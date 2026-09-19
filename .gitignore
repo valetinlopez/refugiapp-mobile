@@ -1,41 +1,68 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# =============================================================
+# Refugiapp Mobile — .gitignore
+# Convencion de seguridad: los ficheros .env reales NUNCA se
+# versionan. Solo se publica .env.example como plantilla.
+# =============================================================
 
-# dependencies
+# Dependencies
 node_modules/
 
-# Expo
+# Expo / Metro
 .expo/
+.expo-shared/
 dist/
 web-build/
 expo-env.d.ts
+.metro-health-check*
 
-# Native
-.kotlin/
-*.orig.*
+# Generated native folders (CNG / prebuild)
+/android
+/ios
+
+# Native signing material and credentials
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+*.pem
+keystore.properties
+debug.keystore
+google-services.json
+GoogleService-Info.plist
+*.orig.*
 
-# Metro
-.metro-health-check*
+# Environment variables
+# Real env files are never committed. Only the template is.
+.env
+.env.*
+!.env.example
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+coverage/
 
 # macOS
 .DS_Store
-*.pem
 
-# local env files
-.env*.local
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# typescript
-*.tsbuildinfo
-
-# generated native folders
-/ios
-/android
+# Editors
+.idea/
+*.iml
+*.swp
+*.swo
+*~
