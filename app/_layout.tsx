@@ -5,6 +5,11 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { config } from '@/core/config';
+
+if (__DEV__) {
+  console.log(`[config] environment=${config.environment} apiBaseUrl=${config.apiBaseUrl}`);
+}
 
 export {
   ErrorBoundary,
