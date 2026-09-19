@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md", "architecture.md"],
+  "references": {
+    "backend": {
+      "path": "../refugiapp",
+      "description": "Refugiapp API backend - NestJS con arquitectura por dominios. Usa esta referencia para entender la estructura de la API, endpoints, modelos de datos, autenticacion JWT, roles y contratos. El frontend debe consumir esta API bajo el prefijo /api/v1."
+    },
+    "backend-architecture": {
+      "path": "../refugiapp/architecture.md",
+      "description": "Documento de arquitectura del backend con modelo de datos completo, enums, relaciones y especificacion de endpoints. Usalo como fuente de verdad para Tipos TypeScript y contratos API."
+    },
+    "backend-agents": {
+      "path": "../refugiapp/AGENTS.md",
+      "description": "Reglas del proyecto backend: idioma ingles para codigo, espanol para docs, arquitectura por dominios, seguridad JWT, observabilidad con correlation IDs."
+    }
+  },
+  "skills": {
+    "paths": [".opencode/skills"]
+  }
+}
