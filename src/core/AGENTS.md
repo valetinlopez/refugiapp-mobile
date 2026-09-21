@@ -36,8 +36,11 @@
 - Tests unitarios para parsing de entorno, selección de host, storage y comportamiento de interceptores.
 - Mockear el límite externo; no depender de una API real en unit tests.
 
-## Deuda conocida
+## Estado implementado
 
-- `apiClient` accede directamente a Secure Store en vez de delegar completamente en `tokenStorage`.
-- La renovación necesita tipado de error y control de concurrencia.
-- Actualizar este archivo y `architecture.md` cuando se resuelvan.
+- Cliente Fetch tipado con `x-request-id`, timeout, multipart y errores normalizados.
+- Reintentos limitados a métodos idempotentes.
+- Refresh single-flight con invalidación de sesión y reintento único.
+- Par de tokens persistido atómicamente mediante una única entrada de Secure Store.
+- TanStack Query conectado a NetInfo y AppState.
+- Adapter HTTP falso inyectable en desarrollo y tests.

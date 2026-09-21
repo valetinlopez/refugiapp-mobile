@@ -16,10 +16,11 @@
 
 ## Estructura actual
 
-- `(auth)`: entrada pública y recuperación de sesión.
+- `(auth)`: login público; no existe registro público en el backend.
 - `(app)`: área autenticada.
 - `(app)/(tabs)`: destinos principales.
 - `design-system`: catálogo interno, no funcionalidad de producción.
+- El layout raíz protege `(auth)` y `(app)` con `Stack.Protected` según el Session Context.
 
 ## Seguridad
 

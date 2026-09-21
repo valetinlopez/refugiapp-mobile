@@ -1,25 +1,6 @@
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'admin' | 'vet' | 'caregiver' | 'volunteer';
-  createdAt: string;
-  updatedAt: string;
-}
+import type { components } from '@/core/api/generated/openapi';
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  name: string;
-}
-
-export interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  user: User;
-}
+export type LoginRequest = components['schemas']['LoginDto'];
+export type AuthResponse = components['schemas']['AuthResponseDto'];
+export type User = components['schemas']['AuthenticatedUser'];
+export type UserRole = User['roles'][number];
