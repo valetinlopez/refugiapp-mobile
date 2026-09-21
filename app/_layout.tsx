@@ -9,6 +9,8 @@ import 'react-native-reanimated';
 import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { config } from '@/core/config';
+import { AppQueryProvider } from '@/core/query';
+import { SessionProvider, useSession } from '@/features/auth/session';
 import { colors, ThemeProvider } from '@/theme';
 
 if (__DEV__) {
@@ -31,20 +33,22 @@ export default function RootLayout() {
     Newsreader_600SemiBold,
   });
 
-  useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [error, loaded]);
-
-  if (!loaded && !error) {
-    return null;
-  }
-
-  return <RootLayoutNav />;
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <ThemeProvider>
+        <AppQueryProvider>
+          <SessionProvider>
+            <RootLayoutNav fontsReady={loaded || error !== null} />
+          </SessionProvider>
+        </AppQueryProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
+  );
 }
 
-function RootLayoutNav() {
+function RootLayoutNav({ fontsReady }: { fontsReady: boolean }) {
+  const { status } = useSession();
+  const appReady = fontsReady && status !== 'restoring';
   const navigationTheme = {
     ...DarkTheme,
     colors: {
@@ -58,18 +62,28 @@ function RootLayoutNav() {
     },
   };
 
+  useEffect(() => {
+    if (appReady) {
+      SplashScreen.hide();
+    }
+  }, [appReady]);
+
+  if (!appReady) {
+    return null;
+  }
+
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <ThemeProvider>
-        <NavigationThemeProvider value={navigationTheme}>
-          <StatusBar style="light" />
-          <Stack>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(app)" options={{ headerShown: false }} />
-            <Stack.Screen name="design-system" options={{ headerShown: false }} />
-          </Stack>
-        </NavigationThemeProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <NavigationThemeProvider value={navigationTheme}>
+      <StatusBar style="light" />
+      <Stack>
+        <Stack.Protected guard={status === 'unauthenticated'}>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        </Stack.Protected>
+        <Stack.Protected guard={status === 'authenticated'}>
+          <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        </Stack.Protected>
+        <Stack.Screen name="design-system" options={{ headerShown: false }} />
+      </Stack>
+    </NavigationThemeProvider>
   );
 }

@@ -4,9 +4,10 @@ Los ADRs registran decisiones técnicas relevantes, su contexto y sus consecuenc
 
 ## Índice
 
-| ADR                                            | Título                                        | Estado   |
-| ---------------------------------------------- | --------------------------------------------- | -------- |
-| [ADR-0001](0001-feature-based-architecture.md) | Arquitectura feature-based con rutas delgadas | Aceptado |
+| ADR                                                   | Título                                        | Estado   |
+| ----------------------------------------------------- | --------------------------------------------- | -------- |
+| [ADR-0001](0001-feature-based-architecture.md)        | Arquitectura feature-based con rutas delgadas | Aceptado |
+| [ADR-0002](0002-fetch-session-and-query-lifecycle.md) | Cliente Fetch, sesión y Query lifecycle       | Aceptado |
 
 ## Cómo agregar una decisión
 

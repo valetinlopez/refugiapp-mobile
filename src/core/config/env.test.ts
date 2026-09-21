@@ -1,6 +1,10 @@
 type PlatformOs = 'ios' | 'android' | 'web';
 
-const ENV_VAR_KEYS = ['EXPO_PUBLIC_ENV', 'EXPO_PUBLIC_API_URL'] as const;
+const ENV_VAR_KEYS = [
+  'EXPO_PUBLIC_ENV',
+  'EXPO_PUBLIC_API_URL',
+  'EXPO_PUBLIC_API_TIMEOUT_MS',
+] as const;
 
 function clearEnv(): void {
   for (const key of ENV_VAR_KEYS) {
@@ -42,6 +46,7 @@ describe('src/core/config/env', () => {
       expect(config.environment).toBe('development');
       expect(config.isDevelopment).toBe(true);
       expect(config.apiBaseUrl).toBe('http://localhost:3000/api/v1');
+      expect(config.apiTimeoutMs).toBe(10000);
     });
 
     it('resolves the Android emulator API URL on Android', () => {
@@ -136,6 +141,20 @@ describe('src/core/config/env', () => {
       });
 
       expect(() => loadEnv()).toThrow(/\/api\/v1/);
+    });
+
+    it('accepts a configurable HTTP timeout', () => {
+      setEnv({ EXPO_PUBLIC_API_TIMEOUT_MS: '15000' });
+
+      const { config } = loadEnv();
+
+      expect(config.apiTimeoutMs).toBe(15000);
+    });
+
+    it('rejects an unsafe HTTP timeout', () => {
+      setEnv({ EXPO_PUBLIC_API_TIMEOUT_MS: '250' });
+
+      expect(() => loadEnv()).toThrow();
     });
   });
 });

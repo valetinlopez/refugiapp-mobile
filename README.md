@@ -63,10 +63,11 @@ La app soporta tres ambientes configurables: `development`, `staging` y `product
 
 Los valores se cargan con `dotenv-cli` al arrancar y se inyectan en el bundle mediante el prefijo `EXPO_PUBLIC_` (Metro). `app.config.ts` lee `EXPO_PUBLIC_ENV` para derivar el bundle identifier, scheme y nombre de cada ambiente.
 
-| Variable              | Obligatoria | Descripcion                                                                  |
-| --------------------- | ----------- | ---------------------------------------------------------------------------- |
-| `EXPO_PUBLIC_ENV`     | Si          | `development` \| `staging` \| `production`. Default: `development`           |
-| `EXPO_PUBLIC_API_URL` | Si*         | URL base de la API. Debe terminar en `/api/v1`; https en staging/production. |
+| Variable                     | Obligatoria | Descripcion                                                                  |
+| ---------------------------- | ----------- | ---------------------------------------------------------------------------- |
+| `EXPO_PUBLIC_ENV`            | Si          | `development` \| `staging` \| `production`. Default: `development`           |
+| `EXPO_PUBLIC_API_URL`        | Si*         | URL base de la API. Debe terminar en `/api/v1`; https en staging/production. |
+| `EXPO_PUBLIC_API_TIMEOUT_MS` | No          | Timeout del cliente HTTP en milisegundos. Default: `10000`.                  |
 
 \* En `development` puede omitirse (usa el fallback local). En `staging` y `production` es obligatoria.
 
@@ -102,11 +103,13 @@ npm run web         # development + web
 | `npm run android`           | Arranca en Android emulator (development)                |
 | `npm run ios`               | Arranca en iOS simulator (development)                   |
 | `npm run web`               | Arranca en navegador (development)                       |
+| `npm run api:generate`      | Regenera tipos de auth desde el snapshot OpenAPI         |
 | `npm run typecheck`         | `tsc --noEmit` (TypeScript estricto)                     |
 | `npm run lint`              | ESLint con `eslint-config-expo`, sin warnings permitidos |
 | `npm run lint:fix`          | Corrige problemas de lint automaticamente                |
 | `npm test`                  | Jest (unit tests)                                        |
 | `npm run test:watch`        | Jest en modo watch                                       |
+| `npm run ci`                | Ejecuta localmente todos los gates del CI móvil          |
 
 ## Estructura del proyecto
 
@@ -117,8 +120,9 @@ src/
   components/           # Componentes de UI compartidos
   constants/            # Constantes (colores, etc.)
   core/
-    api/                # Cliente HTTP (axios) con interceptor JWT
+    api/                # Cliente Fetch, errores, correlation ID y OpenAPI generado
     config/             # Variables de ambiente tipadas y validadas (zod)
+    query/              # QueryClient y lifecycle de conectividad/AppState
     storage/            # Token storage seguro (expo-secure-store)
   features/             # Features del dominio (auth, animals, ...)
     <feature>/
@@ -152,6 +156,14 @@ src/components/patterns/    # Patrones compuestos, como filas de tareas
 - Unit tests para logica de negocio y config (`src/core/config/env.test.ts`, `src/core/api/client.test.ts`).
 - Component tests con React Native Testing Library (tooling ya configurado en `jest.config.js`).
 - E2E solo para flujos criticos (login, flujo principal).
+
+El límite HTTP es inyectable. `createFakeHttpTransport` permite definir rutas falsas para desarrollo aislado y tests sin depender de una API real.
+
+En Android/iOS, el par de tokens se persiste exclusivamente con Expo SecureStore. En web, donde SecureStore no está disponible, la sesión se conserva solo en memoria y se pierde al recargar; nunca se degrada a `localStorage` o AsyncStorage.
+
+## CI móvil
+
+`.github/workflows/mobile-ci.yml` ejecuta instalación reproducible, generación de tipos OpenAPI, formato, lint, typecheck y tests unitarios/componentes con cobertura. Para bloquear merges, configurar en GitHub el check requerido `Mobile CI / lint, typecheck and tests` sobre `develop` y `master`.
 
 ## Troubleshooting
 

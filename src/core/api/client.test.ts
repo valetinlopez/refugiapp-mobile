@@ -1,58 +1,160 @@
-import type { InternalAxiosRequestConfig } from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import type { TokenPair } from '@/core/storage';
 
-import { config } from '@/core/config';
-import { apiClient } from './client';
+import { createHttpClient, type TokenStorageAdapter } from './client';
+import { ApiError } from './errors';
+import { createFakeHttpTransport } from './testing/fakeHttpTransport';
 
-jest.mock('expo-secure-store', () => ({
-  getItemAsync: jest.fn(),
-  setItemAsync: jest.fn(),
-  deleteItemAsync: jest.fn(),
-}));
-
-const getItemMock = SecureStore.getItemAsync as jest.MockedFunction<
-  typeof SecureStore.getItemAsync
->;
-
-function stubAdapter(): { headers?: Record<string, string> } {
-  const captured: { headers?: Record<string, string> } = {};
-  apiClient.defaults.adapter = (async (request: InternalAxiosRequestConfig) => {
-    captured.headers = request.headers as unknown as Record<string, string>;
-    return {
-      data: {},
-      status: 200,
-      statusText: 'OK',
-      headers: {},
-      config: request,
-    };
-  }) as never;
-  return captured;
+function createTokenStore(initial: TokenPair | null = null): TokenStorageAdapter & {
+  clearTokens: jest.MockedFunction<() => Promise<void>>;
+  setTokens: jest.MockedFunction<(access: string, refresh: string) => Promise<void>>;
+} {
+  let current = initial;
+  return {
+    clearTokens: jest.fn(async () => {
+      current = null;
+    }),
+    getTokens: jest.fn(async () => current),
+    setTokens: jest.fn(async (accessToken, refreshToken) => {
+      current = { accessToken, refreshToken };
+    }),
+  };
 }
 
-describe('src/core/api/client', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+describe('HttpClient', () => {
+  it('adds Authorization and a UUID x-request-id to every request', async () => {
+    const tokenStore = createTokenStore({ accessToken: 'access', refreshToken: 'refresh' });
+    let capturedHeaders: Record<string, string> = {};
+    const client = createHttpClient({
+      baseUrl: 'https://api.test/api/v1',
+      timeoutMs: 1000,
+      tokenStore,
+      transport: createFakeHttpTransport({
+        'GET /api/v1/animals': ({ headers }) => {
+          capturedHeaders = headers;
+          return { body: [] };
+        },
+      }),
+    });
+
+    await client.get('/animals');
+
+    expect(capturedHeaders.Authorization).toBe('Bearer access');
+    expect(capturedHeaders['x-request-id']).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+    );
   });
 
-  it('uses the centralized API base URL', () => {
-    expect(apiClient.defaults.baseURL).toBe(config.apiBaseUrl);
+  it('retries idempotent requests once but never retries POST', async () => {
+    let getCalls = 0;
+    let postCalls = 0;
+    const client = createHttpClient({
+      baseUrl: 'https://api.test/api/v1',
+      timeoutMs: 1000,
+      tokenStore: createTokenStore(),
+      transport: createFakeHttpTransport({
+        'GET /api/v1/animals': () => {
+          getCalls += 1;
+          return getCalls === 1 ? { status: 500 } : { body: [] };
+        },
+        'POST /api/v1/animals': () => {
+          postCalls += 1;
+          return { status: 500 };
+        },
+      }),
+    });
+
+    await expect(client.get('/animals')).resolves.toMatchObject({ status: 200 });
+    await expect(client.post('/animals', { name: 'Luna' })).rejects.toBeInstanceOf(ApiError);
+    expect(getCalls).toBe(2);
+    expect(postCalls).toBe(1);
   });
 
-  it('attaches the access token as a Bearer header', async () => {
-    getItemMock.mockResolvedValueOnce('token-123');
-    const captured = stubAdapter();
+  it('lets fetch set the multipart boundary', async () => {
+    let capturedHeaders: Record<string, string> = {};
+    const client = createHttpClient({
+      baseUrl: 'https://api.test/api/v1',
+      timeoutMs: 1000,
+      tokenStore: createTokenStore(),
+      transport: createFakeHttpTransport({
+        'POST /api/v1/media/upload': ({ headers }) => {
+          capturedHeaders = headers;
+          return { body: { id: 'asset-id' } };
+        },
+      }),
+    });
 
-    await apiClient.get('/animals');
+    await client.post('/media/upload', new FormData());
 
-    expect(captured.headers?.Authorization).toBe('Bearer token-123');
+    expect(capturedHeaders['Content-Type']).toBeUndefined();
   });
 
-  it('does not attach a header when no token is stored', async () => {
-    getItemMock.mockResolvedValueOnce(null);
-    const captured = stubAdapter();
+  it('shares one refresh across concurrent 401 responses and retries each request once', async () => {
+    const tokenStore = createTokenStore({
+      accessToken: 'expired-access',
+      refreshToken: 'valid-refresh',
+    });
+    let animalCalls = 0;
+    let refreshCalls = 0;
+    let releaseUnauthorizedRequests: (() => void) | undefined;
+    const bothUnauthorized = new Promise<void>((resolve) => {
+      releaseUnauthorizedRequests = resolve;
+    });
 
-    await apiClient.get('/animals');
+    const client = createHttpClient({
+      baseUrl: 'https://api.test/api/v1',
+      timeoutMs: 1000,
+      tokenStore,
+      transport: createFakeHttpTransport({
+        'GET /api/v1/animals': ({ headers }) => {
+          animalCalls += 1;
+          if (animalCalls === 2) {
+            releaseUnauthorizedRequests?.();
+          }
+          return headers.Authorization === 'Bearer fresh-access'
+            ? { body: [] }
+            : { body: { code: 'UNAUTHORIZED' }, status: 401 };
+        },
+        'POST /api/v1/auth/refresh': async () => {
+          refreshCalls += 1;
+          await bothUnauthorized;
+          return {
+            body: {
+              accessToken: 'fresh-access',
+              expiresIn: '1d',
+              refreshExpiresIn: '30d',
+              refreshToken: 'fresh-refresh',
+              tokenType: 'Bearer',
+            },
+          };
+        },
+      }),
+    });
 
-    expect(captured.headers?.Authorization).toBeUndefined();
+    await Promise.all([client.get('/animals'), client.get('/animals')]);
+
+    expect(refreshCalls).toBe(1);
+    expect(animalCalls).toBe(4);
+    expect(tokenStore.setTokens).toHaveBeenCalledTimes(1);
+    expect(tokenStore.setTokens).toHaveBeenCalledWith('fresh-access', 'fresh-refresh');
+  });
+
+  it('clears the device session and notifies the app when refresh fails', async () => {
+    const tokenStore = createTokenStore({ accessToken: 'expired', refreshToken: 'revoked' });
+    const invalidated = jest.fn();
+    const client = createHttpClient({
+      baseUrl: 'https://api.test/api/v1',
+      timeoutMs: 1000,
+      tokenStore,
+      transport: createFakeHttpTransport({
+        'GET /api/v1/users/me': () => ({ status: 401 }),
+        'POST /api/v1/auth/refresh': () => ({ status: 401 }),
+      }),
+    });
+    client.setSessionInvalidatedHandler(invalidated);
+
+    await expect(client.get('/users/me')).rejects.toBeInstanceOf(ApiError);
+
+    expect(tokenStore.clearTokens).toHaveBeenCalledTimes(1);
+    expect(invalidated).toHaveBeenCalledTimes(1);
   });
 });

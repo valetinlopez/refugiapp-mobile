@@ -16,19 +16,19 @@ Los detalles visuales viven en `docs/design.md`. Los contratos del servidor y pe
 
 ## 2. Contexto tecnológico
 
-| Área                | Tecnología                          | Decisión                                                              |
-| ------------------- | ----------------------------------- | --------------------------------------------------------------------- |
-| Runtime             | Node.js 22.13+                      | Mínimo requerido por Expo SDK 57                                      |
-| Framework           | Expo SDK 57                         | Runtime y tooling móvil                                               |
-| UI                  | React Native 0.86 + React 19.2      | Base multiplataforma                                                  |
-| Lenguaje            | TypeScript estricto                 | `strict`, `noUncheckedIndexedAccess` y `exactOptionalPropertyTypes`   |
-| Navegación          | Expo Router                         | Rutas basadas en archivos                                             |
-| Red                 | Axios                               | Cliente HTTP central con interceptores                                |
-| Estado servidor     | TanStack Query                      | Dependencia instalada; integración de providers y hooks aún pendiente |
-| Persistencia segura | Expo Secure Store                   | Tokens JWT y datos secretos pequeños                                  |
-| Diseño              | Tokens propios + Expo Symbols       | Sistema compartido documentado en `docs/design.md`                    |
-| Testing             | Jest + React Native Testing Library | Unit y component tests                                                |
-| Calidad             | ESLint + Prettier + TypeScript      | Gates locales obligatorios                                            |
+| Área                | Tecnología                          | Decisión                                                            |
+| ------------------- | ----------------------------------- | ------------------------------------------------------------------- |
+| Runtime             | Node.js 22.13+                      | Mínimo requerido por Expo SDK 57                                    |
+| Framework           | Expo SDK 57                         | Runtime y tooling móvil                                             |
+| UI                  | React Native 0.86 + React 19.2      | Base multiplataforma                                                |
+| Lenguaje            | TypeScript estricto                 | `strict`, `noUncheckedIndexedAccess` y `exactOptionalPropertyTypes` |
+| Navegación          | Expo Router                         | Rutas basadas en archivos                                           |
+| Red                 | Fetch                               | Cliente HTTP tipado, normalización y refresh single-flight          |
+| Estado servidor     | TanStack Query                      | Provider global conectado a red y AppState de React Native          |
+| Persistencia segura | Expo Secure Store                   | Tokens JWT y datos secretos pequeños                                |
+| Diseño              | Tokens propios + Expo Symbols       | Sistema compartido documentado en `docs/design.md`                  |
+| Testing             | Jest + React Native Testing Library | Unit y component tests                                              |
+| Calidad             | ESLint + Prettier + TypeScript      | Gates locales obligatorios                                          |
 
 ## 3. Principios arquitectónicos
 
@@ -121,9 +121,10 @@ src/
   core/
     api/
     config/
+    query/
     storage/
   features/
-    auth/
+    auth/                    # API, formulario y estado global de sesión
     animals/
   theme/
   types/
@@ -144,9 +145,9 @@ Expo Router es la fuente de verdad de navegación:
 - `(app)` agrupa el área autenticada.
 - `(tabs)` define la navegación principal.
 - `design-system` es una ruta interna de validación visual; no es una pantalla de producción.
-- `_layout.tsx` raíz carga fuentes, safe areas, tema y navegación global.
-
-La protección real de sesión y roles todavía no está implementada. Cuando se agregue, debe resolverse en layouts o providers de aplicación, no repetirse en cada pantalla.
+- `_layout.tsx` raíz carga fuentes, safe areas, tema, QueryClient y sesión global.
+- `Stack.Protected` expone `(auth)` solo sin sesión y `(app)` solo con una sesión validada.
+- El splash permanece visible hasta resolver fuentes y restauración de sesión, evitando mostrar una ruta incorrecta durante el bootstrap.
 
 ## 7. Integración con la API
 
@@ -156,13 +157,15 @@ La protección real de sesión y roles todavía no está implementada. Cuando se
 
 ### 7.2 Cliente HTTP
 
-`src/core/api/client.ts` configura Axios y adjunta el access token. La renovación de tokens existe de forma inicial, pero aún debe consolidarse para usar exclusivamente `tokenStorage`, tipar los errores y evitar solicitudes de refresh concurrentes.
+`src/core/api/client.ts` implementa un cliente basado en `fetch`. Adjunta el access token, genera `x-request-id`, aplica timeout configurable, reintenta solo métodos idempotentes, conserva `FormData` sin fijar manualmente el boundary y normaliza errores técnicos a español.
+
+Ante respuestas `401`, todas las solicitudes concurrentes comparten una única renovación. El nuevo par se guarda en una sola escritura de Secure Store y cada solicitud original se reintenta una sola vez. Si la renovación falla, se limpian tokens y cache de Query antes de volver a login.
 
 Las features exponen funciones HTTP en su carpeta `api`. Los componentes y rutas no llaman al cliente directamente.
 
 ### 7.3 Contratos
 
-El OpenAPI del backend debe convertirse en la fuente de tipos de red. Flujo objetivo:
+El snapshot parcial `openapi/auth.openapi.json` refleja los endpoints de auth y perfil consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts`; el CI verifica que el resultado esté versionado y actualizado. El flujo es:
 
 ```text
 openapi.json del backend
@@ -173,7 +176,7 @@ openapi.json del backend
   -> componente
 ```
 
-Los tipos manuales existentes en `auth` y `animals` son scaffolding y presentan divergencias conocidas. No deben ampliarse sin reconciliarlos primero con OpenAPI.
+Los tipos de auth derivan del archivo generado. Los tipos manuales existentes en `animals` siguen siendo scaffolding y no deben ampliarse sin reconciliarlos primero con OpenAPI.
 
 ### 7.4 Errores
 
@@ -181,13 +184,15 @@ La infraestructura debe normalizar errores técnicos a una forma segura. Las fea
 
 ## 8. Estado y flujo de datos
 
-- TanStack Query será responsable de cache, deduplicación, reintentos controlados e invalidaciones de datos remotos.
+- TanStack Query es responsable de cache, deduplicación, reintentos controlados e invalidaciones de datos remotos.
+- Las queries reintentan una vez; las mutations no se reintentan automáticamente.
+- `NetInfo` alimenta `onlineManager` y `AppState` alimenta `focusManager`, habilitando refetch al reconectar o volver al foreground.
 - Estado efímero de formulario o presentación permanece local cuando no necesita compartirse.
 - No duplicar respuestas completas del servidor en un store global.
 - Las derivaciones visuales se calculan de forma pura y testeable; por ejemplo, `overdue` no se persiste.
 - Las actualizaciones optimistas solo se incorporan cuando exista una estrategia explícita de rollback.
 
-El provider de TanStack Query y los hooks de features todavía están pendientes.
+Las features nuevas deben definir sus query keys e invalidaciones dentro de su propia frontera.
 
 ## 9. Autenticación y autorización
 
@@ -197,16 +202,17 @@ Roles válidos:
 - `shelter_manager`
 - `veterinarian`
 
-Los access y refresh tokens se almacenan con Expo Secure Store. La aplicación no debe inferir permisos únicamente desde la presencia de un botón: el backend sigue siendo autoridad final.
+Los access y refresh tokens se almacenan juntos con Expo Secure Store en Android/iOS. En web, donde Secure Store no existe, la sesión es volátil y nunca cae a storage persistente inseguro. La aplicación no debe inferir permisos únicamente desde la presencia de un botón: el backend sigue siendo autoridad final.
 
-El contrato actual del backend implementa login, refresh y logout. La pantalla y función de registro del scaffolding no deben considerarse funcionalidad soportada hasta que el backend publique ese endpoint.
+El contrato actual del backend implementa login, refresh, logout y `GET /users/me`. No se expone registro público mientras el backend no publique ese endpoint.
 
-El flujo objetivo de sesión es:
+El flujo implementado de sesión es:
 
 ```text
 inicio
-  -> leer sesión segura
-  -> validar/renovar si corresponde
+  -> leer el par de tokens de Secure Store
+  -> validar el perfil con GET /users/me
+  -> renovar una sola vez si el access token venció
   -> área autenticada o login
   -> ante logout o refresh inválido, limpiar tokens y cache sensible
 ```
@@ -291,26 +297,28 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 
 - Expo SDK 57, TypeScript estricto y Expo Router.
 - Configuración validada para development, staging y production.
-- Cliente Axios con token y renovación inicial.
-- Storage seguro de access y refresh tokens.
-- Scaffolding de APIs de auth y animals.
+- Cliente Fetch tipado con correlation ID, timeout, reintentos idempotentes, multipart y errores normalizados.
+- Storage seguro y atómico del par de access y refresh tokens.
+- Refresh single-flight y reintento único de la solicitud original.
+- Provider de sesión con restauración, login para los tres roles y logout best-effort.
+- Rutas protegidas con Expo Router y splash coordinado con el bootstrap de sesión.
+- TanStack Query conectado a NetInfo y AppState.
+- Adapter HTTP falso inyectable para desarrollo y tests.
+- Tipos de auth generados desde un snapshot OpenAPI parcial.
+- Scaffolding de API de animals.
 - Sistema de diseño, componentes compartidos y catálogo interno.
 - Tests unitarios y de componentes.
+- CI móvil con generación de tipos, formato, lint, typecheck y tests RNTL.
 - ESLint, Prettier, typecheck y export web verificados.
 - Jerarquía de documentación y reglas locales por frontera.
 
 ## 17. Pendientes y deuda conocida
 
-- Generar tipos TypeScript desde `openapi.json` y eliminar contratos manuales divergentes.
-- Corregir `auth/types.ts`: contiene roles que no existen en el backend.
-- Retirar o bloquear el registro público hasta que exista contrato de backend.
+- Ampliar el snapshot OpenAPI y los tipos generados a medida que nuevas features consuman endpoints.
 - Corregir `animals/types.ts`: contiene estados ajenos al enum real y campos provisionales.
 - Retirar el `DELETE /animals/:id` provisional; el backend actual no documenta ese endpoint.
-- Centralizar todo acceso a tokens mediante `tokenStorage`.
-- Resolver concurrencia y tipado en refresh de sesión.
-- Incorporar QueryClientProvider y hooks de TanStack Query.
-- Implementar guards de sesión y roles en navegación.
 - Agregar tests E2E de flujos críticos.
+- Configurar en GitHub la protección de `develop`/`master` para exigir el check `Mobile CI / lint, typecheck and tests` antes del merge.
 - Validar el sistema visual en dispositivos iOS y Android reales.
 
 Los pendientes no se consideran implementados hasta que exista código, contrato y tests cuando corresponda.

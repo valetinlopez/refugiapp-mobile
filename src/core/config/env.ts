@@ -17,6 +17,7 @@ const DEV_API_URLS: Record<'android' | 'default', string> = {
 const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '10.0.2.2']);
 
 const environmentSchema = z.enum(APP_ENVIRONMENTS);
+const timeoutSchema = z.coerce.number().int().min(1000).max(120000).default(10000);
 
 function parseEnvironment(value: string | undefined): AppEnvironment {
   const result = environmentSchema.safeParse(value ?? 'development');
@@ -90,9 +91,11 @@ function parseApiUrl(environment: AppEnvironment, value: string | undefined): st
 
 const environment = parseEnvironment(process.env.EXPO_PUBLIC_ENV);
 const apiBaseUrl = parseApiUrl(environment, process.env.EXPO_PUBLIC_API_URL);
+const apiTimeoutMs = timeoutSchema.parse(process.env.EXPO_PUBLIC_API_TIMEOUT_MS);
 
 export const config = {
   apiBaseUrl,
+  apiTimeoutMs,
   environment,
   appName: APP_NAME,
   appVersion: APP_VERSION,

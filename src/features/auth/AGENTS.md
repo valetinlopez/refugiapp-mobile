@@ -27,7 +27,7 @@ Verificar OpenAPI antes de modificar payloads. La arquitectura actual del backen
 ## Estructura objetivo
 
 - `api/`: login, refresh y logout.
-- `hooks/`: bootstrap de sesión, mutations y estado derivado.
+- `session/`: context, reducer, bootstrap y acciones de sesión.
 - `components/`: formulario y feedback específicos de auth.
 - `types/`: modelos de vista y aliases derivados de OpenAPI.
 
@@ -50,14 +50,14 @@ Las rutas de `app/(auth)` se limitan a composición y navegación.
 
 ### Implementado
 
-- Funciones iniciales de login, refresh y logout.
-- Secure storage de access y refresh token en `core`.
-- Rutas placeholder de login y registro.
+- Login real contra backend y validación posterior mediante `GET /users/me`.
+- Roles `admin`, `shelter_manager` y `veterinarian` derivados del OpenAPI parcial.
+- Secure storage atómico del par de tokens en `core`.
+- Refresh single-flight y limpieza central ante sesión inválida.
+- Session Context/reducer, restauración sin parpadeo y logout best-effort.
+- Formulario de login accesible y rutas protegidas.
 
 ### Deuda conocida
 
-- `types.ts` declara roles `vet`, `caregiver` y `volunteer`, incompatibles con el backend.
-- `register` y `RegisterRequest` son scaffolding sin endpoint confirmado.
-- La pantalla de login aún no ejecuta el flujo real.
-- No existe provider/hook de sesión ni protección de rutas.
-- Antes de ampliar la feature, generar tipos desde OpenAPI y resolver estas divergencias.
+- No existe self-registration público porque el backend no publica ese contrato.
+- Falta E2E en dispositivo para login, recuperación y logout.
