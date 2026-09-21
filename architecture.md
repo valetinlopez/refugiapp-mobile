@@ -306,6 +306,9 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Adapter HTTP falso inyectable para desarrollo y tests.
 - Tipos de auth, animals y media generados desde el snapshot OpenAPI.
 - Alta de animales con foto de perfil opcional: formulario React Hook Form + Zod en español, subida multipart huérfana, guard visual por rol y ruta `app/(app)/animals/new.tsx`.
+- Detalle de animal en `app/(app)/animals/[id].tsx` visible para los tres roles, con foto actual vía `GET /media/:id`.
+- Edición de ficha en `app/(app)/animals/[id]/edit.tsx` y cambio de estado desde el detalle, restringidos a `admin` y `shelter_manager`, con formulario compartido `AnimalProfileForm` (modos create/edit).
+- Cambio de estado con matriz de transiciones local (`animalTransitions`), confirmación con modal que explica la consecuencia y sin optimistic updates: invalidación de queries como fuente de verdad.
 - Dependencias `react-hook-form`, `@hookform/resolvers` y `expo-image-picker` (ver ADR-0003).
 - Sistema de diseño, componentes compartidos y catálogo interno.
 - Tests unitarios y de componentes.
@@ -316,8 +319,8 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 ## 17. Pendientes y deuda conocida
 
 - Ampliar el snapshot OpenAPI y los tipos generados a medida que nuevas features consuman endpoints (cubiertos: auth, animals y media).
-- Agregar UI y hooks de query para listado y detalle de animales.
-- Agregar tests E2E de flujos críticos, incluido el alta de animales.
+- Agregar UI y hooks de query para el listado de animales; el detalle y la edición ya operan por deep link.
+- Agregar tests E2E de flujos críticos, incluidos alta, edición y cambio de estado de animales.
 - Agregar un paso de typegen de Expo Router en Mobile CI: `npm run typecheck` exige `.expo/types`, que hoy solo se genera al arrancar el dev server o exportar.
 - Configurar en GitHub la protección de `develop`/`master` para exigir el check `Mobile CI / lint, typecheck and tests` antes del merge.
 - Validar el sistema visual en dispositivos iOS y Android reales.

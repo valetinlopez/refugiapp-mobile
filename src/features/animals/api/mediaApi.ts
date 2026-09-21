@@ -22,6 +22,11 @@ export function buildOrphanPhotoFormData(photo: PhotoFile): FormData {
 }
 
 export const mediaApi = {
+  async getById(id: string, client: HttpClient = apiClient): Promise<MediaAsset> {
+    const response = await client.get<MediaAsset>(`/media/${id}`);
+    return response.data;
+  },
+
   async uploadOrphanPhoto(photo: PhotoFile, client: HttpClient = apiClient): Promise<MediaAsset> {
     const response = await client.post<MediaAsset>(
       '/media/upload',

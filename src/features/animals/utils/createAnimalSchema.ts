@@ -54,70 +54,79 @@ const optionalText = (maxLength: number, tooLongMessage: string) =>
     .optional()
     .transform((value) => (value === undefined || value === '' ? undefined : value));
 
+export const animalProfileFields = {
+  name: z
+    .string()
+    .trim()
+    .min(1, 'El nombre es obligatorio.')
+    .max(120, 'El nombre no puede superar los 120 caracteres.'),
+  species: z
+    .string()
+    .trim()
+    .min(1, 'La especie es obligatoria.')
+    .max(80, 'La especie no puede superar los 80 caracteres.'),
+  breed: optionalText(80, 'La raza no puede superar los 80 caracteres.'),
+  sex: z
+    .enum(ANIMAL_SEX_VALUES, {
+      errorMap: () => ({ message: 'El sexo seleccionado no es válido.' }),
+    })
+    .optional()
+    .default('unknown'),
+  intakeDate: z
+    .string()
+    .trim()
+    .min(1, 'La fecha de ingreso es obligatoria.')
+    .refine(
+      (value) => DATE_PATTERN.test(value),
+      'La fecha de ingreso debe tener formato AAAA-MM-DD.'
+    )
+    .refine((value) => isCalendarDate(value), 'La fecha de ingreso no es una fecha válida.')
+    .refine((value) => value <= todayLocalDate(), 'La fecha de ingreso no puede ser futura.'),
+  birthDate: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => (value === undefined || value === '' ? undefined : value))
+    .refine(
+      (value) => value === undefined || DATE_PATTERN.test(value),
+      'La fecha de nacimiento debe tener formato AAAA-MM-DD.'
+    )
+    .refine(
+      (value) => value === undefined || isCalendarDate(value),
+      'La fecha de nacimiento no es una fecha válida.'
+    ),
+} as const;
+
+export function birthDateBeforeIntakeRefine(
+  values: { birthDate?: string | undefined; intakeDate: string },
+  context: z.RefinementCtx
+): void {
+  if (
+    values.birthDate !== undefined &&
+    DATE_PATTERN.test(values.intakeDate) &&
+    isCalendarDate(values.intakeDate) &&
+    isCalendarDate(values.birthDate) &&
+    values.birthDate > values.intakeDate
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['birthDate'],
+      message: 'La fecha de nacimiento no puede ser posterior a la fecha de ingreso.',
+    });
+  }
+}
+
 export const createAnimalSchema = z
   .object({
-    name: z
-      .string()
-      .trim()
-      .min(1, 'El nombre es obligatorio.')
-      .max(120, 'El nombre no puede superar los 120 caracteres.'),
-    species: z
-      .string()
-      .trim()
-      .min(1, 'La especie es obligatoria.')
-      .max(80, 'La especie no puede superar los 80 caracteres.'),
-    breed: optionalText(80, 'La raza no puede superar los 80 caracteres.'),
-    sex: z
-      .enum(ANIMAL_SEX_VALUES, {
-        errorMap: () => ({ message: 'El sexo seleccionado no es válido.' }),
-      })
-      .optional()
-      .default('unknown'),
+    ...animalProfileFields,
     status: z
       .enum(ANIMAL_STATUS_VALUES, {
         errorMap: () => ({ message: 'El estado seleccionado no es válido.' }),
       })
       .optional()
       .default('admitted'),
-    intakeDate: z
-      .string()
-      .trim()
-      .min(1, 'La fecha de ingreso es obligatoria.')
-      .refine(
-        (value) => DATE_PATTERN.test(value),
-        'La fecha de ingreso debe tener formato AAAA-MM-DD.'
-      )
-      .refine((value) => isCalendarDate(value), 'La fecha de ingreso no es una fecha válida.')
-      .refine((value) => value <= todayLocalDate(), 'La fecha de ingreso no puede ser futura.'),
-    birthDate: z
-      .string()
-      .trim()
-      .optional()
-      .transform((value) => (value === undefined || value === '' ? undefined : value))
-      .refine(
-        (value) => value === undefined || DATE_PATTERN.test(value),
-        'La fecha de nacimiento debe tener formato AAAA-MM-DD.'
-      )
-      .refine(
-        (value) => value === undefined || isCalendarDate(value),
-        'La fecha de nacimiento no es una fecha válida.'
-      ),
   })
-  .superRefine((values, context) => {
-    if (
-      values.birthDate !== undefined &&
-      DATE_PATTERN.test(values.intakeDate) &&
-      isCalendarDate(values.intakeDate) &&
-      isCalendarDate(values.birthDate) &&
-      values.birthDate > values.intakeDate
-    ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['birthDate'],
-        message: 'La fecha de nacimiento no puede ser posterior a la fecha de ingreso.',
-      });
-    }
-  });
+  .superRefine(birthDateBeforeIntakeRefine);
 
 export type CreateAnimalFormInput = z.input<typeof createAnimalSchema>;
 export type CreateAnimalFormValues = z.output<typeof createAnimalSchema>;

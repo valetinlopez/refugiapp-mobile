@@ -9,6 +9,7 @@ import { MAX_PROFILE_PHOTO_BYTES, type PhotoFile } from '../api/mediaApi';
 
 interface ProfilePhotoPickerProps {
   disabled?: boolean;
+  fallbackUri?: string | null;
   onChange(photo: PhotoFile | null): void;
   value: PhotoFile | null;
 }
@@ -19,7 +20,12 @@ function fileNameFromUri(uri: string): string {
   return withoutQuery !== '' ? withoutQuery : `photo-${String(Date.now())}.jpg`;
 }
 
-export function ProfilePhotoPicker({ disabled = false, onChange, value }: ProfilePhotoPickerProps) {
+export function ProfilePhotoPicker({
+  disabled = false,
+  fallbackUri = null,
+  onChange,
+  value,
+}: ProfilePhotoPickerProps) {
   const [isPicking, setIsPicking] = useState(false);
   const [pickerError, setPickerError] = useState<string | null>(null);
 
@@ -73,17 +79,16 @@ export function ProfilePhotoPicker({ disabled = false, onChange, value }: Profil
   }
 
   const busy = isPicking || disabled;
+  const displayUri = value ? { uri: value.uri } : fallbackUri ? { uri: fallbackUri } : undefined;
+  const photoLabel = value
+    ? `Foto de perfil seleccionada para ${value.name}`
+    : fallbackUri
+      ? 'Foto de perfil actual'
+      : 'Sin foto de perfil';
 
   return (
     <View style={styles.container}>
-      <AppAvatar
-        accessibilityLabel={
-          value ? `Foto de perfil seleccionada para ${value.name}` : 'Sin foto de perfil'
-        }
-        initials="?"
-        size="lg"
-        source={value ? { uri: value.uri } : undefined}
-      />
+      <AppAvatar accessibilityLabel={photoLabel} initials="?" size="lg" source={displayUri} />
       <View style={styles.actions}>
         <AppButton
           disabled={busy}

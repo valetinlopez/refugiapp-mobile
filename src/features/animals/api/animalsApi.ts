@@ -3,8 +3,10 @@ import { apiClient, type HttpClient } from '@/core/api';
 import type {
   Animal,
   AnimalResponse,
+  ChangeAnimalStatusRequest,
   CreateAnimalRequest,
   PaginatedAnimalsResponse,
+  UpdateAnimalRequest,
 } from '../types';
 import { toAnimalView } from '../types';
 
@@ -32,10 +34,19 @@ export const animalsApi = {
 
   async update(
     id: string,
-    data: Partial<CreateAnimalRequest>,
+    data: UpdateAnimalRequest,
     client: HttpClient = apiClient
   ): Promise<Animal> {
     const response = await client.patch<AnimalResponse>(`/animals/${id}`, data);
+    return toAnimalView(response.data);
+  },
+
+  async changeStatus(
+    id: string,
+    data: ChangeAnimalStatusRequest,
+    client: HttpClient = apiClient
+  ): Promise<Animal> {
+    const response = await client.patch<AnimalResponse>(`/animals/${id}/status`, data);
     return toAnimalView(response.data);
   },
 };

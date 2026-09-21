@@ -3,7 +3,7 @@
   "info": {
     "title": "Refugiapp API - mobile consumed subset",
     "version": "1.0.0",
-    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, alta de animales y subida de media."
+    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, animales (alta, detalle, edicion y cambio de estado) y media."
   },
   "servers": [{ "url": "/api/v1" }],
   "paths": {
@@ -113,6 +113,186 @@
         }
       }
     },
+    "/animals/{id}": {
+      "get": {
+        "operationId": "getAnimalById",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Animal detail",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnimalResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateAnimal",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateAnimalDto" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Animal updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnimalResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "409": {
+            "description": "The request conflicts with the current resource state.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/animals/{id}/status": {
+      "patch": {
+        "operationId": "changeAnimalStatus",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChangeAnimalStatusDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Animal status changed with a traceable status_change event",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnimalResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "409": {
+            "description": "The request conflicts with the current resource state.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/media/upload": {
       "post": {
         "operationId": "uploadMedia",
@@ -131,6 +311,46 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/MediaAssetResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{id}": {
+      "get": {
+        "operationId": "getMediaById",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Media asset detail",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MediaAssetResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
               }
             }
           }
@@ -227,6 +447,33 @@
           "birthDate": { "type": "string", "format": "date", "nullable": true },
           "notes": { "type": "object", "nullable": true },
           "profilePhotoMediaId": { "type": "object", "nullable": true }
+        }
+      },
+      "UpdateAnimalDto": {
+        "type": "object",
+        "description": "Partial update of the animal general record. Does not change status; use the status endpoint instead.",
+        "properties": {
+          "name": { "type": "string" },
+          "species": { "type": "string", "example": "dog" },
+          "breed": { "type": "string", "example": "mixed", "nullable": true },
+          "sex": {
+            "type": "string",
+            "enum": ["female", "male", "unknown"]
+          },
+          "intakeDate": { "type": "string", "format": "date" },
+          "birthDate": { "type": "string", "format": "date", "nullable": true },
+          "profilePhotoMediaId": { "type": "string", "format": "uuid", "nullable": true }
+        }
+      },
+      "ChangeAnimalStatusDto": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["admitted", "under_treatment", "available_for_adoption", "adopted", "deceased"]
+          },
+          "occurredAt": { "type": "string", "format": "date-time" }
         }
       },
       "PaginatedAnimalsResponseDto": {

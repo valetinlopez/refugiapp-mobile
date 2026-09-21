@@ -75,3 +75,37 @@ describe('mediaApi.uploadOrphanPhoto', () => {
     ).rejects.toMatchObject({ status: 400 });
   });
 });
+
+describe('mediaApi.getById', () => {
+  it('fetches the media asset metadata', async () => {
+    const client = createClient({
+      'GET /api/v1/media/7fa85f64-5717-4562-b3fc-2c963f66afa6': () => ({
+        body: {
+          id: '7fa85f64-5717-4562-b3fc-2c963f66afa6',
+          resourceType: 'image',
+          publicId: 'refugiapp/profile-photo',
+          secureUrl: 'https://cloudinary.test/profile-photo.jpg',
+        },
+      }),
+    });
+
+    const asset = await mediaApi.getById('7fa85f64-5717-4562-b3fc-2c963f66afa6', client);
+
+    expect(asset.secureUrl).toBe('https://cloudinary.test/profile-photo.jpg');
+  });
+
+  it('propagates a 404 when the asset is missing', async () => {
+    const client = createClient({
+      'GET /api/v1/media/7fa85f64-5717-4562-b3fc-2c963f66afa6': () => ({
+        status: 404,
+        body: { code: 'MEDIA_NOT_FOUND' },
+      }),
+    });
+
+    await expect(
+      mediaApi.getById('7fa85f64-5717-4562-b3fc-2c963f66afa6', client)
+    ).rejects.toMatchObject({
+      status: 404,
+    });
+  });
+});
