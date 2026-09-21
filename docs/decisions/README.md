@@ -8,6 +8,7 @@ Los ADRs registran decisiones técnicas relevantes, su contexto y sus consecuenc
 | ----------------------------------------------------- | --------------------------------------------- | -------- |
 | [ADR-0001](0001-feature-based-architecture.md)        | Arquitectura feature-based con rutas delgadas | Aceptado |
 | [ADR-0002](0002-fetch-session-and-query-lifecycle.md) | Cliente Fetch, sesión y Query lifecycle       | Aceptado |
+| [ADR-0003](0003-react-hook-form-and-image-picker.md)  | React Hook Form y expo-image-picker           | Aceptado |
 
 ## Cómo agregar una decisión
 

@@ -34,7 +34,13 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permite a Refugiapp acceder a tus fotos para usar una como foto de perfil del animal."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -18,6 +18,8 @@
 
 No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar endpoints sin confirmarlos en OpenAPI.
 
+- `POST /media/upload` sin `ownerType`/`ownerId`: alta de foto huérfana para `admin`, `shelter_manager` y `veterinarian`; se vincula con `profilePhotoMediaId` al crear el animal. Los huérfanos no vinculados se purgan por antigüedad.
+
 ## Datos e invariantes
 
 - Estados: `admitted`, `under_treatment`, `available_for_adoption`, `adopted`, `deceased`.
@@ -44,10 +46,11 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 ## Estructura objetivo
 
-- `api/`: endpoints de animals y events.
-- `hooks/`: listado, detalle, mutations e invalidaciones.
-- `components/`: tarjetas, filas y formularios específicos.
+- `api/`: endpoints de animals y media (alta huérfana).
+- `hooks/`: `animalKeys`, `useCreateAnimal` e invalidaciones; listado y detalle cuando tengan UI.
+- `components/`: formulario de alta y selector de foto de perfil.
 - `types/`: modelos de vista y aliases derivados de OpenAPI.
+- `utils/`: esquema Zod, mapper al DTO y traducción de errores de backend.
 - Los componentes reutilizables sin dominio permanecen en `src/components`.
 
 ## Testing
@@ -61,14 +64,15 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 ### Implementado
 
-- Cliente API provisional para listado, detalle, alta y edición.
-- Tipos manuales iniciales.
-- Pantalla placeholder; no existe flujo funcional de animals.
+- Tipos de red derivados de `openapi/mobile.openapi.json` (`CreateAnimalDto`, `AnimalResponseDto`, `PaginatedAnimalsResponseDto`, `MediaAssetResponseDto`) con modelo de vista `Animal` y mapper `toAnimalView`.
+- Alta de animales (`POST /animals`) para `admin` y `shelter_manager` mediante `useCreateAnimal`.
+- Subida de foto de perfil como asset huérfano (`POST /media/upload` multipart) y vinculación con `profilePhotoMediaId`; limpieza best-effort del huérfano si el alta falla después de subir.
+- Formulario con React Hook Form + Zod, mensajes en español y validación cruzada `birthDate <= intakeDate`.
+- Ruta `app/(app)/animals/new.tsx` con guard visual por rol y entrada desde la pestaña Animales.
+- Traducción de errores de backend a mensajes claros (`toCreateAnimalErrorMessage`).
+- Unit tests (esquema, mapper, mensajes), integración multipart con transporte falso y component tests con RNTL.
 
 ### Deuda conocida
 
-- `AnimalStatus` incluye valores ajenos al backend (`stray`, `rescued`, `in_treatment`).
-- Los modelos usan `age`, `photoUrl` y `description` en lugar del contrato real.
-- `remove()` invoca un endpoint no documentado.
-- Los tipos paginados todavía no provienen de OpenAPI.
-- Resolver estas divergencias antes de construir UI o hooks reales sobre el scaffolding.
+- Listado y detalle tienen cliente con tipos reconciliados pero sin UI ni hooks de query; el siguiente flujo es el listado.
+- Falta E2E en dispositivo para el alta (éxito, validación y error 403).
