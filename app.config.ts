@@ -31,9 +31,7 @@ function resolveVariant(raw: string | undefined): AppVariant {
     return raw as AppVariant;
   }
   throw new Error(
-    `Invalid EXPO_PUBLIC_ENV "${raw}". Expected one of: ${Object.keys(
-      APP_VARIANTS
-    ).join(', ')}.`
+    `Invalid EXPO_PUBLIC_ENV "${raw}". Expected one of: ${Object.keys(APP_VARIANTS).join(', ')}.`
   );
 }
 

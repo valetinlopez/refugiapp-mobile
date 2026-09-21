@@ -1,27 +1,24 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
+import { AppText } from '@/components/primitives';
+import { colors, spacing } from '@/theme';
 
 export default function HomeScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Refugiapp</Text>
-      <Text style={styles.subtitle}>Bienvenido</Text>
+      <AppText variant="heading1">Refugiapp</AppText>
+      <AppText color="textSecondary">Bienvenido</AppText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  subtitle: {
-    fontSize: 16,
-    marginTop: 8,
-    opacity: 0.6,
+    backgroundColor: colors.background,
+    flex: 1,
+    gap: spacing.xs,
+    justifyContent: 'center',
+    padding: spacing.lg,
   },
 });

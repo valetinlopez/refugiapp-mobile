@@ -1,10 +1,5 @@
 export type AnimalStatus =
-  | 'stray'
-  | 'rescued'
-  | 'in_treatment'
-  | 'available_for_adoption'
-  | 'adopted'
-  | 'deceased';
+  'stray' | 'rescued' | 'in_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
 
 export interface Animal {
   id: string;

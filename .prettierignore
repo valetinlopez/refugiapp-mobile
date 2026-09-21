@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+.claude/
+.vscode/
+coverage/
+dist/
+web-build/
+package-lock.json
+docs/design-references/
+opencode.json

@@ -1,21 +1,22 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
+import { AppText } from '@/components/primitives';
+import { colors, spacing } from '@/theme';
 
 export default function ExploreScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Explorar</Text>
+      <AppText variant="heading1">Explorar</AppText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
+    backgroundColor: colors.background,
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    padding: spacing.lg,
   },
 });

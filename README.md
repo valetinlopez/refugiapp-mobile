@@ -4,9 +4,20 @@ Aplicacion movil de Refugiapp construida con **Expo (SDK 57) + React Native + Ty
 
 Este modulo es el frontend movil que consume la API del backend Refugiapp bajo el prefijo `/api/v1`. La referencia de arquitectura y contratos esta en `architecture.md` del backend (`@backend-architecture`).
 
+## Documentación viva
+
+- [`architecture.md`](architecture.md): arquitectura, fronteras, dependencias y estado real del móvil.
+- [`docs/README.md`](docs/README.md): índice de documentación.
+- [`docs/documentation-governance.md`](docs/documentation-governance.md): matriz que indica qué documentos actualizar con cada cambio.
+- [`docs/design.md`](docs/design.md): sistema visual y accesibilidad.
+- [`docs/decisions/`](docs/decisions/): decisiones de arquitectura y sus trade-offs.
+- `AGENTS.md`: reglas globales; cada frontera y feature agrega reglas locales junto a su código.
+
+La documentación se actualiza en el mismo cambio que modifica responsabilidades, contratos, permisos, estructura o decisiones técnicas. Una feature nueva debe incluir su propio `AGENTS.md`.
+
 ## Requisitos
 
-- Node.js >= 20.18.1 (alineado con el backend)
+- Node.js >= 22.13.0 (mínimo requerido por Expo SDK 57; el backend admite Node.js 20+)
 - npm >= 10
 - Cuenta de Expo y la app **Expo Go** instalada en el dispositivo o emulador
 - (Opcional) Backend Refugiapp corriendo localmente en el puerto `3000` para development
@@ -31,11 +42,11 @@ cp .env.example .env.production
 
 La app soporta tres ambientes configurables: `development`, `staging` y `production`. Cada ambiente define su propia URL de API, nombre visible, scheme de deep-linking y bundle identifier.
 
-| Ambiente     | Script                 | API URL                                  | Bundle identifier               | Scheme                 | Nombre visible     |
-| ------------ | ---------------------- | ---------------------------------------- | ------------------------------- | ---------------------- | ------------------ |
-| development  | `npm run start:development` | `http://localhost:3000/api/v1` (ver nota) | `app.refugiapp.mobile.dev`      | `refugiappmobile-dev` | Refugiapp (Dev)    |
-| staging      | `npm run start:staging`     | `https://staging-api.refugiapp.app/api/v1` | `app.refugiapp.mobile.staging`  | `refugiappmobile-staging` | Refugiapp (Staging) |
-| production   | `npm run start:production`  | `https://api.refugiapp.app/api/v1`        | `app.refugiapp.mobile`          | `refugiappmobile`    | Refugiapp          |
+| Ambiente    | Script                      | API URL                                    | Bundle identifier              | Scheme                    | Nombre visible      |
+| ----------- | --------------------------- | ------------------------------------------ | ------------------------------ | ------------------------- | ------------------- |
+| development | `npm run start:development` | `http://localhost:3000/api/v1` (ver nota)  | `app.refugiapp.mobile.dev`     | `refugiappmobile-dev`     | Refugiapp (Dev)     |
+| staging     | `npm run start:staging`     | `https://staging-api.refugiapp.app/api/v1` | `app.refugiapp.mobile.staging` | `refugiappmobile-staging` | Refugiapp (Staging) |
+| production  | `npm run start:production`  | `https://api.refugiapp.app/api/v1`         | `app.refugiapp.mobile`         | `refugiappmobile`         | Refugiapp           |
 
 > **Nota sobre development y la URL local:** en `development`, si no se define `EXPO_PUBLIC_API_URL`, la URL se resuelve automaticamente en `src/core/config/env.ts`:
 >
@@ -52,10 +63,10 @@ La app soporta tres ambientes configurables: `development`, `staging` y `product
 
 Los valores se cargan con `dotenv-cli` al arrancar y se inyectan en el bundle mediante el prefijo `EXPO_PUBLIC_` (Metro). `app.config.ts` lee `EXPO_PUBLIC_ENV` para derivar el bundle identifier, scheme y nombre de cada ambiente.
 
-| Variable                 | Obligatoria | Descripcion                                                                  |
-| ------------------------ | ----------- | ---------------------------------------------------------------------------- |
-| `EXPO_PUBLIC_ENV`        | Si          | `development` \| `staging` \| `production`. Default: `development`            |
-| `EXPO_PUBLIC_API_URL`    | Si*         | URL base de la API. Debe terminar en `/api/v1`; https en staging/production. |
+| Variable              | Obligatoria | Descripcion                                                                  |
+| --------------------- | ----------- | ---------------------------------------------------------------------------- |
+| `EXPO_PUBLIC_ENV`     | Si          | `development` \| `staging` \| `production`. Default: `development`           |
+| `EXPO_PUBLIC_API_URL` | Si*         | URL base de la API. Debe terminar en `/api/v1`; https en staging/production. |
 
 \* En `development` puede omitirse (usa el fallback local). En `staging` y `production` es obligatoria.
 
@@ -82,20 +93,20 @@ npm run web         # development + web
 
 ## Scripts
 
-| Script              | Descripcion                                              |
-| ------------------- | -------------------------------------------------------- |
-| `npm start`         | Arranca Expo en el ambiente development                  |
+| Script                      | Descripcion                                              |
+| --------------------------- | -------------------------------------------------------- |
+| `npm start`                 | Arranca Expo en el ambiente development                  |
 | `npm run start:development` | Arranca Expo en development                              |
 | `npm run start:staging`     | Arranca Expo en staging                                  |
 | `npm run start:production`  | Arranca Expo en production                               |
-| `npm run android`   | Arranca en Android emulator (development)                |
-| `npm run ios`       | Arranca en iOS simulator (development)                   |
-| `npm run web`       | Arranca en navegador (development)                       |
-| `npm run typecheck` | `tsc --noEmit` (TypeScript estricto)                     |
-| `npm run lint`      | ESLint con `eslint-config-expo`, sin warnings permitidos |
-| `npm run lint:fix`  | Corrige problemas de lint automaticamente                |
-| `npm test`          | Jest (unit tests)                                        |
-| `npm run test:watch`| Jest en modo watch                                       |
+| `npm run android`           | Arranca en Android emulator (development)                |
+| `npm run ios`               | Arranca en iOS simulator (development)                   |
+| `npm run web`               | Arranca en navegador (development)                       |
+| `npm run typecheck`         | `tsc --noEmit` (TypeScript estricto)                     |
+| `npm run lint`              | ESLint con `eslint-config-expo`, sin warnings permitidos |
+| `npm run lint:fix`          | Corrige problemas de lint automaticamente                |
+| `npm test`                  | Jest (unit tests)                                        |
+| `npm run test:watch`        | Jest en modo watch                                       |
 
 ## Estructura del proyecto
 
@@ -118,7 +129,23 @@ src/
   shared/               # Componentes/utilities reutilizables entre features
 ```
 
+La estructura real usa actualmente `src/components/` para UI compartida. `src/shared/` queda reservado para utilidades no visuales cuando exista reutilización concreta; no se crean carpetas vacías por anticipación. Ver [`architecture.md`](architecture.md) para las reglas completas de dependencia.
+
 Convenciones de arquitectura y seguridad: ver `AGENTS.md` (JWT en secure storage, IDs UUID, montos en centavos, API bajo `/api/v1`, codigo en ingles / docs en espanol).
+
+## Sistema de diseño
+
+La identidad visual, los tokens, las reglas de accesibilidad y la correspondencia con los estados del backend están documentados en [`docs/design.md`](docs/design.md). El catálogo interno se abre en la ruta `/design-system`; sirve para validar primitivas y patrones y no es todavía un dashboard de producción.
+
+La implementación compartida vive en:
+
+```text
+src/theme/                  # Tokens y proveedor de tema
+src/components/primitives/  # Texto, iconos, botones, tarjetas, badges y avatares
+src/components/feedback/    # Carga, vacío, error y offline
+src/components/navigation/  # Navegación inferior
+src/components/patterns/    # Patrones compuestos, como filas de tareas
+```
 
 ## Testing
 

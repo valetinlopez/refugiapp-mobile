@@ -2,14 +2,10 @@ import { apiClient } from '@/core/api';
 import type { Animal, CreateAnimalRequest, PaginatedResponse } from '../types';
 
 export const animalsApi = {
-  async getAll(
-    page = 1,
-    limit = 20
-  ): Promise<PaginatedResponse<Animal>> {
-    const response = await apiClient.get<PaginatedResponse<Animal>>(
-      '/animals',
-      { params: { page, limit } }
-    );
+  async getAll(page = 1, limit = 20): Promise<PaginatedResponse<Animal>> {
+    const response = await apiClient.get<PaginatedResponse<Animal>>('/animals', {
+      params: { page, limit },
+    });
     return response.data;
   },
 

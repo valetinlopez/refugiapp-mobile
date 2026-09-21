@@ -22,18 +22,13 @@ function parseEnvironment(value: string | undefined): AppEnvironment {
   const result = environmentSchema.safeParse(value ?? 'development');
   if (!result.success) {
     throw new Error(
-      `Invalid EXPO_PUBLIC_ENV "${value ?? ''}". Expected one of: ${APP_ENVIRONMENTS.join(
-        ', '
-      )}.`
+      `Invalid EXPO_PUBLIC_ENV "${value ?? ''}". Expected one of: ${APP_ENVIRONMENTS.join(', ')}.`
     );
   }
   return result.data;
 }
 
-function validateApiUrlFormat(
-  value: string,
-  environment: AppEnvironment
-): string | undefined {
+function validateApiUrlFormat(value: string, environment: AppEnvironment): string | undefined {
   let url: URL;
   try {
     url = new URL(value);
@@ -51,9 +46,7 @@ function validateApiUrlFormat(
     return `http is only allowed for local hosts (localhost, 127.0.0.1, 10.0.2.2); received "${value}"`;
   }
 
-  const basePath = url.pathname.endsWith('/')
-    ? url.pathname.slice(0, -1)
-    : url.pathname;
+  const basePath = url.pathname.endsWith('/') ? url.pathname.slice(0, -1) : url.pathname;
   if (basePath !== API_BASE_PATH) {
     return `must point to the API base path "${API_BASE_PATH}", received "${url.pathname}"`;
   }
@@ -69,14 +62,10 @@ function toAndroidEmulatorUrl(value: string): string {
   return url.toString();
 }
 
-function parseApiUrl(
-  environment: AppEnvironment,
-  value: string | undefined
-): string {
+function parseApiUrl(environment: AppEnvironment, value: string | undefined): string {
   if (value === undefined || value.trim() === '') {
     if (environment === 'development') {
-      const fallback =
-        DEV_API_URLS[Platform.OS === 'android' ? 'android' : 'default'];
+      const fallback = DEV_API_URLS[Platform.OS === 'android' ? 'android' : 'default'];
       const error = validateApiUrlFormat(fallback, environment);
       if (error !== undefined) {
         throw new Error(`Invalid development API URL: ${error}`);
@@ -92,11 +81,7 @@ function parseApiUrl(
     throw new Error(`Invalid EXPO_PUBLIC_API_URL: ${error}`);
   }
 
-  if (
-    environment === 'development' &&
-    Platform.OS === 'android' &&
-    trimmed.startsWith('http://')
-  ) {
+  if (environment === 'development' && Platform.OS === 'android' && trimmed.startsWith('http://')) {
     return toAndroidEmulatorUrl(trimmed);
   }
 

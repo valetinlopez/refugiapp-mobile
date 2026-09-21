@@ -1,13 +1,18 @@
-import { View, Text, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
+
+import { AppText } from '@/components/primitives';
+import { colors, fontFamilies, spacing } from '@/theme';
 
 export default function LoginScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Refugiapp</Text>
-      <Text style={styles.subtitle}>Iniciar sesion</Text>
+      <AppText variant="display">Refugiapp</AppText>
+      <AppText color="textSecondary" variant="heading3">
+        Iniciar sesión
+      </AppText>
       <Link href="/register" style={styles.link}>
-        No tienes cuenta? Registrate
+        ¿No tienes cuenta? Regístrate
       </Link>
     </View>
   );
@@ -15,24 +20,17 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 18,
-    marginBottom: 24,
-    opacity: 0.6,
+    backgroundColor: colors.background,
+    flex: 1,
+    gap: spacing.xs,
+    justifyContent: 'center',
+    padding: spacing.lg,
   },
   link: {
-    marginTop: 16,
+    color: colors.positive,
+    fontFamily: fontFamilies.bodyStrong,
     fontSize: 14,
-    color: '#007AFF',
+    marginTop: spacing.md,
   },
 });

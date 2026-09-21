@@ -1,12 +1,15 @@
-import { View, Text, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
+
+import { AppText } from '@/components/primitives';
+import { colors, fontFamilies, spacing } from '@/theme';
 
 export default function RegisterScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Crear cuenta</Text>
+      <AppText variant="heading1">Crear cuenta</AppText>
       <Link href="/login" style={styles.link}>
-        Ya tienes cuenta? Inicia sesion
+        ¿Ya tienes cuenta? Inicia sesión
       </Link>
     </View>
   );
@@ -14,19 +17,16 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
+    backgroundColor: colors.background,
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 24,
+    padding: spacing.lg,
   },
   link: {
-    marginTop: 16,
+    color: colors.positive,
+    fontFamily: fontFamilies.bodyStrong,
     fontSize: 14,
-    color: '#007AFF',
+    marginTop: spacing.lg,
   },
 });
