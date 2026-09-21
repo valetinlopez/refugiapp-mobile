@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, '..');
-const sourcePath = resolve(projectRoot, 'openapi/auth.openapi.json');
+const sourcePath = resolve(projectRoot, 'openapi/mobile.openapi.json');
 const outputPath = resolve(projectRoot, 'src/core/api/generated/openapi.ts');
 const document = JSON.parse(readFileSync(sourcePath, 'utf8'));
 
@@ -52,7 +52,7 @@ const schemaLines = Object.entries(document.components.schemas).map(
 
 const output = `/**
  * Archivo generado. No editar manualmente.
- * Fuente: openapi/auth.openapi.json
+ * Fuente: openapi/mobile.openapi.json
  * Ejecutar: npm run api:generate
  */
 

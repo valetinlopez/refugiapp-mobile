@@ -1,35 +1,36 @@
-export type AnimalStatus =
-  'stray' | 'rescued' | 'in_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
+import type { components } from '@/core/api/generated/openapi';
+
+export type CreateAnimalRequest = components['schemas']['CreateAnimalDto'];
+export type AnimalResponse = components['schemas']['AnimalResponseDto'];
+export type PaginatedAnimalsResponse = components['schemas']['PaginatedAnimalsResponseDto'];
+export type MediaAsset = components['schemas']['MediaAssetResponseDto'];
+
+export type AnimalSex = NonNullable<CreateAnimalRequest['sex']>;
+export type AnimalStatus = NonNullable<CreateAnimalRequest['status']>;
 
 export interface Animal {
   id: string;
   name: string;
   species: string;
-  breed?: string;
-  age?: number;
+  breed: string | null;
+  sex: AnimalSex;
   status: AnimalStatus;
-  photoUrl?: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
+  intakeDate: string;
+  birthDate: string | null;
+  profilePhotoMediaId: string | null;
 }
 
-export interface CreateAnimalRequest {
-  name: string;
-  species: string;
-  breed?: string;
-  age?: number;
-  status: AnimalStatus;
-  photoUrl?: string;
-  description?: string;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
+export function toAnimalView(dto: AnimalResponse): Animal {
+  return {
+    id: dto.id,
+    name: dto.name,
+    species: dto.species,
+    breed: typeof dto.breed === 'string' ? dto.breed : null,
+    sex: dto.sex,
+    status: dto.status,
+    intakeDate: dto.intakeDate,
+    birthDate: typeof dto.birthDate === 'string' ? dto.birthDate : null,
+    profilePhotoMediaId:
+      typeof dto.profilePhotoMediaId === 'string' ? dto.profilePhotoMediaId : null,
   };
 }

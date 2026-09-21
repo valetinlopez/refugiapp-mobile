@@ -1,0 +1,77 @@
+import { createHttpClient, type HttpClient } from '@/core/api';
+import { createFakeHttpTransport, type FakeHttpRoutes } from '@/core/api/testing/fakeHttpTransport';
+
+import { mediaApi } from './mediaApi';
+
+function createClient(routes: FakeHttpRoutes): HttpClient {
+  return createHttpClient({
+    baseUrl: 'https://api.test/api/v1',
+    timeoutMs: 1000,
+    tokenStore: {
+      clearTokens: async () => undefined,
+      getTokens: async () => null,
+      setTokens: async () => undefined,
+    },
+    transport: createFakeHttpTransport(routes),
+  });
+}
+
+describe('mediaApi.uploadOrphanPhoto', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('uploads the photo as multipart without forcing a JSON content type', async () => {
+    let capturedBody: unknown;
+    let capturedHeaders: Record<string, string> = {};
+    const appendSpy = jest.spyOn(FormData.prototype, 'append');
+    const client = createClient({
+      'POST /api/v1/media/upload': ({ body, headers }) => {
+        capturedBody = body;
+        capturedHeaders = headers;
+        return {
+          status: 201,
+          body: {
+            id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+            resourceType: 'image',
+            publicId: 'refugiapp/profile-photo',
+            secureUrl: 'https://cloudinary.test/profile-photo.jpg',
+          },
+        };
+      },
+    });
+
+    const asset = await mediaApi.uploadOrphanPhoto(
+      { uri: 'file:///photo.jpg', name: 'photo.jpg', mimeType: 'image/jpeg' },
+      client
+    );
+
+    expect(asset.id).toBe('3fa85f64-5717-4562-b3fc-2c963f66afa6');
+    expect(capturedBody).toBeInstanceOf(FormData);
+    expect(appendSpy).toHaveBeenCalledWith(
+      'file',
+      expect.objectContaining({
+        uri: 'file:///photo.jpg',
+        name: 'photo.jpg',
+        type: 'image/jpeg',
+      })
+    );
+    expect(capturedHeaders['Content-Type']).toBeUndefined();
+  });
+
+  it('propagates upload failures without inventing an asset', async () => {
+    const client = createClient({
+      'POST /api/v1/media/upload': () => ({
+        status: 400,
+        body: { code: 'FILE_REQUIRED' },
+      }),
+    });
+
+    await expect(
+      mediaApi.uploadOrphanPhoto(
+        { uri: 'file:///photo.jpg', name: 'photo.jpg', mimeType: 'image/jpeg' },
+        client
+      )
+    ).rejects.toMatchObject({ status: 400 });
+  });
+});
