@@ -1,6 +1,13 @@
 import type { components } from '@/core/api/generated/openapi';
 
 export type CreateAnimalRequest = components['schemas']['CreateAnimalDto'];
+export type UpdateAnimalRequest = Omit<
+  components['schemas']['UpdateAnimalDto'],
+  'profilePhotoMediaId'
+> & {
+  profilePhotoMediaId?: string | null;
+};
+export type ChangeAnimalStatusRequest = components['schemas']['ChangeAnimalStatusDto'];
 export type AnimalResponse = components['schemas']['AnimalResponseDto'];
 export type PaginatedAnimalsResponse = components['schemas']['PaginatedAnimalsResponseDto'];
 export type MediaAsset = components['schemas']['MediaAssetResponseDto'];

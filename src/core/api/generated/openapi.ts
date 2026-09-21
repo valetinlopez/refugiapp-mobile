@@ -47,6 +47,19 @@ export interface components {
       notes?: Record<string, unknown>;
       profilePhotoMediaId?: Record<string, unknown>;
     };
+    UpdateAnimalDto: {
+      name?: string;
+      species?: string;
+      breed?: string;
+      sex?: 'female' | 'male' | 'unknown';
+      intakeDate?: string;
+      birthDate?: string;
+      profilePhotoMediaId?: string;
+    };
+    ChangeAnimalStatusDto: {
+      status: 'admitted' | 'under_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
+      occurredAt?: string;
+    };
     PaginatedAnimalsResponseDto: {
       items: components['schemas']['AnimalResponseDto'][];
       page: number;

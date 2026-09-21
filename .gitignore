@@ -66,3 +66,8 @@ Desktop.ini
 *.swp
 *.swo
 *~
+
+# Agents
+.vscode/
+.claude/
+.agents/
