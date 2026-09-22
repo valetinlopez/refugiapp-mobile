@@ -111,3 +111,21 @@ export function toChangeStatusErrorMessage(error: unknown): string {
 
   return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
 }
+
+export function toCreateAnimalEventErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    switch (error.status) {
+      case 400:
+      case 422:
+        return 'Revisa el tipo, la descripción y la fecha del evento.';
+      case 403:
+        return 'Tu rol no tiene permiso para registrar eventos generales.';
+      case 404:
+        return 'El animal ya no está disponible.';
+      default:
+        return error.message;
+    }
+  }
+
+  return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+}

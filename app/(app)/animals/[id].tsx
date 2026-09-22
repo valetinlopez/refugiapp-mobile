@@ -154,6 +154,16 @@ function AnimalDetailContent({
             }
             variant="secondary"
           />
+          <AppButton
+            label="Registrar evento general"
+            onPress={() =>
+              router.push({
+                pathname: '/animals/[id]/events/new',
+                params: { id: animal.id },
+              })
+            }
+            variant="secondary"
+          />
           <AppText variant="heading2">Cambiar estado</AppText>
           <AnimalStatusChanger
             currentStatus={animal.status}

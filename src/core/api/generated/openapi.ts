@@ -66,6 +66,21 @@ export interface components {
       limit: number;
       total: number;
     };
+    CreateAnimalHistoryEventDto: {
+      eventType: 'general_note' | 'behavior_note' | 'transfer';
+      description: string;
+      occurredAt?: string;
+    };
+    AnimalHistoryEventResponseDto: {
+      id: string;
+      animalId: string;
+      eventType:
+        'intake' | 'transfer' | 'status_change' | 'behavior_note' | 'adoption' | 'general_note';
+      description: string;
+      occurredAt: string;
+      createdByUserId?: string;
+      metadata?: Record<string, unknown>;
+    };
     UploadMediaAssetBodyDto: {
       ownerType?: 'animal' | 'expense_ticket' | 'medical_record' | 'user' | 'veterinarian';
       ownerId?: string;

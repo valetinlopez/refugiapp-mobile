@@ -165,7 +165,7 @@ Las features exponen funciones HTTP en su carpeta `api`. Los componentes y rutas
 
 ### 7.3 Contratos
 
-El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, alta de animales y subida de media consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts`; el CI verifica que el resultado esté versionado y actualizado. El flujo es:
+El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, alta y gestión de animales, eventos generales y subida de media consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts`; el CI verifica que el resultado esté versionado y actualizado. El flujo es:
 
 ```text
 openapi.json del backend
@@ -309,6 +309,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Detalle de animal en `app/(app)/animals/[id].tsx` visible para los tres roles, con foto actual vía `GET /media/:id`.
 - Edición de ficha en `app/(app)/animals/[id]/edit.tsx` y cambio de estado desde el detalle, restringidos a `admin` y `shelter_manager`, con formulario compartido `AnimalProfileForm` (modos create/edit).
 - Cambio de estado con matriz de transiciones local (`animalTransitions`), confirmación con modal que explica la consecuencia y sin optimistic updates: invalidación de queries como fuente de verdad.
+- Alta de eventos generales del animal desde una ruta protegida por capacidad para `admin` y `shelter_manager`, con tipos manuales derivados de OpenAPI e invalidación de la query key del historial.
 - Dependencias `react-hook-form`, `@hookform/resolvers` y `expo-image-picker` (ver ADR-0003).
 - Sistema de diseño, componentes compartidos y catálogo interno.
 - Tests unitarios y de componentes.
@@ -318,7 +319,8 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 
 ## 17. Pendientes y deuda conocida
 
-- Ampliar el snapshot OpenAPI y los tipos generados a medida que nuevas features consuman endpoints (cubiertos: auth, animals y media).
+- Ampliar el snapshot OpenAPI y los tipos generados a medida que nuevas features consuman endpoints (cubiertos: auth, animals, eventos generales y media).
+- Agregar la consulta y presentación del historial general; la creación e invalidación de su query key ya están implementadas.
 - Agregar UI y hooks de query para el listado de animales; el detalle y la edición ya operan por deep link.
 - Agregar tests E2E de flujos críticos, incluidos alta, edición y cambio de estado de animales.
 - Agregar un paso de typegen de Expo Router en Mobile CI: `npm run typecheck` exige `.expo/types`, que hoy solo se genera al arrancar el dev server o exportar.

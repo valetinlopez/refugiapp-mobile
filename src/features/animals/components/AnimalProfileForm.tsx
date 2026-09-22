@@ -94,8 +94,14 @@ export function OptionGroup<T extends string>({
   );
 }
 
-export function FormTextInput(props: TextInputProps) {
-  return <TextInput placeholderTextColor={colors.textSecondary} style={styles.input} {...props} />;
+export function FormTextInput({ style, ...props }: TextInputProps) {
+  return (
+    <TextInput
+      placeholderTextColor={colors.textSecondary}
+      style={[styles.input, style]}
+      {...props}
+    />
+  );
 }
 
 interface AnimalProfileFormBaseProps {
