@@ -164,6 +164,16 @@ function AnimalDetailContent({
             }
             variant="secondary"
           />
+          <AppButton
+            label="Ver tareas de cuidado"
+            onPress={() =>
+              router.push({
+                pathname: '/inbox',
+                params: { animalId: animal.id, animalName: animal.name },
+              })
+            }
+            variant="secondary"
+          />
           <AppText variant="heading2">Cambiar estado</AppText>
           <AnimalStatusChanger
             currentStatus={animal.status}

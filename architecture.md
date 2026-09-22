@@ -126,6 +126,7 @@ src/
   features/
     auth/                    # API, formulario y estado global de sesión
     animals/
+    care-tasks/              # Listado, formulario y transiciones de tareas
   theme/
   types/
 docs/
@@ -224,7 +225,7 @@ La matriz completa vive en la arquitectura del backend. Para el frontend:
 - Los tres roles pueden consultar animales.
 - Solo `admin` y `shelter_manager` crean o editan la ficha general y cambian estado.
 - Solo `admin` y `veterinarian` acceden a historia clínica.
-- Todos los roles gestionan tareas, con restricciones al completar tareas clínicas.
+- Los tres roles consultan tareas; solo `admin` y `shelter_manager` pueden crearlas, editarlas, completarlas o cancelarlas.
 - `shelter_manager` no recibe actividad clínica reciente en dashboard.
 - Solo `admin` consulta auditoría y administra usuarios.
 
@@ -239,8 +240,8 @@ La UI por rol se deriva de esta matriz y debe actualizarse cuando cambie el back
 - Tarea persistida: `pending | completed | cancelled`.
 - `overdue`: tarea `pending` con `dueAt < now`.
 - `upcoming`: tarea `pending` dentro de la ventana definida por producto.
-- `clinical`: característica del tipo, no estado.
-- En presentación de tareas pendientes prevalece `overdue`, luego `upcoming`, luego `clinical`.
+- El contrato actual de tareas no expone un campo `type`; no se infieren categorías desde el título o la descripción.
+- En presentación de tareas pendientes, `overdue` y `upcoming` son estados derivados y nunca se persisten.
 
 ## 12. Sistema de diseño
 
@@ -310,6 +311,8 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Edición de ficha en `app/(app)/animals/[id]/edit.tsx` y cambio de estado desde el detalle, restringidos a `admin` y `shelter_manager`, con formulario compartido `AnimalProfileForm` (modos create/edit).
 - Cambio de estado con matriz de transiciones local (`animalTransitions`), confirmación con modal que explica la consecuencia y sin optimistic updates: invalidación de queries como fuente de verdad.
 - Alta de eventos generales del animal desde una ruta protegida por capacidad para `admin` y `shelter_manager`, con tipos manuales derivados de OpenAPI e invalidación de la query key del historial.
+- Listado global de tareas y filtro por animal desde su detalle, con formularios de alta y edición y confirmaciones para completar o cancelar; las mutaciones invalidan las queries de tareas y dashboard.
+- Contratos de tareas derivados del snapshot OpenAPI y guards de escritura para `admin` y `shelter_manager`.
 - Dependencias `react-hook-form`, `@hookform/resolvers` y `expo-image-picker` (ver ADR-0003).
 - Sistema de diseño, componentes compartidos y catálogo interno.
 - Tests unitarios y de componentes.
@@ -319,7 +322,8 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 
 ## 17. Pendientes y deuda conocida
 
-- Ampliar el snapshot OpenAPI y los tipos generados a medida que nuevas features consuman endpoints (cubiertos: auth, animals, eventos generales y media).
+- Ampliar el snapshot OpenAPI y los tipos generados a medida que nuevas features consuman endpoints (cubiertos: auth, animals, eventos generales, tareas y media).
+- El formulario de tareas no puede ofrecer `type` ni un responsable asignable hasta que el backend los incorpore al contrato. Hoy el backend registra al actor autenticado en `createdByUserId`.
 - Agregar la consulta y presentación del historial general; la creación e invalidación de su query key ya están implementadas.
 - Agregar UI y hooks de query para el listado de animales; el detalle y la edición ya operan por deep link.
 - Agregar tests E2E de flujos críticos, incluidos alta, edición y cambio de estado de animales.
