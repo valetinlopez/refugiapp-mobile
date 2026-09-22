@@ -311,7 +311,9 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Edición de ficha en `app/(app)/animals/[id]/edit.tsx` y cambio de estado desde el detalle, restringidos a `admin` y `shelter_manager`, con formulario compartido `AnimalProfileForm` (modos create/edit).
 - Cambio de estado con matriz de transiciones local (`animalTransitions`), confirmación con modal que explica la consecuencia y sin optimistic updates: invalidación de queries como fuente de verdad.
 - Alta de eventos generales del animal desde una ruta protegida por capacidad para `admin` y `shelter_manager`, con tipos manuales derivados de OpenAPI e invalidación de la query key del historial.
-- Listado global de tareas y filtro por animal desde su detalle, con formularios de alta y edición y confirmaciones para completar o cancelar; las mutaciones invalidan las queries de tareas y dashboard.
+- Listado paginado de animales en `app/(app)/(tabs)/explore.tsx` (tab "Animales") con búsqueda por nombre, filtro por estado y navegación al detalle; disponible para los tres roles.
+- Lectura y presentación del historial general en el detalle del animal (`GET /animals/:animalId/events`) para los tres roles, con invalidación coherente al crear eventos.
+- Listado global de tareas (tab "Tareas", ruta `care-tasks`) y filtro por animal desde su detalle, con filtro por estado, formularios de alta y edición y confirmaciones para completar o cancelar; las mutaciones invalidan las queries de tareas y dashboard. La ruta legacy `/inbox` redirige a `/care-tasks`.
 - Contratos de tareas derivados del snapshot OpenAPI y guards de escritura para `admin` y `shelter_manager`.
 - Dependencias `react-hook-form`, `@hookform/resolvers` y `expo-image-picker` (ver ADR-0003).
 - Sistema de diseño, componentes compartidos y catálogo interno.
@@ -324,8 +326,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 
 - Ampliar el snapshot OpenAPI y los tipos generados a medida que nuevas features consuman endpoints (cubiertos: auth, animals, eventos generales, tareas y media).
 - El formulario de tareas no puede ofrecer `type` ni un responsable asignable hasta que el backend los incorpore al contrato. Hoy el backend registra al actor autenticado en `createdByUserId`.
-- Agregar la consulta y presentación del historial general; la creación e invalidación de su query key ya están implementadas.
-- Agregar UI y hooks de query para el listado de animales; el detalle y la edición ya operan por deep link.
+- El historial general del animal se presenta con una sola página (20 ítems); falta paginación UI de historial.
 - Agregar tests E2E de flujos críticos, incluidos alta, edición y cambio de estado de animales.
 - Agregar un paso de typegen de Expo Router en Mobile CI: `npm run typecheck` exige `.expo/types`, que hoy solo se genera al arrancar el dev server o exportar.
 - Configurar en GitHub la protección de `develop`/`master` para exigir el check `Mobile CI / lint, typecheck and tests` antes del merge.

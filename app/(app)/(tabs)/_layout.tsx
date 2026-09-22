@@ -33,12 +33,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="inbox"
+        name="care-tasks"
         options={{
-          title: 'Cuidados',
+          title: 'Tareas',
           tabBarIcon: ({ color }) => <TabBarIcon color={color} name="calendar" />,
         }}
       />
+      <Tabs.Screen name="inbox" options={{ href: null }} />
     </Tabs>
   );
 }

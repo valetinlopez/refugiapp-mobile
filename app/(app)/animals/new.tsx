@@ -51,7 +51,9 @@ export default function NewAnimalScreen() {
           isSubmitting={createAnimal.isPending}
           onSubmit={(input) =>
             createAnimal.mutate(input, {
-              onSuccess: () => goBack(),
+              onSuccess: (animal) => {
+                router.replace({ pathname: '/animals/[id]', params: { id: animal.id } });
+              },
             })
           }
         />

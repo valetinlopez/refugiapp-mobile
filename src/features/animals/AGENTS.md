@@ -53,12 +53,12 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 ## Estructura objetivo
 
-- `api/`: endpoints de animals (alta, detalle, edición, cambio de estado y eventos generales) y media (alta huérfana y lectura).
-- `hooks/`: `animalKeys`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useCreateAnimalEvent`, `useAnimalPhoto` e invalidaciones; listado cuando tenga UI.
-- `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con confirmación y modal de consecuencia.
+- `api/`: endpoints de animals (listado, alta, detalle, edición, cambio de estado y eventos generales) y media (alta huérfana y lectura).
+- `hooks/`: `animalKeys`, `useAnimals`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useCreateAnimalEvent`, `useAnimalHistory`, `useAnimalPhoto` e invalidaciones.
+- `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con confirmación, tarjeta de listado (`AnimalCard`) y sección de historial (`AnimalHistory`).
 - `types/`: modelos de vista y aliases derivados de OpenAPI.
-- `utils/`: esquemas Zod, mappers al DTO, matriz de transiciones y traducción de errores de backend.
-- Los componentes reutilizables sin dominio permanecen en `src/components`.
+- `utils/`: esquemas Zod, mappers al DTO, matriz de transiciones, presentación de eventos e historial y traducción de errores de backend.
+- Los componentes reutilizables sin dominio permanecen en `src/components` (p. ej. `FilterChip`).
 
 ## Estrategia de escritura
 
@@ -84,7 +84,9 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Alta de eventos generales (`POST /animals/:animalId/events`) para `admin` y `shelter_manager`, limitada a `general_note`, `behavior_note` y `transfer`; el backend registra al actor autenticado y la mutation invalida `animalKeys.history(animalId)`.
 - Subida de foto de perfil como asset huérfano (`POST /media/upload` multipart) y vinculación con `profilePhotoMediaId` al crear o editar; limpieza best-effort del huérfano si la escritura falla después de subir.
 - Lectura de asset (`GET /media/:id`) para mostrar la foto actual en detalle y edición (`useAnimalPhoto`).
-- Detalle `app/(app)/animals/[id].tsx` (los tres roles) con edición y cambio de estado solo para `admin`/`shelter_manager`.
+- Listado paginado (`GET /animals`) con filtros `status`, `species`, `sex` y nombre parcial mediante `useAnimals` (paginación infinita) y `AnimalCard`, con ruta `app/(app)/(tabs)/explore.tsx` para los tres roles.
+- Lectura del historial general (`GET /animals/:animalId/events`) mediante `useAnimalHistory` y presentación en `AnimalHistory` dentro del detalle, con invalidación coherente al crear eventos.
+- Detalle `app/(app)/animals/[id].tsx` (los tres roles) con edición y cambio de estado solo para `admin`/`shelter_manager`, y enlace al listado de tareas filtrado por animal.
 - Edición `app/(app)/animals/[id]/edit.tsx` con guard visual por rol y formulario compartido `AnimalProfileForm` (modos create/edit).
 - Formulario con React Hook Form + Zod, mensajes en español y validación cruzada `birthDate <= intakeDate`.
 - Confirmación de cambio de estado con `StatusConfirmDialog` (modal del sistema de diseño, sin `Alert` nativo).
@@ -93,6 +95,5 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 ### Deuda conocida
 
-- El listado tiene cliente con tipos reconciliados pero sin UI ni hooks de query; el detalle se alcanza por deep link o navegación directa.
-- Falta la UI de listado del historial general; la query key de historial ya queda definida para su futura lectura e invalidación.
+- El listado e historial operan con una página de 20 ítems; no hay paginación UI visible para cargar más historial (el listado de animales sí pagina).
 - Falta E2E en dispositivo para alta, edición, cambio de estado y registro de eventos generales (éxito, validación y error 403).

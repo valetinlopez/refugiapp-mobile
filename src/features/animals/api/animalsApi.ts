@@ -2,24 +2,34 @@ import { apiClient, type HttpClient } from '@/core/api';
 
 import type {
   Animal,
+  AnimalListFilters,
   AnimalResponse,
   ChangeAnimalStatusRequest,
   CreateAnimalRequest,
+  PaginatedAnimals,
   PaginatedAnimalsResponse,
   UpdateAnimalRequest,
 } from '../types';
-import { toAnimalView } from '../types';
+import { toAnimalView, toPaginatedAnimals } from '../types';
 
 export const animalsApi = {
   async getAll(
+    filters: AnimalListFilters = {},
     page = 1,
     limit = 20,
     client: HttpClient = apiClient
-  ): Promise<PaginatedAnimalsResponse> {
+  ): Promise<PaginatedAnimals> {
     const response = await client.get<PaginatedAnimalsResponse>('/animals', {
-      params: { page, limit },
+      params: {
+        page,
+        limit,
+        status: filters.status,
+        species: filters.species,
+        sex: filters.sex,
+        name: filters.name,
+      },
     });
-    return response.data;
+    return toPaginatedAnimals(response.data);
   },
 
   async getById(id: string, client: HttpClient = apiClient): Promise<Animal> {

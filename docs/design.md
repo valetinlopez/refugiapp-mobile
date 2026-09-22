@@ -106,6 +106,10 @@ Un recorte transparente puede usarse una vez en una cabecera editorial. Debe con
 
 Los badges tienen texto, icono, tono y forma píldora. No se usa un punto de color aislado. Las etiquetas visibles se redactan en español; los valores de dominio permanecen en inglés. Para listas densas puede omitirse el icono solo si existe otra señal explícita y la etiqueta es inequívoca.
 
+### Chips de filtro (`FilterChip`)
+
+Patrón compartido para filtrar listados (animales por estado, tareas por estado). Píldora con label, área táctil mínima de 44 pt, borde en `border`; estado seleccionado con fondo `positive` y texto inverso. Cada chip expone `accessibilityState.selected` para que el estado no dependa solo del color. Los chips se agrupan en un `ScrollView` horizontal para evitar desbordes.
+
 ## 16. Avatares
 
 Tamaños: 36, 48 y 72 pt. Los retratos usan recorte circular y borde cálido. Si falta la foto, mostrar hasta dos iniciales; nunca un espacio vacío ni una imagen genérica que pueda confundirse con el animal real.

@@ -81,6 +81,12 @@ export interface components {
       createdByUserId?: string;
       metadata?: Record<string, unknown>;
     };
+    PaginatedAnimalHistoryEventsResponseDto: {
+      items: components['schemas']['AnimalHistoryEventResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
     CreateCareTaskDto: {
       animalId: string;
       title: string;

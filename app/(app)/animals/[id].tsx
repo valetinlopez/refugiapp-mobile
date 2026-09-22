@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppBadge, AppAvatar, AppButton, AppCard, AppText } from '@/components/primitives';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { AnimalHistory } from '@/features/animals/components/AnimalHistory';
 import { AnimalStatusChanger } from '@/features/animals/components/AnimalStatusChanger';
 import { useSession } from '@/features/auth/session';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
@@ -168,7 +169,7 @@ function AnimalDetailContent({
             label="Ver tareas de cuidado"
             onPress={() =>
               router.push({
-                pathname: '/inbox',
+                pathname: '/care-tasks',
                 params: { animalId: animal.id, animalName: animal.name },
               })
             }
@@ -183,6 +184,11 @@ function AnimalDetailContent({
           />
         </View>
       ) : null}
+
+      <View style={styles.historySection}>
+        <AppText variant="heading2">Historial</AppText>
+        <AnimalHistory animalId={animal.id} />
+      </View>
     </View>
   );
 }
@@ -212,6 +218,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.md,
+  },
+  historySection: {
+    gap: spacing.sm,
   },
   heading: {
     flex: 1,
