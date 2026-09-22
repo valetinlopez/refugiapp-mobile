@@ -55,3 +55,64 @@ describe('animalEventsApi.create', () => {
     expect(event.createdByUserId).toBe('9fa85f64-5717-4562-b3fc-2c963f66afa6');
   });
 });
+
+describe('animalEventsApi.list', () => {
+  it('lists the history events and maps them to the view model', async () => {
+    let capturedQuery: Record<string, string> | undefined;
+    const client = createClient({
+      [`GET /api/v1/animals/${ANIMAL_ID}/events`]: ({ url }) => {
+        capturedQuery = Object.fromEntries(url.searchParams.entries());
+        return {
+          body: {
+            items: [
+              {
+                id: '7fa85f64-5717-4562-b3fc-2c963f66afa6',
+                animalId: ANIMAL_ID,
+                eventType: 'status_change',
+                description: 'Pasó a disponible para adopción.',
+                occurredAt: '2026-09-21T14:30:00.000Z',
+                createdByUserId: null,
+                metadata: {},
+              },
+            ],
+            page: 1,
+            limit: 20,
+            total: 1,
+          },
+        };
+      },
+    });
+
+    const result = await animalEventsApi.list(
+      ANIMAL_ID,
+      { eventType: 'status_change' },
+      2,
+      10,
+      client
+    );
+
+    expect(capturedQuery).toEqual({ page: '2', limit: '10', eventType: 'status_change' });
+    expect(result.total).toBe(1);
+    expect(result.items[0]).toEqual({
+      id: '7fa85f64-5717-4562-b3fc-2c963f66afa6',
+      animalId: ANIMAL_ID,
+      eventType: 'status_change',
+      description: 'Pasó a disponible para adopción.',
+      occurredAt: '2026-09-21T14:30:00.000Z',
+      createdByUserId: null,
+    });
+  });
+
+  it('propagates a 403 without masking it', async () => {
+    const client = createClient({
+      [`GET /api/v1/animals/${ANIMAL_ID}/events`]: () => ({
+        status: 403,
+        body: { code: 'FORBIDDEN' },
+      }),
+    });
+
+    await expect(animalEventsApi.list(ANIMAL_ID, {}, 1, 20, client)).rejects.toMatchObject({
+      status: 403,
+    });
+  });
+});

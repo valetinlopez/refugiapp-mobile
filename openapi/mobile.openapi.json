@@ -81,6 +81,35 @@
       "get": {
         "operationId": "listAnimals",
         "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "admitted",
+                "under_treatment",
+                "available_for_adoption",
+                "adopted",
+                "deceased"
+              ]
+            }
+          },
+          { "name": "species", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "sex",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["female", "male", "unknown"] }
+          },
+          { "name": "name", "in": "query", "schema": { "type": "string" } }
+        ],
         "responses": {
           "200": {
             "description": "Paginated animals with deterministic order",
@@ -327,6 +356,75 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested animal was not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listAnimalHistoryEvents",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "animalId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 }
+          },
+          {
+            "name": "eventType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "intake",
+                "transfer",
+                "status_change",
+                "behavior_note",
+                "adoption",
+                "general_note"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated history events for the animal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedAnimalHistoryEventsResponseDto"
+                }
               }
             }
           },
@@ -736,6 +834,19 @@
           "occurredAt": { "type": "string", "format": "date-time" },
           "createdByUserId": { "type": "string", "format": "uuid", "nullable": true },
           "metadata": { "type": "object" }
+        }
+      },
+      "PaginatedAnimalHistoryEventsResponseDto": {
+        "type": "object",
+        "required": ["items", "page", "limit", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AnimalHistoryEventResponseDto" }
+          },
+          "page": { "type": "number" },
+          "limit": { "type": "number" },
+          "total": { "type": "number" }
         }
       },
       "CreateCareTaskDto": {

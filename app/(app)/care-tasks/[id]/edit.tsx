@@ -90,7 +90,7 @@ function Denied() {
 
 function goBack(): void {
   if (router.canGoBack()) router.back();
-  else router.replace('/inbox');
+  else router.replace('/care-tasks');
 }
 
 const styles = StyleSheet.create({

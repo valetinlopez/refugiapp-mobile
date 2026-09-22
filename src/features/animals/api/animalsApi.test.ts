@@ -90,6 +90,64 @@ describe('animalsApi.create', () => {
   });
 });
 
+describe('animalsApi.getAll', () => {
+  it('sends pagination and filters and maps items to the view model', async () => {
+    let capturedQuery: Record<string, string> | undefined;
+    const client = createClient({
+      'GET /api/v1/animals': ({ url }) => {
+        capturedQuery = Object.fromEntries(url.searchParams.entries());
+        return {
+          body: {
+            items: [
+              {
+                id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+                name: 'Luna',
+                species: 'dog',
+                breed: null,
+                sex: 'female',
+                status: 'admitted',
+                intakeDate: '2026-01-10',
+                profilePhotoMediaId: null,
+              },
+            ],
+            page: 1,
+            limit: 20,
+            total: 1,
+          },
+        };
+      },
+    });
+
+    const result = await animalsApi.getAll(
+      { status: 'admitted', sex: 'female', name: 'luna' },
+      1,
+      20,
+      client
+    );
+
+    expect(capturedQuery).toEqual({
+      page: '1',
+      limit: '20',
+      status: 'admitted',
+      sex: 'female',
+      name: 'luna',
+    });
+    expect(result.total).toBe(1);
+    expect(result.items[0]?.name).toBe('Luna');
+  });
+
+  it('propagates a 401 without masking it', async () => {
+    const client = createClient({
+      'GET /api/v1/animals': () => ({
+        status: 401,
+        body: { code: 'UNAUTHORIZED' },
+      }),
+    });
+
+    await expect(animalsApi.getAll({}, 1, 20, client)).rejects.toMatchObject({ status: 401 });
+  });
+});
+
 describe('animalsApi.getById', () => {
   it('fetches the detail and maps it to the view model', async () => {
     const client = createClient({
