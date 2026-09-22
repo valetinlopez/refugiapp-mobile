@@ -3,7 +3,7 @@
   "info": {
     "title": "Refugiapp API - mobile consumed subset",
     "version": "1.0.0",
-    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, animales (alta, detalle, edicion, cambio de estado y eventos generales) y media."
+    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, animales, eventos generales, tareas de cuidado y media."
   },
   "servers": [{ "url": "/api/v1" }],
   "paths": {
@@ -357,6 +357,156 @@
         }
       }
     },
+    "/care-tasks": {
+      "get": {
+        "operationId": "listCareTasks",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 }
+          },
+          { "name": "animalId", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["pending", "completed", "cancelled"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated care tasks",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedCareTasksResponseDto" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createCareTask",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateCareTaskDto" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Care task created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CareTaskResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/care-tasks/{id}": {
+      "get": {
+        "operationId": "getCareTaskById",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Care task detail",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CareTaskResponseDto" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateCareTask",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateCareTaskDto" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Care task updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CareTaskResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/care-tasks/{id}/complete": {
+      "post": {
+        "operationId": "completeCareTask",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Care task completed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CareTaskResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/care-tasks/{id}/cancel": {
+      "post": {
+        "operationId": "cancelCareTask",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Care task cancelled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CareTaskResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/media/upload": {
       "post": {
         "operationId": "uploadMedia",
@@ -586,6 +736,53 @@
           "occurredAt": { "type": "string", "format": "date-time" },
           "createdByUserId": { "type": "string", "format": "uuid", "nullable": true },
           "metadata": { "type": "object" }
+        }
+      },
+      "CreateCareTaskDto": {
+        "type": "object",
+        "required": ["animalId", "title"],
+        "properties": {
+          "animalId": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "minLength": 3, "maxLength": 160 },
+          "description": { "type": "string", "nullable": true },
+          "dueAt": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "UpdateCareTaskDto": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "minLength": 3, "maxLength": 160 },
+          "description": { "type": "string", "nullable": true },
+          "dueAt": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "CareTaskResponseDto": {
+        "type": "object",
+        "required": ["id", "animalId", "title", "status", "createdAt", "updatedAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "animalId": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "status": { "type": "string", "enum": ["pending", "completed", "cancelled"] },
+          "dueAt": { "type": "string", "format": "date-time", "nullable": true },
+          "completedAt": { "type": "string", "format": "date-time", "nullable": true },
+          "createdByUserId": { "type": "string", "format": "uuid", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedCareTasksResponseDto": {
+        "type": "object",
+        "required": ["items", "page", "limit", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CareTaskResponseDto" }
+          },
+          "page": { "type": "number" },
+          "limit": { "type": "number" },
+          "total": { "type": "number" }
         }
       },
       "UploadMediaAssetBodyDto": {

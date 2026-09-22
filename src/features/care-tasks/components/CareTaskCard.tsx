@@ -1,0 +1,88 @@
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import { AppBadge, AppButton, AppCard, AppText } from '@/components/primitives';
+import { spacing } from '@/theme';
+
+import type { CareTask } from '../types';
+import { formatCareTaskDate, getCareTaskStatusPresentation } from '../utils/careTaskPresentation';
+import { CareTaskActionDialog, type CareTaskAction } from './CareTaskActionDialog';
+
+interface CareTaskCardProps {
+  animalName: string;
+  canWrite: boolean;
+  disabled?: boolean;
+  onCancel(id: string): void;
+  onComplete(id: string): void;
+  onEdit(id: string): void;
+  task: CareTask;
+}
+
+export function CareTaskCard({
+  animalName,
+  canWrite,
+  disabled = false,
+  onCancel,
+  onComplete,
+  onEdit,
+  task,
+}: CareTaskCardProps) {
+  const [action, setAction] = useState<CareTaskAction | null>(null);
+  const presentation = getCareTaskStatusPresentation(task.status, task.dueAt);
+  const actionable = canWrite && task.status === 'pending';
+
+  function confirmAction(): void {
+    if (action === 'complete') onComplete(task.id);
+    if (action === 'cancel') onCancel(task.id);
+    setAction(null);
+  }
+
+  return (
+    <AppCard accessibilityLabel={`${task.title}, ${animalName}, ${presentation.label}`}>
+      <View style={styles.header}>
+        <View style={styles.heading}>
+          <AppText variant="heading3">{task.title}</AppText>
+          <AppText color="textSecondary">{animalName}</AppText>
+        </View>
+        <AppBadge label={presentation.label} tone={presentation.tone} />
+      </View>
+      {task.description ? <AppText>{task.description}</AppText> : null}
+      <AppText color="textSecondary" variant="caption">
+        Fecha: {formatCareTaskDate(task.dueAt)}
+      </AppText>
+      {actionable ? (
+        <View style={styles.actions}>
+          <AppButton
+            disabled={disabled}
+            label="Editar"
+            onPress={() => onEdit(task.id)}
+            variant="secondary"
+          />
+          <AppButton disabled={disabled} label="Completar" onPress={() => setAction('complete')} />
+          <AppButton
+            disabled={disabled}
+            label="Cancelar tarea"
+            onPress={() => setAction('cancel')}
+            variant="danger"
+          />
+        </View>
+      ) : null}
+      {action ? (
+        <CareTaskActionDialog
+          action={action}
+          onClose={() => setAction(null)}
+          onConfirm={confirmAction}
+          submitting={disabled}
+          taskTitle={task.title}
+          visible
+        />
+      ) : null}
+    </AppCard>
+  );
+}
+
+const styles = StyleSheet.create({
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  header: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.sm },
+  heading: { flex: 1, gap: spacing.xxs },
+});

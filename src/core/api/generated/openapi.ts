@@ -81,6 +81,35 @@ export interface components {
       createdByUserId?: string;
       metadata?: Record<string, unknown>;
     };
+    CreateCareTaskDto: {
+      animalId: string;
+      title: string;
+      description?: string;
+      dueAt?: string;
+    };
+    UpdateCareTaskDto: {
+      title?: string;
+      description?: string;
+      dueAt?: string;
+    };
+    CareTaskResponseDto: {
+      id: string;
+      animalId: string;
+      title: string;
+      description?: string;
+      status: 'pending' | 'completed' | 'cancelled';
+      dueAt?: string;
+      completedAt?: string;
+      createdByUserId?: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    PaginatedCareTasksResponseDto: {
+      items: components['schemas']['CareTaskResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
     UploadMediaAssetBodyDto: {
       ownerType?: 'animal' | 'expense_ticket' | 'medical_record' | 'user' | 'veterinarian';
       ownerId?: string;
