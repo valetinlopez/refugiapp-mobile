@@ -11,9 +11,12 @@ export type ChangeAnimalStatusRequest = components['schemas']['ChangeAnimalStatu
 export type AnimalResponse = components['schemas']['AnimalResponseDto'];
 export type PaginatedAnimalsResponse = components['schemas']['PaginatedAnimalsResponseDto'];
 export type MediaAsset = components['schemas']['MediaAssetResponseDto'];
+export type CreateAnimalHistoryEventRequest = components['schemas']['CreateAnimalHistoryEventDto'];
+export type AnimalHistoryEventResponse = components['schemas']['AnimalHistoryEventResponseDto'];
 
 export type AnimalSex = NonNullable<CreateAnimalRequest['sex']>;
 export type AnimalStatus = NonNullable<CreateAnimalRequest['status']>;
+export type ManualAnimalHistoryEventType = CreateAnimalHistoryEventRequest['eventType'];
 
 export interface Animal {
   id: string;

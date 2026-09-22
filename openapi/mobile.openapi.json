@@ -3,7 +3,7 @@
   "info": {
     "title": "Refugiapp API - mobile consumed subset",
     "version": "1.0.0",
-    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, animales (alta, detalle, edicion y cambio de estado) y media."
+    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, animales (alta, detalle, edicion, cambio de estado y eventos generales) y media."
   },
   "servers": [{ "url": "/api/v1" }],
   "paths": {
@@ -293,6 +293,70 @@
         }
       }
     },
+    "/animals/{animalId}/events": {
+      "post": {
+        "operationId": "createAnimalHistoryEvent",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "animalId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateAnimalHistoryEventDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Event created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnimalHistoryEventResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested animal was not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/media/upload": {
       "post": {
         "operationId": "uploadMedia",
@@ -487,6 +551,41 @@
           "page": { "type": "number", "example": 1 },
           "limit": { "type": "number", "example": 20 },
           "total": { "type": "number", "example": 42 }
+        }
+      },
+      "CreateAnimalHistoryEventDto": {
+        "type": "object",
+        "required": ["eventType", "description"],
+        "properties": {
+          "eventType": {
+            "type": "string",
+            "enum": ["general_note", "behavior_note", "transfer"]
+          },
+          "description": { "type": "string", "maxLength": 1000 },
+          "occurredAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AnimalHistoryEventResponseDto": {
+        "type": "object",
+        "required": ["id", "animalId", "eventType", "description", "occurredAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "animalId": { "type": "string", "format": "uuid" },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "intake",
+              "transfer",
+              "status_change",
+              "behavior_note",
+              "adoption",
+              "general_note"
+            ]
+          },
+          "description": { "type": "string" },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "createdByUserId": { "type": "string", "format": "uuid", "nullable": true },
+          "metadata": { "type": "object" }
         }
       },
       "UploadMediaAssetBodyDto": {

@@ -3,7 +3,7 @@
 ## Responsabilidad
 
 - Gestiona la ficha general del animal, listado, detalle, alta, edición y cambio de estado según permisos.
-- Presenta historial general no clínico cuando se implemente.
+- Registra eventos generales no clínicos y mantiene la cache del historial coherente.
 - No contiene diagnósticos, tratamientos ni vacunas ocurridas; pertenecen a `medical-records`.
 - No gestiona tareas futuras; pertenecen a `care-tasks`.
 
@@ -53,9 +53,9 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 ## Estructura objetivo
 
-- `api/`: endpoints de animals (alta, detalle, edición, cambio de estado) y media (alta huérfana y lectura).
-- `hooks/`: `animalKeys`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useAnimalPhoto` e invalidaciones; listado cuando tenga UI.
-- `components/`: formulario compartido de perfil (alta/edición), selector de foto de perfil, selector de estado con confirmación y modal de consecuencia.
+- `api/`: endpoints de animals (alta, detalle, edición, cambio de estado y eventos generales) y media (alta huérfana y lectura).
+- `hooks/`: `animalKeys`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useCreateAnimalEvent`, `useAnimalPhoto` e invalidaciones; listado cuando tenga UI.
+- `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con confirmación y modal de consecuencia.
 - `types/`: modelos de vista y aliases derivados de OpenAPI.
 - `utils/`: esquemas Zod, mappers al DTO, matriz de transiciones y traducción de errores de backend.
 - Los componentes reutilizables sin dominio permanecen en `src/components`.
@@ -81,6 +81,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Alta de animales (`POST /animals`) para `admin` y `shelter_manager` mediante `useCreateAnimal`.
 - Edición de ficha (`PATCH /animals/:id`) para `admin` y `shelter_manager` mediante `useUpdateAnimal`, sin tocar `status`.
 - Cambio de estado (`PATCH /animals/:id/status`) para `admin` y `shelter_manager` mediante `useChangeAnimalStatus`, con matriz de transiciones local y confirmación de consecuencia.
+- Alta de eventos generales (`POST /animals/:animalId/events`) para `admin` y `shelter_manager`, limitada a `general_note`, `behavior_note` y `transfer`; el backend registra al actor autenticado y la mutation invalida `animalKeys.history(animalId)`.
 - Subida de foto de perfil como asset huérfano (`POST /media/upload` multipart) y vinculación con `profilePhotoMediaId` al crear o editar; limpieza best-effort del huérfano si la escritura falla después de subir.
 - Lectura de asset (`GET /media/:id`) para mostrar la foto actual en detalle y edición (`useAnimalPhoto`).
 - Detalle `app/(app)/animals/[id].tsx` (los tres roles) con edición y cambio de estado solo para `admin`/`shelter_manager`.
@@ -93,4 +94,5 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 ### Deuda conocida
 
 - El listado tiene cliente con tipos reconciliados pero sin UI ni hooks de query; el detalle se alcanza por deep link o navegación directa.
-- Falta E2E en dispositivo para alta, edición y cambio de estado (éxito, validación y error 403).
+- Falta la UI de listado del historial general; la query key de historial ya queda definida para su futura lectura e invalidación.
+- Falta E2E en dispositivo para alta, edición, cambio de estado y registro de eventos generales (éxito, validación y error 403).
