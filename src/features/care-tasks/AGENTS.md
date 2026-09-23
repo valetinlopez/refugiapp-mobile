@@ -49,6 +49,7 @@
 - Listado global con filtro por animal, filtro por estado persistido (`pending`, `completed`, `cancelled`) y recarga manual.
 - Ruta principal `app/(app)/(tabs)/care-tasks.tsx` (tab "Tareas"); la ruta legacy `/inbox` redirige a `/care-tasks`.
 - Alta y edición mediante formularios validados.
+- `dueAt` opcional mediante selector nativo compartido; si se informa debe ser futuro, con fallback textual web.
 - Confirmaciones para completar y cancelar tareas pendientes.
 - Invalidación de las queries de tareas y dashboard después de cada mutación.
 - Guards visuales de escritura para `admin` y `shelter_manager`.
@@ -56,4 +57,3 @@
 ### Pendiente o deuda conocida
 
 - El backend debe incorporar `type` y asignación de responsable antes de exponerlos en el formulario móvil.
-- La fecha `dueAt` se ingresa como texto ISO sin selector nativo; usar `DateTimePicker` cuando se integre la mejora de media/formularios.

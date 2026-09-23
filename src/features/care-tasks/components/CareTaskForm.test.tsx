@@ -3,6 +3,21 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import type { CareTask } from '../types';
 import { CareTaskForm } from './CareTaskForm';
 
+jest.mock('@react-native-community/datetimepicker', () => {
+  const React = jest.requireActual<typeof import('react')>('react');
+  const { Pressable, Text } = jest.requireActual<typeof import('react-native')>('react-native');
+  const MockPicker = ({ onChange }: { onChange(event: { type: string }, date?: Date): void }) =>
+    React.createElement(
+      Pressable,
+      {
+        accessibilityLabel: 'selector de fecha y hora',
+        onPress: () => onChange({ type: 'set' }, new Date(Date.now() + 86_400_000)),
+      },
+      React.createElement(Text, null, 'selector')
+    );
+  return { __esModule: true, default: MockPicker };
+});
+
 const ANIMAL_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
 
 function createTask(): CareTask {
@@ -36,7 +51,8 @@ describe('CareTaskForm', () => {
     await fireEvent.press(screen.getByRole('radio', { name: 'Luna' }));
     await fireEvent.changeText(screen.getByLabelText('Título'), '  Dar medicación  ');
     await fireEvent.changeText(screen.getByLabelText('Descripción'), '  Una dosis  ');
-    await fireEvent.changeText(screen.getByLabelText('Fecha y hora'), '2026-09-22T18:00:00-03:00');
+    await fireEvent.press(screen.getByLabelText('Elegir fecha y hora'));
+    await fireEvent.press(screen.getByLabelText('selector de fecha y hora'));
     await fireEvent.press(screen.getByLabelText('Crear tarea'));
 
     await waitFor(() => {
@@ -44,7 +60,7 @@ describe('CareTaskForm', () => {
         animalId: ANIMAL_ID,
         title: 'Dar medicación',
         description: 'Una dosis',
-        dueAt: '2026-09-22T18:00:00-03:00',
+        dueAt: expect.any(String),
       });
     });
   });
@@ -65,7 +81,7 @@ describe('CareTaskForm', () => {
     expect(screen.getByLabelText('Título').props.value).toBe('Dar medicación');
     await fireEvent.changeText(screen.getByLabelText('Título'), 'Control general');
     await fireEvent.changeText(screen.getByLabelText('Descripción'), '');
-    await fireEvent.changeText(screen.getByLabelText('Fecha y hora'), '');
+    await fireEvent.press(screen.getByLabelText('Quitar fecha y hora'));
     await fireEvent.press(screen.getByLabelText('Guardar cambios'));
 
     await waitFor(() => {

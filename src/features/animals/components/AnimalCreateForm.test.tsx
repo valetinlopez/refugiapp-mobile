@@ -4,6 +4,23 @@ import * as ImagePicker from 'expo-image-picker';
 
 import { AnimalCreateForm } from './AnimalCreateForm';
 
+let mockPickedDate = new Date(2026, 0, 10, 12);
+
+jest.mock('@react-native-community/datetimepicker', () => {
+  const React = jest.requireActual<typeof import('react')>('react');
+  const { Pressable, Text } = jest.requireActual<typeof import('react-native')>('react-native');
+  const MockPicker = ({ onChange }: { onChange(event: { type: string }, date?: Date): void }) =>
+    React.createElement(
+      Pressable,
+      {
+        accessibilityLabel: 'selector de fecha',
+        onPress: () => onChange({ type: 'set' }, mockPickedDate),
+      },
+      React.createElement(Text, null, 'selector')
+    );
+  return { __esModule: true, default: MockPicker };
+});
+
 jest.mock('expo-image-picker', () => ({
   MediaTypeOptions: { Images: 'Images' },
   launchCameraAsync: jest.fn(),
@@ -18,7 +35,9 @@ const mockLaunchLibrary = ImagePicker.launchImageLibraryAsync as jest.Mock;
 async function fillRequiredFields(screen: RenderResult) {
   await fireEvent.changeText(screen.getByLabelText('Nombre'), 'Luna');
   await fireEvent.changeText(screen.getByLabelText('Especie'), 'dog');
-  await fireEvent.changeText(screen.getByLabelText('Fecha de ingreso'), '2026-01-10');
+  mockPickedDate = new Date(2026, 0, 10, 12);
+  await fireEvent.press(screen.getByLabelText('Elegir fecha de ingreso'));
+  await fireEvent.press(screen.getByLabelText('selector de fecha'));
 }
 
 describe('AnimalCreateForm', () => {
@@ -104,7 +123,9 @@ describe('AnimalCreateForm', () => {
     const onSubmit = jest.fn();
     const screen = await render(<AnimalCreateForm onSubmit={onSubmit} />);
     await fillRequiredFields(screen);
-    await fireEvent.changeText(screen.getByLabelText('Fecha de nacimiento'), '2026-02-01');
+    mockPickedDate = new Date(2026, 1, 1, 12);
+    await fireEvent.press(screen.getByLabelText('Elegir fecha de nacimiento'));
+    await fireEvent.press(screen.getByLabelText('selector de fecha'));
 
     await fireEvent.press(screen.getByRole('button', { name: 'Dar de alta' }));
 

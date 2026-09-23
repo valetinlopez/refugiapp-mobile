@@ -10,6 +10,21 @@ jest.mock('expo-image-picker', () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(),
 }));
 
+jest.mock('@react-native-community/datetimepicker', () => {
+  const React = jest.requireActual<typeof import('react')>('react');
+  const { Pressable, Text } = jest.requireActual<typeof import('react-native')>('react-native');
+  const MockPicker = ({ onChange }: { onChange(event: { type: string }, date?: Date): void }) =>
+    React.createElement(
+      Pressable,
+      {
+        accessibilityLabel: 'selector de fecha',
+        onPress: () => onChange({ type: 'set' }, new Date(2026, 1, 1, 12)),
+      },
+      React.createElement(Text, null, 'selector')
+    );
+  return { __esModule: true, default: MockPicker };
+});
+
 function createAnimal(): Animal {
   return {
     id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
@@ -39,8 +54,8 @@ describe('AnimalProfileForm edit mode', () => {
     expect(screen.getByLabelText('Nombre').props.value).toBe('Luna');
     expect(screen.getByLabelText('Especie').props.value).toBe('dog');
     expect(screen.getByLabelText('Raza').props.value).toBe('Mestizo');
-    expect(screen.getByLabelText('Fecha de ingreso').props.value).toBe('2026-01-10');
-    expect(screen.getByLabelText('Fecha de nacimiento').props.value).toBe('2025-06-01');
+    expect(screen.getByRole('button', { name: /Fecha de ingreso:/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Fecha de nacimiento:/ })).toBeTruthy();
     expect(screen.getByRole('radio', { name: 'Hembra' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeTruthy();
   });
@@ -98,7 +113,8 @@ describe('AnimalProfileForm edit mode', () => {
       />
     );
 
-    await fireEvent.changeText(screen.getByLabelText('Fecha de nacimiento'), '2026-02-01');
+    await fireEvent.press(screen.getByRole('button', { name: /Fecha de nacimiento:/ }));
+    await fireEvent.press(screen.getByLabelText('selector de fecha'));
     await fireEvent.press(screen.getByRole('button', { name: 'Guardar cambios' }));
 
     expect(

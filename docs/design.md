@@ -134,7 +134,7 @@ Máximo cuatro o cinco destinos estables. Cada elemento combina icono y texto; e
 
 ## 21. Formularios
 
-Etiqueta visible sobre el campo, ayuda y error debajo. No usar placeholder como única etiqueta. Altura mínima 48 pt, borde de foco claro, teclado y `autoComplete` apropiados, y agrupación semántica. Los errores explican qué corregir y se anuncian; no se indican solo en coral. Los datos monetarios se transforman a `amountCents` fuera del componente visual. Los selectores de estado muestran valores permitidos por el backend y respetan permisos del rol.
+Etiqueta visible sobre el campo, ayuda y error debajo. No usar placeholder como única etiqueta. Altura mínima 48 pt, borde de foco claro, teclado y `autoComplete` apropiados, y agrupación semántica. Los errores explican qué corregir y se anuncian; no se indican solo en coral. Los datos monetarios se transforman a `amountCents` fuera del componente visual. Los selectores de estado muestran valores permitidos por el backend y respetan permisos del rol. Las fechas usan `DateTimeField`: picker del sistema en iOS/Android y entrada textual con formato explícito en web.
 
 ## 22. Estados de carga, vacío, error, offline y sin permisos
 
