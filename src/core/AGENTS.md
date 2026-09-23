@@ -22,6 +22,7 @@
 ## Storage
 
 - Tokens solo mediante el adaptador de `storage`; nunca AsyncStorage.
+- En web, el adaptador usa `sessionStorage` para sobrevivir recargas dentro de la misma pestaña; no usar `localStorage` ni compartir tokens entre pestañas.
 - Las claves de storage se definen una vez y no se duplican en features.
 - Limpiar sesión y cache sensible cuando refresh/logout fallen definitivamente.
 
@@ -39,8 +40,9 @@
 ## Estado implementado
 
 - Cliente Fetch tipado con `x-request-id`, timeout, multipart y errores normalizados.
+- Las subidas multipart con `onUploadProgress` usan el adaptador XHR del cliente y aceptan `AbortSignal`; no fijar manualmente el boundary de `FormData`.
 - Reintentos limitados a métodos idempotentes.
 - Refresh single-flight con invalidación de sesión y reintento único.
-- Par de tokens persistido atómicamente mediante una única entrada de Secure Store.
+- Par de tokens persistido atómicamente mediante una única entrada de Secure Store en Android/iOS y una entrada de `sessionStorage` por pestaña en web.
 - TanStack Query conectado a NetInfo y AppState.
 - Adapter HTTP falso inyectable en desarrollo y tests.

@@ -48,9 +48,15 @@ export default function EditMedicalRecordScreen() {
   }
 
   const pending =
-    recordQuery.isPending || attachmentsQuery.isPending || animalQuery.isPending || veterinariansQuery.isPending;
+    recordQuery.isPending ||
+    attachmentsQuery.isPending ||
+    animalQuery.isPending ||
+    veterinariansQuery.isPending;
   const hasError =
-    recordQuery.isError || attachmentsQuery.isError || animalQuery.isError || veterinariansQuery.isError;
+    recordQuery.isError ||
+    attachmentsQuery.isError ||
+    animalQuery.isError ||
+    veterinariansQuery.isError;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -73,7 +79,10 @@ export default function EditMedicalRecordScreen() {
             title="No se pudo editar"
           />
         ) : null}
-        {recordQuery.data && attachmentsQuery.data && animalQuery.data && veterinariansQuery.data ? (
+        {recordQuery.data &&
+        attachmentsQuery.data &&
+        animalQuery.data &&
+        veterinariansQuery.data ? (
           <MedicalRecordForm
             errorMessage={
               updateRecord.error ? toUpdateMedicalRecordErrorMessage(updateRecord.error) : null
@@ -82,9 +91,11 @@ export default function EditMedicalRecordScreen() {
             intakeDate={animalQuery.data.intakeDate}
             isSubmitting={updateRecord.isPending}
             mode="edit"
+            onCancelUpload={updateRecord.cancelUpload}
             onSubmit={(input) => updateRecord.mutate(input, { onSuccess: goBack })}
             record={recordQuery.data}
             veterinarianOptions={veterinariansQuery.data}
+            upload={updateRecord.upload}
           />
         ) : null}
       </ScrollView>

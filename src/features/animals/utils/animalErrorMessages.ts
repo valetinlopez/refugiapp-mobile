@@ -1,4 +1,5 @@
 import { ApiError } from '@/core/api';
+import { UploadCancelledError } from '@/core/media';
 
 export type CreateAnimalPhase = 'photo' | 'create';
 export type UpdateAnimalPhase = 'photo' | 'update';
@@ -44,6 +45,10 @@ function unwrapUpdate(error: unknown): { phase: UpdateAnimalPhase; root: unknown
 export function toCreateAnimalErrorMessage(error: unknown): string {
   const { phase, root } = unwrap(error);
 
+  if (root instanceof UploadCancelledError) {
+    return 'La subida de la foto fue cancelada.';
+  }
+
   if (root instanceof ApiError) {
     if (root.status === 400 || root.status === 422) {
       return phase === 'photo'
@@ -68,6 +73,10 @@ export function toCreateAnimalErrorMessage(error: unknown): string {
 
 export function toUpdateAnimalErrorMessage(error: unknown): string {
   const { phase, root } = unwrapUpdate(error);
+
+  if (root instanceof UploadCancelledError) {
+    return 'La subida de la foto fue cancelada.';
+  }
 
   if (root instanceof ApiError) {
     if (root.status === 400 || root.status === 422) {

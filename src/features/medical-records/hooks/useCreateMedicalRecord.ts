@@ -1,4 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRef, useState } from 'react';
+
+import { UploadCancelledError } from '@/core/media';
 
 import { clinicalAttachmentsApi, type AttachmentFile } from '../api/clinicalAttachmentsApi';
 import { medicalRecordsApi } from '../api/medicalRecordsApi';
@@ -16,19 +19,35 @@ export interface CreateMedicalRecordInput {
 
 export function useCreateMedicalRecord() {
   const queryClient = useQueryClient();
+  const abortController = useRef<AbortController | null>(null);
+  const [upload, setUpload] = useState<{ fileName: string; progress: number } | null>(null);
 
-  return useMutation<MedicalRecord, CreateMedicalRecordError, CreateMedicalRecordInput>({
+  const mutation = useMutation<MedicalRecord, CreateMedicalRecordError, CreateMedicalRecordInput>({
     mutationFn: async ({ form, attachments }) => {
       const uploadedIds: string[] = [];
+      abortController.current = new AbortController();
 
       try {
-        for (const file of attachments) {
-          const asset = await clinicalAttachmentsApi.uploadOrphan(file);
+        for (const [index, file] of attachments.entries()) {
+          setUpload({ fileName: file.name, progress: index / attachments.length });
+          const asset = await clinicalAttachmentsApi.uploadOrphan(file, undefined, {
+            signal: abortController.current.signal,
+            onUploadProgress: (fileProgress) =>
+              setUpload({
+                fileName: file.name,
+                progress: (index + fileProgress) / attachments.length,
+              }),
+          });
           uploadedIds.push(asset.id);
         }
       } catch (error) {
         await deleteUploaded(uploadedIds);
+        if (abortController.current.signal.aborted) {
+          throw new CreateMedicalRecordError('attachment', new UploadCancelledError());
+        }
         throw new CreateMedicalRecordError('attachment', error);
+      } finally {
+        setUpload(null);
       }
 
       try {
@@ -43,7 +62,17 @@ export function useCreateMedicalRecord() {
     onSuccess: async () => {
       await invalidateMedicalRecordQueries(queryClient);
     },
+    onSettled: () => {
+      abortController.current = null;
+      setUpload(null);
+    },
   });
+
+  return {
+    ...mutation,
+    cancelUpload: () => abortController.current?.abort(),
+    upload,
+  };
 }
 
 async function deleteUploaded(ids: string[]): Promise<void> {

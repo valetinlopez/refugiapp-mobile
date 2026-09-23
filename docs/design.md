@@ -139,6 +139,7 @@ Etiqueta visible sobre el campo, ayuda y error debajo. No usar placeholder como 
 ## 22. Estados de carga, vacío, error, offline y sin permisos
 
 - **Carga:** spinner y texto que describe qué se carga; usar skeleton solo cuando refleje la estructura real y respetar reduce motion.
+- **Subida de archivos:** mostrar nombre, porcentaje textual y barra accesible; durante una subida activa ofrecer cancelación explícita. Los errores se anuncian como alertas y nunca dependen solo del color.
 - **Vacío:** explicar qué falta y ofrecer una acción cuando el rol pueda realizarla.
 - **Error:** mensaje recuperable, acción de reintento y detalles técnicos fuera de la UI de usuario.
 - **Offline:** distinguir falta de red de un error del servidor y explicar sincronización.

@@ -50,6 +50,7 @@ export default function EditAnimalScreen() {
           currentPhotoUri={photoQuery.data ?? null}
           errorMessage={updateAnimal.error ? toUpdateAnimalErrorMessage(updateAnimal.error) : null}
           isSubmitting={updateAnimal.isPending}
+          onCancelUpload={updateAnimal.cancelUpload}
           onRetry={() => void animalQuery.refetch()}
           onSubmit={(input) =>
             updateAnimal.mutate(input, {
@@ -57,6 +58,7 @@ export default function EditAnimalScreen() {
             })
           }
           query={animalQuery}
+          upload={updateAnimal.upload}
         />
       </ScrollView>
     </SafeAreaView>
@@ -76,17 +78,21 @@ interface EditFormProps {
   errorMessage: string | null;
   isSubmitting: boolean;
   onRetry(): void;
+  onCancelUpload(): void;
   onSubmit(input: UpdateAnimalInput): void;
   query: ReturnType<typeof useAnimal>;
+  upload: { fileName: string; progress: number } | null;
 }
 
 function EditForm({
   currentPhotoUri,
   errorMessage,
   isSubmitting,
+  onCancelUpload,
   onRetry,
   onSubmit,
   query,
+  upload,
 }: EditFormProps) {
   if (query.isPending) {
     return <LoadingState label="Cargando ficha" />;
@@ -121,7 +127,9 @@ function EditForm({
       isSubmitting={isSubmitting}
       mode="edit"
       animal={query.data}
+      onCancelUpload={onCancelUpload}
       onSubmit={onSubmit}
+      upload={upload}
     />
   );
 }

@@ -1,4 +1,5 @@
 import { ApiError } from '@/core/api';
+import { UploadCancelledError } from '@/core/media';
 
 export type CreateMedicalRecordPhase = 'attachment' | 'create';
 export type UpdateMedicalRecordPhase = 'attachment' | 'update';
@@ -44,6 +45,10 @@ function unwrapUpdate(error: unknown): { phase: UpdateMedicalRecordPhase; root: 
 export function toCreateMedicalRecordErrorMessage(error: unknown): string {
   const { phase, root } = unwrapCreate(error);
 
+  if (root instanceof UploadCancelledError) {
+    return 'La subida fue cancelada. Los archivos huérfanos ya subidos se eliminaron.';
+  }
+
   if (root instanceof ApiError) {
     if (root.status === 400 || root.status === 422) {
       return phase === 'attachment'
@@ -70,6 +75,10 @@ export function toCreateMedicalRecordErrorMessage(error: unknown): string {
 
 export function toUpdateMedicalRecordErrorMessage(error: unknown): string {
   const { phase, root } = unwrapUpdate(error);
+
+  if (root instanceof UploadCancelledError) {
+    return 'La subida fue cancelada. No se guardaron adjuntos incompletos.';
+  }
 
   if (root instanceof ApiError) {
     if (root.status === 400 || root.status === 422) {

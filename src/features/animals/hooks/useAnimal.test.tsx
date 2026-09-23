@@ -56,6 +56,17 @@ describe('useAnimal', () => {
     expect(result.current.data?.name).toBe('Luna');
   });
 
+  it('uses a freshly cached animal without requesting it again', async () => {
+    const getById = jest.spyOn(animalsApi, 'getById');
+    const animal = createAnimal();
+    queryClient.setQueryData(['animals', 'detail', animal.id], animal);
+
+    const { result } = await renderHook(() => useAnimal(animal.id), { wrapper });
+
+    expect(result.current.data).toEqual(animal);
+    expect(getById).not.toHaveBeenCalled();
+  });
+
   it('is disabled when no id is provided', async () => {
     const getById = jest.spyOn(animalsApi, 'getById');
     const { result } = await renderHook(() => useAnimal(''), { wrapper });

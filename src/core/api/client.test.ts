@@ -88,6 +88,29 @@ describe('HttpClient', () => {
     expect(capturedHeaders['Content-Type']).toBeUndefined();
   });
 
+  it('forwards multipart progress without changing the form boundary', async () => {
+    const onUploadProgress = jest.fn();
+    const client = createHttpClient({
+      baseUrl: 'https://api.test/api/v1',
+      timeoutMs: 1000,
+      tokenStore: createTokenStore(),
+      transport: async (_url, init, options) => {
+        expect(new Headers(init.headers).has('Content-Type')).toBe(false);
+        options?.onUploadProgress?.(0.5);
+        return {
+          headers: new Headers(),
+          ok: true,
+          status: 201,
+          text: async () => JSON.stringify({ id: 'asset-id' }),
+        };
+      },
+    });
+
+    await client.post('/media/upload', new FormData(), { onUploadProgress });
+
+    expect(onUploadProgress).toHaveBeenCalledWith(0.5);
+  });
+
   it('shares one refresh across concurrent 401 responses and retries each request once', async () => {
     const tokenStore = createTokenStore({
       accessToken: 'expired-access',

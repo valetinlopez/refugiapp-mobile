@@ -59,6 +59,34 @@ describe('mediaApi.uploadOrphanPhoto', () => {
     expect(capturedHeaders['Content-Type']).toBeUndefined();
   });
 
+  it('appends the browser File instead of the native URI descriptor on web', async () => {
+    const appendSpy = jest.spyOn(FormData.prototype, 'append');
+    const browserFile = new Blob(['photo'], { type: 'image/jpeg' });
+    const client = createClient({
+      'POST /api/v1/media/upload': () => ({
+        status: 201,
+        body: {
+          id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+          resourceType: 'image',
+          publicId: 'refugiapp/profile-photo',
+          secureUrl: 'https://cloudinary.test/profile-photo.jpg',
+        },
+      }),
+    });
+
+    await mediaApi.uploadOrphanPhoto(
+      {
+        uri: 'blob:https://app.test/photo',
+        name: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        file: browserFile,
+      },
+      client
+    );
+
+    expect(appendSpy).toHaveBeenCalledWith('file', browserFile);
+  });
+
   it('propagates upload failures without inventing an asset', async () => {
     const client = createClient({
       'POST /api/v1/media/upload': () => ({

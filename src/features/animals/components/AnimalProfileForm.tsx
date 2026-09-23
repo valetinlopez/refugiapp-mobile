@@ -4,6 +4,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { AppButton, AppIcon, AppText } from '@/components/primitives';
+import { MediaUploadStatus } from '@/components/feedback';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
 import type { PhotoFile } from '../api/mediaApi';
@@ -107,6 +108,8 @@ export function FormTextInput({ style, ...props }: TextInputProps) {
 interface AnimalProfileFormBaseProps {
   errorMessage?: string | null;
   isSubmitting?: boolean;
+  onCancelUpload?(): void;
+  upload?: { fileName: string; progress: number } | null;
 }
 
 export type AnimalCreateModeProps = AnimalProfileFormBaseProps & {
@@ -133,7 +136,9 @@ export function AnimalProfileForm(props: AnimalProfileFormProps) {
 function CreateProfileForm({
   errorMessage,
   isSubmitting = false,
+  onCancelUpload,
   onSubmit,
+  upload,
 }: AnimalCreateModeProps) {
   const [photo, setPhoto] = useState<PhotoFile | null>(null);
   const { control, handleSubmit } = useForm<CreateAnimalFormInput>({
@@ -281,6 +286,14 @@ function CreateProfileForm({
         <AppText variant="label">Foto de perfil</AppText>
         <ProfilePhotoPicker disabled={isSubmitting} onChange={setPhoto} value={photo} />
       </View>
+      {upload ? (
+        <MediaUploadStatus
+          fileName={upload.fileName}
+          {...(onCancelUpload ? { onCancel: onCancelUpload } : {})}
+          progress={upload.progress}
+          status="uploading"
+        />
+      ) : null}
       {errorMessage ? (
         <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
           {errorMessage}
@@ -305,7 +318,9 @@ function EditProfileForm({
   currentPhotoUri,
   errorMessage,
   isSubmitting = false,
+  onCancelUpload,
   onSubmit,
+  upload,
 }: AnimalEditModeProps) {
   const [photo, setPhoto] = useState<PhotoFile | null>(null);
   const { control, handleSubmit } = useForm<UpdateAnimalFormInput>({
@@ -436,6 +451,14 @@ function EditProfileForm({
           value={photo}
         />
       </View>
+      {upload ? (
+        <MediaUploadStatus
+          fileName={upload.fileName}
+          {...(onCancelUpload ? { onCancel: onCancelUpload } : {})}
+          progress={upload.progress}
+          status="uploading"
+        />
+      ) : null}
       {errorMessage ? (
         <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
           {errorMessage}
