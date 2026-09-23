@@ -130,6 +130,7 @@ src/
     auth/                    # API, formulario y estado global de sesión
     animals/
     care-tasks/              # Listado, formulario y transiciones de tareas
+    expenses/                # Alta de gastos con comprobante y permisos por rol
     medical-records/         # Registros clínicos y evolución clínica
   theme/
   types/
@@ -233,6 +234,7 @@ La matriz completa vive en la arquitectura del backend. Para el frontend:
 - Los tres roles consultan tareas; solo `admin` y `shelter_manager` pueden crearlas, editarlas, completarlas o cancelarlas.
 - `shelter_manager` no recibe actividad clínica reciente en dashboard.
 - Solo `admin` consulta auditoría y administra usuarios.
+- Los tres roles consultan gastos; solo `admin` y `shelter_manager` pueden registrarlos o eliminarlos.
 
 La UI por rol se deriva de esta matriz y debe actualizarse cuando cambie el backend.
 
@@ -325,6 +327,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Dependencias `react-hook-form`, `@hookform/resolvers` y `expo-image-picker` (ver ADR-0003).
 - Captura de imágenes desde cámara o galería y selección de PDF mediante `expo-document-picker`; validación local espejo de MIME/tamaño del backend y subida multipart con progreso y cancelación (ver ADR-0005).
 - Registros médicos y evolución clínica: feature `src/features/medical-records` con contrato derivado de OpenAPI (medical-records, veterinarians y media por owner), alta y edición con PATCH semántico (diff que omite campos intactos y envía `null` para limpiar), adjuntos clínicos multipart huérfanos en creación y directos al registro en edición, y selectores de veterinarios activos.
+- Alta de gastos: feature `src/features/expenses` con formulario validado, importe entero en centavos, comprobante multipart huérfano vinculado mediante `ticketMediaId`, limpieza compensatoria e invalidación de gastos y dashboard.
 - Formulario clínico con React Hook Form + Zod en español, `@react-native-community/datetimepicker` para `occurredAt` (validado contra `intakeDate` y fecha actual) y mensajes de error seguros por código de backend.
 - Rutas `app/(app)/animals/[id]/medical-records/new.tsx` y `app/(app)/animals/[id]/medical-records/[recordId]/edit.tsx`, y sección "Evolución clínica" en el detalle con `ClinicalHistory`; guards visuales para `admin` y `veterinarian`.
 - Invalidación de la evolución clínica (`medicalRecordKeys.lists()`) tras crear o editar registros, sin optimistic updates.

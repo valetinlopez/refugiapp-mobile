@@ -3,7 +3,7 @@
   "info": {
     "title": "Refugiapp API - mobile consumed subset",
     "version": "1.0.0",
-    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, animales, eventos generales, tareas de cuidado, registros medicos, veterinarios y media."
+    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, animales, eventos generales, tareas de cuidado, gastos, registros medicos, veterinarios y media."
   },
   "servers": [{ "url": "/api/v1" }],
   "paths": {
@@ -623,6 +623,42 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/MediaAssetResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/expenses": {
+      "post": {
+        "operationId": "createExpense",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateExpenseDto" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Expense created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ExpenseResponseDto" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listExpenses",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Paginated expenses",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedExpensesResponseDto" }
               }
             }
           }
@@ -1321,6 +1357,72 @@
           "format": { "type": "string" },
           "uploadedByUserId": { "type": "string" },
           "metadata": { "type": "object" }
+        }
+      },
+      "CreateExpenseDto": {
+        "type": "object",
+        "required": [
+          "animalId",
+          "category",
+          "amountCents",
+          "currency",
+          "description",
+          "incurredAt"
+        ],
+        "properties": {
+          "animalId": { "type": "string", "format": "uuid" },
+          "category": {
+            "type": "string",
+            "enum": ["food", "medicine", "veterinary", "supplies", "transport", "other"]
+          },
+          "amountCents": { "type": "number", "minimum": 0 },
+          "currency": { "type": "string", "example": "ARS" },
+          "description": { "type": "string" },
+          "incurredAt": { "type": "string", "format": "date-time" },
+          "ticketMediaId": { "type": "string", "format": "uuid" }
+        }
+      },
+      "ExpenseResponseDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "animalId",
+          "category",
+          "amountCents",
+          "currency",
+          "description",
+          "incurredAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "animalId": { "type": "string", "format": "uuid" },
+          "category": {
+            "type": "string",
+            "enum": ["food", "medicine", "veterinary", "supplies", "transport", "other"]
+          },
+          "amountCents": { "type": "number" },
+          "currency": { "type": "string" },
+          "description": { "type": "string" },
+          "ticketMediaId": { "type": "object", "nullable": true },
+          "createdByUserId": { "type": "object", "nullable": true },
+          "incurredAt": { "type": "string", "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedExpensesResponseDto": {
+        "type": "object",
+        "required": ["items", "page", "limit", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ExpenseResponseDto" }
+          },
+          "page": { "type": "number" },
+          "limit": { "type": "number" },
+          "total": { "type": "number" }
         }
       },
       "CreateMedicalRecordDto": {
