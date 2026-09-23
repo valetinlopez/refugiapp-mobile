@@ -3,7 +3,7 @@
   "info": {
     "title": "Refugiapp API - mobile consumed subset",
     "version": "1.0.0",
-    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, animales, eventos generales, tareas de cuidado y media."
+    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, animales, eventos generales, tareas de cuidado, registros medicos, veterinarios y media."
   },
   "servers": [{ "url": "/api/v1" }],
   "paths": {
@@ -668,6 +668,399 @@
           }
         }
       }
+    },
+    "/veterinarians": {
+      "get": {
+        "operationId": "listVeterinarians",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 }
+          },
+          { "name": "isActive", "in": "query", "schema": { "type": "boolean" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated veterinarian profiles",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedVeterinariansResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media": {
+      "get": {
+        "operationId": "listMediaByOwner",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "ownerType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["animal", "expense_ticket", "medical_record", "user", "veterinarian"]
+            }
+          },
+          { "name": "ownerId", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated media assets for the owner",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedMediaAssetsResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested owner was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/medical-records": {
+      "get": {
+        "operationId": "listMedicalRecords",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 }
+          },
+          {
+            "name": "recordType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "consultation",
+                "vaccination",
+                "deworming",
+                "surgery",
+                "lab_result",
+                "treatment",
+                "other"
+              ]
+            }
+          },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated medical records",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedMedicalRecordsResponseDto" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createMedicalRecord",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateMedicalRecordDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Medical record created with linked clinical attachments",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MedicalRecordResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "409": {
+            "description": "The request conflicts with the current resource state.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/medical-records/{id}": {
+      "get": {
+        "operationId": "getMedicalRecordById",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Medical record detail",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MedicalRecordResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateMedicalRecord",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateMedicalRecordDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Medical record updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MedicalRecordResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "409": {
+            "description": "The request conflicts with the current resource state.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/animals/{animalId}/medical-records": {
+      "get": {
+        "operationId": "listAnimalMedicalRecords",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "animalId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 }
+          },
+          {
+            "name": "recordType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "consultation",
+                "vaccination",
+                "deworming",
+                "surgery",
+                "lab_result",
+                "treatment",
+                "other"
+              ]
+            }
+          },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated clinical history for the animal",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedMedicalRecordsResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested animal was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -928,6 +1321,151 @@
           "format": { "type": "string" },
           "uploadedByUserId": { "type": "string" },
           "metadata": { "type": "object" }
+        }
+      },
+      "CreateMedicalRecordDto": {
+        "type": "object",
+        "required": ["animalId", "recordType", "title", "occurredAt"],
+        "properties": {
+          "animalId": { "type": "string", "format": "uuid" },
+          "veterinarianId": { "type": "string", "format": "uuid" },
+          "recordType": {
+            "type": "string",
+            "enum": [
+              "consultation",
+              "vaccination",
+              "deworming",
+              "surgery",
+              "lab_result",
+              "treatment",
+              "other"
+            ]
+          },
+          "title": { "type": "string", "minLength": 3, "maxLength": 160 },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "diagnosis": { "type": "string" },
+          "treatment": { "type": "string" },
+          "notes": { "type": "string" },
+          "attachmentMediaIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "maxItems": 10
+          }
+        }
+      },
+      "UpdateMedicalRecordDto": {
+        "type": "object",
+        "properties": {
+          "recordType": {
+            "type": "string",
+            "enum": [
+              "consultation",
+              "vaccination",
+              "deworming",
+              "surgery",
+              "lab_result",
+              "treatment",
+              "other"
+            ]
+          },
+          "title": { "type": "string", "minLength": 3, "maxLength": 160 },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "veterinarianId": { "type": "string", "format": "uuid", "nullable": true },
+          "diagnosis": { "type": "string", "nullable": true },
+          "treatment": { "type": "string", "nullable": true },
+          "notes": { "type": "string", "nullable": true }
+        }
+      },
+      "MedicalRecordResponseDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "animalId",
+          "recordType",
+          "title",
+          "occurredAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "animalId": { "type": "string", "format": "uuid" },
+          "veterinarianId": { "type": "string", "format": "uuid", "nullable": true },
+          "recordType": {
+            "type": "string",
+            "enum": [
+              "consultation",
+              "vaccination",
+              "deworming",
+              "surgery",
+              "lab_result",
+              "treatment",
+              "other"
+            ]
+          },
+          "title": { "type": "string" },
+          "diagnosis": { "type": "string", "nullable": true },
+          "treatment": { "type": "string", "nullable": true },
+          "notes": { "type": "string", "nullable": true },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedMedicalRecordsResponseDto": {
+        "type": "object",
+        "required": ["items", "page", "limit", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MedicalRecordResponseDto" }
+          },
+          "page": { "type": "number" },
+          "limit": { "type": "number" },
+          "total": { "type": "number" }
+        }
+      },
+      "VeterinarianResponseDto": {
+        "type": "object",
+        "required": ["id", "firstName", "lastName", "licenseNumber", "isActive"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid", "nullable": true },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "licenseNumber": { "type": "string" },
+          "email": { "type": "string", "nullable": true },
+          "phone": { "type": "string", "nullable": true },
+          "notes": { "type": "string", "nullable": true },
+          "isActive": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedVeterinariansResponseDto": {
+        "type": "object",
+        "required": ["items", "page", "limit", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/VeterinarianResponseDto" }
+          },
+          "page": { "type": "number" },
+          "limit": { "type": "number" },
+          "total": { "type": "number" }
+        }
+      },
+      "PaginatedMediaAssetsResponseDto": {
+        "type": "object",
+        "required": ["items", "page", "limit", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MediaAssetResponseDto" }
+          },
+          "page": { "type": "number" },
+          "limit": { "type": "number" },
+          "total": { "type": "number" }
         }
       },
       "ErrorResponseDto": {

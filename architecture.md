@@ -16,19 +16,21 @@ Los detalles visuales viven en `docs/design.md`. Los contratos del servidor y pe
 
 ## 2. Contexto tecnológico
 
-| Área                | Tecnología                          | Decisión                                                            |
-| ------------------- | ----------------------------------- | ------------------------------------------------------------------- |
-| Runtime             | Node.js 22.13+                      | Mínimo requerido por Expo SDK 57                                    |
-| Framework           | Expo SDK 57                         | Runtime y tooling móvil                                             |
-| UI                  | React Native 0.86 + React 19.2      | Base multiplataforma                                                |
-| Lenguaje            | TypeScript estricto                 | `strict`, `noUncheckedIndexedAccess` y `exactOptionalPropertyTypes` |
-| Navegación          | Expo Router                         | Rutas basadas en archivos                                           |
-| Red                 | Fetch                               | Cliente HTTP tipado, normalización y refresh single-flight          |
-| Estado servidor     | TanStack Query                      | Provider global conectado a red y AppState de React Native          |
-| Persistencia segura | Expo Secure Store                   | Tokens JWT y datos secretos pequeños                                |
-| Diseño              | Tokens propios + Expo Symbols       | Sistema compartido documentado en `docs/design.md`                  |
-| Testing             | Jest + React Native Testing Library | Unit y component tests                                              |
-| Calidad             | ESLint + Prettier + TypeScript      | Gates locales obligatorios                                          |
+| Área                | Tecnología                               | Decisión                                                              |
+| ------------------- | ---------------------------------------- | --------------------------------------------------------------------- |
+| Runtime             | Node.js 22.13+                           | Mínimo requerido por Expo SDK 57                                      |
+| Framework           | Expo SDK 57                              | Runtime y tooling móvil                                               |
+| UI                  | React Native 0.86 + React 19.2           | Base multiplataforma                                                  |
+| Lenguaje            | TypeScript estricto                      | `strict`, `noUncheckedIndexedAccess` y `exactOptionalPropertyTypes`   |
+| Navegación          | Expo Router                              | Rutas basadas en archivos                                             |
+| Red                 | Fetch                                    | Cliente HTTP tipado, normalización y refresh single-flight            |
+| Estado servidor     | TanStack Query                           | Provider global conectado a red y AppState de React Native            |
+| Persistencia segura | Expo Secure Store                        | Tokens JWT y datos secretos pequeños                                  |
+| Diseño              | Tokens propios + Expo Symbols            | Sistema compartido documentado en `docs/design.md`                    |
+| Formularios         | React Hook Form + Zod                    | Validación en español con esquemas puros testeables                   |
+| Selector de fecha   | `@react-native-community/datetimepicker` | Selector nativo para `occurredAt` de registros médicos (ver ADR-0004) |
+| Testing             | Jest + React Native Testing Library      | Unit y component tests                                                |
+| Calidad             | ESLint + Prettier + TypeScript           | Gates locales obligatorios                                            |
 
 ## 3. Principios arquitectónicos
 
@@ -127,6 +129,7 @@ src/
     auth/                    # API, formulario y estado global de sesión
     animals/
     care-tasks/              # Listado, formulario y transiciones de tareas
+    medical-records/         # Registros clínicos y evolución clínica
   theme/
   types/
 docs/
@@ -166,7 +169,7 @@ Las features exponen funciones HTTP en su carpeta `api`. Los componentes y rutas
 
 ### 7.3 Contratos
 
-El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, alta y gestión de animales, eventos generales y subida de media consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts`; el CI verifica que el resultado esté versionado y actualizado. El flujo es:
+El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, alta y gestión de animales, eventos generales, tareas de cuidado, registros médicos, veterinarios y media consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts`; el CI verifica que el resultado esté versionado y actualizado. El flujo es:
 
 ```text
 openapi.json del backend
@@ -224,7 +227,8 @@ La matriz completa vive en la arquitectura del backend. Para el frontend:
 
 - Los tres roles pueden consultar animales.
 - Solo `admin` y `shelter_manager` crean o editan la ficha general y cambian estado.
-- Solo `admin` y `veterinarian` acceden a historia clínica.
+- Solo `admin` y `veterinarian` acceden a la evolución clínica; `shelter_manager` no ve acciones clínicas.
+- `admin` y `veterinarian` crean y editan registros médicos con adjuntos clínicos (`ownerType=medical_record`); el backend valida siempre con 403 para `shelter_manager`.
 - Los tres roles consultan tareas; solo `admin` y `shelter_manager` pueden crearlas, editarlas, completarlas o cancelarlas.
 - `shelter_manager` no recibe actividad clínica reciente en dashboard.
 - Solo `admin` consulta auditoría y administra usuarios.
@@ -237,6 +241,8 @@ La UI por rol se deriva de esta matriz y debe actualizarse cuando cambie el back
 - Fechas de API: strings ISO 8601; parsear en el límite y formatear para la locale de UI.
 - Dinero: enteros `amountCents`; no usar flotantes para lógica monetaria.
 - Animal: `admitted | under_treatment | available_for_adoption | adopted | deceased`.
+- Registro médico: `recordType` ∈ `consultation | vaccination | deworming | surgery | lab_result | treatment | other`.
+- `occurredAt` de un registro médico no puede ser anterior al `intakeDate` del animal ni futura.
 - Tarea persistida: `pending | completed | cancelled`.
 - `overdue`: tarea `pending` con `dueAt < now`.
 - `upcoming`: tarea `pending` dentro de la ventana definida por producto.
@@ -316,6 +322,10 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Listado global de tareas (tab "Tareas", ruta `care-tasks`) y filtro por animal desde su detalle, con filtro por estado, formularios de alta y edición y confirmaciones para completar o cancelar; las mutaciones invalidan las queries de tareas y dashboard. La ruta legacy `/inbox` redirige a `/care-tasks`.
 - Contratos de tareas derivados del snapshot OpenAPI y guards de escritura para `admin` y `shelter_manager`.
 - Dependencias `react-hook-form`, `@hookform/resolvers` y `expo-image-picker` (ver ADR-0003).
+- Registros médicos y evolución clínica: feature `src/features/medical-records` con contrato derivado de OpenAPI (medical-records, veterinarians y media por owner), alta y edición con PATCH semántico (diff que omite campos intactos y envía `null` para limpiar), adjuntos clínicos multipart huérfanos en creación y directos al registro en edición, y selectores de veterinarios activos.
+- Formulario clínico con React Hook Form + Zod en español, `@react-native-community/datetimepicker` para `occurredAt` (validado contra `intakeDate` y fecha actual) y mensajes de error seguros por código de backend.
+- Rutas `app/(app)/animals/[id]/medical-records/new.tsx` y `app/(app)/animals/[id]/medical-records/[recordId]/edit.tsx`, y sección "Evolución clínica" en el detalle con `ClinicalHistory`; guards visuales para `admin` y `veterinarian`.
+- Invalidación de la evolución clínica (`medicalRecordKeys.lists()`) tras crear o editar registros, sin optimistic updates.
 - Sistema de diseño, componentes compartidos y catálogo interno.
 - Tests unitarios y de componentes.
 - CI móvil con generación de tipos, formato, lint, typecheck y tests RNTL.
@@ -324,13 +334,14 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 
 ## 17. Pendientes y deuda conocida
 
-- Ampliar el snapshot OpenAPI y los tipos generados a medida que nuevas features consuman endpoints (cubiertos: auth, animals, eventos generales, tareas y media).
+- Ampliar el snapshot OpenAPI y los tipos generados a medida que nuevas features consuman endpoints (cubiertos: auth, animals, eventos generales, tareas, registros médicos, veterinarios y media).
 - El formulario de tareas no puede ofrecer `type` ni un responsable asignable hasta que el backend los incorpore al contrato. Hoy el backend registra al actor autenticado en `createdByUserId`.
 - El historial general del animal se presenta con una sola página (20 ítems); falta paginación UI de historial.
-- Agregar tests E2E de flujos críticos, incluidos alta, edición y cambio de estado de animales.
+- La evolución clínica se presenta con una sola página (20 ítems); falta paginación UI.
+- Agregar tests E2E de flujos críticos, incluidos alta, edición y cambio de estado de animales y registro de consultas.
 - Agregar un paso de typegen de Expo Router en Mobile CI: `npm run typecheck` exige `.expo/types`, que hoy solo se genera al arrancar el dev server o exportar.
 - Configurar en GitHub la protección de `develop`/`master` para exigir el check `Mobile CI / lint, typecheck and tests` antes del merge.
-- Validar el sistema visual en dispositivos iOS y Android reales.
+- Validar el sistema visual y el selector de fecha nativo en dispositivos iOS y Android reales.
 
 Los pendientes no se consideran implementados hasta que exista código, contrato y tests cuando corresponda.
 

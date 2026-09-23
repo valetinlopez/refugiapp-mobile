@@ -13,6 +13,7 @@ import { useChangeAnimalStatus } from '@/features/animals/hooks/useChangeAnimalS
 import { toChangeStatusErrorMessage } from '@/features/animals/utils/animalErrorMessages';
 import { getStatusBadge } from '@/features/animals/utils/animalTransitions';
 import { isUuid } from '@/features/animals/utils/uuid';
+import { ClinicalHistory } from '@/features/medical-records/components/ClinicalHistory';
 import type { AnimalSex, AnimalStatus } from '@/features/animals/types';
 import { colors, spacing } from '@/theme';
 
@@ -21,6 +22,8 @@ export default function AnimalDetailScreen() {
   const { user } = useSession();
   const canWrite =
     user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
+  const canWriteClinical =
+    user?.roles.some((role) => role === 'admin' || role === 'veterinarian') ?? false;
 
   const animalId = typeof id === 'string' && isUuid(id) ? id : '';
   const animalQuery = useAnimal(animalId);
@@ -32,6 +35,7 @@ export default function AnimalDetailScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <AnimalDetailContent
           canWrite={canWrite}
+          canWriteClinical={canWriteClinical}
           changeStatusError={
             changeStatus.error ? toChangeStatusErrorMessage(changeStatus.error) : null
           }
@@ -56,6 +60,7 @@ function goBack(): void {
 
 interface AnimalDetailContentProps {
   canWrite: boolean;
+  canWriteClinical: boolean;
   changeStatusError: string | null;
   isSubmittingStatus: boolean;
   onChangeStatus(status: AnimalStatus): void;
@@ -66,6 +71,7 @@ interface AnimalDetailContentProps {
 
 function AnimalDetailContent({
   canWrite,
+  canWriteClinical,
   changeStatusError,
   isSubmittingStatus,
   onChangeStatus,
@@ -189,6 +195,35 @@ function AnimalDetailContent({
         <AppText variant="heading2">Historial</AppText>
         <AnimalHistory animalId={animal.id} />
       </View>
+
+      {canWriteClinical ? (
+        <View style={styles.historySection}>
+          <View style={styles.clinicalHeader}>
+            <AppText variant="heading2">Evolución clínica</AppText>
+            <AppButton
+              accessibilityLabel="Registrar consulta"
+              icon="medical"
+              label=""
+              onPress={() =>
+                router.push({
+                  pathname: '/animals/[id]/medical-records/new',
+                  params: { id: animal.id },
+                })
+              }
+              variant="secondary"
+            />
+          </View>
+          <ClinicalHistory
+            animalId={animal.id}
+            onEditRecord={(recordId) =>
+              router.push({
+                pathname: '/animals/[id]/medical-records/[recordId]/edit',
+                params: { id: animal.id, recordId },
+              })
+            }
+          />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -205,6 +240,11 @@ function sexLabel(sex: AnimalSex): string {
 }
 
 const styles = StyleSheet.create({
+  clinicalHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   content: {
     backgroundColor: colors.background,
     flexGrow: 1,

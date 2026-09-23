@@ -28,33 +28,33 @@ export interface components {
     CreateAnimalDto: {
       name: string;
       species: string;
-      breed?: string;
+      breed?: string | null;
       sex?: 'female' | 'male' | 'unknown';
       status?: 'admitted' | 'under_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
       intakeDate: string;
-      birthDate?: string;
+      birthDate?: string | null;
       profilePhotoMediaId?: string;
     };
     AnimalResponseDto: {
       id: string;
       name: string;
       species: string;
-      breed?: Record<string, unknown>;
+      breed?: Record<string, unknown> | null;
       sex: 'female' | 'male' | 'unknown';
       status: 'admitted' | 'under_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
       intakeDate: string;
-      birthDate?: string;
-      notes?: Record<string, unknown>;
-      profilePhotoMediaId?: Record<string, unknown>;
+      birthDate?: string | null;
+      notes?: Record<string, unknown> | null;
+      profilePhotoMediaId?: Record<string, unknown> | null;
     };
     UpdateAnimalDto: {
       name?: string;
       species?: string;
-      breed?: string;
+      breed?: string | null;
       sex?: 'female' | 'male' | 'unknown';
       intakeDate?: string;
-      birthDate?: string;
-      profilePhotoMediaId?: string;
+      birthDate?: string | null;
+      profilePhotoMediaId?: string | null;
     };
     ChangeAnimalStatusDto: {
       status: 'admitted' | 'under_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
@@ -78,7 +78,7 @@ export interface components {
         'intake' | 'transfer' | 'status_change' | 'behavior_note' | 'adoption' | 'general_note';
       description: string;
       occurredAt: string;
-      createdByUserId?: string;
+      createdByUserId?: string | null;
       metadata?: Record<string, unknown>;
     };
     PaginatedAnimalHistoryEventsResponseDto: {
@@ -90,23 +90,23 @@ export interface components {
     CreateCareTaskDto: {
       animalId: string;
       title: string;
-      description?: string;
-      dueAt?: string;
+      description?: string | null;
+      dueAt?: string | null;
     };
     UpdateCareTaskDto: {
       title?: string;
-      description?: string;
-      dueAt?: string;
+      description?: string | null;
+      dueAt?: string | null;
     };
     CareTaskResponseDto: {
       id: string;
       animalId: string;
       title: string;
-      description?: string;
+      description?: string | null;
       status: 'pending' | 'completed' | 'cancelled';
-      dueAt?: string;
-      completedAt?: string;
-      createdByUserId?: string;
+      dueAt?: string | null;
+      completedAt?: string | null;
+      createdByUserId?: string | null;
       createdAt: string;
       updatedAt: string;
     };
@@ -122,8 +122,8 @@ export interface components {
     };
     MediaAssetResponseDto: {
       id: string;
-      ownerType?: 'animal' | 'expense_ticket' | 'medical_record' | 'user' | 'veterinarian';
-      ownerId?: Record<string, unknown>;
+      ownerType?: 'animal' | 'expense_ticket' | 'medical_record' | 'user' | 'veterinarian' | null;
+      ownerId?: Record<string, unknown> | null;
       resourceType: 'image' | 'video' | 'raw';
       publicId: string;
       secureUrl: string;
@@ -131,6 +131,91 @@ export interface components {
       format?: string;
       uploadedByUserId?: string;
       metadata?: Record<string, unknown>;
+    };
+    CreateMedicalRecordDto: {
+      animalId: string;
+      veterinarianId?: string;
+      recordType:
+        | 'consultation'
+        | 'vaccination'
+        | 'deworming'
+        | 'surgery'
+        | 'lab_result'
+        | 'treatment'
+        | 'other';
+      title: string;
+      occurredAt: string;
+      diagnosis?: string;
+      treatment?: string;
+      notes?: string;
+      attachmentMediaIds?: string[];
+    };
+    UpdateMedicalRecordDto: {
+      recordType?:
+        | 'consultation'
+        | 'vaccination'
+        | 'deworming'
+        | 'surgery'
+        | 'lab_result'
+        | 'treatment'
+        | 'other';
+      title?: string;
+      occurredAt?: string;
+      veterinarianId?: string | null;
+      diagnosis?: string | null;
+      treatment?: string | null;
+      notes?: string | null;
+    };
+    MedicalRecordResponseDto: {
+      id: string;
+      animalId: string;
+      veterinarianId?: string | null;
+      recordType:
+        | 'consultation'
+        | 'vaccination'
+        | 'deworming'
+        | 'surgery'
+        | 'lab_result'
+        | 'treatment'
+        | 'other';
+      title: string;
+      diagnosis?: string | null;
+      treatment?: string | null;
+      notes?: string | null;
+      occurredAt: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    PaginatedMedicalRecordsResponseDto: {
+      items: components['schemas']['MedicalRecordResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
+    VeterinarianResponseDto: {
+      id: string;
+      userId?: string | null;
+      firstName: string;
+      lastName: string;
+      licenseNumber: string;
+      email?: string | null;
+      phone?: string | null;
+      notes?: string | null;
+      isActive: boolean;
+      createdAt?: string;
+      updatedAt?: string;
+    };
+    PaginatedVeterinariansResponseDto: {
+      items: components['schemas']['VeterinarianResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
+    PaginatedMediaAssetsResponseDto: {
+      items: components['schemas']['MediaAssetResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
     };
     ErrorResponseDto: {
       statusCode: number;
