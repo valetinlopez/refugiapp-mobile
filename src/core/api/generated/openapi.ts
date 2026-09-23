@@ -132,6 +132,34 @@ export interface components {
       uploadedByUserId?: string;
       metadata?: Record<string, unknown>;
     };
+    CreateExpenseDto: {
+      animalId: string;
+      category: 'food' | 'medicine' | 'veterinary' | 'supplies' | 'transport' | 'other';
+      amountCents: number;
+      currency: string;
+      description: string;
+      incurredAt: string;
+      ticketMediaId?: string;
+    };
+    ExpenseResponseDto: {
+      id: string;
+      animalId: string;
+      category: 'food' | 'medicine' | 'veterinary' | 'supplies' | 'transport' | 'other';
+      amountCents: number;
+      currency: string;
+      description: string;
+      ticketMediaId?: Record<string, unknown> | null;
+      createdByUserId?: Record<string, unknown> | null;
+      incurredAt: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    PaginatedExpensesResponseDto: {
+      items: components['schemas']['ExpenseResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
     CreateMedicalRecordDto: {
       animalId: string;
       veterinarianId?: string;

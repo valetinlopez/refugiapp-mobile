@@ -19,6 +19,7 @@
 - `(auth)`: login público; no existe registro público en el backend.
 - `(app)`: área autenticada.
 - `(app)/(tabs)`: destinos principales: `index` (Inicio), `explore` (Animales), `care-tasks` (Tareas). La ruta legacy `inbox` es un redirect oculto (`href: null`) hacia `care-tasks`.
+- `(app)/expenses/new`: alta de gasto con comprobante para `admin` y `shelter_manager`.
 - `design-system`: catálogo interno, no funcionalidad de producción.
 - El layout raíz protege `(auth)` y `(app)` con `Stack.Protected` según el Session Context.
 

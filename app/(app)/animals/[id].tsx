@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -178,6 +178,16 @@ function AnimalDetailContent({
                 pathname: '/care-tasks',
                 params: { animalId: animal.id, animalName: animal.name },
               })
+            }
+            variant="secondary"
+          />
+          <AppButton
+            label="Registrar gasto"
+            onPress={() =>
+              router.push({
+                pathname: '/expenses/new',
+                params: { animalId: animal.id },
+              } as unknown as Href)
             }
             variant="secondary"
           />

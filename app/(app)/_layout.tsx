@@ -21,6 +21,7 @@ export default function AppLayout() {
       />
       <Stack.Screen name="care-tasks/new" options={{ title: 'Crear tarea' }} />
       <Stack.Screen name="care-tasks/[id]/edit" options={{ title: 'Editar tarea' }} />
+      <Stack.Screen name="expenses/new" options={{ title: 'Registrar gasto' }} />
     </Stack>
   );
 }
