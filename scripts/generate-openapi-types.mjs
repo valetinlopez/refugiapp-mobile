@@ -14,27 +14,34 @@ function referenceName(reference) {
 
 function schemaToType(schema) {
   if (schema.$ref) {
-    return `components['schemas']['${referenceName(schema.$ref)}']`;
+    return withNullable(schema, `components['schemas']['${referenceName(schema.$ref)}']`);
   }
   if (schema.oneOf) {
-    return schema.oneOf.map(schemaToType).join(' | ');
+    return withNullable(schema, schema.oneOf.map(schemaToType).join(' | '));
   }
   if (schema.enum) {
-    return schema.enum.map((value) => JSON.stringify(value)).join(' | ');
+    return withNullable(schema, schema.enum.map((value) => JSON.stringify(value)).join(' | '));
   }
   if (schema.type === 'array') {
-    return `(${schemaToType(schema.items)})[]`;
+    return withNullable(schema, `(${schemaToType(schema.items)})[]`);
   }
   if (schema.type === 'object' || schema.properties) {
-    return objectSchemaToType(schema);
+    return withNullable(schema, objectSchemaToType(schema));
   }
   if (schema.type === 'integer' || schema.type === 'number') {
-    return 'number';
+    return withNullable(schema, 'number');
   }
   if (schema.type === 'boolean') {
-    return 'boolean';
+    return withNullable(schema, 'boolean');
   }
-  return 'string';
+  if (schema.type === 'null') {
+    return 'null';
+  }
+  return withNullable(schema, 'string');
+}
+
+function withNullable(schema, type) {
+  return schema.nullable === true ? `${type} | null` : type;
 }
 
 function objectSchemaToType(schema) {

@@ -11,6 +11,14 @@ export default function AppLayout() {
         name="animals/[id]/events/new"
         options={{ title: 'Registrar evento general' }}
       />
+      <Stack.Screen
+        name="animals/[id]/medical-records/new"
+        options={{ title: 'Registrar consulta' }}
+      />
+      <Stack.Screen
+        name="animals/[id]/medical-records/[recordId]/edit"
+        options={{ title: 'Editar registro clínico' }}
+      />
       <Stack.Screen name="care-tasks/new" options={{ title: 'Crear tarea' }} />
       <Stack.Screen name="care-tasks/[id]/edit" options={{ title: 'Editar tarea' }} />
     </Stack>

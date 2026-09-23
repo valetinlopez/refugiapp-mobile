@@ -54,6 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       package: app.packageName,
       predictiveBackGestureEnabled: false,
     },
+    plugins: [...(config.plugins ?? []), '@react-native-community/datetimepicker'],
     extra: {
       ...config.extra,
       environment: variant,
