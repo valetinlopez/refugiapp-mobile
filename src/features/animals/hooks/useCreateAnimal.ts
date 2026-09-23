@@ -1,4 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRef, useState } from 'react';
+
+import { UploadCancelledError } from '@/core/media';
 
 import { animalsApi } from '../api/animalsApi';
 import { mediaApi, type PhotoFile } from '../api/mediaApi';
@@ -15,17 +18,30 @@ export interface CreateAnimalInput extends CreateAnimalFormValues {
 
 export function useCreateAnimal() {
   const queryClient = useQueryClient();
+  const abortController = useRef<AbortController | null>(null);
+  const [upload, setUpload] = useState<{ fileName: string; progress: number } | null>(null);
 
-  return useMutation<Animal, CreateAnimalError, CreateAnimalInput>({
+  const mutation = useMutation<Animal, CreateAnimalError, CreateAnimalInput>({
     mutationFn: async (input) => {
       let profilePhotoMediaId: string | undefined;
 
       if (input.photo !== null) {
+        abortController.current = new AbortController();
+        setUpload({ fileName: input.photo.name, progress: 0 });
         try {
-          const asset = await mediaApi.uploadOrphanPhoto(input.photo);
+          const asset = await mediaApi.uploadOrphanPhoto(input.photo, undefined, {
+            signal: abortController.current.signal,
+            onUploadProgress: (progress) =>
+              setUpload({ fileName: input.photo?.name ?? '', progress }),
+          });
           profilePhotoMediaId = asset.id;
         } catch (error) {
+          if (abortController.current.signal.aborted) {
+            throw new CreateAnimalError('photo', new UploadCancelledError());
+          }
           throw new CreateAnimalError('photo', error);
+        } finally {
+          setUpload(null);
         }
       }
 
@@ -38,8 +54,15 @@ export function useCreateAnimal() {
         throw new CreateAnimalError('create', error);
       }
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: animalKeys.all });
+    onSuccess: (animal) => {
+      queryClient.setQueryData(animalKeys.detail(animal.id), animal);
+      void queryClient.invalidateQueries({ queryKey: animalKeys.lists() });
+    },
+    onSettled: () => {
+      abortController.current = null;
+      setUpload(null);
     },
   });
+
+  return { ...mutation, cancelUpload: () => abortController.current?.abort(), upload };
 }

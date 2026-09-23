@@ -110,6 +110,51 @@ describe('medical record mutations', () => {
     expect(remove).toHaveBeenCalledWith('media-1');
   });
 
+  it('cancels an upload and deletes orphan assets already uploaded', async () => {
+    let uploadCount = 0;
+    const create = jest.spyOn(medicalRecordsApi, 'create').mockResolvedValue(record());
+    jest
+      .spyOn(clinicalAttachmentsApi, 'uploadOrphan')
+      .mockImplementation(async (_file, _client, options) => {
+        uploadCount += 1;
+        if (uploadCount === 1) {
+          return {
+            id: 'media-1',
+            resourceType: 'image',
+            publicId: 'refugiapp/first',
+            secureUrl: 'https://cdn.test/first.jpg',
+          };
+        }
+        return new Promise((_resolve, reject) => {
+          options?.signal?.addEventListener('abort', () => reject(new Error('aborted')), {
+            once: true,
+          });
+        });
+      });
+    const remove = jest.spyOn(clinicalAttachmentsApi, 'delete').mockResolvedValue(undefined);
+    const { result } = await renderHook(() => useCreateMedicalRecord(), { wrapper });
+
+    result.current.mutate({
+      form: {
+        animalId: ANIMAL_ID,
+        recordType: 'consultation',
+        title: 'Consulta general',
+        occurredAt: '2026-09-22T14:30:00-03:00',
+      },
+      attachments: [
+        { uri: 'file:///first.jpg', name: 'first.jpg', mimeType: 'image/jpeg' },
+        { uri: 'file:///second.jpg', name: 'second.jpg', mimeType: 'image/jpeg' },
+      ],
+    });
+    await waitFor(() => expect(result.current.upload?.fileName).toBe('second.jpg'));
+
+    result.current.cancelUpload();
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(remove).toHaveBeenCalledWith('media-1');
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('invalidates the clinical history list and updates detail after editing', async () => {
     jest.spyOn(medicalRecordsApi, 'update').mockResolvedValue(record());
     jest.spyOn(medicalRecordsApi, 'getById').mockResolvedValue(record());
@@ -161,10 +206,18 @@ describe('medical record mutations', () => {
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(upload).toHaveBeenCalledWith(RECORD_ID, {
-      uri: 'file:///rx2.jpg',
-      name: 'rx2.jpg',
-      mimeType: 'image/jpeg',
-    });
+    expect(upload).toHaveBeenCalledWith(
+      RECORD_ID,
+      {
+        uri: 'file:///rx2.jpg',
+        name: 'rx2.jpg',
+        mimeType: 'image/jpeg',
+      },
+      undefined,
+      expect.objectContaining({
+        onUploadProgress: expect.any(Function),
+        signal: expect.any(AbortSignal),
+      })
+    );
   });
 });

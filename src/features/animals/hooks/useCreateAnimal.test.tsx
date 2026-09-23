@@ -80,7 +80,8 @@ describe('useCreateAnimal', () => {
       status: 'admitted',
       intakeDate: '2026-01-10',
     });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: animalKeys.all });
+    expect(queryClient.getQueryData(animalKeys.detail(createAnimal().id))).toEqual(createAnimal());
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: animalKeys.lists() });
   });
 
   it('uploads the orphan photo first and links it on creation', async () => {
@@ -99,7 +100,14 @@ describe('useCreateAnimal', () => {
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
     });
-    expect(upload).toHaveBeenCalledWith(photo);
+    expect(upload).toHaveBeenCalledWith(
+      photo,
+      undefined,
+      expect.objectContaining({
+        onUploadProgress: expect.any(Function),
+        signal: expect.any(AbortSignal),
+      })
+    );
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
         profilePhotoMediaId: '7fa85f64-5717-4562-b3fc-2c963f66afa6',

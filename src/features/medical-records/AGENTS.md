@@ -54,7 +54,7 @@
 
 - Snapshot OpenAPI móvil ampliado con medical-records, veterinarians y media por owner; tipos generados.
 - `MedicalRecordForm` create/edit con React Hook Form + Zod en español y diff PATCH.
-- Adjuntos clínicos: subida huérfana en creación (limpieza best-effort si falla el POST) y subida directa en edición.
+- Adjuntos clínicos desde cámara, galería o selector de PDF: JPEG, PNG, WebP y PDF de hasta 10 MB; subida huérfana en creación (limpieza best-effort al cancelar o fallar el POST) y subida directa en edición, con progreso y cancelación.
 - `ClinicalHistory` para presentar la evolución clínica por animal.
 - Invalidación de `medicalRecordKeys.listByAnimal(animalId)` tras crear o editar.
 - Guards visuales para `admin` y `veterinarian`.

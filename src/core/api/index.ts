@@ -3,6 +3,7 @@ export type {
   HttpRequestOptions,
   HttpResponse,
   HttpTransport,
+  HttpTransportOptions,
   HttpTransportResponse,
   TokenStorageAdapter,
 } from './client';

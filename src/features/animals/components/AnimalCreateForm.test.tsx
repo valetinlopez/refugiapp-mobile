@@ -6,7 +6,9 @@ import { AnimalCreateForm } from './AnimalCreateForm';
 
 jest.mock('expo-image-picker', () => ({
   MediaTypeOptions: { Images: 'Images' },
+  launchCameraAsync: jest.fn(),
   launchImageLibraryAsync: jest.fn(),
+  requestCameraPermissionsAsync: jest.fn(),
   requestMediaLibraryPermissionsAsync: jest.fn(),
 }));
 
@@ -133,7 +135,7 @@ describe('AnimalCreateForm', () => {
     const onSubmit = jest.fn();
     const screen = await render(<AnimalCreateForm onSubmit={onSubmit} />);
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Elegir foto' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Elegir de galería' }));
 
     expect(await screen.findByLabelText('Foto de perfil seleccionada para photo.jpg')).toBeTruthy();
 
@@ -160,19 +162,19 @@ describe('AnimalCreateForm', () => {
     });
     const screen = await render(<AnimalCreateForm onSubmit={() => undefined} />);
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Elegir foto' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Elegir de galería' }));
     await screen.findByLabelText('Foto de perfil seleccionada para photo.jpg');
     await fireEvent.press(screen.getByRole('button', { name: 'Quitar' }));
 
     expect(screen.getByLabelText('Sin foto de perfil')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Elegir foto' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Elegir de galería' })).toBeTruthy();
   });
 
   it('explains denied photo permissions in Spanish', async () => {
     mockRequestPermissions.mockResolvedValue({ granted: false });
     const screen = await render(<AnimalCreateForm onSubmit={() => undefined} />);
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Elegir foto' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Elegir de galería' }));
 
     expect(
       await screen.findByText('Necesitamos acceso a tus fotos para elegir la foto de perfil.')
@@ -186,10 +188,10 @@ describe('AnimalCreateForm', () => {
     });
     const screen = await render(<AnimalCreateForm onSubmit={() => undefined} />);
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Elegir foto' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Elegir de galería' }));
 
     expect(
-      await screen.findByText('La foto supera los 10 MB. Elige una imagen más liviana.')
+      await screen.findByText('La foto supera los 10 MB. Elegí una imagen más liviana.')
     ).toBeTruthy();
   });
 });

@@ -84,6 +84,8 @@ npm run start:production
 
 Al ejecutar `npm start` se levanta el Metro bundler. Escanear el QR con **Expo Go** (Android) o la camara (iOS) para abrir la app en el ambiente development.
 
+Los permisos nativos de cámara y galería se configuran mediante el plugin de `expo-image-picker`. Al cambiar esos textos o dependencias nativas se necesita una nueva compilación; una actualización OTA no modifica los permisos declarados en el binario.
+
 Otras variantes:
 
 ```bash
@@ -159,7 +161,7 @@ src/components/patterns/    # Patrones compuestos, como filas de tareas
 
 El límite HTTP es inyectable. `createFakeHttpTransport` permite definir rutas falsas para desarrollo aislado y tests sin depender de una API real.
 
-En Android/iOS, el par de tokens se persiste exclusivamente con Expo SecureStore. En web, donde SecureStore no está disponible, la sesión se conserva solo en memoria y se pierde al recargar; nunca se degrada a `localStorage` o AsyncStorage.
+En Android/iOS, el par de tokens se persiste exclusivamente con Expo SecureStore. En web, donde SecureStore no está disponible, se usa `sessionStorage`: la sesión sobrevive recargas en la misma pestaña y se elimina al cerrarla. Nunca se guardan tokens en `localStorage` o AsyncStorage.
 
 ## CI móvil
 

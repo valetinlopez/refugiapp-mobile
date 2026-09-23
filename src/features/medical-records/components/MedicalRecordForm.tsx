@@ -5,6 +5,7 @@ import { Controller, useForm, type Control } from 'react-hook-form';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { AppButton, AppIcon, AppText } from '@/components/primitives';
+import { MediaUploadStatus } from '@/components/feedback';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
 import type { AttachmentFile } from '../api/clinicalAttachmentsApi';
@@ -45,6 +46,8 @@ interface BaseProps {
   errorMessage?: string | null;
   isSubmitting?: boolean;
   intakeDate: string;
+  onCancelUpload?(): void;
+  upload?: { fileName: string; progress: number } | null;
   veterinarianOptions: VeterinarianOption[];
 }
 
@@ -72,7 +75,9 @@ function CreateForm({
   errorMessage,
   intakeDate,
   isSubmitting = false,
+  onCancelUpload,
   onSubmit,
+  upload,
   veterinarianOptions,
 }: CreateProps) {
   const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
@@ -108,6 +113,14 @@ function CreateForm({
           value={attachments}
         />
       </View>
+      {upload ? (
+        <MediaUploadStatus
+          fileName={upload.fileName}
+          {...(onCancelUpload ? { onCancel: onCancelUpload } : {})}
+          progress={upload.progress}
+          status="uploading"
+        />
+      ) : null}
       <FormError message={errorMessage} />
       <AppButton
         label="Registrar consulta"
@@ -128,9 +141,11 @@ function EditForm({
   existingAttachments,
   intakeDate,
   isSubmitting = false,
+  onCancelUpload,
   onSubmit,
   record,
   veterinarianOptions,
+  upload,
 }: EditProps) {
   const [newAttachments, setNewAttachments] = useState<AttachmentFile[]>([]);
   const [removedAttachmentIds, setRemovedAttachmentIds] = useState<string[]>([]);
@@ -161,6 +176,14 @@ function EditForm({
           value={newAttachments}
         />
       </View>
+      {upload ? (
+        <MediaUploadStatus
+          fileName={upload.fileName}
+          {...(onCancelUpload ? { onCancel: onCancelUpload } : {})}
+          progress={upload.progress}
+          status="uploading"
+        />
+      ) : null}
       <FormError message={errorMessage} />
       <AppButton
         label="Guardar cambios"

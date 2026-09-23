@@ -101,11 +101,18 @@ describe('useUpdateAnimal', () => {
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
     });
-    expect(upload).toHaveBeenCalledWith({
-      uri: 'file:///photo.jpg',
-      name: 'photo.jpg',
-      mimeType: 'image/jpeg',
-    });
+    expect(upload).toHaveBeenCalledWith(
+      {
+        uri: 'file:///photo.jpg',
+        name: 'photo.jpg',
+        mimeType: 'image/jpeg',
+      },
+      undefined,
+      expect.objectContaining({
+        onUploadProgress: expect.any(Function),
+        signal: expect.any(AbortSignal),
+      })
+    );
     expect(update).toHaveBeenCalledWith(
       ANIMAL_ID,
       expect.objectContaining({

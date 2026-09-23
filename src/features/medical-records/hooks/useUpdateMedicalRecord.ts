@@ -1,4 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRef, useState } from 'react';
+
+import { UploadCancelledError } from '@/core/media';
 
 import { clinicalAttachmentsApi, type AttachmentFile } from '../api/clinicalAttachmentsApi';
 import { medicalRecordsApi } from '../api/medicalRecordsApi';
@@ -26,8 +29,10 @@ export interface UpdateMedicalRecordInput {
 
 export function useUpdateMedicalRecord() {
   const queryClient = useQueryClient();
+  const abortController = useRef<AbortController | null>(null);
+  const [upload, setUpload] = useState<{ fileName: string; progress: number } | null>(null);
 
-  return useMutation<MedicalRecord, UpdateMedicalRecordError, UpdateMedicalRecordInput>({
+  const mutation = useMutation<MedicalRecord, UpdateMedicalRecordError, UpdateMedicalRecordInput>({
     mutationFn: async ({ id, initial, form, newAttachments, removedAttachmentIds }) => {
       const patch = toUpdateMedicalRecordRequest(initial, form);
       const hasChanges =
@@ -45,14 +50,28 @@ export function useUpdateMedicalRecord() {
       }
 
       const uploadedIds: string[] = [];
+      abortController.current = new AbortController();
       try {
-        for (const file of newAttachments) {
-          const asset = await clinicalAttachmentsApi.uploadToRecord(id, file);
+        for (const [index, file] of newAttachments.entries()) {
+          setUpload({ fileName: file.name, progress: index / newAttachments.length });
+          const asset = await clinicalAttachmentsApi.uploadToRecord(id, file, undefined, {
+            signal: abortController.current.signal,
+            onUploadProgress: (fileProgress) =>
+              setUpload({
+                fileName: file.name,
+                progress: (index + fileProgress) / newAttachments.length,
+              }),
+          });
           uploadedIds.push(asset.id);
         }
       } catch (error) {
         await deleteUploaded(uploadedIds);
+        if (abortController.current.signal.aborted) {
+          throw new UpdateMedicalRecordError('attachment', new UploadCancelledError());
+        }
         throw new UpdateMedicalRecordError('attachment', error);
+      } finally {
+        setUpload(null);
       }
 
       await Promise.all(
@@ -67,7 +86,17 @@ export function useUpdateMedicalRecord() {
       void queryClient.setQueryData(medicalRecordKeys.detail(record.id), record);
       await invalidateMedicalRecordQueries(queryClient);
     },
+    onSettled: () => {
+      abortController.current = null;
+      setUpload(null);
+    },
   });
+
+  return {
+    ...mutation,
+    cancelUpload: () => abortController.current?.abort(),
+    upload,
+  };
 }
 
 async function deleteUploaded(ids: string[]): Promise<void> {

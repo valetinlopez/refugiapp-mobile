@@ -20,8 +20,25 @@ const isAvailableMock = SecureStore.isAvailableAsync as jest.MockedFunction<
 >;
 
 describe('tokenStorage', () => {
+  const sessionStorageValues = new Map<string, string>();
+  const sessionStorageMock: Storage = {
+    clear: jest.fn(() => sessionStorageValues.clear()),
+    getItem: jest.fn((key: string) => sessionStorageValues.get(key) ?? null),
+    key: jest.fn((index: number) => [...sessionStorageValues.keys()][index] ?? null),
+    get length() {
+      return sessionStorageValues.size;
+    },
+    removeItem: jest.fn((key: string) => sessionStorageValues.delete(key)),
+    setItem: jest.fn((key: string, value: string) => sessionStorageValues.set(key, value)),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
+    sessionStorageValues.clear();
+    Object.defineProperty(globalThis, 'sessionStorage', {
+      configurable: true,
+      value: sessionStorageMock,
+    });
     isAvailableMock.mockResolvedValue(true);
   });
 
@@ -44,7 +61,7 @@ describe('tokenStorage', () => {
     await expect(tokenStorage.getTokens()).resolves.toBeNull();
   });
 
-  it('uses volatile memory without persisting tokens when SecureStore is unavailable on web', async () => {
+  it('keeps web tokens in session storage so a page reload can restore them', async () => {
     isAvailableMock.mockResolvedValue(false);
 
     await tokenStorage.setTokens('web-access', 'web-refresh');
@@ -54,8 +71,20 @@ describe('tokenStorage', () => {
       refreshToken: 'web-refresh',
     });
     expect(setItemMock).not.toHaveBeenCalled();
+    expect(sessionStorageMock.setItem).toHaveBeenCalledWith(
+      'refugiapp.authTokenPair',
+      JSON.stringify({ accessToken: 'web-access', refreshToken: 'web-refresh' })
+    );
 
     await tokenStorage.clearTokens();
+    await expect(tokenStorage.getTokens()).resolves.toBeNull();
+    expect(sessionStorageMock.removeItem).toHaveBeenCalledWith('refugiapp.authTokenPair');
+  });
+
+  it('rejects malformed web session data', async () => {
+    isAvailableMock.mockResolvedValue(false);
+    sessionStorageValues.set('refugiapp.authTokenPair', '{"accessToken":"missing-refresh"}');
+
     await expect(tokenStorage.getTokens()).resolves.toBeNull();
   });
 });

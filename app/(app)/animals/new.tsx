@@ -49,6 +49,7 @@ export default function NewAnimalScreen() {
         <AnimalCreateForm
           errorMessage={createAnimal.error ? toCreateAnimalErrorMessage(createAnimal.error) : null}
           isSubmitting={createAnimal.isPending}
+          onCancelUpload={createAnimal.cancelUpload}
           onSubmit={(input) =>
             createAnimal.mutate(input, {
               onSuccess: (animal) => {
@@ -56,6 +57,7 @@ export default function NewAnimalScreen() {
               },
             })
           }
+          upload={createAnimal.upload}
         />
       </ScrollView>
     </SafeAreaView>

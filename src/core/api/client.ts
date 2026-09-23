@@ -14,7 +14,15 @@ export interface HttpTransportResponse {
   text(): Promise<string>;
 }
 
-export type HttpTransport = (url: string, init: RequestInit) => Promise<HttpTransportResponse>;
+export interface HttpTransportOptions {
+  onUploadProgress?(progress: number): void;
+}
+
+export type HttpTransport = (
+  url: string,
+  init: RequestInit,
+  options?: HttpTransportOptions
+) => Promise<HttpTransportResponse>;
 
 export interface HttpResponse<T> {
   data: T;
@@ -26,8 +34,10 @@ export interface HttpResponse<T> {
 export interface HttpRequestOptions {
   auth?: boolean;
   headers?: Record<string, string>;
+  onUploadProgress?(progress: number): void;
   params?: Record<string, boolean | number | string | null | undefined>;
   retry?: number;
+  signal?: AbortSignal;
   timeoutMs?: number;
 }
 
@@ -47,8 +57,55 @@ interface HttpClientOptions {
 
 type SessionInvalidatedHandler = () => void | Promise<void>;
 
-function defaultTransport(url: string, init: RequestInit): Promise<HttpTransportResponse> {
+function defaultTransport(
+  url: string,
+  init: RequestInit,
+  options?: HttpTransportOptions
+): Promise<HttpTransportResponse> {
+  if (options?.onUploadProgress !== undefined) {
+    return xhrTransport(url, init, options.onUploadProgress);
+  }
   return fetch(url, init);
+}
+
+function xhrTransport(
+  url: string,
+  init: RequestInit,
+  onUploadProgress: (progress: number) => void
+): Promise<HttpTransportResponse> {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open(init.method ?? 'GET', url);
+    new Headers(init.headers).forEach((value, key) => request.setRequestHeader(key, value));
+    request.upload.onprogress = ({ lengthComputable, loaded, total }) => {
+      if (lengthComputable && total > 0) {
+        onUploadProgress(Math.min(1, loaded / total));
+      }
+    };
+    request.onload = () => {
+      onUploadProgress(1);
+      const headers = new Headers();
+      for (const line of request
+        .getAllResponseHeaders()
+        .trim()
+        .split(/[\r\n]+/)) {
+        const separator = line.indexOf(':');
+        if (separator > 0) {
+          headers.append(line.slice(0, separator).trim(), line.slice(separator + 1).trim());
+        }
+      }
+      resolve({
+        headers,
+        ok: request.status >= 200 && request.status < 300,
+        status: request.status,
+        text: async () => request.responseText,
+      });
+    };
+    request.onerror = () => reject(new Error('Upload request failed'));
+    request.onabort = () => reject(new Error('Upload request aborted'));
+    init.signal?.addEventListener('abort', () => request.abort(), { once: true });
+    request.send((init.body as XMLHttpRequestBodyInit | null | undefined) ?? null);
+  });
 }
 
 function isFormData(body: unknown): body is FormData {
@@ -214,6 +271,11 @@ export class HttpClient {
 
     const requestBody = toRequestBody(body);
     const controller = new AbortController();
+    const abortFromCaller = () => controller.abort();
+    options.signal?.addEventListener('abort', abortFromCaller, { once: true });
+    if (options.signal?.aborted === true) {
+      controller.abort();
+    }
     const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? this.timeoutMs);
     const init: RequestInit = {
       headers,
@@ -225,9 +287,14 @@ export class HttpClient {
     }
 
     try {
-      return await this.transport(buildUrl(this.baseUrl, path, options.params), init);
+      return await this.transport(buildUrl(this.baseUrl, path, options.params), init, {
+        ...(options.onUploadProgress !== undefined
+          ? { onUploadProgress: options.onUploadProgress }
+          : {}),
+      });
     } finally {
       clearTimeout(timeout);
+      options.signal?.removeEventListener('abort', abortFromCaller);
     }
   }
 

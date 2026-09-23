@@ -63,6 +63,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 ## Estrategia de escritura
 
 - No se usan optimistic updates: `useUpdateAnimal` y `useChangeAnimalStatus` invalidan queries y, al volver del detalle, la pantalla refetchea la fuente de verdad.
+- `useCreateAnimal` hidrata `animalKeys.detail(id)` con la respuesta confirmada de `POST /animals` e invalida solo los listados; el detalle conserva una ventana corta de frescura para no repetir inmediatamente la lectura después del alta.
 - `useUpdateAnimal` sube una foto huérfana solo si el usuario eligió una; si el `PATCH` falla después de subir, borra el asset huérfano best-effort.
 - `PATCH /animals/:id/status` crea un evento `status_change` trazable; la UI explica la consecuencia antes de confirmar y reserva el tono danger para estados terminales.
 
@@ -83,6 +84,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Cambio de estado (`PATCH /animals/:id/status`) para `admin` y `shelter_manager` mediante `useChangeAnimalStatus`, con matriz de transiciones local y confirmación de consecuencia.
 - Alta de eventos generales (`POST /animals/:animalId/events`) para `admin` y `shelter_manager`, limitada a `general_note`, `behavior_note` y `transfer`; el backend registra al actor autenticado y la mutation invalida `animalKeys.history(animalId)`.
 - Subida de foto de perfil como asset huérfano (`POST /media/upload` multipart) y vinculación con `profilePhotoMediaId` al crear o editar; limpieza best-effort del huérfano si la escritura falla después de subir.
+- La foto puede capturarse con cámara o elegirse desde galería; se aceptan JPEG, PNG y WebP de hasta 10 MB, con progreso y cancelación durante la subida.
 - Lectura de asset (`GET /media/:id`) para mostrar la foto actual en detalle y edición (`useAnimalPhoto`).
 - Listado paginado (`GET /animals`) con filtros `status`, `species`, `sex` y nombre parcial mediante `useAnimals` (paginación infinita) y `AnimalCard`, con ruta `app/(app)/(tabs)/explore.tsx` para los tres roles.
 - Lectura del historial general (`GET /animals/:animalId/events`) mediante `useAnimalHistory` y presentación en `AnimalHistory` dentro del detalle, con invalidación coherente al crear eventos.

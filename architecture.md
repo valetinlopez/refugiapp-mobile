@@ -29,6 +29,7 @@ Los detalles visuales viven en `docs/design.md`. Los contratos del servidor y pe
 | Diseño              | Tokens propios + Expo Symbols            | Sistema compartido documentado en `docs/design.md`                    |
 | Formularios         | React Hook Form + Zod                    | Validación en español con esquemas puros testeables                   |
 | Selector de fecha   | `@react-native-community/datetimepicker` | Selector nativo para `occurredAt` de registros médicos (ver ADR-0004) |
+| Selección de media  | Expo ImagePicker + DocumentPicker        | Cámara, galería e importación de PDF (ver ADR-0005)                   |
 | Testing             | Jest + React Native Testing Library      | Unit y component tests                                                |
 | Calidad             | ESLint + Prettier + TypeScript           | Gates locales obligatorios                                            |
 
@@ -161,7 +162,7 @@ Expo Router es la fuente de verdad de navegación:
 
 ### 7.2 Cliente HTTP
 
-`src/core/api/client.ts` implementa un cliente basado en `fetch`. Adjunta el access token, genera `x-request-id`, aplica timeout configurable, reintenta solo métodos idempotentes, conserva `FormData` sin fijar manualmente el boundary y normaliza errores técnicos a español.
+`src/core/api/client.ts` implementa un cliente basado en `fetch`. Adjunta el access token, genera `x-request-id`, aplica timeout configurable, reintenta solo métodos idempotentes, conserva `FormData` sin fijar manualmente el boundary y normaliza errores técnicos a español. Las subidas multipart que solicitan progreso usan `XMLHttpRequest` como transporte acotado para publicar avance y permitir cancelación mediante `AbortSignal`, sin cambiar el contrato del cliente para el resto de las solicitudes.
 
 Ante respuestas `401`, todas las solicitudes concurrentes comparten una única renovación. El nuevo par se guarda en una sola escritura de Secure Store y cada solicitud original se reintenta una sola vez. Si la renovación falla, se limpian tokens y cache de Query antes de volver a login.
 
@@ -206,7 +207,7 @@ Roles válidos:
 - `shelter_manager`
 - `veterinarian`
 
-Los access y refresh tokens se almacenan juntos con Expo Secure Store en Android/iOS. En web, donde Secure Store no existe, la sesión es volátil y nunca cae a storage persistente inseguro. La aplicación no debe inferir permisos únicamente desde la presencia de un botón: el backend sigue siendo autoridad final.
+Los access y refresh tokens se almacenan juntos con Expo Secure Store en Android/iOS. En web, donde Secure Store no existe, el adaptador usa `sessionStorage`: la sesión sobrevive recargas en la misma pestaña y se elimina al cerrar esa pestaña. Nunca se usa `localStorage` ni AsyncStorage para tokens. La aplicación no debe inferir permisos únicamente desde la presencia de un botón: el backend sigue siendo autoridad final.
 
 El contrato actual del backend implementa login, refresh, logout y `GET /users/me`. No se expone registro público mientras el backend no publique ese endpoint.
 
@@ -322,6 +323,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Listado global de tareas (tab "Tareas", ruta `care-tasks`) y filtro por animal desde su detalle, con filtro por estado, formularios de alta y edición y confirmaciones para completar o cancelar; las mutaciones invalidan las queries de tareas y dashboard. La ruta legacy `/inbox` redirige a `/care-tasks`.
 - Contratos de tareas derivados del snapshot OpenAPI y guards de escritura para `admin` y `shelter_manager`.
 - Dependencias `react-hook-form`, `@hookform/resolvers` y `expo-image-picker` (ver ADR-0003).
+- Captura de imágenes desde cámara o galería y selección de PDF mediante `expo-document-picker`; validación local espejo de MIME/tamaño del backend y subida multipart con progreso y cancelación (ver ADR-0005).
 - Registros médicos y evolución clínica: feature `src/features/medical-records` con contrato derivado de OpenAPI (medical-records, veterinarians y media por owner), alta y edición con PATCH semántico (diff que omite campos intactos y envía `null` para limpiar), adjuntos clínicos multipart huérfanos en creación y directos al registro en edición, y selectores de veterinarios activos.
 - Formulario clínico con React Hook Form + Zod en español, `@react-native-community/datetimepicker` para `occurredAt` (validado contra `intakeDate` y fecha actual) y mensajes de error seguros por código de backend.
 - Rutas `app/(app)/animals/[id]/medical-records/new.tsx` y `app/(app)/animals/[id]/medical-records/[recordId]/edit.tsx`, y sección "Evolución clínica" en el detalle con `ClinicalHistory`; guards visuales para `admin` y `veterinarian`.

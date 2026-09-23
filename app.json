@@ -38,7 +38,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Permite a Refugiapp acceder a tus fotos para usar una como foto de perfil del animal."
+          "cameraPermission": "Permite a Refugiapp usar la cámara para fotografiar animales y documentos.",
+          "microphonePermission": false,
+          "photosPermission": "Permite a Refugiapp acceder a tus fotos para adjuntar imágenes de animales y documentos."
         }
       ]
     ],

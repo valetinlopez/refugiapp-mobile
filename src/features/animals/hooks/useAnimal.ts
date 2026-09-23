@@ -11,5 +11,6 @@ export function useAnimal(id: string) {
     queryFn: () => animalsApi.getById(id),
     enabled: id !== '',
     retry: 1,
+    staleTime: 30_000,
   });
 }

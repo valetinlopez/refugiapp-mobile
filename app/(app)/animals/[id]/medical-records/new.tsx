@@ -50,7 +50,7 @@ export default function NewMedicalRecordScreen() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppText variant="heading1">Registrar consulta</AppText>
         <AppText color="textSecondary">
-          Completá el registro clínico del animal. Podés adjuntar imágenes.
+          Completá el registro clínico del animal. Podés adjuntar imágenes o PDF.
         </AppText>
         {pending ? <LoadingState label="Preparando formulario" /> : null}
         {hasError ? (
@@ -73,12 +73,14 @@ export default function NewMedicalRecordScreen() {
             intakeDate={animalQuery.data.intakeDate}
             isSubmitting={createRecord.isPending}
             mode="create"
+            onCancelUpload={createRecord.cancelUpload}
             onSubmit={(input) =>
               createRecord.mutate(input, {
                 onSuccess: () => goBack(),
               })
             }
             veterinarianOptions={veterinariansQuery.data}
+            upload={createRecord.upload}
           />
         ) : null}
       </ScrollView>

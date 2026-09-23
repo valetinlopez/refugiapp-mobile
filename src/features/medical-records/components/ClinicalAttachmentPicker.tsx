@@ -1,11 +1,13 @@
+import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppButton, AppIcon, AppText } from '@/components/primitives';
+import { DOCUMENT_MEDIA_TYPES, validateMediaFile } from '@/core/media';
 import { colors, radii, sizes, spacing } from '@/theme';
 
-import { MAX_CLINICAL_ATTACHMENT_BYTES, type AttachmentFile } from '../api/clinicalAttachmentsApi';
+import type { AttachmentFile } from '../api/clinicalAttachmentsApi';
 import { MAX_MEDICAL_ATTACHMENTS } from '../utils/medicalRecordSchema';
 
 interface ClinicalAttachmentPickerProps {
@@ -31,131 +33,186 @@ export function ClinicalAttachmentPicker({
 }: ClinicalAttachmentPickerProps) {
   const [isPicking, setIsPicking] = useState(false);
   const [pickerError, setPickerError] = useState<string | null>(null);
+  const total = value.length + existing.length;
 
-  async function handlePickFile(): Promise<void> {
-    if (isPicking || disabled) {
+  function addFile(file: AttachmentFile): void {
+    if (total >= MAX_MEDICAL_ATTACHMENTS) {
+      setPickerError(`No podés adjuntar más de ${MAX_MEDICAL_ATTACHMENTS} archivos.`);
       return;
     }
+    const validationError = validateMediaFile(file, DOCUMENT_MEDIA_TYPES);
+    if (validationError === 'invalid_type') {
+      setPickerError('Solo podés adjuntar imágenes JPEG, PNG o WebP y documentos PDF.');
+      return;
+    }
+    if (validationError === 'file_too_large') {
+      setPickerError('Un archivo supera los 10 MB. Elegí archivos más livianos.');
+      return;
+    }
+    onChange([...value, file]);
+  }
+
+  async function handlePickImage(source: 'camera' | 'gallery'): Promise<void> {
+    if (isPicking || disabled) return;
     setPickerError(null);
     setIsPicking(true);
     try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permission =
+        source === 'camera'
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        setPickerError('Necesitamos acceso a tus fotos para adjuntar archivos.');
+        setPickerError(
+          source === 'camera'
+            ? 'Necesitamos acceso a la cámara para fotografiar el documento.'
+            : 'Necesitamos acceso a tus fotos para adjuntar archivos.'
+        );
         return;
       }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
+      const options: ImagePicker.ImagePickerOptions = {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
         quality: 0.8,
+      };
+      const result =
+        source === 'camera'
+          ? await ImagePicker.launchCameraAsync(options)
+          : await ImagePicker.launchImageLibraryAsync(options);
+      const asset = result.canceled ? undefined : result.assets[0];
+      if (asset === undefined) return;
+      addFile({
+        uri: asset.uri,
+        name: asset.fileName ?? fileNameFromUri(asset.uri),
+        mimeType: asset.mimeType ?? 'image/jpeg',
+        ...(asset.fileSize != null ? { size: asset.fileSize } : {}),
+        ...(asset.file !== undefined ? { file: asset.file } : {}),
       });
-      if (result.canceled) {
-        return;
-      }
-
-      const asset = result.assets[0];
-      if (asset === undefined) {
-        return;
-      }
-
-      if (value.length >= MAX_MEDICAL_ATTACHMENTS) {
-        setPickerError(`No podés adjuntar más de ${MAX_MEDICAL_ATTACHMENTS} archivos.`);
-        return;
-      }
-      if (asset.fileSize != null && asset.fileSize > MAX_CLINICAL_ATTACHMENT_BYTES) {
-        setPickerError('Un archivo supera los 10 MB. Elige archivos más livianos.');
-        return;
-      }
-
-      onChange([
-        ...value,
-        {
-          uri: asset.uri,
-          name: fileNameFromUri(asset.uri),
-          mimeType: asset.mimeType ?? 'image/jpeg',
-          ...(asset.fileSize != null ? { size: asset.fileSize } : {}),
-        },
-      ]);
     } finally {
       setIsPicking(false);
     }
   }
 
-  const total = value.length + existing.length;
+  async function handlePickPdf(): Promise<void> {
+    if (isPicking || disabled) return;
+    setPickerError(null);
+    setIsPicking(true);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        copyToCacheDirectory: true,
+        multiple: false,
+        type: 'application/pdf',
+      });
+      const asset = result.canceled ? undefined : result.assets[0];
+      if (asset !== undefined) {
+        addFile({
+          uri: asset.uri,
+          name: asset.name,
+          mimeType: asset.mimeType ?? 'application/pdf',
+          ...(asset.size != null ? { size: asset.size } : {}),
+          ...(asset.file !== undefined ? { file: asset.file } : {}),
+        });
+      }
+    } finally {
+      setIsPicking(false);
+    }
+  }
+
   const busy = isPicking || disabled;
 
   return (
     <View style={styles.container}>
-      {existing.length > 0 || value.length > 0 ? (
+      {total > 0 ? (
         <View accessibilityLabel="Adjuntos clínicos" style={styles.list}>
           {existing.map((file) => (
-            <View key={file.id} style={styles.row}>
-              <AppIcon color="textSecondary" name="medical" size={sizes.iconSm} />
-              <AppText numberOfLines={1} style={styles.name}>
-                {file.name}
-              </AppText>
-              <Pressable
-                accessibilityLabel={`Quitar ${file.name}`}
-                accessibilityRole="button"
-                disabled={disabled}
-                hitSlop={8}
-                onPress={() => onRemoveExisting(file.id)}
-                style={styles.remove}
-              >
-                <AppIcon color="danger" name="close" size={sizes.iconSm} />
-              </Pressable>
-            </View>
+            <AttachmentRow
+              disabled={disabled}
+              key={file.id}
+              name={file.name}
+              onRemove={() => onRemoveExisting(file.id)}
+            />
           ))}
           {value.map((file, index) => (
-            <View key={`${file.uri}-${index}`} style={styles.row}>
-              <AppIcon color="textSecondary" name="medical" size={sizes.iconSm} />
-              <AppText numberOfLines={1} style={styles.name}>
-                {file.name}
-              </AppText>
-              <Pressable
-                accessibilityLabel={`Quitar ${file.name}`}
-                accessibilityRole="button"
-                disabled={disabled}
-                hitSlop={8}
-                onPress={() => onChange(value.filter((_, i) => i !== index))}
-                style={styles.remove}
-              >
-                <AppIcon color="danger" name="close" size={sizes.iconSm} />
-              </Pressable>
-            </View>
+            <AttachmentRow
+              disabled={disabled}
+              key={`${file.uri}-${index}`}
+              name={file.name}
+              onRemove={() => onChange(value.filter((_, itemIndex) => itemIndex !== index))}
+            />
           ))}
         </View>
       ) : null}
-      <AppButton
-        disabled={busy || total >= MAX_MEDICAL_ATTACHMENTS}
-        label={total === 0 ? 'Adjuntar archivo' : 'Adjuntar otro archivo'}
-        loading={isPicking}
-        onPress={() => void handlePickFile()}
-        variant="secondary"
-      />
+      <View style={styles.actions}>
+        <AppButton
+          disabled={busy || total >= MAX_MEDICAL_ATTACHMENTS}
+          label="Tomar foto"
+          loading={isPicking}
+          onPress={() => void handlePickImage('camera')}
+          variant="secondary"
+        />
+        <AppButton
+          disabled={busy || total >= MAX_MEDICAL_ATTACHMENTS}
+          label="Elegir imagen"
+          onPress={() => void handlePickImage('gallery')}
+          variant="secondary"
+        />
+        <AppButton
+          disabled={busy || total >= MAX_MEDICAL_ATTACHMENTS}
+          label="Elegir PDF"
+          onPress={() => void handlePickPdf()}
+          variant="secondary"
+        />
+      </View>
       {pickerError ? (
         <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
           {pickerError}
         </AppText>
       ) : null}
       <AppText color="textSecondary" variant="caption">
-        Opcional. Hasta {MAX_MEDICAL_ATTACHMENTS} archivos de imágenes de 10 MB como máximo.
+        Opcional. Hasta {MAX_MEDICAL_ATTACHMENTS} imágenes o PDF de 10 MB como máximo.
       </AppText>
     </View>
   );
 }
 
+function AttachmentRow({
+  disabled,
+  name,
+  onRemove,
+}: {
+  disabled: boolean;
+  name: string;
+  onRemove(): void;
+}) {
+  return (
+    <View style={styles.row}>
+      <AppIcon color="textSecondary" name="medical" size={sizes.iconSm} />
+      <AppText numberOfLines={1} style={styles.name}>
+        {name}
+      </AppText>
+      <Pressable
+        accessibilityLabel={`Quitar ${name}`}
+        accessibilityRole="button"
+        disabled={disabled}
+        hitSlop={8}
+        onPress={onRemove}
+        style={styles.remove}
+      >
+        <AppIcon color="danger" name="close" size={sizes.iconSm} />
+      </Pressable>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  list: {
-    gap: spacing.xs,
-  },
-  name: {
-    flex: 1,
-  },
+  container: { gap: spacing.sm },
+  list: { gap: spacing.xs },
+  name: { flex: 1 },
   remove: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppAvatar, AppButton, AppText } from '@/components/primitives';
+import { IMAGE_MEDIA_TYPES, validateMediaFile } from '@/core/media';
 import { spacing } from '@/theme';
 
-import { MAX_PROFILE_PHOTO_BYTES, type PhotoFile } from '../api/mediaApi';
+import type { PhotoFile } from '../api/mediaApi';
 
 interface ProfilePhotoPickerProps {
   disabled?: boolean;
@@ -29,50 +30,54 @@ export function ProfilePhotoPicker({
   const [isPicking, setIsPicking] = useState(false);
   const [pickerError, setPickerError] = useState<string | null>(null);
 
-  async function handlePickPhoto(): Promise<void> {
-    if (isPicking || disabled) {
-      return;
-    }
+  async function handlePickPhoto(source: 'camera' | 'gallery'): Promise<void> {
+    if (isPicking || disabled) return;
     setPickerError(null);
     setIsPicking(true);
     try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permission =
+        source === 'camera'
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        setPickerError('Necesitamos acceso a tus fotos para elegir la foto de perfil.');
+        setPickerError(
+          source === 'camera'
+            ? 'Necesitamos acceso a la cámara para tomar la foto de perfil.'
+            : 'Necesitamos acceso a tus fotos para elegir la foto de perfil.'
+        );
         return;
       }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
+      const options: ImagePicker.ImagePickerOptions = {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
-      });
-      if (result.canceled) {
-        return;
-      }
+      };
+      const result =
+        source === 'camera'
+          ? await ImagePicker.launchCameraAsync(options)
+          : await ImagePicker.launchImageLibraryAsync(options);
+      const asset = result.canceled ? undefined : result.assets[0];
+      if (asset === undefined) return;
 
-      const asset = result.assets[0];
-      if (asset === undefined) {
-        return;
-      }
-
-      const mimeType = asset.mimeType ?? 'image/jpeg';
-      if (!mimeType.startsWith('image/')) {
-        setPickerError('El archivo elegido no es una imagen válida.');
-        return;
-      }
-      if (asset.fileSize != null && asset.fileSize > MAX_PROFILE_PHOTO_BYTES) {
-        setPickerError('La foto supera los 10 MB. Elige una imagen más liviana.');
-        return;
-      }
-
-      onChange({
+      const photo: PhotoFile = {
         uri: asset.uri,
-        name: fileNameFromUri(asset.uri),
-        mimeType,
+        name: asset.fileName ?? fileNameFromUri(asset.uri),
+        mimeType: asset.mimeType ?? 'image/jpeg',
         ...(asset.fileSize != null ? { size: asset.fileSize } : {}),
-      });
+        ...(asset.file !== undefined ? { file: asset.file } : {}),
+      };
+      const validationError = validateMediaFile(photo, IMAGE_MEDIA_TYPES);
+      if (validationError === 'invalid_type') {
+        setPickerError('El archivo elegido no es una imagen JPEG, PNG o WebP válida.');
+        return;
+      }
+      if (validationError === 'file_too_large') {
+        setPickerError('La foto supera los 10 MB. Elegí una imagen más liviana.');
+        return;
+      }
+      onChange(photo);
     } finally {
       setIsPicking(false);
     }
@@ -92,9 +97,15 @@ export function ProfilePhotoPicker({
       <View style={styles.actions}>
         <AppButton
           disabled={busy}
-          label={value ? 'Cambiar foto' : 'Elegir foto'}
+          label="Tomar foto"
           loading={isPicking}
-          onPress={() => void handlePickPhoto()}
+          onPress={() => void handlePickPhoto('camera')}
+          variant="secondary"
+        />
+        <AppButton
+          disabled={busy}
+          label={value ? 'Cambiar desde galería' : 'Elegir de galería'}
+          onPress={() => void handlePickPhoto('gallery')}
           variant="secondary"
         />
         {value ? (
@@ -112,7 +123,7 @@ export function ProfilePhotoPicker({
         </AppText>
       ) : null}
       <AppText color="textSecondary" variant="caption">
-        Opcional. Usa un retrato con el rostro visible, de hasta 10 MB.
+        Opcional. Tomá una foto o elegí una imagen JPEG, PNG o WebP de hasta 10 MB.
       </AppText>
     </View>
   );
