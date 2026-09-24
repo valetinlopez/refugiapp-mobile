@@ -16,22 +16,22 @@ Los detalles visuales viven en `docs/design.md`. Los contratos del servidor y pe
 
 ## 2. Contexto tecnológico
 
-| Área                | Tecnología                               | Decisión                                                              |
-| ------------------- | ---------------------------------------- | --------------------------------------------------------------------- |
-| Runtime             | Node.js 22.13+                           | Mínimo requerido por Expo SDK 57                                      |
-| Framework           | Expo SDK 57                              | Runtime y tooling móvil                                               |
-| UI                  | React Native 0.86 + React 19.2           | Base multiplataforma                                                  |
-| Lenguaje            | TypeScript estricto                      | `strict`, `noUncheckedIndexedAccess` y `exactOptionalPropertyTypes`   |
-| Navegación          | Expo Router                              | Rutas basadas en archivos                                             |
-| Red                 | Fetch                                    | Cliente HTTP tipado, normalización y refresh single-flight            |
-| Estado servidor     | TanStack Query                           | Provider global conectado a red y AppState de React Native            |
-| Persistencia segura | Expo Secure Store                        | Tokens JWT y datos secretos pequeños                                  |
-| Diseño              | Tokens propios + Expo Symbols            | Sistema compartido documentado en `docs/design.md`                    |
-| Formularios         | React Hook Form + Zod                    | Validación en español con esquemas puros testeables                   |
-| Selector de fecha   | `@react-native-community/datetimepicker` | Selector nativo para `occurredAt` de registros médicos (ver ADR-0004) |
-| Selección de media  | Expo ImagePicker + DocumentPicker        | Cámara, galería e importación de PDF (ver ADR-0005)                   |
-| Testing             | Jest + React Native Testing Library      | Unit y component tests                                                |
-| Calidad             | ESLint + Prettier + TypeScript           | Gates locales obligatorios                                            |
+| Área                | Tecnología                               | Decisión                                                                   |
+| ------------------- | ---------------------------------------- | -------------------------------------------------------------------------- |
+| Runtime             | Node.js 22.13+                           | Mínimo requerido por Expo SDK 57                                           |
+| Framework           | Expo SDK 57                              | Runtime y tooling móvil                                                    |
+| UI                  | React Native 0.86 + React 19.2           | Base multiplataforma                                                       |
+| Lenguaje            | TypeScript estricto                      | `strict`, `noUncheckedIndexedAccess` y `exactOptionalPropertyTypes`        |
+| Navegación          | Expo Router                              | Rutas basadas en archivos                                                  |
+| Red                 | Fetch                                    | Cliente HTTP tipado, normalización y refresh single-flight                 |
+| Estado servidor     | TanStack Query                           | Provider global conectado a red y AppState de React Native                 |
+| Persistencia segura | Expo Secure Store                        | Tokens JWT y datos secretos pequeños                                       |
+| Diseño              | Tokens propios + Expo Symbols            | Sistema compartido documentado en `docs/design.md`                         |
+| Formularios         | React Hook Form + Zod                    | Validación en español con esquemas puros testeables                        |
+| Selector de fecha   | `@react-native-community/datetimepicker` | Patrón compartido para animales, tareas y registros médicos (ver ADR-0004) |
+| Selección de media  | Expo ImagePicker + DocumentPicker        | Cámara, galería e importación de PDF (ver ADR-0005)                        |
+| Testing             | Jest + React Native Testing Library      | Unit y component tests                                                     |
+| Calidad             | ESLint + Prettier + TypeScript           | Gates locales obligatorios                                                 |
 
 ## 3. Principios arquitectónicos
 

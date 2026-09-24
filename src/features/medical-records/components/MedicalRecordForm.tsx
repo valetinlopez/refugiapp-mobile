@@ -1,4 +1,3 @@
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, type ReactNode } from 'react';
 import { Controller, useForm, type Control } from 'react-hook-form';
@@ -6,6 +5,7 @@ import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'rea
 
 import { AppButton, AppIcon, AppText } from '@/components/primitives';
 import { MediaUploadStatus } from '@/components/feedback';
+import { DateTimeField } from '@/components/patterns';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
 import type { AttachmentFile } from '../api/clinicalAttachmentsApi';
@@ -28,11 +28,7 @@ import {
   toMedicalRecordRecordFields,
   toUpdateMedicalRecordFormValues,
 } from '../utils/toMedicalRecordFormValues';
-import {
-  formatRecordDate,
-  getRecordTypeLabel,
-  toLocalDateTimeIso,
-} from '../utils/medicalRecordPresentation';
+import { getRecordTypeLabel } from '../utils/medicalRecordPresentation';
 
 import { ClinicalAttachmentPicker } from './ClinicalAttachmentPicker';
 
@@ -263,8 +259,11 @@ function RecordFields({
         name="occurredAt"
         render={({ field, fieldState }) => (
           <Field error={fieldState.error?.message} label="Fecha y hora">
-            <OccurredAtInput
+            <DateTimeField
+              accessibilityLabel="Fecha y hora"
               disabled={disabled}
+              maximumDate={new Date()}
+              mode="datetime"
               onChange={field.onChange}
               value={field.value ?? ''}
             />
@@ -348,46 +347,6 @@ function RecordFields({
         )}
       />
     </>
-  );
-}
-
-function OccurredAtInput({
-  disabled,
-  onChange,
-  value,
-}: {
-  disabled: boolean;
-  onChange(value: string): void;
-  value: string;
-}) {
-  const [showPicker, setShowPicker] = useState(false);
-
-  function handleChange(event: DateTimePickerEvent, date?: Date): void {
-    setShowPicker(false);
-    if (event.type === 'set' && date !== undefined) {
-      onChange(toLocalDateTimeIso(date.toISOString()));
-    }
-  }
-
-  return (
-    <View style={styles.dateField}>
-      <AppButton
-        accessibilityLabel={value === '' ? 'Elegir fecha y hora' : `Fecha y hora ${value}`}
-        disabled={disabled}
-        icon="calendar"
-        label={value === '' ? 'Elegir fecha y hora' : formatRecordDate(value)}
-        onPress={() => setShowPicker(true)}
-        variant="secondary"
-      />
-      {showPicker ? (
-        <DateTimePicker
-          display="default"
-          mode="datetime"
-          onChange={handleChange}
-          value={value === '' ? new Date() : new Date(value)}
-        />
-      ) : null}
-    </View>
   );
 }
 
@@ -526,9 +485,6 @@ function FormError({ message }: { message: string | null | undefined }) {
 }
 
 const styles = StyleSheet.create({
-  dateField: {
-    gap: spacing.xs,
-  },
   field: {
     gap: spacing.xs,
   },

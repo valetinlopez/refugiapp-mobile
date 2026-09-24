@@ -13,6 +13,7 @@ import {
 
 import { AppButton, AppIcon, AppText } from '@/components/primitives';
 import { MediaUploadStatus } from '@/components/feedback';
+import { DateTimeField } from '@/components/patterns';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
 import type { PhotoFile } from '../api/mediaApi';
@@ -259,16 +260,12 @@ function CreateProfileForm({
         name="intakeDate"
         render={({ field, fieldState }) => (
           <FormField error={fieldState.error?.message} label="Fecha de ingreso">
-            <FormTextInput
+            <DateTimeField
               accessibilityLabel="Fecha de ingreso"
-              autoCapitalize="none"
-              autoComplete="off"
-              editable={!isSubmitting}
-              keyboardType="numbers-and-punctuation"
-              maxLength={10}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="AAAA-MM-DD"
+              disabled={isSubmitting}
+              maximumDate={new Date()}
+              mode="date"
+              onChange={field.onChange}
               value={field.value}
             />
           </FormField>
@@ -279,16 +276,13 @@ function CreateProfileForm({
         name="birthDate"
         render={({ field, fieldState }) => (
           <FormField error={fieldState.error?.message} label="Fecha de nacimiento">
-            <FormTextInput
+            <DateTimeField
               accessibilityLabel="Fecha de nacimiento"
-              autoCapitalize="none"
-              autoComplete="off"
-              editable={!isSubmitting}
-              keyboardType="numbers-and-punctuation"
-              maxLength={10}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="AAAA-MM-DD (opcional)"
+              disabled={isSubmitting}
+              maximumDate={new Date()}
+              mode="date"
+              onChange={field.onChange}
+              optional
               value={field.value ?? ''}
             />
           </FormField>
@@ -496,14 +490,10 @@ function EditProfileForm({
           >
             <FormTextInput
               accessibilityLabel="Fecha de ingreso"
-              autoCapitalize="none"
-              autoComplete="off"
-              editable={!isSubmitting}
-              keyboardType="numbers-and-punctuation"
-              maxLength={10}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="AAAA-MM-DD"
+              disabled={isSubmitting}
+              maximumDate={new Date()}
+              mode="date"
+              onChange={field.onChange}
               value={field.value}
             />
           </FormField>
@@ -520,14 +510,11 @@ function EditProfileForm({
           >
             <FormTextInput
               accessibilityLabel="Fecha de nacimiento"
-              autoCapitalize="none"
-              autoComplete="off"
-              editable={!isSubmitting}
-              keyboardType="numbers-and-punctuation"
-              maxLength={10}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="AAAA-MM-DD (opcional)"
+              disabled={isSubmitting}
+              maximumDate={new Date()}
+              mode="date"
+              onChange={field.onChange}
+              optional
               value={field.value ?? ''}
             />
           </FormField>

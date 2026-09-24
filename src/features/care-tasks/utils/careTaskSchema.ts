@@ -23,6 +23,10 @@ const optionalDueAt = z
     (value) =>
       value === undefined || z.string().datetime({ offset: true }).safeParse(value).success,
     'La fecha y hora debe tener formato ISO 8601.'
+  )
+  .refine(
+    (value) => value === undefined || new Date(value).getTime() > Date.now(),
+    'La fecha y hora debe ser futura.'
   );
 
 export const createCareTaskSchema = z.object({
