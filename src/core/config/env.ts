@@ -16,6 +16,27 @@ const DEV_API_URLS: Record<'android' | 'default', string> = {
 
 const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '10.0.2.2']);
 
+function isPrivateIpv4(hostname: string): boolean {
+  const parts = hostname.split('.');
+  if (parts.length !== 4 || parts.some((part) => !/^\d+$/.test(part))) {
+    return false;
+  }
+  const octets = parts.map((part) => Number(part));
+  if (octets.some((octet) => octet < 0 || octet > 255)) {
+    return false;
+  }
+  const [first, second] = octets;
+  return (
+    first === 10 ||
+    (first === 172 && second !== undefined && second >= 16 && second <= 31) ||
+    (first === 192 && second === 168)
+  );
+}
+
+function isLocalDevHost(hostname: string): boolean {
+  return LOCAL_HOSTNAMES.has(hostname) || isPrivateIpv4(hostname);
+}
+
 const environmentSchema = z.enum(APP_ENVIRONMENTS);
 const timeoutSchema = z.coerce.number().int().min(1000).max(120000).default(10000);
 
@@ -43,8 +64,8 @@ function validateApiUrlFormat(value: string, environment: AppEnvironment): strin
   if (url.protocol === 'http:' && environment !== 'development') {
     return `http is only allowed in development; use https for ${environment}`;
   }
-  if (url.protocol === 'http:' && !LOCAL_HOSTNAMES.has(url.hostname)) {
-    return `http is only allowed for local hosts (localhost, 127.0.0.1, 10.0.2.2); received "${value}"`;
+  if (url.protocol === 'http:' && !isLocalDevHost(url.hostname)) {
+    return `http is only allowed for local hosts (localhost, 127.0.0.1, 10.0.2.2 or private LAN IPs); received "${value}"`;
   }
 
   const basePath = url.pathname.endsWith('/') ? url.pathname.slice(0, -1) : url.pathname;

@@ -134,6 +134,46 @@ describe('src/core/config/env', () => {
       expect(() => loadEnv()).toThrow(/only allowed for local hosts/);
     });
 
+    it('accepts http to a private LAN IP in development', () => {
+      setEnv({
+        EXPO_PUBLIC_ENV: 'development',
+        EXPO_PUBLIC_API_URL: 'http://192.168.123.36:3000/api/v1',
+      });
+
+      const { config } = loadEnv('ios');
+
+      expect(config.apiBaseUrl).toBe('http://192.168.123.36:3000/api/v1');
+    });
+
+    it('accepts http to any RFC1918 private IP in development', () => {
+      setEnv({
+        EXPO_PUBLIC_ENV: 'development',
+        EXPO_PUBLIC_API_URL: 'http://10.0.0.8:3000/api/v1',
+      });
+
+      const { config } = loadEnv('ios');
+
+      expect(config.apiBaseUrl).toBe('http://10.0.0.8:3000/api/v1');
+    });
+
+    it('rejects http to a public IP in development', () => {
+      setEnv({
+        EXPO_PUBLIC_ENV: 'development',
+        EXPO_PUBLIC_API_URL: 'http://8.8.8.8:3000/api/v1',
+      });
+
+      expect(() => loadEnv()).toThrow(/only allowed for local hosts/);
+    });
+
+    it('rejects http to a private LAN IP outside development', () => {
+      setEnv({
+        EXPO_PUBLIC_ENV: 'staging',
+        EXPO_PUBLIC_API_URL: 'http://192.168.123.36:3000/api/v1',
+      });
+
+      expect(() => loadEnv()).toThrow(/http is only allowed in development/);
+    });
+
     it('rejects a URL outside the /api/v1 base path', () => {
       setEnv({
         EXPO_PUBLIC_ENV: 'staging',

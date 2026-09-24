@@ -58,6 +58,8 @@ La app soporta tres ambientes configurables: `development`, `staging` y `product
 > ```bash
 > EXPO_PUBLIC_API_URL=http://192.168.1.50:3000/api/v1
 > ```
+>
+> En `development` el validador acepta `http` para `localhost`, `127.0.0.1`, `10.0.2.2` e IPs privadas LAN (RFC1918: `10.x.x.x`, `172.16-31.x.x`, `192.168.x.x`). El backend debe escuchar en todas las interfaces (no solo `127.0.0.1`) y el firewall debe permitir el puerto entrante.
 
 ### Configuracion por ambiente
 
@@ -172,5 +174,5 @@ En Android/iOS, el par de tokens se persiste exclusivamente con Expo SecureStore
 - **Puerto 8081 ocupado:** Expo ofrece elegir otro puerto al arrancar. Si se usa otro puerto, Metro no inicia.
 - **Cambios de `.env` no reflejados:** las variables `EXPO_PUBLIC_` se inyectan en el bundle; recargar la app completa (shake > Reload) o reiniciar Metro con `npx expo start -c` (clear cache).
 - **Android emulator no alcanza localhost:** en development el host se reescribe a `10.0.2.2` automaticamente.
-- **Dispositivo fisico no conecta a la API local:** crear `.env.local` con la IP de LAN de la maquina (ver tabla de ambientes).
+- **Dispositivo fisico no conecta a la API local:** crear `.env.local` con la IP de LAN de la maquina (ver tabla de ambientes), reiniciar con `npx expo start --clear` y comprobar que el backend escucha en todas las interfaces y el firewall permite el puerto.
 - **Error de validacion de ambiente:** revisar `EXPO_PUBLIC_ENV` y `EXPO_PUBLIC_API_URL` en el `.env` correspondiente; el mensaje de error indica la variable y el valor esperado.
