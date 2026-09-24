@@ -8,13 +8,15 @@ import { mediaApi, type PhotoFile } from '../api/mediaApi';
 import type { Animal } from '../types';
 import { UpdateAnimalError } from '../utils/animalErrorMessages';
 import type { UpdateAnimalFormValues } from '../utils/updateAnimalSchema';
-import { toUpdateAnimalRequest } from '../utils/toUpdateAnimalRequest';
+import { hasPatchChanges, toUpdateAnimalRequest } from '../utils/toUpdateAnimalRequest';
 
 import { animalKeys } from './animalKeys';
 
 export interface UpdateAnimalInput {
+  initial: Animal;
   form: UpdateAnimalFormValues;
   photo: PhotoFile | null;
+  skipPhoto?: boolean;
 }
 
 export function useUpdateAnimal(id: string) {
@@ -23,10 +25,10 @@ export function useUpdateAnimal(id: string) {
   const [upload, setUpload] = useState<{ fileName: string; progress: number } | null>(null);
 
   const mutation = useMutation<Animal, UpdateAnimalError, UpdateAnimalInput>({
-    mutationFn: async ({ form, photo }) => {
+    mutationFn: async ({ form, initial, photo, skipPhoto = false }) => {
       let profilePhotoMediaId: string | undefined;
 
-      if (photo !== null) {
+      if (photo !== null && !skipPhoto) {
         abortController.current = new AbortController();
         setUpload({ fileName: photo.name, progress: 0 });
         try {
@@ -45,8 +47,13 @@ export function useUpdateAnimal(id: string) {
         }
       }
 
+      const request = toUpdateAnimalRequest(initial, form, profilePhotoMediaId);
+      if (!hasPatchChanges(request)) {
+        return initial;
+      }
+
       try {
-        return await animalsApi.update(id, toUpdateAnimalRequest(form, profilePhotoMediaId));
+        return await animalsApi.update(id, request);
       } catch (error) {
         if (profilePhotoMediaId !== undefined) {
           await mediaApi.deleteAsset(profilePhotoMediaId).catch(() => undefined);

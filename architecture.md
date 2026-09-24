@@ -344,7 +344,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - El historial general del animal se presenta con una sola página (20 ítems); falta paginación UI de historial.
 - La evolución clínica se presenta con una sola página (20 ítems); falta paginación UI.
 - Agregar tests E2E de flujos críticos, incluidos alta, edición y cambio de estado de animales y registro de consultas.
-- Agregar un paso de typegen de Expo Router en Mobile CI: `npm run typecheck` exige `.expo/types`, que hoy solo se genera al arrancar el dev server o exportar.
+- `npm run typecheck` no exige `.expo/types`: verificado que compila sin el directorio generado por Expo Router. Si en el futuro el código depende de tipos de ruta generados, agregar el typegen al Mobile CI en ese momento.
 - Configurar en GitHub la protección de `develop`/`master` para exigir el check `Mobile CI / lint, typecheck and tests` antes del merge.
 - Validar el sistema visual y el selector de fecha nativo en dispositivos iOS y Android reales.
 

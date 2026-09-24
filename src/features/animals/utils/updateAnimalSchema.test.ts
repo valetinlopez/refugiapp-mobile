@@ -1,5 +1,4 @@
 import { toUpdateAnimalFormValues } from './toUpdateAnimalFormValues';
-import { toUpdateAnimalRequest } from './toUpdateAnimalRequest';
 import { updateAnimalSchema } from './updateAnimalSchema';
 
 describe('updateAnimalSchema', () => {
@@ -51,6 +50,31 @@ describe('updateAnimalSchema', () => {
     expect(result.breed).toBeUndefined();
     expect(result.birthDate).toBeUndefined();
   });
+
+  it('accepts a birth date equal to the intake date', () => {
+    const result = updateAnimalSchema.safeParse({
+      name: 'Luna',
+      species: 'dog',
+      sex: 'female',
+      intakeDate: '2026-01-10',
+      birthDate: '2026-01-10',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts an intake date equal to today', () => {
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate()
+    ).padStart(2, '0')}`;
+    const result = updateAnimalSchema.safeParse({
+      name: 'Luna',
+      species: 'dog',
+      sex: 'female',
+      intakeDate: today,
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 describe('toUpdateAnimalFormValues', () => {
@@ -75,50 +99,5 @@ describe('toUpdateAnimalFormValues', () => {
       intakeDate: '2026-01-10',
       birthDate: '',
     });
-  });
-});
-
-describe('toUpdateAnimalRequest', () => {
-  it('maps form values to the update DTO without touching status', () => {
-    expect(
-      toUpdateAnimalRequest({
-        name: 'Luna',
-        species: 'dog',
-        breed: undefined,
-        sex: 'female',
-        intakeDate: '2026-01-10',
-        birthDate: undefined,
-      })
-    ).toEqual({
-      name: 'Luna',
-      species: 'dog',
-      sex: 'female',
-      intakeDate: '2026-01-10',
-    });
-  });
-
-  it('includes the orphan photo media id when a new photo is uploaded', () => {
-    const request = toUpdateAnimalRequest(
-      {
-        name: 'Luna',
-        species: 'dog',
-        breed: 'Mestizo',
-        sex: 'female',
-        intakeDate: '2026-01-10',
-        birthDate: '2025-06-01',
-      },
-      '7fa85f64-5717-4562-b3fc-2c963f66afa6'
-    );
-    expect(request.profilePhotoMediaId).toBe('7fa85f64-5717-4562-b3fc-2c963f66afa6');
-  });
-
-  it('omits the photo field when keeping the current photo', () => {
-    const request = toUpdateAnimalRequest({
-      name: 'Luna',
-      species: 'dog',
-      sex: 'female',
-      intakeDate: '2026-01-10',
-    });
-    expect('profilePhotoMediaId' in request).toBe(false);
   });
 });

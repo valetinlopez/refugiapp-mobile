@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useRef, type RefObject } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,7 +10,10 @@ import { useSession } from '@/features/auth/session';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
 import { useAnimalPhoto } from '@/features/animals/hooks/useAnimalPhoto';
 import { useUpdateAnimal, type UpdateAnimalInput } from '@/features/animals/hooks/useUpdateAnimal';
-import { toUpdateAnimalErrorMessage } from '@/features/animals/utils/animalErrorMessages';
+import {
+  toUpdateAnimalErrorMessage,
+  UpdateAnimalError,
+} from '@/features/animals/utils/animalErrorMessages';
 import { isUuid } from '@/features/animals/utils/uuid';
 import { colors, spacing } from '@/theme';
 
@@ -23,6 +27,13 @@ export default function EditAnimalScreen() {
   const animalQuery = useAnimal(animalId);
   const photoQuery = useAnimalPhoto(animalQuery.data?.profilePhotoMediaId ?? null);
   const updateAnimal = useUpdateAnimal(animalId);
+  const scrollRef = useRef<ScrollView>(null);
+
+  const updateError = updateAnimal.error;
+  const phase = updateError instanceof UpdateAnimalError ? updateError.phase : 'update';
+  const updateMessage = updateError ? toUpdateAnimalErrorMessage(updateError) : null;
+  const photoErrorMessage = phase === 'photo' ? updateMessage : null;
+  const errorMessage = phase === 'update' ? updateMessage : null;
 
   if (!canWrite) {
     return (
@@ -41,14 +52,14 @@ export default function EditAnimalScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content}>
         <AppText variant="heading1">Editar animal</AppText>
         <AppText color="textSecondary">
           Actualizá la ficha general. El estado se cambia desde el detalle del animal.
         </AppText>
         <EditForm
           currentPhotoUri={photoQuery.data ?? null}
-          errorMessage={updateAnimal.error ? toUpdateAnimalErrorMessage(updateAnimal.error) : null}
+          errorMessage={errorMessage}
           isSubmitting={updateAnimal.isPending}
           onCancelUpload={updateAnimal.cancelUpload}
           onRetry={() => void animalQuery.refetch()}
@@ -57,7 +68,9 @@ export default function EditAnimalScreen() {
               onSuccess: () => goBack(),
             })
           }
+          photoErrorMessage={photoErrorMessage}
           query={animalQuery}
+          scrollRef={scrollRef}
           upload={updateAnimal.upload}
         />
       </ScrollView>
@@ -80,7 +93,9 @@ interface EditFormProps {
   onRetry(): void;
   onCancelUpload(): void;
   onSubmit(input: UpdateAnimalInput): void;
+  photoErrorMessage: string | null;
   query: ReturnType<typeof useAnimal>;
+  scrollRef: RefObject<ScrollView | null>;
   upload: { fileName: string; progress: number } | null;
 }
 
@@ -91,7 +106,9 @@ function EditForm({
   onCancelUpload,
   onRetry,
   onSubmit,
+  photoErrorMessage,
   query,
+  scrollRef,
   upload,
 }: EditFormProps) {
   if (query.isPending) {
@@ -129,6 +146,8 @@ function EditForm({
       animal={query.data}
       onCancelUpload={onCancelUpload}
       onSubmit={onSubmit}
+      photoErrorMessage={photoErrorMessage}
+      scrollRef={scrollRef}
       upload={upload}
     />
   );
