@@ -121,6 +121,97 @@ describe('MedicalRecordForm (create)', () => {
       'Tu rol no tiene permiso para registrar datos clínicos.'
     );
   });
+
+  it('renders an empty state with retry when there are no active veterinarians', async () => {
+    const onRetryVeterinarians = jest.fn();
+    const screen = await render(
+      <MedicalRecordForm
+        animalId={ANIMAL_ID}
+        intakeDate={INTAKE_DATE}
+        mode="create"
+        onRetryVeterinarians={onRetryVeterinarians}
+        onSubmit={() => undefined}
+        veterinarianOptions={[]}
+        veterinariansStatus="empty"
+      />
+    );
+
+    expect(screen.getByText('Sin veterinarios activos')).toBeTruthy();
+    expect(
+      screen.getByText('No hay veterinarios activos. Podés guardar el registro sin veterinario.')
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Reintentar'));
+    expect(onRetryVeterinarians).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders a recoverable error state when veterinarians fail to load', async () => {
+    const onRetryVeterinarians = jest.fn();
+    const screen = await render(
+      <MedicalRecordForm
+        animalId={ANIMAL_ID}
+        intakeDate={INTAKE_DATE}
+        mode="create"
+        onRetryVeterinarians={onRetryVeterinarians}
+        onSubmit={() => undefined}
+        veterinarianOptions={[]}
+        veterinariansStatus="error"
+      />
+    );
+
+    expect(screen.getByText('No se pudieron cargar los veterinarios')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Reintentar'));
+    expect(onRetryVeterinarians).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a loading state while veterinarians are being fetched', async () => {
+    const screen = await render(
+      <MedicalRecordForm
+        animalId={ANIMAL_ID}
+        intakeDate={INTAKE_DATE}
+        mode="create"
+        onSubmit={() => undefined}
+        veterinarianOptions={[]}
+        veterinariansStatus="loading"
+      />
+    );
+
+    expect(screen.getByLabelText('Cargando veterinarios')).toBeTruthy();
+  });
+
+  it('submits without a veterinarian when the options list is empty', async () => {
+    const onSubmit = jest.fn();
+    const screen = await render(
+      <MedicalRecordForm
+        animalId={ANIMAL_ID}
+        intakeDate={INTAKE_DATE}
+        mode="create"
+        onSubmit={onSubmit}
+        veterinarianOptions={[]}
+        veterinariansStatus="empty"
+      />
+    );
+
+    await fireEvent.changeText(screen.getByLabelText('Título'), 'Consulta sin veterinario');
+    await fireEvent.press(screen.getByLabelText('Elegir fecha y hora'));
+    await fireEvent.press(screen.getByLabelText('picker'));
+    await fireEvent.press(screen.getByLabelText('Registrar consulta'));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({
+        form: {
+          animalId: ANIMAL_ID,
+          recordType: 'consultation',
+          title: 'Consulta sin veterinario',
+          occurredAt: expect.any(String),
+          veterinarianId: undefined,
+          diagnosis: undefined,
+          treatment: undefined,
+          notes: undefined,
+        },
+        attachments: [],
+      });
+    });
+  });
 });
 
 describe('MedicalRecordForm (edit)', () => {

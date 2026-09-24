@@ -245,7 +245,7 @@ La UI por rol se deriva de esta matriz y debe actualizarse cuando cambie el back
 - Dinero: enteros `amountCents`; no usar flotantes para lógica monetaria.
 - Animal: `admitted | under_treatment | available_for_adoption | adopted | deceased`.
 - Registro médico: `recordType` ∈ `consultation | vaccination | deworming | surgery | lab_result | treatment | other`.
-- `occurredAt` de un registro médico no puede ser anterior al `intakeDate` del animal ni futura.
+- `occurredAt` de un registro médico no puede ser anterior al inicio de día local del `intakeDate` del animal ni futura más allá de 60 segundos (tolerancia de skew de reloj; ver ADR-0007).
 - Tarea persistida: `pending | completed | cancelled`.
 - `overdue`: tarea `pending` con `dueAt < now`.
 - `upcoming`: tarea `pending` dentro de la ventana definida por producto.
@@ -328,7 +328,8 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Captura de imágenes desde cámara o galería y selección de PDF mediante `expo-document-picker`; validación local espejo de MIME/tamaño del backend y subida multipart con progreso y cancelación (ver ADR-0005).
 - Registros médicos y evolución clínica: feature `src/features/medical-records` con contrato derivado de OpenAPI (medical-records, veterinarians y media por owner), alta y edición con PATCH semántico (diff que omite campos intactos y envía `null` para limpiar), adjuntos clínicos multipart huérfanos en creación y directos al registro en edición, y selectores de veterinarios activos.
 - Alta de gastos: feature `src/features/expenses` con formulario validado, importe entero en centavos, comprobante multipart huérfano vinculado mediante `ticketMediaId`, limpieza compensatoria e invalidación de gastos y dashboard.
-- Formulario clínico con React Hook Form + Zod en español, `@react-native-community/datetimepicker` para `occurredAt` (validado contra `intakeDate` y fecha actual) y mensajes de error seguros por código de backend.
+- Formulario clínico con React Hook Form + Zod en español, `@react-native-community/datetimepicker` para `occurredAt` (validado contra el inicio de día local del `intakeDate` y con tolerancia de +60 s para el límite futuro, ver ADR-0007) y mensajes de error seguros por código de backend (`OCCURRED_AT_IN_FUTURE`, `OCCURRED_AT_BEFORE_INTAKE`, 403, 404 y 409 `VETERINARIAN_INACTIVE`).
+- La carga de veterinarios en los formularios clínico no bloquea el render: estados de carga, error y vacío con reintento, y guardado posible sin veterinario.
 - Rutas `app/(app)/animals/[id]/medical-records/new.tsx` y `app/(app)/animals/[id]/medical-records/[recordId]/edit.tsx`, y sección "Evolución clínica" en el detalle con `ClinicalHistory`; guards visuales para `admin` y `veterinarian`.
 - Invalidación de la evolución clínica (`medicalRecordKeys.lists()`) tras crear o editar registros, sin optimistic updates.
 - Sistema de diseño, componentes compartidos y catálogo interno.

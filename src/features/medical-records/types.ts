@@ -51,6 +51,8 @@ export interface VeterinarianOption {
   licenseNumber: string;
 }
 
+export type VeterinariansStatus = 'loading' | 'error' | 'empty' | 'ready';
+
 export interface ClinicalAttachment {
   id: string;
   secureUrl: string;
