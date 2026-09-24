@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import type { MedicalRecordType } from '../types';
+import { intakeStartOfDayMs, OCCURRED_AT_FUTURE_TOLERANCE_MS } from './occurredAtWindow';
 import { isUuid } from './uuid';
 
 export const MEDICAL_RECORD_TYPE_VALUES = [
@@ -67,15 +68,15 @@ function occurredAtWithinWindow(
   if (Number.isNaN(occurredAtMs)) {
     return;
   }
-  const intakeStartMs = Date.parse(`${intakeDate}T00:00:00`);
-  if (!Number.isNaN(intakeStartMs) && occurredAtMs < intakeStartMs) {
+  const intakeStartMs = intakeStartOfDayMs(intakeDate);
+  if (intakeStartMs !== null && occurredAtMs < intakeStartMs) {
     context.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['occurredAt'],
       message: 'La fecha y hora no puede ser anterior al ingreso del animal.',
     });
   }
-  if (occurredAtMs > Date.now()) {
+  if (occurredAtMs > Date.now() + OCCURRED_AT_FUTURE_TOLERANCE_MS) {
     context.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['occurredAt'],

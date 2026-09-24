@@ -19,8 +19,10 @@
 - `POST /media/upload` con `ownerType=medical_record` + `ownerId`: adjunto clínico vinculado directo (para edición).
 - `GET /media?ownerType=medical_record&ownerId=:id`: listado de adjuntos de un registro.
 - `DELETE /media/:id`: baja de un adjunto.
-- `GET /veterinarians`: opciones de veterinario (solo activos para el selector).
+- `GET /veterinarians`: opciones de veterinario (solo activos para el selector). En create/edit el form no se bloquea por esta query: si falla o vuelve vacía se muestra un estado recuperable con reintento y se permite guardar sin veterinario.
 - `recordType` válido: `consultation | vaccination | deworming | surgery | lab_result | treatment | other`.
+- Ventana de `occurredAt`: `intakeDate <= occurredAt <= now + 60 s`. El límite inferior se calcula como inicio de día local del `intakeDate`; el límite superior del picker usa la misma tolerancia de skew de reloj.
+- Códigos de validación del backend: `OCCURRED_AT_IN_FUTURE` y `OCCURRED_AT_BEFORE_INTAKE` (400/422) se traducen a mensajes específicos en español.
 - Los tipos de red derivan de `openapi/mobile.openapi.json`.
 
 ## Permisos
@@ -45,7 +47,8 @@
 ## Testing
 
 - Unit tests para validación y diff PATCH (omit vs null, trim a null).
-- Component tests RNTL para crear, editar, adjuntos y error 403.
+- Unit tests para la ventana de `occurredAt`: inicio de día local, offsets de zona horaria y tolerancia futura.
+- Component tests RNTL para crear, editar, adjuntos, estados de veterinarios y error 403.
 - Hook tests para invalidación de la evolución clínica tras mutación.
 
 ## Estado
@@ -54,6 +57,9 @@
 
 - Snapshot OpenAPI móvil ampliado con medical-records, veterinarians y media por owner; tipos generados.
 - `MedicalRecordForm` create/edit con React Hook Form + Zod en español y diff PATCH.
+- Ventana de `occurredAt` corregida: comparación por instante (UTC) contra el inicio de día local de `intakeDate` y tolerancia de +60 s en el límite futuro; el picker respeta los mismos límites.
+- El formulario clínico no se bloquea por `GET /veterinarians`: estados de carga, error y vacío con reintento, y guardado posible sin veterinario.
+- Mensajes específicos para `OCCURRED_AT_IN_FUTURE` y `OCCURRED_AT_BEFORE_INTAKE`.
 - Adjuntos clínicos desde cámara, galería o selector de PDF: JPEG, PNG, WebP y PDF de hasta 10 MB; subida huérfana en creación (limpieza best-effort al cancelar o fallar el POST) y subida directa en edición, con progreso y cancelación.
 - `ClinicalHistory` para presentar la evolución clínica por animal.
 - Invalidación de `medicalRecordKeys.listByAnimal(animalId)` tras crear o editar.

@@ -47,16 +47,8 @@ export default function EditMedicalRecordScreen() {
     );
   }
 
-  const pending =
-    recordQuery.isPending ||
-    attachmentsQuery.isPending ||
-    animalQuery.isPending ||
-    veterinariansQuery.isPending;
-  const hasError =
-    recordQuery.isError ||
-    attachmentsQuery.isError ||
-    animalQuery.isError ||
-    veterinariansQuery.isError;
+  const pending = recordQuery.isPending || attachmentsQuery.isPending || animalQuery.isPending;
+  const hasError = recordQuery.isError || attachmentsQuery.isError || animalQuery.isError;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -74,15 +66,11 @@ export default function EditMedicalRecordScreen() {
               void recordQuery.refetch();
               void attachmentsQuery.refetch();
               void animalQuery.refetch();
-              void veterinariansQuery.refetch();
             }}
             title="No se pudo editar"
           />
         ) : null}
-        {recordQuery.data &&
-        attachmentsQuery.data &&
-        animalQuery.data &&
-        veterinariansQuery.data ? (
+        {recordQuery.data && attachmentsQuery.data && animalQuery.data ? (
           <MedicalRecordForm
             errorMessage={
               updateRecord.error ? toUpdateMedicalRecordErrorMessage(updateRecord.error) : null
@@ -92,9 +80,11 @@ export default function EditMedicalRecordScreen() {
             isSubmitting={updateRecord.isPending}
             mode="edit"
             onCancelUpload={updateRecord.cancelUpload}
+            onRetryVeterinarians={() => void veterinariansQuery.refetch()}
             onSubmit={(input) => updateRecord.mutate(input, { onSuccess: goBack })}
             record={recordQuery.data}
-            veterinarianOptions={veterinariansQuery.data}
+            veterinarianOptions={veterinariansQuery.data ?? []}
+            veterinariansStatus={veterinariansQuery.veterinariansStatus}
             upload={updateRecord.upload}
           />
         ) : null}

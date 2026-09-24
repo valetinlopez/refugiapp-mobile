@@ -42,8 +42,8 @@ export default function NewMedicalRecordScreen() {
     );
   }
 
-  const pending = animalQuery.isPending || veterinariansQuery.isPending;
-  const hasError = animalQuery.isError || veterinariansQuery.isError;
+  const pending = animalQuery.isPending;
+  const hasError = animalQuery.isError;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -59,12 +59,11 @@ export default function NewMedicalRecordScreen() {
             message="No pudimos preparar el formulario del registro clínico."
             onAction={() => {
               void animalQuery.refetch();
-              void veterinariansQuery.refetch();
             }}
             title="No se pudo preparar"
           />
         ) : null}
-        {animalQuery.data && veterinariansQuery.data ? (
+        {animalQuery.data ? (
           <MedicalRecordForm
             animalId={animalId}
             errorMessage={
@@ -74,12 +73,14 @@ export default function NewMedicalRecordScreen() {
             isSubmitting={createRecord.isPending}
             mode="create"
             onCancelUpload={createRecord.cancelUpload}
+            onRetryVeterinarians={() => void veterinariansQuery.refetch()}
             onSubmit={(input) =>
               createRecord.mutate(input, {
                 onSuccess: () => goBack(),
               })
             }
-            veterinarianOptions={veterinariansQuery.data}
+            veterinarianOptions={veterinariansQuery.data ?? []}
+            veterinariansStatus={veterinariansQuery.veterinariansStatus}
             upload={createRecord.upload}
           />
         ) : null}

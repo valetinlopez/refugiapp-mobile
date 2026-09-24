@@ -5,6 +5,29 @@ const VET_ID = '7fa85f64-5717-4562-b3fc-2c963f66afa6';
 const MEDIA_ID = '1b2a3b4c-5d6e-4f80-9a10-b11c12d13e14';
 const INTAKE_DATE = '2026-01-10';
 
+function toLocalDateTimeIso(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const offsetMinutes = -date.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60);
+  const offsetMins = Math.abs(offsetMinutes) % 60;
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}:00${sign}${pad(offsetHours)}:${pad(offsetMins)}`;
+}
+
+function formatWithOffset(date: Date, offsetMinutes: number): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const wallClock = new Date(date.getTime() + offsetMinutes * 60_000);
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const absOffset = Math.abs(offsetMinutes);
+  return `${wallClock.getUTCFullYear()}-${pad(wallClock.getUTCMonth() + 1)}-${pad(
+    wallClock.getUTCDate()
+  )}T${pad(wallClock.getUTCHours())}:${pad(wallClock.getUTCMinutes())}:00${sign}${pad(
+    Math.floor(absOffset / 60)
+  )}:${pad(absOffset % 60)}`;
+}
+
 describe('createMedicalRecordSchema', () => {
   it('accepts and normalizes a valid create payload', () => {
     expect(
@@ -139,6 +162,89 @@ describe('updateMedicalRecordSchema', () => {
       expect(result.error.flatten().fieldErrors.occurredAt).toContain(
         'La fecha y hora no puede ser futura.'
       );
+    }
+  });
+});
+
+describe('occurredAt window (local timezone)', () => {
+  const base = {
+    animalId: ANIMAL_ID,
+    recordType: 'consultation',
+    title: 'Consulta inicial',
+  };
+
+  it('accepts occurredAt exactly at local midnight of the intake date', () => {
+    const result = createMedicalRecordSchema(INTAKE_DATE).safeParse({
+      ...base,
+      occurredAt: toLocalDateTimeIso(new Date(2026, 0, 10, 0, 0, 0)),
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects occurredAt one second before the intake day', () => {
+    const result = createMedicalRecordSchema(INTAKE_DATE).safeParse({
+      ...base,
+      occurredAt: toLocalDateTimeIso(new Date(2026, 0, 9, 23, 59, 59)),
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.occurredAt).toContain(
+        'La fecha y hora no puede ser anterior al ingreso del animal.'
+      );
+    }
+  });
+
+  it('rejects a before-intake date on edits too', () => {
+    const result = updateMedicalRecordSchema(INTAKE_DATE).safeParse({
+      recordType: 'consultation',
+      title: 'Consulta inicial',
+      occurredAt: toLocalDateTimeIso(new Date(2026, 0, 9, 23, 59, 59)),
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.occurredAt).toContain(
+        'La fecha y hora no puede ser anterior al ingreso del animal.'
+      );
+    }
+  });
+
+  it('accepts occurredAt within the future skew tolerance', () => {
+    const result = createMedicalRecordSchema(INTAKE_DATE).safeParse({
+      ...base,
+      occurredAt: new Date(Date.now() + 30_000).toISOString(),
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects occurredAt beyond the future skew tolerance', () => {
+    const result = createMedicalRecordSchema(INTAKE_DATE).safeParse({
+      ...base,
+      occurredAt: new Date(Date.now() + 61_000).toISOString(),
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.occurredAt).toContain(
+        'La fecha y hora no puede ser futura.'
+      );
+    }
+  });
+
+  it('accepts the same instant represented with different offsets', () => {
+    const instant = new Date(Date.now() - 3_600_000);
+    const representations = [
+      instant.toISOString(),
+      formatWithOffset(instant, -180),
+      formatWithOffset(instant, 330),
+    ];
+
+    for (const occurredAt of representations) {
+      const result = createMedicalRecordSchema(INTAKE_DATE).safeParse({ ...base, occurredAt });
+      expect(result.success).toBe(true);
     }
   });
 });

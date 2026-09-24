@@ -47,6 +47,28 @@ describe('toCreateMedicalRecordErrorMessage', () => {
     );
   });
 
+  it('translates OCCURRED_AT_IN_FUTURE to a future date message', () => {
+    const error = new ApiError({
+      code: 'OCCURRED_AT_IN_FUTURE',
+      message: 'Occurred at is in the future',
+      requestId: 'req-1',
+      status: 422,
+    });
+    expect(toCreateMedicalRecordErrorMessage(error)).toBe('La fecha y hora no puede ser futura.');
+  });
+
+  it('translates OCCURRED_AT_BEFORE_INTAKE to a before-intake message', () => {
+    const error = new ApiError({
+      code: 'OCCURRED_AT_BEFORE_INTAKE',
+      message: 'Occurred at is before intake',
+      requestId: 'req-1',
+      status: 400,
+    });
+    expect(toCreateMedicalRecordErrorMessage(error)).toBe(
+      'La fecha y hora no puede ser anterior al ingreso del animal.'
+    );
+  });
+
   it('falls back to a safe message for unknown errors', () => {
     expect(toCreateMedicalRecordErrorMessage(new Error('boom'))).toBe(
       'Ocurrió un error inesperado. Inténtalo de nuevo.'
@@ -91,6 +113,28 @@ describe('toUpdateMedicalRecordErrorMessage', () => {
     );
     expect(toUpdateMedicalRecordErrorMessage(error)).toBe(
       'Un adjunto no es válido. Elige archivos de hasta 10 MB e inténtalo de nuevo.'
+    );
+  });
+
+  it('translates OCCURRED_AT_IN_FUTURE to a future date message', () => {
+    const error = new ApiError({
+      code: 'OCCURRED_AT_IN_FUTURE',
+      message: 'Occurred at is in the future',
+      requestId: 'req-1',
+      status: 422,
+    });
+    expect(toUpdateMedicalRecordErrorMessage(error)).toBe('La fecha y hora no puede ser futura.');
+  });
+
+  it('translates OCCURRED_AT_BEFORE_INTAKE to a before-intake message', () => {
+    const error = new ApiError({
+      code: 'OCCURRED_AT_BEFORE_INTAKE',
+      message: 'Occurred at is before intake',
+      requestId: 'req-1',
+      status: 400,
+    });
+    expect(toUpdateMedicalRecordErrorMessage(error)).toBe(
+      'La fecha y hora no puede ser anterior al ingreso del animal.'
     );
   });
 

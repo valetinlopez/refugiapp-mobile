@@ -51,9 +51,16 @@ export function toCreateMedicalRecordErrorMessage(error: unknown): string {
 
   if (root instanceof ApiError) {
     if (root.status === 400 || root.status === 422) {
-      return phase === 'attachment'
-        ? 'Un adjunto no es válido. Elige archivos de hasta 10 MB e inténtalo de nuevo.'
-        : 'Revisa los datos del registro clínico e inténtalo de nuevo.';
+      if (phase === 'attachment') {
+        return 'Un adjunto no es válido. Elige archivos de hasta 10 MB e inténtalo de nuevo.';
+      }
+      if (root.code === 'OCCURRED_AT_IN_FUTURE') {
+        return 'La fecha y hora no puede ser futura.';
+      }
+      if (root.code === 'OCCURRED_AT_BEFORE_INTAKE') {
+        return 'La fecha y hora no puede ser anterior al ingreso del animal.';
+      }
+      return 'Revisa los datos del registro clínico e inténtalo de nuevo.';
     }
 
     switch (root.status) {
@@ -82,9 +89,16 @@ export function toUpdateMedicalRecordErrorMessage(error: unknown): string {
 
   if (root instanceof ApiError) {
     if (root.status === 400 || root.status === 422) {
-      return phase === 'attachment'
-        ? 'Un adjunto no es válido. Elige archivos de hasta 10 MB e inténtalo de nuevo.'
-        : 'Revisa los datos del registro clínico e inténtalo de nuevo.';
+      if (phase === 'attachment') {
+        return 'Un adjunto no es válido. Elige archivos de hasta 10 MB e inténtalo de nuevo.';
+      }
+      if (root.code === 'OCCURRED_AT_IN_FUTURE') {
+        return 'La fecha y hora no puede ser futura.';
+      }
+      if (root.code === 'OCCURRED_AT_BEFORE_INTAKE') {
+        return 'La fecha y hora no puede ser anterior al ingreso del animal.';
+      }
+      return 'Revisa los datos del registro clínico e inténtalo de nuevo.';
     }
 
     switch (root.status) {

@@ -4,7 +4,7 @@ import { Controller, useForm, type Control } from 'react-hook-form';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { AppButton, AppIcon, AppText } from '@/components/primitives';
-import { MediaUploadStatus } from '@/components/feedback';
+import { EmptyState, ErrorState, LoadingState, MediaUploadStatus } from '@/components/feedback';
 import { DateTimeField } from '@/components/patterns';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
@@ -16,6 +16,7 @@ import type {
   MedicalRecord,
   MedicalRecordType,
   VeterinarianOption,
+  VeterinariansStatus,
 } from '../types';
 import {
   createMedicalRecordSchema,
@@ -29,6 +30,7 @@ import {
   toUpdateMedicalRecordFormValues,
 } from '../utils/toMedicalRecordFormValues';
 import { getRecordTypeLabel } from '../utils/medicalRecordPresentation';
+import { intakeStartOfDay, OCCURRED_AT_FUTURE_TOLERANCE_MS } from '../utils/occurredAtWindow';
 
 import { ClinicalAttachmentPicker } from './ClinicalAttachmentPicker';
 
@@ -43,8 +45,10 @@ interface BaseProps {
   isSubmitting?: boolean;
   intakeDate: string;
   onCancelUpload?(): void;
+  onRetryVeterinarians?(): void;
   upload?: { fileName: string; progress: number } | null;
   veterinarianOptions: VeterinarianOption[];
+  veterinariansStatus?: VeterinariansStatus;
 }
 
 type CreateProps = BaseProps & {
@@ -72,11 +76,14 @@ function CreateForm({
   intakeDate,
   isSubmitting = false,
   onCancelUpload,
+  onRetryVeterinarians,
   onSubmit,
   upload,
   veterinarianOptions,
+  veterinariansStatus = 'ready',
 }: CreateProps) {
   const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
+  const intakeStart = intakeStartOfDay(intakeDate);
   const { control, handleSubmit } = useForm<CreateMedicalRecordFormInput>({
     resolver: zodResolver(createMedicalRecordSchema(intakeDate)),
     defaultValues: {
@@ -98,7 +105,10 @@ function CreateForm({
       <RecordFields
         control={control as unknown as Control<RecordFieldsValues>}
         disabled={isSubmitting}
+        intakeStart={intakeStart}
+        {...(onRetryVeterinarians ? { onRetryVeterinarians } : {})}
         veterinarianOptions={veterinarianOptions}
+        veterinariansStatus={veterinariansStatus}
       />
       <View style={styles.field}>
         <AppText variant="label">Adjuntos clínicos</AppText>
@@ -138,13 +148,16 @@ function EditForm({
   intakeDate,
   isSubmitting = false,
   onCancelUpload,
+  onRetryVeterinarians,
   onSubmit,
   record,
   veterinarianOptions,
+  veterinariansStatus = 'ready',
   upload,
 }: EditProps) {
   const [newAttachments, setNewAttachments] = useState<AttachmentFile[]>([]);
   const [removedAttachmentIds, setRemovedAttachmentIds] = useState<string[]>([]);
+  const intakeStart = intakeStartOfDay(intakeDate);
   const { control, handleSubmit } = useForm<UpdateMedicalRecordFormInput>({
     resolver: zodResolver(updateMedicalRecordSchema(intakeDate)),
     defaultValues: toUpdateMedicalRecordFormValues(record),
@@ -160,7 +173,10 @@ function EditForm({
       <RecordFields
         control={control as unknown as Control<RecordFieldsValues>}
         disabled={isSubmitting}
+        intakeStart={intakeStart}
+        {...(onRetryVeterinarians ? { onRetryVeterinarians } : {})}
         veterinarianOptions={veterinarianOptions}
+        veterinariansStatus={veterinariansStatus}
       />
       <View style={styles.field}>
         <AppText variant="label">Adjuntos clínicos</AppText>
@@ -214,11 +230,17 @@ interface RecordFieldsValues {
 function RecordFields({
   control,
   disabled,
+  intakeStart,
+  onRetryVeterinarians,
   veterinarianOptions,
+  veterinariansStatus,
 }: {
   control: Control<RecordFieldsValues>;
   disabled: boolean;
+  intakeStart: Date | null;
+  onRetryVeterinarians?: () => void;
   veterinarianOptions: VeterinarianOption[];
+  veterinariansStatus: VeterinariansStatus;
 }) {
   return (
     <>
@@ -262,7 +284,8 @@ function RecordFields({
             <DateTimeField
               accessibilityLabel="Fecha y hora"
               disabled={disabled}
-              maximumDate={new Date()}
+              maximumDate={new Date(new Date().getTime() + OCCURRED_AT_FUTURE_TOLERANCE_MS)}
+              {...(intakeStart ? { minimumDate: intakeStart } : {})}
               mode="datetime"
               onChange={field.onChange}
               value={field.value ?? ''}
@@ -278,7 +301,9 @@ function RecordFields({
             disabled={disabled}
             error={fieldState.error?.message}
             onChange={field.onChange}
+            {...(onRetryVeterinarians ? { onRetry: onRetryVeterinarians } : {})}
             options={veterinarianOptions}
+            status={veterinariansStatus}
             value={field.value ?? ''}
           />
         )}
@@ -354,17 +379,38 @@ function VeterinarianSelector({
   disabled,
   error,
   onChange,
+  onRetry,
   options,
+  status,
   value,
 }: {
   disabled: boolean;
   error: string | undefined;
   onChange(value: string): void;
+  onRetry?: () => void;
   options: VeterinarianOption[];
+  status: VeterinariansStatus;
   value: string;
 }) {
   return (
     <Field error={error} label="Veterinario">
+      {status === 'loading' ? <LoadingState label="Cargando veterinarios" /> : null}
+      {status === 'error' ? (
+        <ErrorState
+          actionLabel="Reintentar"
+          message="No pudimos cargar los veterinarios. Podés continuar sin veterinario."
+          {...(onRetry ? { onAction: onRetry } : {})}
+          title="No se pudieron cargar los veterinarios"
+        />
+      ) : null}
+      {status === 'empty' ? (
+        <EmptyState
+          actionLabel="Reintentar"
+          message="No hay veterinarios activos. Podés guardar el registro sin veterinario."
+          {...(onRetry ? { onAction: onRetry } : {})}
+          title="Sin veterinarios activos"
+        />
+      ) : null}
       <View accessibilityLabel="Veterinario" accessibilityRole="radiogroup" style={styles.options}>
         <Pressable
           accessibilityLabel="Sin veterinario"
