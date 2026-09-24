@@ -47,11 +47,11 @@ export function ClinicalHistory({ animalId, onEditRecord }: ClinicalHistoryProps
           key={record.id}
         >
           <View style={styles.row}>
-            <AppText color="textSecondary" variant="label">
+            <AppText color="textSecondary" style={styles.rowLabel} variant="label">
               {getRecordTypeLabel(record.recordType)}
             </AppText>
             <View style={styles.cardActions}>
-              <AppText color="textSecondary" variant="caption">
+              <AppText color="textSecondary" style={styles.rowMeta} variant="caption">
                 {formatRecordDate(record.occurredAt)}
               </AppText>
               {onEditRecord ? (
@@ -96,10 +96,13 @@ const styles = StyleSheet.create({
   cardActions: {
     alignItems: 'center',
     flexDirection: 'row',
+    flexShrink: 1,
     gap: spacing.xs,
+    justifyContent: 'flex-end',
   },
   edit: {
     alignItems: 'center',
+    flexShrink: 0,
     justifyContent: 'center',
     minHeight: sizes.touchTarget,
     minWidth: sizes.touchTarget,
@@ -110,6 +113,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     justifyContent: 'space-between',
+  },
+  rowLabel: {
+    flexShrink: 0,
+  },
+  rowMeta: {
+    flexShrink: 1,
+    textAlign: 'right',
   },
   section: { gap: spacing.xxs, marginTop: spacing.sm },
 });

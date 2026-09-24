@@ -1,4 +1,5 @@
 import type { AppIconName } from '@/components/primitives';
+import { formatDateTime } from '@/components/patterns';
 import type { BadgeTone } from '@/types/design-system';
 
 import type { CareTaskStatus } from '../types';
@@ -17,9 +18,6 @@ export function getCareTaskStatusPresentation(
 }
 
 export function formatCareTaskDate(value: string | null): string {
-  if (value === null) return 'Sin fecha';
-  return new Intl.DateTimeFormat('es-AR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(new Date(value));
+  if (value === null || value === '') return 'Sin fecha';
+  return formatDateTime(value) || 'Sin fecha';
 }

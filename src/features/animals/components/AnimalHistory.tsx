@@ -46,10 +46,10 @@ export function AnimalHistory({ animalId }: AnimalHistoryProps) {
           key={event.id}
         >
           <View style={styles.row}>
-            <AppText color="textSecondary" variant="label">
+            <AppText color="textSecondary" style={styles.rowLabel} variant="label">
               {getAnimalEventTypeLabel(event.eventType)}
             </AppText>
-            <AppText color="textSecondary" variant="caption">
+            <AppText color="textSecondary" style={styles.rowMeta} variant="caption">
               {formatAnimalEventDate(event.occurredAt)}
             </AppText>
           </View>
@@ -67,5 +67,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     justifyContent: 'space-between',
+  },
+  rowLabel: {
+    flexShrink: 0,
+  },
+  rowMeta: {
+    flex: 1,
+    textAlign: 'right',
   },
 });

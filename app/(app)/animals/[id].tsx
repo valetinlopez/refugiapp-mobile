@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppBadge, AppAvatar, AppButton, AppCard, AppText } from '@/components/primitives';
+import { formatDateMedium } from '@/components/patterns';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { AnimalHistory } from '@/features/animals/components/AnimalHistory';
 import { AnimalStatusChanger } from '@/features/animals/components/AnimalStatusChanger';
@@ -129,22 +130,24 @@ function AnimalDetailContent({
 
       <AppCard>
         <View style={styles.row}>
-          <AppText color="textSecondary" variant="label">
+          <AppText color="textSecondary" style={styles.rowLabel} variant="label">
             Sexo
           </AppText>
-          <AppText>{sexLabel(animal.sex)}</AppText>
+          <AppText style={styles.rowValue}>{sexLabel(animal.sex)}</AppText>
         </View>
         <View style={styles.row}>
-          <AppText color="textSecondary" variant="label">
+          <AppText color="textSecondary" style={styles.rowLabel} variant="label">
             Fecha de ingreso
           </AppText>
-          <AppText>{animal.intakeDate}</AppText>
+          <AppText style={styles.rowValue}>{formatDateMedium(animal.intakeDate)}</AppText>
         </View>
         <View style={styles.row}>
-          <AppText color="textSecondary" variant="label">
+          <AppText color="textSecondary" style={styles.rowLabel} variant="label">
             Fecha de nacimiento
           </AppText>
-          <AppText>{animal.birthDate ?? 'No informada'}</AppText>
+          <AppText style={styles.rowValue}>
+            {animal.birthDate ? formatDateMedium(animal.birthDate) : 'No informada'}
+          </AppText>
         </View>
       </AppCard>
 
@@ -275,12 +278,20 @@ const styles = StyleSheet.create({
   heading: {
     flex: 1,
     gap: spacing.xxs,
+    minWidth: 0,
   },
   row: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.md,
     justifyContent: 'space-between',
+  },
+  rowLabel: {
+    flexShrink: 0,
+  },
+  rowValue: {
+    flex: 1,
+    textAlign: 'right',
   },
   safeArea: {
     backgroundColor: colors.background,

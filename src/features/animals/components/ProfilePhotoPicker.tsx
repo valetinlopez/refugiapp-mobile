@@ -1,9 +1,14 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 
 import { AppAvatar, AppButton, AppText } from '@/components/primitives';
-import { IMAGE_MEDIA_TYPES, validateMediaFile } from '@/core/media';
+import {
+  IMAGE_MEDIA_TYPES,
+  normalizeMediaFileName,
+  resolveMediaMimeType,
+  validateMediaFile,
+} from '@/core/media';
 import { spacing } from '@/theme';
 
 import type { PhotoFile } from '../api/mediaApi';
@@ -29,10 +34,12 @@ export function ProfilePhotoPicker({
 }: ProfilePhotoPickerProps) {
   const [isPicking, setIsPicking] = useState(false);
   const [pickerError, setPickerError] = useState<string | null>(null);
+  const [permissionBlocked, setPermissionBlocked] = useState(false);
 
   async function handlePickPhoto(source: 'camera' | 'gallery'): Promise<void> {
     if (isPicking || disabled) return;
     setPickerError(null);
+    setPermissionBlocked(false);
     setIsPicking(true);
     try {
       const permission =
@@ -40,10 +47,16 @@ export function ProfilePhotoPicker({
           ? await ImagePicker.requestCameraPermissionsAsync()
           : await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
+        const canAskAgain = permission.canAskAgain !== false;
+        setPermissionBlocked(!canAskAgain);
         setPickerError(
-          source === 'camera'
-            ? 'Necesitamos acceso a la cámara para tomar la foto de perfil.'
-            : 'Necesitamos acceso a tus fotos para elegir la foto de perfil.'
+          canAskAgain
+            ? source === 'camera'
+              ? 'Necesitamos acceso a la cámara para tomar la foto de perfil.'
+              : 'Necesitamos acceso a tus fotos para elegir la foto de perfil.'
+            : source === 'camera'
+              ? 'El acceso a la cámara está bloqueado. Habilitalo en los ajustes del dispositivo para tomar la foto.'
+              : 'El acceso a tus fotos está bloqueado. Habilitalo en los ajustes del dispositivo para elegir una imagen.'
         );
         return;
       }
@@ -61,10 +74,12 @@ export function ProfilePhotoPicker({
       const asset = result.canceled ? undefined : result.assets[0];
       if (asset === undefined) return;
 
+      const name = asset.fileName ?? fileNameFromUri(asset.uri);
+      const mimeType = resolveMediaMimeType(name, asset.mimeType);
       const photo: PhotoFile = {
         uri: asset.uri,
-        name: asset.fileName ?? fileNameFromUri(asset.uri),
-        mimeType: asset.mimeType ?? 'image/jpeg',
+        name: normalizeMediaFileName(name, mimeType),
+        mimeType,
         ...(asset.fileSize != null ? { size: asset.fileSize } : {}),
         ...(asset.file !== undefined ? { file: asset.file } : {}),
       };
@@ -118,9 +133,18 @@ export function ProfilePhotoPicker({
         ) : null}
       </View>
       {pickerError ? (
-        <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
-          {pickerError}
-        </AppText>
+        <View style={styles.permissionBlock}>
+          <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
+            {pickerError}
+          </AppText>
+          {permissionBlocked ? (
+            <AppButton
+              label="Abrir ajustes"
+              onPress={() => void Linking.openSettings()}
+              variant="secondary"
+            />
+          ) : null}
+        </View>
       ) : null}
       <AppText color="textSecondary" variant="caption">
         Opcional. Tomá una foto o elegí una imagen JPEG, PNG o WebP de hasta 10 MB.
@@ -136,6 +160,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   container: {
+    gap: spacing.sm,
+  },
+  permissionBlock: {
     gap: spacing.sm,
   },
 });

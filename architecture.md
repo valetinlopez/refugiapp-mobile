@@ -326,6 +326,8 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Contratos de tareas derivados del snapshot OpenAPI y guards de escritura para `admin` y `shelter_manager`.
 - Dependencias `react-hook-form`, `@hookform/resolvers` y `expo-image-picker` (ver ADR-0003).
 - Captura de imágenes desde cámara o galería y selección de PDF mediante `expo-document-picker`; validación local espejo de MIME/tamaño del backend y subida multipart con progreso y cancelación (ver ADR-0005).
+- Permiso de cámara/galería denegado con explicación y, si queda bloqueado permanentemente, acceso a los ajustes del dispositivo (`Linking.openSettings`). El picker de foto infiere MIME/nombre cuando el sistema omite metadatos (`resolveMediaMimeType`/`normalizeMediaFileName`) y permite subir sin `fileSize`, dejando al backend como autoridad de tamaño. `AppAvatar` cae a iniciales de forma silenciosa ante fallo de imagen (`onError`).
+- Fechas presentadas siempre formateadas en `es-AR` con formadores compartidos `dateFormat` (nunca ISO crudo): detalle de animal, historial general, evolución clínica y tareas; las fechas de calendario se parsean como fecha local para evitar corrimientos de zona horaria, y las filas etiqueta-valor envuelven en pantallas estrechas y con fuente ampliada.
 - Registros médicos y evolución clínica: feature `src/features/medical-records` con contrato derivado de OpenAPI (medical-records, veterinarians y media por owner), alta y edición con PATCH semántico (diff que omite campos intactos y envía `null` para limpiar), adjuntos clínicos multipart huérfanos en creación y directos al registro en edición, y selectores de veterinarios activos.
 - Alta de gastos: feature `src/features/expenses` con formulario validado, importe entero en centavos, comprobante multipart huérfano vinculado mediante `ticketMediaId`, limpieza compensatoria e invalidación de gastos y dashboard.
 - Formulario clínico con React Hook Form + Zod en español, `@react-native-community/datetimepicker` para `occurredAt` (validado contra el inicio de día local del `intakeDate` y con tolerancia de +60 s para el límite futuro, ver ADR-0007) y mensajes de error seguros por código de backend (`OCCURRED_AT_IN_FUTURE`, `OCCURRED_AT_BEFORE_INTAKE`, 403, 404 y 409 `VETERINARIAN_INACTIVE`).
@@ -337,6 +339,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - CI móvil con generación de tipos, formato, lint, typecheck y tests RNTL.
 - ESLint, Prettier, typecheck y export web verificados.
 - Jerarquía de documentación y reglas locales por frontera.
+- Compartición en desarrollo con túnel: scripts `start:tunnel` (solo Metro por ngrok), `start:lan` y `start:share` (`scripts/start-dev.mjs` detecta la IP LAN de la máquina e inyecta `EXPO_PUBLIC_API_URL`, con prioridad sobre `.env.*` y respetando un valor explícito del shell), con `@expo/ngrok` como devDependency. El túnel de Metro no publica la API: cada dispositivo debe alcanzarla por IP LAN o mediante un túnel propio del backend (cloudflared/ngrok), y ese valor sigue validándose en `src/core/config/env.ts`.
 
 ## 17. Pendientes y deuda conocida
 
