@@ -1,4 +1,4 @@
-# ADR-0004: Selector de fecha nativo para registros médicos
+# ADR-0004: Selector de fecha y hora multiplataforma compartido
 
 - Estado: aceptado
 - Fecha: 2026-09-22
@@ -15,7 +15,8 @@ Los registros médicos exigen `occurredAt` (fecha y hora de atención) obligator
 
 ## Decisión
 
-- Usar `@react-native-community/datetimepicker` (versión fijada por `npx expo install` para SDK 57) para capturar `occurredAt` en el formulario de registros médicos.
+- Usar `@react-native-community/datetimepicker` (versión fijada por `npx expo install` para SDK 57) para fechas de animales, vencimientos de tareas y `occurredAt` de registros médicos.
+- Centralizar el comportamiento en `DateTimeField`: selector nativo en iOS/Android, secuencia fecha-hora en Android y `TextInput` validado como fallback web.
 - Registrar el config plugin en `app.config.ts` (requerido para builds nativos).
 - El valor se serializa a ISO con offset local mediante `toLocalDateTimeIso`; el esquema Zod sigue validando formato, `intakeDate <= occurredAt <= now`.
 
@@ -31,5 +32,5 @@ Los registros médicos exigen `occurredAt` (fecha y hora de atención) obligator
 
 ## Criterios de revisión
 
-- Si otros formularios (tareas, eventos) necesitan el mismo selector, extraer un campo compartido a `src/components` en lugar de duplicar el patrón por feature.
+- Toda fecha nueva debe reutilizar `DateTimeField` cuando necesite selección interactiva; no duplicar el patrón dentro de una feature.
 - Si el selector de fecha fuese insuficiente para rango (desde/hasta en evolución clínica), evaluar ampliar el patrón sin cambiar el contrato.

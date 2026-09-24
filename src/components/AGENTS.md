@@ -37,6 +37,7 @@
 ## Testing
 
 - Probar comportamiento, accesibilidad y estados; evitar snapshots como única verificación.
+- `DateTimeField` centraliza selección, serialización ISO local y fallback web.
 - Cubrir callbacks, disabled/loading, selección y precedencia semántica cuando aplique.
 
 ## Documentación

@@ -4,6 +4,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/primitives';
+import { DateTimeField } from '@/components/patterns';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
 import type {
@@ -207,13 +208,13 @@ function TaskFields({
         name="dueAt"
         render={({ field, fieldState }) => (
           <Field error={fieldState.error?.message} label="Fecha y hora">
-            <FormInput
+            <DateTimeField
               accessibilityLabel="Fecha y hora"
-              autoCapitalize="none"
-              editable={!disabled}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="2026-09-22T18:00:00-03:00 (opcional)"
+              disabled={disabled}
+              minimumDate={new Date()}
+              mode="datetime"
+              onChange={field.onChange}
+              optional
               value={field.value ?? ''}
             />
           </Field>
