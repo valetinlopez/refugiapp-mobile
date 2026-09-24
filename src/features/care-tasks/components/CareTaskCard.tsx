@@ -11,7 +11,7 @@ import { CareTaskActionDialog, type CareTaskAction } from './CareTaskActionDialo
 interface CareTaskCardProps {
   animalName: string;
   canWrite: boolean;
-  disabled?: boolean;
+  isBusy?: boolean;
   onCancel(id: string): void;
   onComplete(id: string): void;
   onEdit(id: string): void;
@@ -21,7 +21,7 @@ interface CareTaskCardProps {
 export function CareTaskCard({
   animalName,
   canWrite,
-  disabled = false,
+  isBusy = false,
   onCancel,
   onComplete,
   onEdit,
@@ -44,7 +44,7 @@ export function CareTaskCard({
           <AppText variant="heading3">{task.title}</AppText>
           <AppText color="textSecondary">{animalName}</AppText>
         </View>
-        <AppBadge label={presentation.label} tone={presentation.tone} />
+        <AppBadge icon={presentation.icon} label={presentation.label} tone={presentation.tone} />
       </View>
       {task.description ? <AppText>{task.description}</AppText> : null}
       <AppText color="textSecondary" variant="caption">
@@ -53,14 +53,14 @@ export function CareTaskCard({
       {actionable ? (
         <View style={styles.actions}>
           <AppButton
-            disabled={disabled}
+            disabled={isBusy}
             label="Editar"
             onPress={() => onEdit(task.id)}
             variant="secondary"
           />
-          <AppButton disabled={disabled} label="Completar" onPress={() => setAction('complete')} />
+          <AppButton disabled={isBusy} label="Completar" onPress={() => setAction('complete')} />
           <AppButton
-            disabled={disabled}
+            disabled={isBusy}
             label="Cancelar tarea"
             onPress={() => setAction('cancel')}
             variant="danger"
@@ -72,7 +72,7 @@ export function CareTaskCard({
           action={action}
           onClose={() => setAction(null)}
           onConfirm={confirmAction}
-          submitting={disabled}
+          submitting={isBusy}
           taskTitle={task.title}
           visible
         />

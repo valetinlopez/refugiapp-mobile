@@ -100,4 +100,75 @@ describe('CareTaskCard', () => {
     );
     expect(readonly.queryByLabelText('Completar')).toBeNull();
   });
+
+  it('shows an explicit final state without actions for completed tasks', async () => {
+    const screen = await render(
+      <CareTaskCard
+        animalName="Luna"
+        canWrite
+        onCancel={() => undefined}
+        onComplete={() => undefined}
+        onEdit={() => undefined}
+        task={createTask('completed')}
+      />
+    );
+
+    expect(screen.getByLabelText('Completada')).toBeTruthy();
+    expect(screen.queryByLabelText('Editar')).toBeNull();
+    expect(screen.queryByLabelText('Completar')).toBeNull();
+    expect(screen.queryByLabelText('Cancelar tarea')).toBeNull();
+  });
+
+  it('shows an explicit final state without actions for cancelled tasks', async () => {
+    const screen = await render(
+      <CareTaskCard
+        animalName="Luna"
+        canWrite
+        onCancel={() => undefined}
+        onComplete={() => undefined}
+        onEdit={() => undefined}
+        task={createTask('cancelled')}
+      />
+    );
+
+    expect(screen.getByLabelText('Cancelada')).toBeTruthy();
+    expect(screen.queryByLabelText('Editar')).toBeNull();
+    expect(screen.queryByLabelText('Completar')).toBeNull();
+    expect(screen.queryByLabelText('Cancelar tarea')).toBeNull();
+  });
+
+  it('disables only the busy row actions', async () => {
+    const screen = await render(
+      <CareTaskCard
+        animalName="Luna"
+        canWrite
+        isBusy
+        onCancel={() => undefined}
+        onComplete={() => undefined}
+        onEdit={() => undefined}
+        task={createTask()}
+      />
+    );
+
+    expect(screen.getByLabelText('Editar').props.accessibilityState?.disabled).toBe(true);
+    expect(screen.getByLabelText('Completar').props.accessibilityState?.disabled).toBe(true);
+    expect(screen.getByLabelText('Cancelar tarea').props.accessibilityState?.disabled).toBe(true);
+  });
+
+  it('keeps a pending task actionable when the row is not busy', async () => {
+    const screen = await render(
+      <CareTaskCard
+        animalName="Luna"
+        canWrite
+        onCancel={() => undefined}
+        onComplete={() => undefined}
+        onEdit={() => undefined}
+        task={createTask()}
+      />
+    );
+
+    expect(screen.getByLabelText('Editar').props.accessibilityState?.disabled).toBe(false);
+    expect(screen.getByLabelText('Completar').props.accessibilityState?.disabled).toBe(false);
+    expect(screen.getByLabelText('Cancelar tarea').props.accessibilityState?.disabled).toBe(false);
+  });
 });

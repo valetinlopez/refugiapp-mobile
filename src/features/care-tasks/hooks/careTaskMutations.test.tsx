@@ -6,7 +6,7 @@ import { careTasksApi } from '../api/careTasksApi';
 import type { CareTask } from '../types';
 
 import { careTaskKeys, dashboardQueryKey } from './careTaskKeys';
-import { useCompleteCareTask } from './useCareTaskActions';
+import { useCancelCareTask, useCompleteCareTask } from './useCareTaskActions';
 import { useCreateCareTask } from './useCreateCareTask';
 
 const ANIMAL_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
@@ -62,6 +62,18 @@ describe('care task mutations', () => {
     jest.spyOn(careTasksApi, 'complete').mockResolvedValue(task('completed'));
     const invalidate = jest.spyOn(queryClient, 'invalidateQueries');
     const { result } = await renderHook(() => useCompleteCareTask(), { wrapper });
+
+    result.current.mutate(TASK_ID);
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: careTaskKeys.all });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: dashboardQueryKey });
+  });
+
+  it('invalidates tasks and dashboard after cancelling', async () => {
+    jest.spyOn(careTasksApi, 'cancel').mockResolvedValue(task('cancelled'));
+    const invalidate = jest.spyOn(queryClient, 'invalidateQueries');
+    const { result } = await renderHook(() => useCancelCareTask(), { wrapper });
 
     result.current.mutate(TASK_ID);
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
