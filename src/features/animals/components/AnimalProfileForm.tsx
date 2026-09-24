@@ -488,7 +488,7 @@ function EditProfileForm({
             label="Fecha de ingreso"
             onLayout={captureFieldOffset('intakeDate')}
           >
-            <FormTextInput
+            <DateTimeField
               accessibilityLabel="Fecha de ingreso"
               disabled={isSubmitting}
               maximumDate={new Date()}
@@ -508,7 +508,7 @@ function EditProfileForm({
             label="Fecha de nacimiento"
             onLayout={captureFieldOffset('birthDate')}
           >
-            <FormTextInput
+            <DateTimeField
               accessibilityLabel="Fecha de nacimiento"
               disabled={isSubmitting}
               maximumDate={new Date()}

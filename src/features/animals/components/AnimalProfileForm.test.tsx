@@ -1,6 +1,6 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import type { RefObject } from 'react';
-import type { ScrollView } from 'react-native';
+import { Platform, type ScrollView } from 'react-native';
 
 import type { Animal } from '../types';
 
@@ -102,6 +102,7 @@ describe('AnimalProfileForm edit mode', () => {
   });
 
   it('scrolls to the first invalid field without submitting', async () => {
+    const platform = jest.replaceProperty(Platform, 'OS', 'web');
     const onSubmit = jest.fn();
     const scrollTo = jest.fn();
     const scrollRef = {
@@ -129,6 +130,7 @@ describe('AnimalProfileForm edit mode', () => {
       expect.objectContaining({ animated: true, y: expect.any(Number) })
     );
     expect(onSubmit).not.toHaveBeenCalled();
+    platform.restore();
   });
 
   it('shows a distinct photo error with retry and save-without-photo actions', async () => {
