@@ -88,6 +88,8 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Alta de eventos generales (`POST /animals/:animalId/events`) para `admin` y `shelter_manager`, limitada a `general_note`, `behavior_note` y `transfer`; el backend registra al actor autenticado y la mutation invalida `animalKeys.history(animalId)`.
 - Subida de foto de perfil como asset huérfano (`POST /media/upload` multipart) y vinculación con `profilePhotoMediaId` al crear o editar; limpieza best-effort del huérfano si la escritura falla después de subir.
 - La foto puede capturarse con cámara o elegirse desde galería; se aceptan JPEG, PNG y WebP de hasta 10 MB, con progreso y cancelación durante la subida.
+- Permiso de cámara/galería denegado con explicación; si el permiso queda bloqueado permanentemente (`canAskAgain=false`), se ofrece abrir los ajustes del dispositivo con `Linking.openSettings`.
+- Si el picker omite `mimeType` o `fileName`, se infiere el tipo desde la extensión y se normaliza el nombre (`resolveMediaMimeType` + `normalizeMediaFileName` en `src/core/media`); si falta `fileSize`, se sube igualmente y el backend sigue siendo autoridad de tamaño.
 - Lectura de asset (`GET /media/:id`) para mostrar la foto actual en detalle y edición (`useAnimalPhoto`).
 - Listado paginado (`GET /animals`) con filtros `status`, `species`, `sex` y nombre parcial mediante `useAnimals` (paginación infinita) y `AnimalCard`, con ruta `app/(app)/(tabs)/explore.tsx` para los tres roles.
 - Lectura del historial general (`GET /animals/:animalId/events`) mediante `useAnimalHistory` y presentación en `AnimalHistory` dentro del detalle, con invalidación coherente al crear eventos.

@@ -112,7 +112,7 @@ Patrón compartido para filtrar listados (animales por estado, tareas por estado
 
 ## 16. Avatares
 
-Tamaños: 36, 48 y 72 pt. Los retratos usan recorte circular y borde cálido. Si falta la foto, mostrar hasta dos iniciales; nunca un espacio vacío ni una imagen genérica que pueda confundirse con el animal real.
+Tamaños: 36, 48 y 72 pt. Los retratos usan recorte circular y borde cálido. Si falta la foto, mostrar hasta dos iniciales; nunca un espacio vacío ni una imagen genérica que pueda confundirse con el animal real. Si la imagen falla al cargar, el avatar vuelve a las iniciales de forma silenciosa (sin botón de reintento) y el fallo se resetea cuando cambia la URL.
 
 ## 17. Filas de tareas
 
@@ -134,7 +134,7 @@ Máximo cuatro o cinco destinos estables. Cada elemento combina icono y texto; e
 
 ## 21. Formularios
 
-Etiqueta visible sobre el campo, ayuda y error debajo. No usar placeholder como única etiqueta. Altura mínima 48 pt, borde de foco claro, teclado y `autoComplete` apropiados, y agrupación semántica. Los errores explican qué corregir y se anuncian; no se indican solo en coral. Los datos monetarios se transforman a `amountCents` fuera del componente visual. Los selectores de estado muestran valores permitidos por el backend y respetan permisos del rol. Las fechas usan `DateTimeField`: picker del sistema en iOS/Android y entrada textual con formato explícito en web.
+Etiqueta visible sobre el campo, ayuda y error debajo. No usar placeholder como única etiqueta. Altura mínima 48 pt, borde de foco claro, teclado y `autoComplete` apropiados, y agrupación semántica. Los errores explican qué corregir y se anuncian; no se indican solo en coral. Los datos monetarios se transforman a `amountCents` fuera del componente visual. Los selectores de estado muestran valores permitidos por el backend y respetan permisos del rol. Las fechas usan `DateTimeField`: picker del sistema en iOS/Android y entrada textual con formato explícito en web. Las fechas guardadas se presentan siempre formateadas en `es-AR` mediante `dateFormat` (nunca ISO crudo); las fechas de calendario (`YYYY-MM-DD`) se parsean como fecha local para evitar corrimientos de zona horaria. En filas etiqueta-valor, la etiqueta no se encoge y el valor envuelve alineado a la derecha.
 
 ## 22. Estados de carga, vacío, error, offline y sin permisos
 

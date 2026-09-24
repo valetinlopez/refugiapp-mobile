@@ -29,6 +29,7 @@
 ## Configuración
 
 - Toda variable nueva se declara en `.env.example`, se valida en `config` y se documenta en `README.md`.
+- `EXPO_PUBLIC_API_URL` puede inyectarse desde `scripts/start-dev.mjs` (`npm run start:lan` / `start:share`): detecta la IP LAN y la inyecta como variable de proceso, con prioridad sobre `.env.*`; un valor ya definido en el shell se respeta y no se sobreescribe.
 - No leer `process.env` fuera de configuración, salvo `app.config.ts` o scripts justificados.
 - Staging y production requieren HTTPS.
 

@@ -1,3 +1,5 @@
+import { formatDateTime } from '@/components/patterns';
+
 import type { MedicalRecordType } from '../types';
 
 const RECORD_TYPE_LABELS: Record<MedicalRecordType, string> = {
@@ -15,10 +17,7 @@ export function getRecordTypeLabel(type: MedicalRecordType): string {
 }
 
 export function formatRecordDate(value: string): string {
-  return new Intl.DateTimeFormat('es-AR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(new Date(value));
+  return formatDateTime(value);
 }
 
 export function toLocalDateTimeIso(value: string): string {

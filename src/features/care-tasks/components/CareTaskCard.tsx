@@ -44,7 +44,12 @@ export function CareTaskCard({
           <AppText variant="heading3">{task.title}</AppText>
           <AppText color="textSecondary">{animalName}</AppText>
         </View>
-        <AppBadge icon={presentation.icon} label={presentation.label} tone={presentation.tone} />
+        <AppBadge
+          icon={presentation.icon}
+          label={presentation.label}
+          style={styles.badge}
+          tone={presentation.tone}
+        />
       </View>
       {task.description ? <AppText>{task.description}</AppText> : null}
       <AppText color="textSecondary" variant="caption">
@@ -83,6 +88,7 @@ export function CareTaskCard({
 
 const styles = StyleSheet.create({
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  badge: { flexShrink: 0 },
   header: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.sm },
-  heading: { flex: 1, gap: spacing.xxs },
+  heading: { flex: 1, gap: spacing.xxs, minWidth: 0 },
 });

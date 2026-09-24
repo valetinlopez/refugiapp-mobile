@@ -1,3 +1,5 @@
+import { formatDateTime } from '@/components/patterns';
+
 import type { AnimalHistoryEventType } from '../types';
 
 const EVENT_TYPE_LABELS: Record<AnimalHistoryEventType, string> = {
@@ -14,8 +16,5 @@ export function getAnimalEventTypeLabel(type: AnimalHistoryEventType): string {
 }
 
 export function formatAnimalEventDate(value: string): string {
-  return new Intl.DateTimeFormat('es-AR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(new Date(value));
+  return formatDateTime(value);
 }

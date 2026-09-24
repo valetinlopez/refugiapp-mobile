@@ -59,6 +59,8 @@ La app soporta tres ambientes configurables: `development`, `staging` y `product
 > EXPO_PUBLIC_API_URL=http://192.168.1.50:3000/api/v1
 > ```
 >
+> Alternativa sin editar ficheros: `npm run start:lan` detecta la IP LAN de la maquina en cada arranque y la inyecta (sirve igual en casa y en la oficina). Un `EXPO_PUBLIC_API_URL` explicito en el shell tiene prioridad sobre la deteccion automatica.
+>
 > En `development` el validador acepta `http` para `localhost`, `127.0.0.1`, `10.0.2.2` e IPs privadas LAN (RFC1918: `10.x.x.x`, `172.16-31.x.x`, `192.168.x.x`). El backend debe escuchar en todas las interfaces (no solo `127.0.0.1`) y el firewall debe permitir el puerto entrante.
 
 ### Configuracion por ambiente
@@ -96,6 +98,45 @@ npm run ios         # development + simulador iOS
 npm run web         # development + web
 ```
 
+## Compartir con otros dispositivos (tunnel)
+
+Hay dos caminos independientes y es facil confundirlos:
+
+| Camino                   | Que lo resuelve                                     | Cuándo falla                                     |
+| ------------------------ | --------------------------------------------------- | ------------------------------------------------ |
+| Teléfono → Metro (JS)    | `expo start --tunnel` (ngrok, dominio `exp.direct`) | Red aislada/corporativa que no deja conexion LAN |
+| Teléfono → API (`:3000`) | IP LAN o un túnel del backend                       | Otra red, o IP de `.env.local` desactualizada    |
+
+`--tunnel` **solo** publica Metro: cada teléfono igual debe alcanzar la API por su cuenta.
+
+```bash
+npm run start:tunnel   # Metro por túnel + API según .env.* / .env.local (simulador o misma LAN)
+npm run start:lan      # Metro directo + API por IP LAN detectada automaticamente
+npm run start:share    # Metro por túnel + API por IP LAN detectada (misma WiFi, red aislada)
+```
+
+Para personas en **otra red** (internet), además hay que publicar el backend. Ejemplos:
+
+```bash
+# En ../refugiapp (una terminal)
+cloudflared tunnel --url http://localhost:3000   # o: ngrok http 3000
+```
+
+Luego, en `.env.local` del móvil:
+
+```bash
+EXPO_PUBLIC_API_URL=https://<tunel-publico>/api/v1
+```
+
+y reiniciar con `npx expo start --clear` (la URL se inlinea en el bundle). Al ser https, pasa el validador de `development`.
+
+Notas:
+
+- Requiere `@expo/ngrok` (devDependency) para el túnel de Metro; Expo usa su propio authtoken, no hace falta cuenta ngrok.
+- La URL pública del backend cambia a cada arranque con túneles gratuitos: actualizar `.env.local` y reiniciar con `--clear`.
+- Compartir el QR expone tu backend a internet mientras el túnel esté abierto: sesiones cortas y cerrarlo al terminar.
+- Túnel de Metro es más lento que LAN; si falla en Windows, revisar que el antivirus no haya en cuarentena el binario de ngrok (`https://status.ngrok.com`).
+
 ## Scripts
 
 | Script                      | Descripcion                                              |
@@ -104,6 +145,9 @@ npm run web         # development + web
 | `npm run start:development` | Arranca Expo en development                              |
 | `npm run start:staging`     | Arranca Expo en staging                                  |
 | `npm run start:production`  | Arranca Expo en production                               |
+| `npm run start:tunnel`      | Arranca Expo con Metro por túnel ngrok (development)     |
+| `npm run start:lan`         | Arranca Expo con la API resuelta a la IP LAN detectada   |
+| `npm run start:share`       | Arranca Expo con túnel ngrok + API por IP LAN detectada  |
 | `npm run android`           | Arranca en Android emulator (development)                |
 | `npm run ios`               | Arranca en iOS simulator (development)                   |
 | `npm run web`               | Arranca en navegador (development)                       |
@@ -174,5 +218,7 @@ En Android/iOS, el par de tokens se persiste exclusivamente con Expo SecureStore
 - **Puerto 8081 ocupado:** Expo ofrece elegir otro puerto al arrancar. Si se usa otro puerto, Metro no inicia.
 - **Cambios de `.env` no reflejados:** las variables `EXPO_PUBLIC_` se inyectan en el bundle; recargar la app completa (shake > Reload) o reiniciar Metro con `npx expo start -c` (clear cache).
 - **Android emulator no alcanza localhost:** en development el host se reescribe a `10.0.2.2` automaticamente.
-- **Dispositivo fisico no conecta a la API local:** crear `.env.local` con la IP de LAN de la maquina (ver tabla de ambientes), reiniciar con `npx expo start --clear` y comprobar que el backend escucha en todas las interfaces y el firewall permite el puerto.
+- **Dispositivo fisico no conecta a la API local:** usar `npm run start:lan` (detecta la IP LAN) o crear `.env.local` con la IP de LAN de la maquina (ver tabla de ambientes), reiniciar con `npx expo start --clear` y comprobar que el backend escucha en todas las interfaces y el firewall permite el puerto.
+- **El QR de tunnel no carga o se corta:** verificar que `@expo/ngrok` este instalado (`npm ci`), que haya salida a internet y que el antivirus no haya puesto en cuarentena el binario de ngrok; ver `https://status.ngrok.com`.
+- **Los demas escanean el QR pero la app no conecta a la API:** el túnel solo publica Metro. Si estan en otra red, publicar el backend (`cloudflared tunnel --url http://localhost:3000`) y apuntar `EXPO_PUBLIC_API_URL` a esa URL https en `.env.local`, luego `npx expo start --clear`.
 - **Error de validacion de ambiente:** revisar `EXPO_PUBLIC_ENV` y `EXPO_PUBLIC_API_URL` en el `.env` correspondiente; el mensaje de error indica la variable y el valor esperado.

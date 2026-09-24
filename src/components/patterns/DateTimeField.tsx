@@ -5,6 +5,8 @@ import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import { AppButton } from '@/components/primitives';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
+import { formatDateTime, formatDateShort } from './dateFormat';
+
 export interface DateTimeFieldProps {
   accessibilityLabel: string;
   disabled?: boolean;
@@ -135,11 +137,8 @@ function parseValue(value: string, mode: 'date' | 'datetime'): Date {
 }
 
 function formatValue(value: string, mode: 'date' | 'datetime'): string {
-  const parsed = parseValue(value, mode);
-  return new Intl.DateTimeFormat(
-    'es-AR',
-    mode === 'date' ? { dateStyle: 'short' } : { dateStyle: 'short', timeStyle: 'short' }
-  ).format(parsed);
+  if (value === '') return '';
+  return mode === 'date' ? formatDateShort(value) : formatDateTime(value);
 }
 
 const styles = StyleSheet.create({
