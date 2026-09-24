@@ -15,24 +15,25 @@ function createAnimal(): Animal {
     id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
     name: 'Luna',
     species: 'dog',
-    breed: null,
+    breed: 'Mestizo',
     sex: 'female',
     status: 'admitted',
     intakeDate: '2026-01-10',
-    birthDate: null,
-    profilePhotoMediaId: null,
+    birthDate: '2025-06-01',
+    profilePhotoMediaId: '7fa85f64-5717-4562-b3fc-2c963f66afa6',
   };
 }
 
 function createInput(overrides: Partial<UpdateAnimalInput> = {}): UpdateAnimalInput {
   return {
+    initial: createAnimal(),
     form: {
       name: 'Luna',
       species: 'dog',
-      breed: undefined,
+      breed: 'Mestizo',
       sex: 'female',
       intakeDate: '2026-01-10',
-      birthDate: undefined,
+      birthDate: '2025-06-01',
     },
     photo: null,
     ...overrides,
@@ -63,10 +64,28 @@ describe('useUpdateAnimal', () => {
     jest.restoreAllMocks();
   });
 
-  it('updates without a new photo and invalidates the detail', async () => {
+  it('updates only the diff without a new photo and invalidates the detail', async () => {
     const update = jest.spyOn(animalsApi, 'update').mockResolvedValue(createAnimal());
     const upload = jest.spyOn(mediaApi, 'uploadOrphanPhoto');
     const invalidate = jest.spyOn(queryClient, 'invalidateQueries');
+    const { result } = await renderHook(() => useUpdateAnimal(ANIMAL_ID), { wrapper });
+
+    result.current.mutate(
+      createInput({
+        form: { ...createInput().form, name: 'Luna Editada' },
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    expect(upload).not.toHaveBeenCalled();
+    expect(update).toHaveBeenCalledWith(ANIMAL_ID, { name: 'Luna Editada' });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: animalKeys.all });
+  });
+
+  it('skips the PATCH when nothing changed', async () => {
+    const update = jest.spyOn(animalsApi, 'update');
     const { result } = await renderHook(() => useUpdateAnimal(ANIMAL_ID), { wrapper });
 
     result.current.mutate(createInput());
@@ -74,12 +93,47 @@ describe('useUpdateAnimal', () => {
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
     });
+    expect(update).not.toHaveBeenCalled();
+    expect(result.current.data).toEqual(createAnimal());
+  });
+
+  it('sends null to clear a nullable text field', async () => {
+    const update = jest.spyOn(animalsApi, 'update').mockResolvedValue(createAnimal());
+    const { result } = await renderHook(() => useUpdateAnimal(ANIMAL_ID), { wrapper });
+
+    result.current.mutate(
+      createInput({
+        form: { ...createInput().form, breed: undefined },
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    expect(update).toHaveBeenCalledWith(ANIMAL_ID, { breed: null });
+  });
+
+  it('skips the upload and keeps the current photo when saving without photo', async () => {
+    const upload = jest.spyOn(mediaApi, 'uploadOrphanPhoto');
+    const update = jest.spyOn(animalsApi, 'update').mockResolvedValue(createAnimal());
+    const { result } = await renderHook(() => useUpdateAnimal(ANIMAL_ID), { wrapper });
+
+    result.current.mutate(
+      createInput({
+        form: { ...createInput().form, name: 'Luna Editada' },
+        photo: { uri: 'file:///photo.jpg', name: 'photo.jpg', mimeType: 'image/jpeg' },
+        skipPhoto: true,
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
     expect(upload).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalledWith(
       ANIMAL_ID,
-      expect.objectContaining({ name: 'Luna', species: 'dog' })
+      expect.not.objectContaining({ profilePhotoMediaId: expect.anything() })
     );
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: animalKeys.all });
   });
 
   it('uploads an orphan photo and links it on update', async () => {

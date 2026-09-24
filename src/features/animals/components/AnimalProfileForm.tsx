@@ -1,7 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, type ReactNode } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { useRef, useState, type ReactNode, type RefObject } from 'react';
+import { Controller, useForm, type FieldErrors } from 'react-hook-form';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+  type LayoutChangeEvent,
+  type TextInputProps,
+} from 'react-native';
 
 import { AppButton, AppIcon, AppText } from '@/components/primitives';
 import { MediaUploadStatus } from '@/components/feedback';
@@ -35,13 +43,15 @@ export function FormField({
   children,
   error,
   label,
+  onLayout,
 }: {
   children: ReactNode;
   error: string | undefined;
   label: string;
+  onLayout?: (event: LayoutChangeEvent) => void;
 }) {
   return (
-    <View style={styles.field}>
+    <View onLayout={onLayout} style={styles.field}>
       <AppText variant="label">{label}</AppText>
       {children}
       {error ? (
@@ -122,6 +132,8 @@ export type AnimalEditModeProps = AnimalProfileFormBaseProps & {
   animal: Animal;
   currentPhotoUri: string | null;
   onSubmit(input: UpdateAnimalInput): void;
+  photoErrorMessage?: string | null;
+  scrollRef?: RefObject<ScrollView | null>;
 };
 
 export type AnimalProfileFormProps = AnimalCreateModeProps | AnimalEditModeProps;
@@ -313,6 +325,22 @@ function CreateProfileForm({
   );
 }
 
+const EDIT_FIELD_ORDER: (keyof UpdateAnimalFormInput)[] = [
+  'name',
+  'species',
+  'breed',
+  'sex',
+  'intakeDate',
+  'birthDate',
+];
+const EDIT_FOCUSABLE_FIELDS: readonly string[] = [
+  'name',
+  'species',
+  'breed',
+  'intakeDate',
+  'birthDate',
+];
+
 function EditProfileForm({
   animal,
   currentPhotoUri,
@@ -320,22 +348,63 @@ function EditProfileForm({
   isSubmitting = false,
   onCancelUpload,
   onSubmit,
+  photoErrorMessage,
+  scrollRef,
   upload,
 }: AnimalEditModeProps) {
   const [photo, setPhoto] = useState<PhotoFile | null>(null);
-  const { control, handleSubmit } = useForm<UpdateAnimalFormInput>({
+  const fieldOffsets = useRef<Record<string, number>>({});
+  const formOffset = useRef(0);
+  const { control, handleSubmit, setFocus } = useForm<UpdateAnimalFormInput>({
     resolver: zodResolver(updateAnimalSchema),
     defaultValues: toUpdateAnimalFormValues(animal),
     mode: 'onTouched',
   });
 
+  function captureFormOffset(event: LayoutChangeEvent): void {
+    formOffset.current = event.nativeEvent.layout.y;
+  }
+
+  function captureFieldOffset(name: string) {
+    return (event: LayoutChangeEvent) => {
+      fieldOffsets.current[name] = event.nativeEvent.layout.y;
+    };
+  }
+
+  function handleInvalid(errors: FieldErrors<UpdateAnimalFormInput>): void {
+    const firstField = EDIT_FIELD_ORDER.find((key) => errors[key] !== undefined);
+    if (firstField !== undefined) {
+      const y = formOffset.current + (fieldOffsets.current[firstField] ?? 0);
+      scrollRef?.current?.scrollTo({ animated: true, y: Math.max(0, y - spacing.md) });
+      if (EDIT_FOCUSABLE_FIELDS.includes(firstField)) {
+        setFocus(firstField);
+      }
+    }
+  }
+
+  function submit(skipPhoto: boolean): void {
+    void handleSubmit((rawValues) => {
+      const values = updateAnimalSchema.parse(rawValues);
+      onSubmit({
+        initial: animal,
+        form: values,
+        photo,
+        ...(skipPhoto ? { skipPhoto: true } : {}),
+      });
+    }, handleInvalid)();
+  }
+
   return (
-    <View style={styles.form}>
+    <View onLayout={captureFormOffset} style={styles.form}>
       <Controller
         control={control}
         name="name"
         render={({ field, fieldState }) => (
-          <FormField error={fieldState.error?.message} label="Nombre">
+          <FormField
+            error={fieldState.error?.message}
+            label="Nombre"
+            onLayout={captureFieldOffset('name')}
+          >
             <FormTextInput
               accessibilityLabel="Nombre"
               autoCapitalize="words"
@@ -354,7 +423,11 @@ function EditProfileForm({
         control={control}
         name="species"
         render={({ field, fieldState }) => (
-          <FormField error={fieldState.error?.message} label="Especie">
+          <FormField
+            error={fieldState.error?.message}
+            label="Especie"
+            onLayout={captureFieldOffset('species')}
+          >
             <FormTextInput
               accessibilityLabel="Especie"
               autoCapitalize="words"
@@ -373,7 +446,11 @@ function EditProfileForm({
         control={control}
         name="breed"
         render={({ field, fieldState }) => (
-          <FormField error={fieldState.error?.message} label="Raza">
+          <FormField
+            error={fieldState.error?.message}
+            label="Raza"
+            onLayout={captureFieldOffset('breed')}
+          >
             <FormTextInput
               accessibilityLabel="Raza"
               autoCapitalize="words"
@@ -392,21 +469,31 @@ function EditProfileForm({
         control={control}
         name="sex"
         render={({ field, fieldState }) => (
-          <OptionGroup
-            disabled={isSubmitting}
+          <FormField
             error={fieldState.error?.message}
             label="Sexo"
-            onChange={field.onChange}
-            options={SEX_OPTIONS}
-            value={field.value}
-          />
+            onLayout={captureFieldOffset('sex')}
+          >
+            <OptionGroup
+              disabled={isSubmitting}
+              error={fieldState.error?.message}
+              label="Sexo"
+              onChange={field.onChange}
+              options={SEX_OPTIONS}
+              value={field.value}
+            />
+          </FormField>
         )}
       />
       <Controller
         control={control}
         name="intakeDate"
         render={({ field, fieldState }) => (
-          <FormField error={fieldState.error?.message} label="Fecha de ingreso">
+          <FormField
+            error={fieldState.error?.message}
+            label="Fecha de ingreso"
+            onLayout={captureFieldOffset('intakeDate')}
+          >
             <FormTextInput
               accessibilityLabel="Fecha de ingreso"
               autoCapitalize="none"
@@ -426,7 +513,11 @@ function EditProfileForm({
         control={control}
         name="birthDate"
         render={({ field, fieldState }) => (
-          <FormField error={fieldState.error?.message} label="Fecha de nacimiento">
+          <FormField
+            error={fieldState.error?.message}
+            label="Fecha de nacimiento"
+            onLayout={captureFieldOffset('birthDate')}
+          >
             <FormTextInput
               accessibilityLabel="Fecha de nacimiento"
               autoCapitalize="none"
@@ -459,21 +550,33 @@ function EditProfileForm({
           status="uploading"
         />
       ) : null}
+      {photoErrorMessage ? (
+        <View style={styles.photoError}>
+          <AppText accessibilityLiveRegion="assertive" color="danger" role="alert">
+            {photoErrorMessage}
+          </AppText>
+          <View style={styles.photoActions}>
+            <AppButton
+              label="Reintentar"
+              loading={isSubmitting}
+              onPress={() => submit(false)}
+              variant="secondary"
+            />
+            <AppButton
+              disabled={isSubmitting}
+              label="Guardar sin foto"
+              onPress={() => submit(true)}
+              variant="ghost"
+            />
+          </View>
+        </View>
+      ) : null}
       {errorMessage ? (
         <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
           {errorMessage}
         </AppText>
       ) : null}
-      <AppButton
-        label="Guardar cambios"
-        loading={isSubmitting}
-        onPress={() =>
-          void handleSubmit((rawValues) => {
-            const values = updateAnimalSchema.parse(rawValues);
-            onSubmit({ form: values, photo });
-          })()
-        }
-      />
+      <AppButton label="Guardar cambios" loading={isSubmitting} onPress={() => submit(false)} />
     </View>
   );
 }
@@ -515,5 +618,13 @@ const styles = StyleSheet.create({
   },
   options: {
     gap: spacing.xs,
+  },
+  photoActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  photoError: {
+    gap: spacing.sm,
   },
 });

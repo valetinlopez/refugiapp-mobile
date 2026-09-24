@@ -1,4 +1,6 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import type { RefObject } from 'react';
+import type { ScrollView } from 'react-native';
 
 import type { Animal } from '../types';
 
@@ -60,13 +62,9 @@ describe('AnimalProfileForm edit mode', () => {
 
   it('submits the edited values without touching status', async () => {
     const onSubmit = jest.fn();
+    const animal = createAnimal();
     const screen = await render(
-      <AnimalProfileForm
-        mode="edit"
-        animal={createAnimal()}
-        currentPhotoUri={null}
-        onSubmit={onSubmit}
-      />
+      <AnimalProfileForm mode="edit" animal={animal} currentPhotoUri={null} onSubmit={onSubmit} />
     );
 
     await fireEvent.changeText(screen.getByLabelText('Nombre'), 'Luna Editada');
@@ -74,6 +72,7 @@ describe('AnimalProfileForm edit mode', () => {
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith({
+        initial: animal,
         form: {
           name: 'Luna Editada',
           species: 'dog',
@@ -84,6 +83,67 @@ describe('AnimalProfileForm edit mode', () => {
         },
         photo: null,
       });
+    });
+  });
+
+  it('scrolls to the first invalid field without submitting', async () => {
+    const onSubmit = jest.fn();
+    const scrollTo = jest.fn();
+    const scrollRef = {
+      current: { scrollTo },
+    } as unknown as RefObject<ScrollView>;
+    const screen = await render(
+      <AnimalProfileForm
+        mode="edit"
+        animal={createAnimal()}
+        currentPhotoUri={null}
+        onSubmit={onSubmit}
+        scrollRef={scrollRef}
+      />
+    );
+
+    await fireEvent.changeText(screen.getByLabelText('Fecha de nacimiento'), '2026-02-01');
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+    expect(
+      await screen.findByText(
+        'La fecha de nacimiento no puede ser posterior a la fecha de ingreso.'
+      )
+    ).toBeTruthy();
+    expect(scrollTo).toHaveBeenCalledWith(
+      expect.objectContaining({ animated: true, y: expect.any(Number) })
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('shows a distinct photo error with retry and save-without-photo actions', async () => {
+    const onSubmit = jest.fn();
+    const screen = await render(
+      <AnimalProfileForm
+        mode="edit"
+        animal={createAnimal()}
+        currentPhotoUri={null}
+        onSubmit={onSubmit}
+        photoErrorMessage="La foto no es válida. Elige una imagen de hasta 10 MB e inténtalo de nuevo."
+      />
+    );
+
+    expect(
+      screen.getByText(
+        'La foto no es válida. Elige una imagen de hasta 10 MB e inténtalo de nuevo.'
+      )
+    ).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Reintentar' }));
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ photo: null }));
+    });
+    expect(onSubmit.mock.calls[0]?.[0]).not.toHaveProperty('skipPhoto');
+
+    onSubmit.mockClear();
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar sin foto' }));
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ skipPhoto: true }));
     });
   });
 

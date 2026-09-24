@@ -64,7 +64,10 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 - No se usan optimistic updates: `useUpdateAnimal` y `useChangeAnimalStatus` invalidan queries y, al volver del detalle, la pantalla refetchea la fuente de verdad.
 - `useCreateAnimal` hidrata `animalKeys.detail(id)` con la respuesta confirmada de `POST /animals` e invalida solo los listados; el detalle conserva una ventana corta de frescura para no repetir inmediatamente la lectura después del alta.
+- `useUpdateAnimal` construye un PATCH diferencial desde el `Animal` inicial: omite los campos intactos, envía `null` para limpiar `breed`/`birthDate` y solo vincula `profilePhotoMediaId` cuando se subió una foto nueva; si no hay cambios ni foto nueva, no llama a la red (no-op).
 - `useUpdateAnimal` sube una foto huérfana solo si el usuario eligió una; si el `PATCH` falla después de subir, borra el asset huérfano best-effort.
+- La subida de foto no bloquea el guardado: ante un error de foto (`phase: 'photo'`), el formulario conserva el borrador y ofrece reintentar o guardar sin foto (`skipPhoto`), que omite `profilePhotoMediaId` y conserva la foto actual.
+- Los errores de subida de foto y de PATCH se distinguen en UI; los errores de validación Zod muestran mensaje en español y hacen scroll y foco al primer campo inválido.
 - `PATCH /animals/:id/status` crea un evento `status_change` trazable; la UI explica la consecuencia antes de confirmar y reserva el tono danger para estados terminales.
 
 ## Testing
@@ -91,6 +94,8 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Detalle `app/(app)/animals/[id].tsx` (los tres roles) con edición y cambio de estado solo para `admin`/`shelter_manager`, y enlace al listado de tareas filtrado por animal.
 - Edición `app/(app)/animals/[id]/edit.tsx` con guard visual por rol y formulario compartido `AnimalProfileForm` (modos create/edit).
 - Formulario con React Hook Form + Zod, mensajes en español y validación cruzada `birthDate <= intakeDate`.
+- PATCH diferencial en edición (`toUpdateAnimalRequest` + `hasPatchChanges`): omite campos intactos, envía `null` para limpiar `breed`/`birthDate` y no-op cuando no hay cambios.
+- Errores de subida de foto y de guardado distinguidos en UI, con reintento y opción "Guardar sin foto"; errores Zod con scroll y foco al primer campo inválido.
 - Confirmación de cambio de estado con `StatusConfirmDialog` (modal del sistema de diseño, sin `Alert` nativo).
 - Traducción de errores de backend a mensajes claros (`toCreateAnimalErrorMessage`, `toUpdateAnimalErrorMessage`, `toChangeStatusErrorMessage`).
 - Unit tests (matriz de transiciones, esquemas, mappers, mensajes), integración multipart con transporte falso y component tests con RNTL.
