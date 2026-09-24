@@ -1,3 +1,4 @@
+import type { AppIconName } from '@/components/primitives';
 import type { BadgeTone } from '@/types/design-system';
 
 import type { CareTaskStatus } from '../types';
@@ -6,13 +7,13 @@ export function getCareTaskStatusPresentation(
   status: CareTaskStatus,
   dueAt: string | null,
   now = new Date()
-): { label: string; tone: BadgeTone } {
-  if (status === 'completed') return { label: 'Completada', tone: 'positive' };
-  if (status === 'cancelled') return { label: 'Cancelada', tone: 'neutral' };
+): { icon: AppIconName; label: string; tone: BadgeTone } {
+  if (status === 'completed') return { icon: 'check', label: 'Completada', tone: 'positive' };
+  if (status === 'cancelled') return { icon: 'close', label: 'Cancelada', tone: 'neutral' };
   if (dueAt !== null && new Date(dueAt).getTime() < now.getTime()) {
-    return { label: 'Vencida', tone: 'danger' };
+    return { icon: 'alert', label: 'Vencida', tone: 'danger' };
   }
-  return { label: 'Pendiente', tone: 'warning' };
+  return { icon: 'clock', label: 'Pendiente', tone: 'warning' };
 }
 
 export function formatCareTaskDate(value: string | null): string {

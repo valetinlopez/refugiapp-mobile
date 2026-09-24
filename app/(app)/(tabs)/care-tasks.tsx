@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -42,8 +42,37 @@ export default function CareTasksScreen() {
   const completeTask = useCompleteCareTask();
   const cancelTask = useCancelCareTask();
   const mutationError = completeTask.error ?? cancelTask.error;
-  const busy = completeTask.isPending || cancelTask.isPending;
-  const names = new Map(animalsQuery.data?.map((animal) => [animal.id, animal.name]) ?? []);
+  const { mutate: mutateComplete } = completeTask;
+  const { mutate: mutateCancel } = cancelTask;
+  const pendingActionId = completeTask.isPending
+    ? completeTask.variables
+    : cancelTask.isPending
+      ? cancelTask.variables
+      : null;
+  const names = useMemo(
+    () => new Map(animalsQuery.data?.map((animal) => [animal.id, animal.name]) ?? []),
+    [animalsQuery.data]
+  );
+  const handleComplete = useCallback((id: string) => mutateComplete(id), [mutateComplete]);
+  const handleCancel = useCallback((id: string) => mutateCancel(id), [mutateCancel]);
+  const handleEdit = useCallback(
+    (id: string) => router.push({ pathname: '/care-tasks/[id]/edit', params: { id } }),
+    []
+  );
+  const renderItem = useCallback(
+    ({ item }: { item: CareTask }) => (
+      <TaskItem
+        animalName={names.get(item.animalId) ?? 'Animal'}
+        busy={pendingActionId === item.id}
+        canWrite={canWrite}
+        onCancel={handleCancel}
+        onComplete={handleComplete}
+        onEdit={handleEdit}
+        task={item}
+      />
+    ),
+    [canWrite, handleCancel, handleComplete, handleEdit, names, pendingActionId]
+  );
 
   const header = (
     <View style={styles.header}>
@@ -65,6 +94,11 @@ export default function CareTasksScreen() {
           />
         ) : null}
       </View>
+      {!canWrite ? (
+        <AppText color="textSecondary">
+          Tu rol permite consultar tareas, pero no crearlas, completarlas ni cancelarlas.
+        </AppText>
+      ) : null}
       {animalId ? (
         <AppButton
           label="Ver todas"
@@ -135,27 +169,19 @@ export default function CareTasksScreen() {
         ListHeaderComponent={header}
         onRefresh={() => void tasksQuery.refetch()}
         refreshing={tasksQuery.isRefetching}
-        renderItem={({ item }) => (
-          <TaskItem
-            animalName={names.get(item.animalId) ?? 'Animal'}
-            busy={busy}
-            canWrite={canWrite}
-            onCancel={(id) => cancelTask.mutate(id)}
-            onComplete={(id) => completeTask.mutate(id)}
-            task={item}
-          />
-        )}
+        renderItem={renderItem}
       />
     </SafeAreaView>
   );
 }
 
-function TaskItem({
+const TaskItem = memo(function TaskItem({
   animalName,
   busy,
   canWrite,
   onCancel,
   onComplete,
+  onEdit,
   task,
 }: {
   animalName: string;
@@ -163,20 +189,21 @@ function TaskItem({
   canWrite: boolean;
   onCancel(id: string): void;
   onComplete(id: string): void;
+  onEdit(id: string): void;
   task: CareTask;
 }) {
   return (
     <CareTaskCard
       animalName={animalName}
       canWrite={canWrite}
-      disabled={busy}
+      isBusy={busy}
       onCancel={onCancel}
       onComplete={onComplete}
-      onEdit={(id) => router.push({ pathname: '/care-tasks/[id]/edit', params: { id } })}
+      onEdit={onEdit}
       task={task}
     />
   );
-}
+});
 
 const styles = StyleSheet.create({
   filters: { gap: spacing.xs, paddingVertical: spacing.xs },

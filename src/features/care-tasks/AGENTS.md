@@ -53,6 +53,9 @@
 - Confirmaciones para completar y cancelar tareas pendientes.
 - Invalidación de las queries de tareas y dashboard después de cada mutación.
 - Guards visuales de escritura para `admin` y `shelter_manager`.
+- Mensaje de solo lectura explicativo para roles sin permisos de escritura en el listado; no se muestran botones que responderían 403.
+- Estados finales (`completed`, `cancelled`) presentados con icono, texto y tono, sin acciones disponibles.
+- Bloqueo de acciones por fila durante una mutación (`pendingActionId`), no global; el resto de la lista permanece interactiva.
 
 ### Pendiente o deuda conocida
 
