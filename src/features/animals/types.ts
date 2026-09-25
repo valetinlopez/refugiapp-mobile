@@ -21,6 +21,24 @@ export type AnimalStatus = NonNullable<CreateAnimalRequest['status']>;
 export type ManualAnimalHistoryEventType = CreateAnimalHistoryEventRequest['eventType'];
 export type AnimalHistoryEventType = AnimalHistoryEventResponse['eventType'];
 
+export type SpeciesResponse = components['schemas']['SpeciesResponseDto'];
+export type SpeciesListResponse = components['schemas']['SpeciesListResponseDto'];
+export type BreedResponse = components['schemas']['BreedResponseDto'];
+export type BreedListResponse = components['schemas']['BreedListResponseDto'];
+
+export interface Species {
+  id: string;
+  slug: string;
+  labelEs: string;
+}
+
+export interface Breed {
+  id: string;
+  speciesId: string;
+  slug: string;
+  labelEs: string;
+}
+
 export interface Animal {
   id: string;
   name: string;
@@ -97,4 +115,20 @@ export function toPaginatedAnimalHistoryEvents(
   dto: PaginatedAnimalHistoryEventsResponse
 ): PaginatedAnimalHistoryEvents {
   return { ...dto, items: dto.items.map(toAnimalHistoryEvent) };
+}
+
+export function toSpecies(dto: SpeciesResponse): Species {
+  return { id: dto.id, slug: dto.slug, labelEs: dto.labelEs };
+}
+
+export function toSpeciesList(dto: SpeciesListResponse): Species[] {
+  return dto.items.map(toSpecies);
+}
+
+export function toBreed(dto: BreedResponse): Breed {
+  return { id: dto.id, speciesId: dto.speciesId, slug: dto.slug, labelEs: dto.labelEs };
+}
+
+export function toBreedList(dto: BreedListResponse): Breed[] {
+  return dto.items.map(toBreed);
 }

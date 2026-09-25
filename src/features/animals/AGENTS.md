@@ -21,6 +21,16 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 - `POST /media/upload` sin `ownerType`/`ownerId`: alta de foto huérfana para `admin`, `shelter_manager` y `veterinarian`; se vincula con `profilePhotoMediaId` al crear o editar el animal. Los huérfanos no vinculados se purgan por antigüedad.
 
+## Catálogo de especies y razas
+
+- `GET /species`: catálogo activo sin paginación; respuesta `{ items: [{ id, slug, labelEs }] }`, orden determinista del backend.
+- `GET /species/:id/breeds`: razas activas de la especie por **UUID**; respuesta `{ items: [{ id, speciesId, slug, labelEs }] }`; `404` si la especie no existe o está inactiva.
+- Lectura para los tres roles autenticados (mismo guard que `GET /animals`).
+- El `slug` es la clave estable en inglés y se envía como `species`/`breed` en `POST/PATCH /animals`; `labelEs` es solo presentación.
+- `animals.species/breed` siguen siendo texto libre para el backend hasta S11; el formulario envía el slug del catálogo cuando el usuario elige una opción y el texto libre bajo la opción `Otra`.
+- El formulario conserva `id + slug` de la especie: el `id` dispara `useBreeds` y el `slug` se envía al persistir.
+- El catálogo caído no bloquea el guardado: `SpeciesSelect`/`BreedSelect` exponen estados de carga, error y vacío con reintento y permiten escribir el valor a mano.
+
 ## Datos e invariantes
 
 - Estados: `admitted`, `under_treatment`, `available_for_adoption`, `adopted`, `deceased`.
@@ -53,11 +63,11 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 ## Estructura objetivo
 
-- `api/`: endpoints de animals (listado, alta, detalle, edición, cambio de estado y eventos generales) y media (alta huérfana y lectura).
-- `hooks/`: `animalKeys`, `useAnimals`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useCreateAnimalEvent`, `useAnimalHistory`, `useAnimalPhoto` e invalidaciones.
-- `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con confirmación, tarjeta de listado (`AnimalCard`) y sección de historial (`AnimalHistory`).
+- `api/`: endpoints de animals (listado, alta, detalle, edición, cambio de estado y eventos generales), media (alta huérfana y lectura) y species (catálogo y razas).
+- `hooks/`: `animalKeys`, `useAnimals`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useCreateAnimalEvent`, `useAnimalHistory`, `useAnimalPhoto`, `speciesKeys`, `useSpecies`, `useBreeds`, `useSpeciesCatalog` e invalidaciones.
+- `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con confirmación, tarjeta de listado (`AnimalCard`), sección de historial (`AnimalHistory`) y selectores de catálogo (`SpeciesSelect`, `BreedSelect`, `CatalogRadioField`).
 - `types/`: modelos de vista y aliases derivados de OpenAPI.
-- `utils/`: esquemas Zod, mappers al DTO, matriz de transiciones, presentación de eventos e historial y traducción de errores de backend.
+- `utils/`: esquemas Zod, mappers al DTO, matriz de transiciones, presentación de eventos e historial, traducción de errores de backend y helpers del catálogo (`speciesCatalog`).
 - Los componentes reutilizables sin dominio permanecen en `src/components` (p. ej. `FilterChip`).
 
 ## Estrategia de escritura
@@ -96,6 +106,9 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Detalle `app/(app)/animals/[id].tsx` (los tres roles) con edición y cambio de estado solo para `admin`/`shelter_manager`, y enlace al listado de tareas filtrado por animal.
 - Edición `app/(app)/animals/[id]/edit.tsx` con guard visual por rol y formulario compartido `AnimalProfileForm` (modos create/edit).
 - Formulario con React Hook Form + Zod, mensajes en español y validación cruzada `birthDate <= intakeDate`.
+- Selectores de especie y raza alimentados por el catálogo (`useSpecies`/`useBreeds` con keys propias y `staleTime` largo): radiogroup con estados de carga, error y vacío con reintento, opción `Otra` con texto libre, razas dependientes de la especie y reseteo de raza al cambiar de especie; el catálogo caído no bloquea el guardado.
+- El valor persistido de `species`/`breed` es el `slug` del catálogo cuando el usuario elige una opción, o el texto libre bajo `Otra`; los valores históricos fuera del catálogo se presentan como `Otra` con el texto original (sin normalización automática).
+- Filtro por especie en el listado `app/(app)/(tabs)/explore.tsx` mediante chips horizontales alimentados por `useSpecies`, combinable con estado y nombre; el valor enviado es el `slug`.
 - PATCH diferencial en edición (`toUpdateAnimalRequest` + `hasPatchChanges`): omite campos intactos, envía `null` para limpiar `breed`/`birthDate` y no-op cuando no hay cambios.
 - Errores de subida de foto y de guardado distinguidos en UI, con reintento y opción "Guardar sin foto"; errores Zod con scroll y foco al primer campo inválido.
 - Confirmación de cambio de estado con `StatusConfirmDialog` (modal del sistema de diseño, sin `Alert` nativo).

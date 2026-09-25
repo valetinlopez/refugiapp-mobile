@@ -74,6 +74,17 @@ describe('useAnimals', () => {
     expect(getAll).toHaveBeenCalledWith({ status: 'available_for_adoption', name: 'luna' }, 1, 20);
   });
 
+  it('passes a species slug filter to the api', async () => {
+    const getAll = jest.spyOn(animalsApi, 'getAll').mockResolvedValue(createPage([], 1, 0));
+    const { result } = await renderHook(() => useAnimals({ species: 'dog' }), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(getAll).toHaveBeenCalledWith({ species: 'dog' }, 1, 20);
+  });
+
   it('loads the next page while one exists', async () => {
     const getAll = jest
       .spyOn(animalsApi, 'getAll')

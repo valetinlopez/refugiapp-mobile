@@ -171,7 +171,7 @@ Las features exponen funciones HTTP en su carpeta `api`. Los componentes y rutas
 
 ### 7.3 Contratos
 
-El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, alta y gestión de animales, eventos generales, tareas de cuidado, registros médicos, veterinarios y media consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts`; el CI verifica que el resultado esté versionado y actualizado. El flujo es:
+El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, alta y gestión de animales, eventos generales, tareas de cuidado, registros médicos, veterinarios, media y catálogo de especies/razas consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts`; el CI verifica que el resultado esté versionado y actualizado. El flujo es:
 
 ```text
 openapi.json del backend
@@ -182,7 +182,7 @@ openapi.json del backend
   -> componente
 ```
 
-Los tipos de auth, alta de animales y media derivan del archivo generado. El modelo de vista `Animal` de la feature se mapea desde el DTO generado y normaliza nulos.
+Los tipos de auth, alta de animales, media y catálogo de especies/razas derivan del archivo generado. El modelo de vista `Animal` de la feature se mapea desde el DTO generado y normaliza nulos.
 
 ### 7.4 Errores
 
@@ -251,6 +251,9 @@ La UI por rol se deriva de esta matriz y debe actualizarse cuando cambie el back
 - `upcoming`: tarea `pending` dentro de la ventana definida por producto.
 - El contrato actual de tareas no expone un campo `type`; no se infieren categorías desde el título o la descripción.
 - En presentación de tareas pendientes, `overdue` y `upcoming` son estados derivados y nunca se persisten.
+- Catálogo de especies/razas: `GET /species` y `GET /species/:id/breeds` devuelven `{ items: [{ id, slug, labelEs }] }` (razas con `speciesId` extra). El `slug` es la clave estable en inglés y se envía en `POST/PATCH /animals`; `labelEs` es solo presentación. La especie `other` y la raza `other` habilitan texto libre (`speciesOther`/`breedOther` no se persisten como campos separados: se colapsan al valor `species`/`breed`).
+- `GET /species/:id/breeds` se consulta por UUID; el formulario conserva `id + slug` de la especie para pedir razas y enviar el slug.
+- `animals.species/breed` siguen siendo texto libre para el backend (sin validación estricta contra el catálogo hasta S11); el frontend normaliza a slugs solo cuando el usuario elige una opción del catálogo y conserva texto libre histórico bajo la opción `Otra`.
 
 ## 12. Sistema de diseño
 
@@ -320,7 +323,8 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Edición de ficha en `app/(app)/animals/[id]/edit.tsx` y cambio de estado desde el detalle, restringidos a `admin` y `shelter_manager`, con formulario compartido `AnimalProfileForm` (modos create/edit).
 - Cambio de estado con matriz de transiciones local (`animalTransitions`), confirmación con modal que explica la consecuencia y sin optimistic updates: invalidación de queries como fuente de verdad.
 - Alta de eventos generales del animal desde una ruta protegida por capacidad para `admin` y `shelter_manager`, con tipos manuales derivados de OpenAPI e invalidación de la query key del historial.
-- Listado paginado de animales en `app/(app)/(tabs)/explore.tsx` (tab "Animales") con búsqueda por nombre, filtro por estado y navegación al detalle; disponible para los tres roles.
+- Listado paginado de animales en `app/(app)/(tabs)/explore.tsx` (tab "Animales") con búsqueda por nombre, filtro por estado, filtro por especie (`FilterChip` alimentado por `useSpecies`, envía el `slug` del catálogo) y navegación al detalle; disponible para los tres roles.
+- Catálogo de especies y razas: endpoints `GET /species` y `GET /species/:id/breeds` consumidos por la feature `animals` con tipos generados desde el snapshot OpenAPI (`SpeciesResponseDto`, `BreedResponseDto`), `useSpecies`/`useBreeds` con `staleTime` largo y keys propias (`speciesKeys`). `SpeciesSelect` y `BreedSelect` (radiogroup con estados de carga, error y vacío con reintento, y opción `Otra` con texto libre) reemplazan el texto libre de especie/raza en `AnimalProfileForm` en modos create/edit; las razas dependen de la especie elegida, el cambio de especie resetea la raza y el catálogo caído no bloquea el guardado (fallback a texto libre).
 - Lectura y presentación del historial general en el detalle del animal (`GET /animals/:animalId/events`) para los tres roles, con invalidación coherente al crear eventos.
 - Listado global de tareas (tab "Tareas", ruta `care-tasks`) y filtro por animal desde su detalle, con filtro por estado, formularios de alta y edición y confirmaciones para completar o cancelar; las mutaciones invalidan las queries de tareas y dashboard. La ruta legacy `/inbox` redirige a `/care-tasks`.
 - Contratos de tareas derivados del snapshot OpenAPI y guards de escritura para `admin` y `shelter_manager`.
@@ -343,7 +347,8 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 
 ## 17. Pendientes y deuda conocida
 
-- Ampliar el snapshot OpenAPI y los tipos generados a medida que nuevas features consuman endpoints (cubiertos: auth, animals, eventos generales, tareas, registros médicos, veterinarios y media).
+- Ampliar el snapshot OpenAPI y los tipos generados a medida que nuevas features consuman endpoints (cubiertos: auth, animals, eventos generales, tareas, registros médicos, veterinarios, media y catálogo de especies/razas).
+- La validación estricta de `POST/PATCH /animals` contra el catálogo de especies/razas queda pendiente del backend (S11); hoy `animals.species/breed` siguen siendo texto libre y el frontend solo normaliza a slugs cuando el usuario elige una opción del catálogo.
 - El formulario de tareas no puede ofrecer `type` ni un responsable asignable hasta que el backend los incorpore al contrato. Hoy el backend registra al actor autenticado en `createdByUserId`.
 - El historial general del animal se presenta con una sola página (20 ítems); falta paginación UI de historial.
 - La evolución clínica se presenta con una sola página (20 ítems); falta paginación UI.

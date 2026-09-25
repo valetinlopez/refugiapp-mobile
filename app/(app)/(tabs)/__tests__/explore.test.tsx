@@ -3,6 +3,7 @@ import { fireEvent, render } from '@testing-library/react-native';
 import type { Animal } from '@/features/animals/types';
 
 import { useAnimals } from '@/features/animals/hooks/useAnimals';
+import { useSpecies } from '@/features/animals/hooks/useSpecies';
 
 import { useSession } from '@/features/auth/session';
 
@@ -20,11 +21,21 @@ jest.mock('@/features/animals/hooks/useAnimals', () => ({
   useAnimals: jest.fn(),
 }));
 
+jest.mock('@/features/animals/hooks/useSpecies', () => ({
+  useSpecies: jest.fn(),
+}));
+
 const mockUseAnimals = useAnimals as jest.Mock;
+const mockUseSpecies = useSpecies as jest.Mock;
 const mockUseSession = useSession as jest.Mock;
 const { router } = jest.requireMock('expo-router') as {
   router: { push: jest.Mock; replace: jest.Mock };
 };
+
+const SPECIES = [
+  { id: 'species-dog', slug: 'dog', labelEs: 'Perro' },
+  { id: 'species-cat', slug: 'cat', labelEs: 'Gato' },
+];
 
 function createAnimal(): Animal {
   return {
@@ -59,6 +70,8 @@ describe('ExploreScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseSession.mockReturnValue({ user: { roles: ['admin'] } });
+    mockUseSpecies.mockReturnValue({ isSuccess: true, data: SPECIES });
+    mockUseAnimals.mockReturnValue(createQueryResult());
   });
 
   it('shows a loading state while fetching', async () => {
@@ -119,5 +132,23 @@ describe('ExploreScreen', () => {
     const screen = await render(<ExploreScreen />);
 
     expect(screen.queryByRole('button', { name: 'Alta' })).toBeNull();
+  });
+
+  it('filters animals by species when a chip is selected', async () => {
+    const screen = await render(<ExploreScreen />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Gato' }));
+
+    expect(mockUseAnimals).toHaveBeenLastCalledWith(expect.objectContaining({ species: 'cat' }));
+  });
+
+  it('resets the species filter with Todas', async () => {
+    const screen = await render(<ExploreScreen />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Gato' }));
+    const toditas = screen.getAllByRole('button', { name: 'Todas' });
+    await fireEvent.press(toditas[toditas.length - 1]!);
+
+    expect(mockUseAnimals).toHaveBeenLastCalledWith({});
   });
 });

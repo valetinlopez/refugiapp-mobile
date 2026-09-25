@@ -34,6 +34,9 @@
 - Los estados persistidos de tareas son `pending`, `completed` y `cancelled`; `overdue`, `upcoming` y `clinical` son presentaciones derivadas.
 - Los datos monetarios se manejan en centavos mediante `amountCents`.
 - Toda lista paginada debe conservar el contrato y orden determinista documentados por el backend.
+- Catálogo de especies/razas: `GET /species` y `GET /species/:id/breeds` devuelven `{ items: [{ id, slug, labelEs }] }` (razas con `speciesId` extra). El `slug` es la clave estable en inglés y se envía en `POST/PATCH /animals`; `labelEs` es solo presentación. La especie `other` y la raza `other` habilitan texto libre (`speciesOther`/`breedOther` no se persisten como campos separados: se colapsan al valor `species`/`breed`).
+- `GET /species/:id/breeds` se consulta por UUID; el formulario conserva `id + slug` de la especie para pedir razas y enviar el slug.
+- `animals.species/breed` siguen siendo texto libre para el backend (sin validación estricta contra el catálogo hasta S11); el frontend normaliza a slugs solo cuando el usuario elige una opción del catálogo y conserva texto libre histórico bajo la opción `Otra`.
 
 ## Seguridad
 

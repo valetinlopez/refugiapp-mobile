@@ -1,30 +1,28 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef, useState, type ReactNode, type RefObject } from 'react';
-import { Controller, useForm, type FieldErrors } from 'react-hook-form';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-  type LayoutChangeEvent,
-  type TextInputProps,
-} from 'react-native';
+import { useRef, useState, type RefObject } from 'react';
+import { Controller, useForm, useWatch, type FieldErrors } from 'react-hook-form';
+import { ScrollView, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 
-import { AppButton, AppIcon, AppText } from '@/components/primitives';
+import { AppButton, AppText } from '@/components/primitives';
 import { MediaUploadStatus } from '@/components/feedback';
 import { DateTimeField } from '@/components/patterns';
-import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
+import { spacing } from '@/theme';
 
 import type { PhotoFile } from '../api/mediaApi';
 import type { CreateAnimalInput } from '../hooks/useCreateAnimal';
 import type { UpdateAnimalInput } from '../hooks/useUpdateAnimal';
+import { useSpeciesCatalog } from '../hooks/useSpeciesCatalog';
 import type { Animal, AnimalSex, AnimalStatus } from '../types';
 import { createAnimalSchema, type CreateAnimalFormInput } from '../utils/createAnimalSchema';
 import { toUpdateAnimalFormValues } from '../utils/toUpdateAnimalFormValues';
 import { updateAnimalSchema, type UpdateAnimalFormInput } from '../utils/updateAnimalSchema';
 
+import { BreedSelect } from './BreedSelect';
+import { SpeciesSelect } from './SpeciesSelect';
+import { FormField, OptionGroup, FormTextInput } from './formFields';
 import { ProfilePhotoPicker } from './ProfilePhotoPicker';
+
+export { FormField, OptionGroup, FormTextInput } from './formFields';
 
 export const SEX_OPTIONS: { label: string; value: AnimalSex }[] = [
   { label: 'Hembra', value: 'female' },
@@ -39,82 +37,6 @@ export const STATUS_OPTIONS: { label: string; value: AnimalStatus }[] = [
   { label: 'Adoptado', value: 'adopted' },
   { label: 'Fallecido', value: 'deceased' },
 ];
-
-export function FormField({
-  children,
-  error,
-  label,
-  onLayout,
-}: {
-  children: ReactNode;
-  error: string | undefined;
-  label: string;
-  onLayout?: (event: LayoutChangeEvent) => void;
-}) {
-  return (
-    <View onLayout={onLayout} style={styles.field}>
-      <AppText variant="label">{label}</AppText>
-      {children}
-      {error ? (
-        <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
-          {error}
-        </AppText>
-      ) : null}
-    </View>
-  );
-}
-
-export function OptionGroup<T extends string>({
-  disabled = false,
-  error,
-  label,
-  onChange,
-  options,
-  value,
-}: {
-  disabled?: boolean;
-  error: string | undefined;
-  label: string;
-  onChange(value: T): void;
-  options: { label: string; value: T }[];
-  value: T | undefined;
-}) {
-  return (
-    <FormField error={error} label={label}>
-      <View accessibilityLabel={label} accessibilityRole="radiogroup" style={styles.options}>
-        {options.map((option) => {
-          const selected = option.value === value;
-          return (
-            <Pressable
-              key={option.value}
-              accessibilityLabel={option.label}
-              accessibilityRole="radio"
-              accessibilityState={{ disabled, selected }}
-              disabled={disabled}
-              onPress={() => onChange(option.value)}
-              style={[styles.option, selected && styles.optionSelected]}
-            >
-              {selected ? <AppIcon color="positive" name="check" size={sizes.iconSm} /> : null}
-              <AppText color={selected ? 'textPrimary' : 'textSecondary'} variant="label">
-                {option.label}
-              </AppText>
-            </Pressable>
-          );
-        })}
-      </View>
-    </FormField>
-  );
-}
-
-export function FormTextInput({ style, ...props }: TextInputProps) {
-  return (
-    <TextInput
-      placeholderTextColor={colors.textSecondary}
-      style={[styles.input, style]}
-      {...props}
-    />
-  );
-}
 
 interface AnimalProfileFormBaseProps {
   errorMessage?: string | null;
@@ -154,7 +76,7 @@ function CreateProfileForm({
   upload,
 }: AnimalCreateModeProps) {
   const [photo, setPhoto] = useState<PhotoFile | null>(null);
-  const { control, handleSubmit } = useForm<CreateAnimalFormInput>({
+  const { control, handleSubmit, setValue } = useForm<CreateAnimalFormInput>({
     resolver: zodResolver(createAnimalSchema),
     defaultValues: {
       name: '',
@@ -167,6 +89,13 @@ function CreateProfileForm({
     },
     mode: 'onTouched',
   });
+  const speciesValue = useWatch({ control, name: 'species' });
+  const catalog = useSpeciesCatalog(speciesValue);
+
+  function changeSpecies(nextSpecies: string): void {
+    setValue('species', nextSpecies);
+    setValue('breed', '');
+  }
 
   return (
     <View style={styles.form}>
@@ -193,38 +122,32 @@ function CreateProfileForm({
         control={control}
         name="species"
         render={({ field, fieldState }) => (
-          <FormField error={fieldState.error?.message} label="Especie">
-            <FormTextInput
-              accessibilityLabel="Especie"
-              autoCapitalize="words"
-              autoComplete="off"
-              editable={!isSubmitting}
-              maxLength={80}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="dog"
-              value={field.value}
-            />
-          </FormField>
+          <SpeciesSelect
+            disabled={isSubmitting}
+            error={fieldState.error?.message}
+            onChange={changeSpecies}
+            onRetry={catalog.retrySpecies}
+            options={catalog.speciesOptions}
+            status={catalog.speciesStatus}
+            value={field.value}
+          />
         )}
       />
       <Controller
         control={control}
         name="breed"
         render={({ field, fieldState }) => (
-          <FormField error={fieldState.error?.message} label="Raza">
-            <FormTextInput
-              accessibilityLabel="Raza"
-              autoCapitalize="words"
-              autoComplete="off"
-              editable={!isSubmitting}
-              maxLength={80}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="Mestizo (opcional)"
-              value={field.value ?? ''}
-            />
-          </FormField>
+          <BreedSelect
+            key={catalog.selectedSpecies?.id ?? 'custom'}
+            disabled={isSubmitting}
+            error={fieldState.error?.message}
+            onChange={field.onChange}
+            onRetry={catalog.retryBreeds}
+            options={catalog.breedOptions}
+            species={catalog.selectedSpecies}
+            status={catalog.breedStatus}
+            value={field.value}
+          />
         )}
       />
       <Controller
@@ -327,13 +250,7 @@ const EDIT_FIELD_ORDER: (keyof UpdateAnimalFormInput)[] = [
   'intakeDate',
   'birthDate',
 ];
-const EDIT_FOCUSABLE_FIELDS: readonly string[] = [
-  'name',
-  'species',
-  'breed',
-  'intakeDate',
-  'birthDate',
-];
+const EDIT_FOCUSABLE_FIELDS: readonly string[] = ['name', 'intakeDate', 'birthDate'];
 
 function EditProfileForm({
   animal,
@@ -349,11 +266,13 @@ function EditProfileForm({
   const [photo, setPhoto] = useState<PhotoFile | null>(null);
   const fieldOffsets = useRef<Record<string, number>>({});
   const formOffset = useRef(0);
-  const { control, handleSubmit, setFocus } = useForm<UpdateAnimalFormInput>({
+  const { control, handleSubmit, setFocus, setValue } = useForm<UpdateAnimalFormInput>({
     resolver: zodResolver(updateAnimalSchema),
     defaultValues: toUpdateAnimalFormValues(animal),
     mode: 'onTouched',
   });
+  const speciesValue = useWatch({ control, name: 'species' });
+  const catalog = useSpeciesCatalog(speciesValue);
 
   function captureFormOffset(event: LayoutChangeEvent): void {
     formOffset.current = event.nativeEvent.layout.y;
@@ -374,6 +293,11 @@ function EditProfileForm({
         setFocus(firstField);
       }
     }
+  }
+
+  function changeSpecies(nextSpecies: string): void {
+    setValue('species', nextSpecies);
+    setValue('breed', '');
   }
 
   function submit(skipPhoto: boolean): void {
@@ -417,46 +341,34 @@ function EditProfileForm({
         control={control}
         name="species"
         render={({ field, fieldState }) => (
-          <FormField
+          <SpeciesSelect
+            disabled={isSubmitting}
             error={fieldState.error?.message}
-            label="Especie"
+            onChange={changeSpecies}
             onLayout={captureFieldOffset('species')}
-          >
-            <FormTextInput
-              accessibilityLabel="Especie"
-              autoCapitalize="words"
-              autoComplete="off"
-              editable={!isSubmitting}
-              maxLength={80}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="dog"
-              value={field.value}
-            />
-          </FormField>
+            onRetry={catalog.retrySpecies}
+            options={catalog.speciesOptions}
+            status={catalog.speciesStatus}
+            value={field.value}
+          />
         )}
       />
       <Controller
         control={control}
         name="breed"
         render={({ field, fieldState }) => (
-          <FormField
+          <BreedSelect
+            key={catalog.selectedSpecies?.id ?? 'custom'}
+            disabled={isSubmitting}
             error={fieldState.error?.message}
-            label="Raza"
+            onChange={field.onChange}
             onLayout={captureFieldOffset('breed')}
-          >
-            <FormTextInput
-              accessibilityLabel="Raza"
-              autoCapitalize="words"
-              autoComplete="off"
-              editable={!isSubmitting}
-              maxLength={80}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="Mestizo (opcional)"
-              value={field.value ?? ''}
-            />
-          </FormField>
+            onRetry={catalog.retryBreeds}
+            options={catalog.breedOptions}
+            species={catalog.selectedSpecies}
+            status={catalog.breedStatus}
+            value={field.value}
+          />
         )}
       />
       <Controller
@@ -575,36 +487,6 @@ const styles = StyleSheet.create({
   form: {
     gap: spacing.md,
     width: '100%',
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    color: colors.textPrimary,
-    fontFamily: fontFamilies.body,
-    fontSize: 16,
-    minHeight: sizes.buttonHeight,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  option: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    minHeight: sizes.touchTarget,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  optionSelected: {
-    borderColor: colors.positive,
-  },
-  options: {
-    gap: spacing.xs,
   },
   photoActions: {
     flexDirection: 'row',

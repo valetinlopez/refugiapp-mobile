@@ -1,7 +1,9 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
-import type { RefObject } from 'react';
+import type { ReactElement, RefObject } from 'react';
 import { Platform, type ScrollView } from 'react-native';
 
+import { speciesApi } from '../api/speciesApi';
 import type { Animal } from '../types';
 
 import { AnimalProfileForm } from './AnimalProfileForm';
@@ -27,6 +29,29 @@ jest.mock('@react-native-community/datetimepicker', () => {
   return { __esModule: true, default: MockPicker };
 });
 
+jest.mock('../api/speciesApi', () => ({
+  speciesApi: {
+    getBreeds: jest.fn(),
+    getSpecies: jest.fn(),
+  },
+}));
+
+const SPECIES = [
+  { id: 'species-dog', slug: 'dog', labelEs: 'Perro' },
+  { id: 'species-cat', slug: 'cat', labelEs: 'Gato' },
+  { id: 'species-other', slug: 'other', labelEs: 'Otro' },
+];
+
+const DOG_BREEDS = [
+  { id: 'breed-mestizo', speciesId: 'species-dog', slug: 'mestizo', labelEs: 'Mestizo' },
+  { id: 'breed-other', speciesId: 'species-dog', slug: 'other', labelEs: 'Otra' },
+];
+
+const CAT_BREEDS = [
+  { id: 'breed-siames', speciesId: 'species-cat', slug: 'siames', labelEs: 'Siamés' },
+  { id: 'breed-other', speciesId: 'species-cat', slug: 'other', labelEs: 'Otra' },
+];
+
 function createAnimal(): Animal {
   return {
     id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
@@ -41,10 +66,30 @@ function createAnimal(): Animal {
   };
 }
 
+function renderForm(ui: ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
+
 describe('AnimalProfileForm edit mode', () => {
-  it('prefills the form from the animal', async () => {
+  beforeEach(() => {
+    jest.mocked(speciesApi.getSpecies).mockResolvedValue(SPECIES);
+    jest
+      .mocked(speciesApi.getBreeds)
+      .mockImplementation(async (speciesId) =>
+        speciesId === 'species-dog' ? DOG_BREEDS : CAT_BREEDS
+      );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('prefills the form from the animal and maps legacy values to the catalog', async () => {
     const onSubmit = jest.fn();
-    const screen = await render(
+    const screen = await renderForm(
       <AnimalProfileForm
         mode="edit"
         animal={createAnimal()}
@@ -54,8 +99,15 @@ describe('AnimalProfileForm edit mode', () => {
     );
 
     expect(screen.getByLabelText('Nombre').props.value).toBe('Luna');
-    expect(screen.getByLabelText('Especie').props.value).toBe('dog');
-    expect(screen.getByLabelText('Raza').props.value).toBe('Mestizo');
+    expect(await screen.findByRole('radio', { name: 'Perro' })).toBeTruthy();
+    expect(
+      (
+        screen.getByRole('radio', { name: 'Perro' }).props.accessibilityState as {
+          selected: boolean;
+        }
+      ).selected
+    ).toBe(true);
+    expect((await screen.findByLabelText('Raza (otra)')).props.value).toBe('Mestizo');
     expect(screen.getByRole('button', { name: /Fecha de ingreso:/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Fecha de nacimiento:/ })).toBeTruthy();
     expect(screen.getByRole('radio', { name: 'Hembra' })).toBeTruthy();
@@ -63,7 +115,7 @@ describe('AnimalProfileForm edit mode', () => {
   });
 
   it('shows the current photo and the submit button label for editing', async () => {
-    const screen = await render(
+    const screen = await renderForm(
       <AnimalProfileForm
         mode="edit"
         animal={createAnimal()}
@@ -78,7 +130,7 @@ describe('AnimalProfileForm edit mode', () => {
   it('submits the edited values without touching status', async () => {
     const onSubmit = jest.fn();
     const animal = createAnimal();
-    const screen = await render(
+    const screen = await renderForm(
       <AnimalProfileForm mode="edit" animal={animal} currentPhotoUri={null} onSubmit={onSubmit} />
     );
 
@@ -108,7 +160,7 @@ describe('AnimalProfileForm edit mode', () => {
     const scrollRef = {
       current: { scrollTo },
     } as unknown as RefObject<ScrollView>;
-    const screen = await render(
+    const screen = await renderForm(
       <AnimalProfileForm
         mode="edit"
         animal={createAnimal()}
@@ -135,7 +187,7 @@ describe('AnimalProfileForm edit mode', () => {
 
   it('shows a distinct photo error with retry and save-without-photo actions', async () => {
     const onSubmit = jest.fn();
-    const screen = await render(
+    const screen = await renderForm(
       <AnimalProfileForm
         mode="edit"
         animal={createAnimal()}
@@ -166,7 +218,7 @@ describe('AnimalProfileForm edit mode', () => {
 
   it('rejects a birth date after the intake date', async () => {
     const onSubmit = jest.fn();
-    const screen = await render(
+    const screen = await renderForm(
       <AnimalProfileForm
         mode="edit"
         animal={createAnimal()}
@@ -188,7 +240,7 @@ describe('AnimalProfileForm edit mode', () => {
   });
 
   it('displays translated backend errors (e.g. 403)', async () => {
-    const screen = await render(
+    const screen = await renderForm(
       <AnimalProfileForm
         mode="edit"
         animal={createAnimal()}
@@ -199,5 +251,92 @@ describe('AnimalProfileForm edit mode', () => {
     );
 
     expect(screen.getByText('Tu rol no tiene permiso para editar animales.')).toBeTruthy();
+  });
+});
+
+describe('AnimalProfileForm create mode with species catalog', () => {
+  beforeEach(() => {
+    jest.mocked(speciesApi.getSpecies).mockResolvedValue(SPECIES);
+    jest
+      .mocked(speciesApi.getBreeds)
+      .mockImplementation(async (speciesId) =>
+        speciesId === 'species-dog' ? DOG_BREEDS : CAT_BREEDS
+      );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('loads dependent breeds when a species is selected', async () => {
+    const onSubmit = jest.fn();
+    const screen = await renderForm(<AnimalProfileForm mode="create" onSubmit={onSubmit} />);
+
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Perro' }));
+    expect(await screen.findByRole('radio', { name: 'Mestizo' })).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Gato' }));
+    expect(await screen.findByRole('radio', { name: 'Siamés' })).toBeTruthy();
+    expect(screen.queryByRole('radio', { name: 'Mestizo' })).toBeNull();
+  });
+
+  it('resets the breed when the species changes', async () => {
+    const onSubmit = jest.fn();
+    const screen = await renderForm(<AnimalProfileForm mode="create" onSubmit={onSubmit} />);
+
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Perro' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Mestizo' }));
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Gato' }));
+    expect(screen.queryByLabelText('Raza (otra)')).toBeNull();
+  });
+
+  it('allows a custom species via Otra and keeps the breed free text', async () => {
+    const onSubmit = jest.fn();
+    const screen = await renderForm(<AnimalProfileForm mode="create" onSubmit={onSubmit} />);
+
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Otra' }));
+    await fireEvent.changeText(screen.getByLabelText('Especie (otra)'), 'Hamster');
+    await fireEvent.changeText(screen.getByLabelText('Raza'), 'Sirio');
+    await fireEvent.changeText(screen.getByLabelText('Nombre'), 'Luna');
+    await fireEvent.press(screen.getByLabelText('Elegir fecha de ingreso'));
+    await fireEvent.press(screen.getByLabelText('selector de fecha'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Dar de alta' }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ species: 'Hamster', breed: 'Sirio' })
+      );
+    });
+  });
+
+  it('requires a custom species text when Otra is selected', async () => {
+    const onSubmit = jest.fn();
+    const screen = await renderForm(<AnimalProfileForm mode="create" onSubmit={onSubmit} />);
+
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Otra' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Dar de alta' }));
+
+    expect(await screen.findByText('La especie es obligatoria.')).toBeTruthy();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('falls back to free text when the catalog fails to load', async () => {
+    jest.mocked(speciesApi.getSpecies).mockRejectedValue({ status: 500 });
+    const onSubmit = jest.fn();
+    const screen = await renderForm(<AnimalProfileForm mode="create" onSubmit={onSubmit} />);
+
+    expect(
+      await screen.findByText('No se pudo cargar el catálogo', {}, { timeout: 5000 })
+    ).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText('Especie (otra)'), 'Conejo');
+    await fireEvent.changeText(screen.getByLabelText('Nombre'), 'Luna');
+    await fireEvent.press(screen.getByLabelText('Elegir fecha de ingreso'));
+    await fireEvent.press(screen.getByLabelText('selector de fecha'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Dar de alta' }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ species: 'Conejo' }));
+    });
   });
 });

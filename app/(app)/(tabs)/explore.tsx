@@ -9,8 +9,10 @@ import { AppButton, AppText } from '@/components/primitives';
 import { useSession } from '@/features/auth/session';
 import { AnimalCard } from '@/features/animals/components/AnimalCard';
 import { useAnimals } from '@/features/animals/hooks/useAnimals';
+import { useSpecies } from '@/features/animals/hooks/useSpecies';
 import type { AnimalStatus } from '@/features/animals/types';
 import { ANIMAL_STATUS_ORDER, getStatusLabel } from '@/features/animals/utils/animalTransitions';
+import { toSpeciesOptions } from '@/features/animals/utils/speciesCatalog';
 import { colors, radii, sizes, spacing } from '@/theme';
 
 export default function AnimalsScreen() {
@@ -19,10 +21,12 @@ export default function AnimalsScreen() {
     user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<AnimalStatus | undefined>(undefined);
+  const [speciesFilter, setSpeciesFilter] = useState<string | undefined>(undefined);
   const search = useDebouncedValue(searchInput, 300);
 
   const animalsQuery = useAnimals({
     ...(statusFilter !== undefined ? { status: statusFilter } : {}),
+    ...(speciesFilter !== undefined ? { species: speciesFilter } : {}),
     ...(search.trim() !== '' ? { name: search.trim() } : {}),
   });
 
@@ -54,6 +58,7 @@ export default function AnimalsScreen() {
         value={searchInput}
       />
       <StatusFilter selected={statusFilter} onSelect={setStatusFilter} />
+      <SpeciesFilter selected={speciesFilter} onSelect={setSpeciesFilter} />
       <AppText accessibilityLiveRegion="polite" color="textSecondary" variant="caption">
         {animalsQuery.isSuccess ? `${animalsQuery.data?.pages[0]?.total ?? 0} animales` : ' '}
       </AppText>
@@ -160,6 +165,45 @@ function StatusFilter({
           label={getStatusLabel(status)}
           onPress={() => onSelect(selected === status ? undefined : status)}
           selected={selected === status}
+        />
+      ))}
+    </ScrollView>
+  );
+}
+
+function SpeciesFilter({
+  onSelect,
+  selected,
+}: {
+  onSelect(species: string | undefined): void;
+  selected: string | undefined;
+}) {
+  const speciesQuery = useSpecies();
+  if (!speciesQuery.isSuccess) {
+    return null;
+  }
+  const options = toSpeciesOptions(speciesQuery.data);
+  if (options.length === 0) {
+    return null;
+  }
+  return (
+    <ScrollView
+      accessibilityLabel="Filtrar por especie"
+      contentContainerStyle={styles.filters}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+    >
+      <FilterChip
+        label="Todas"
+        onPress={() => onSelect(undefined)}
+        selected={selected === undefined}
+      />
+      {options.map((option) => (
+        <FilterChip
+          key={option.value}
+          label={option.label}
+          onPress={() => onSelect(selected === option.value ? undefined : option.value)}
+          selected={selected === option.value}
         />
       ))}
     </ScrollView>

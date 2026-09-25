@@ -254,5 +254,22 @@ export interface components {
       path: string;
       requestId?: string;
     };
+    SpeciesResponseDto: {
+      id: string;
+      slug: string;
+      labelEs: string;
+    };
+    SpeciesListResponseDto: {
+      items: components['schemas']['SpeciesResponseDto'][];
+    };
+    BreedResponseDto: {
+      id: string;
+      speciesId: string;
+      slug: string;
+      labelEs: string;
+    };
+    BreedListResponseDto: {
+      items: components['schemas']['BreedResponseDto'][];
+    };
   };
 }
