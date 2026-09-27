@@ -3,7 +3,7 @@
   "info": {
     "title": "Refugiapp API - mobile consumed subset",
     "version": "1.0.0",
-    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, animales, eventos generales, tareas de cuidado, gastos, registros medicos, veterinarios y media."
+    "description": "Snapshot parcial del OpenAPI del backend para los endpoints consumidos por el movil: autenticacion, animales, dashboard, eventos generales, tareas de cuidado, gastos, registros medicos, veterinarios y media."
   },
   "servers": [{ "url": "/api/v1" }],
   "paths": {
@@ -1097,6 +1097,38 @@
           }
         }
       }
+    },
+    "/dashboard/overview": {
+      "get": {
+        "operationId": "getDashboardOverview",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Dashboard overview",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DashboardOverviewResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1568,6 +1600,43 @@
           "page": { "type": "number" },
           "limit": { "type": "number" },
           "total": { "type": "number" }
+        }
+      },
+      "DashboardTotalsDto": {
+        "type": "object",
+        "required": ["animals", "byStatus"],
+        "properties": {
+          "animals": { "type": "number", "example": 42 },
+          "byStatus": {
+            "type": "object",
+            "description": "Conteo de animales activos por estado; todos los estados del enum estan presentes.",
+            "additionalProperties": { "type": "number" }
+          }
+        }
+      },
+      "DashboardAnimalDto": {
+        "type": "object",
+        "required": ["id", "name", "species", "status"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "example": "Luna" },
+          "species": { "type": "string", "example": "dog" },
+          "status": {
+            "type": "string",
+            "enum": ["admitted", "under_treatment", "available_for_adoption", "adopted", "deceased"]
+          },
+          "profilePhotoMediaId": { "type": "string", "format": "uuid", "nullable": true }
+        }
+      },
+      "DashboardOverviewResponseDto": {
+        "type": "object",
+        "required": ["totals", "recentAnimals"],
+        "properties": {
+          "totals": { "$ref": "#/components/schemas/DashboardTotalsDto" },
+          "recentAnimals": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DashboardAnimalDto" }
+          }
         }
       },
       "ErrorResponseDto": {

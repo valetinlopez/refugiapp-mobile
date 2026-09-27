@@ -130,6 +130,7 @@ src/
     auth/                    # API, formulario y estado global de sesión
     animals/
     care-tasks/              # Listado, formulario y transiciones de tareas
+    dashboard/               # Panel de portada con totales, recientes y capacidades por rol
     expenses/                # Alta de gastos con comprobante y permisos por rol
     medical-records/         # Registros clínicos y evolución clínica
   theme/
@@ -172,7 +173,7 @@ Las features exponen funciones HTTP en su carpeta `api`. Los componentes y rutas
 
 ### 7.3 Contratos
 
-El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, alta y gestión de animales, eventos generales, tareas de cuidado, registros médicos, veterinarios y media consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts`; el CI verifica que el resultado esté versionado y actualizado. El flujo es:
+El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, alta y gestión de animales, dashboard, eventos generales, tareas de cuidado, registros médicos, veterinarios y media consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts`; el CI verifica que el resultado esté versionado y actualizado. El flujo es:
 
 ```text
 openapi.json del backend
@@ -325,6 +326,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Alta de eventos generales del animal desde una ruta protegida por capacidad para `admin` y `shelter_manager`, con tipos manuales derivados de OpenAPI e invalidación de la query key del historial.
 - Listado paginado de animales en `app/(app)/(tabs)/explore.tsx` (tab "Animales") con búsqueda por nombre, filtro por estado y navegación al detalle; disponible para los tres roles.
 - Foto de perfil en el listado de animales: `AnimalCardAvatar` consulta `useAnimalPhoto(profilePhotoMediaId)` por tarjeta con caché compartida por `animalKeys.media` (deduplicación por `mediaId`, `staleTime` 5 min), sin fetch para animales sin foto y fallback silencioso a iniciales ante error; la invalidación de `animalKeys.all` tras crear o editar la ficha mantiene la foto coherente sin optimistic updates.
+- Dashboard de portada en el tab "Inicio" (`app/(app)/(tabs)/index.tsx`): feature `src/features/dashboard` que consume `GET /dashboard/overview` para los tres roles, con totales por estado y animales recientes (foto de perfil vía `GET /media/:id` solo cuando `profilePhotoMediaId` está presente, sin fetch si es `null`), estados de skeleton inicial, vacío, error con reintento y pull-to-refresh. La autorización visual sale del registro de capacidades `capabilitiesForRoles` (espejo de `ROLE_CAPABILITIES` del backend): "Alta animal"/"Nueva tarea" requieren `canEditAnimal` y "Registrar gasto" requiere `canManageExpenses`; `canReadAudit` queda reservado a `admin` sin consumidor de UI todavía. `dashboardKeys.all = ['dashboard']` es la key canónica del panel; las mutaciones de tareas y gastos la invalidan por prefijo (constantes locales en cada feature, sin imports cruzados).
 - Lectura y presentación del historial general en el detalle del animal (`GET /animals/:animalId/events`) para los tres roles, con invalidación coherente al crear eventos.
 - Listado global de tareas (tab "Tareas", ruta `care-tasks`) y filtro por animal desde su detalle, con filtro por estado, formularios de alta y edición y confirmaciones para completar o cancelar; las mutaciones invalidan las queries de tareas y dashboard. La ruta legacy `/inbox` redirige a `/care-tasks`.
 - Contratos de tareas derivados del snapshot OpenAPI y guards de escritura para `admin` y `shelter_manager`.
