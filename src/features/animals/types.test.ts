@@ -53,4 +53,33 @@ describe('toAnimalView', () => {
       profilePhotoMediaId: null,
     });
   });
+
+  it('normalizes ISO datetime dates from the backend to date-only values', () => {
+    expect(
+      toAnimalView(
+        createResponse({
+          intakeDate: '2026-01-10T00:00:00.000Z',
+          birthDate: '2025-06-01T00:00:00.000Z',
+          profilePhotoMediaId: '7fa85f64-5717-4562-b3fc-2c963f66afa6' as unknown as Record<
+            string,
+            unknown
+          >,
+        })
+      )
+    ).toEqual({
+      id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+      name: 'Luna',
+      species: 'dog',
+      breed: null,
+      sex: 'female',
+      status: 'admitted',
+      intakeDate: '2026-01-10',
+      birthDate: '2025-06-01',
+      profilePhotoMediaId: '7fa85f64-5717-4562-b3fc-2c963f66afa6',
+    });
+  });
+
+  it('falls back to an empty string when the intake date cannot be normalized', () => {
+    expect(toAnimalView(createResponse({ intakeDate: 'not-a-date' })).intakeDate).toBe('');
+  });
 });

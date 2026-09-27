@@ -1,5 +1,7 @@
 import type { components } from '@/core/api/generated/openapi';
 
+import { toDateOnly } from './utils/toDateOnly';
+
 export type CreateAnimalRequest = components['schemas']['CreateAnimalDto'];
 export type UpdateAnimalRequest = Omit<
   components['schemas']['UpdateAnimalDto'],
@@ -71,8 +73,8 @@ export function toAnimalView(dto: AnimalResponse): Animal {
     breed: typeof dto.breed === 'string' ? dto.breed : null,
     sex: dto.sex,
     status: dto.status,
-    intakeDate: dto.intakeDate,
-    birthDate: typeof dto.birthDate === 'string' ? dto.birthDate : null,
+    intakeDate: toDateOnly(dto.intakeDate) ?? '',
+    birthDate: toDateOnly(dto.birthDate),
     profilePhotoMediaId:
       typeof dto.profilePhotoMediaId === 'string' ? dto.profilePhotoMediaId : null,
   };

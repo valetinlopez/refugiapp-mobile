@@ -243,6 +243,7 @@ La UI por rol se deriva de esta matriz y debe actualizarse cuando cambie el back
 
 - IDs principales: UUID.
 - Fechas de API: strings ISO 8601; parsear en el límite y formatear para la locale de UI.
+- El backend serializa `intakeDate` y `birthDate` como ISO datetime pese a declarar `format: date`. `toDateOnly` los normaliza a `YYYY-MM-DD` en la frontera (`toAnimalView`); los mappers de edición comparan y envían siempre `YYYY-MM-DD` (ver ADR-0008).
 - Dinero: enteros `amountCents`; no usar flotantes para lógica monetaria.
 - Animal: `admitted | under_treatment | available_for_adoption | adopted | deceased`.
 - Registro médico: `recordType` ∈ `consultation | vaccination | deworming | surgery | lab_result | treatment | other`.
@@ -330,6 +331,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Captura de imágenes desde cámara o galería y selección de PDF mediante `expo-document-picker`; validación local espejo de MIME/tamaño del backend y subida multipart con progreso y cancelación (ver ADR-0005).
 - Permiso de cámara/galería denegado con explicación y, si queda bloqueado permanentemente, acceso a los ajustes del dispositivo (`Linking.openSettings`). El picker de foto infiere MIME/nombre cuando el sistema omite metadatos (`resolveMediaMimeType`/`normalizeMediaFileName`) y permite subir sin `fileSize`, dejando al backend como autoridad de tamaño. `AppAvatar` cae a iniciales de forma silenciosa ante fallo de imagen (`onError`).
 - Fechas presentadas siempre formateadas en `es-AR` con formadores compartidos `dateFormat` (nunca ISO crudo): detalle de animal, historial general, evolución clínica y tareas; las fechas de calendario se parsean como fecha local para evitar corrimientos de zona horaria, y las filas etiqueta-valor envuelven en pantallas estrechas y con fuente ampliada.
+- Normalización de `intakeDate`/`birthDate` a `YYYY-MM-DD` en la frontera (`toDateOnly` en `toAnimalView` y en los mappers de edición), corrigiendo que las fechas de ingreso/nacimiento quedaran en blanco tras guardar la ficha: el backend las serializa como ISO datetime y `dateFormat` solo acepta `YYYY-MM-DD` (ver ADR-0008).
 - Registros médicos y evolución clínica: feature `src/features/medical-records` con contrato derivado de OpenAPI (medical-records, veterinarians y media por owner), alta y edición con PATCH semántico (diff que omite campos intactos y envía `null` para limpiar), adjuntos clínicos multipart huérfanos en creación y directos al registro en edición, y selectores de veterinarios activos.
 - Alta de gastos: feature `src/features/expenses` con formulario validado, importe entero en centavos, comprobante multipart huérfano vinculado mediante `ticketMediaId`, limpieza compensatoria e invalidación de gastos y dashboard.
 - Formulario clínico con React Hook Form + Zod en español, `@react-native-community/datetimepicker` para `occurredAt` (validado contra el inicio de día local del `intakeDate` y con tolerancia de +60 s para el límite futuro, ver ADR-0007) y mensajes de error seguros por código de backend (`OCCURRED_AT_IN_FUTURE`, `OCCURRED_AT_BEFORE_INTAKE`, 403, 404 y 409 `VETERINARIAN_INACTIVE`).

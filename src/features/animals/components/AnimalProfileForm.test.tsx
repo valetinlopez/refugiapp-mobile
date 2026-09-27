@@ -2,6 +2,7 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import type { RefObject } from 'react';
 import { Platform, type ScrollView } from 'react-native';
 
+import { formatDateShort } from '@/components/patterns';
 import type { Animal } from '../types';
 
 import { AnimalProfileForm } from './AnimalProfileForm';
@@ -199,5 +200,59 @@ describe('AnimalProfileForm edit mode', () => {
     );
 
     expect(screen.getByText('Tu rol no tiene permiso para editar animales.')).toBeTruthy();
+  });
+
+  it('prefills dates when the API returns ISO datetimes', async () => {
+    const animal = {
+      ...createAnimal(),
+      intakeDate: '2026-01-10T00:00:00.000Z',
+      birthDate: '2025-06-01T00:00:00.000Z',
+    };
+    const screen = await render(
+      <AnimalProfileForm
+        mode="edit"
+        animal={animal}
+        currentPhotoUri={null}
+        onSubmit={() => undefined}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', { name: `Fecha de ingreso: ${formatDateShort('2026-01-10')}` })
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: `Fecha de nacimiento: ${formatDateShort('2025-06-01')}` })
+    ).toBeTruthy();
+  });
+
+  it('submits date-only values when editing an animal returned with ISO dates', async () => {
+    const animal = {
+      ...createAnimal(),
+      intakeDate: '2026-03-01T00:00:00.000Z',
+      birthDate: null,
+    };
+    const onSubmit = jest.fn();
+    const screen = await render(
+      <AnimalProfileForm mode="edit" animal={animal} currentPhotoUri={null} onSubmit={onSubmit} />
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Elegir fecha de nacimiento' }));
+    await fireEvent.press(screen.getByLabelText('selector de fecha'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({
+        initial: animal,
+        form: {
+          name: 'Luna',
+          species: 'dog',
+          breed: 'Mestizo',
+          sex: 'female',
+          intakeDate: '2026-03-01',
+          birthDate: '2026-02-01',
+        },
+        photo: null,
+      });
+    });
   });
 });

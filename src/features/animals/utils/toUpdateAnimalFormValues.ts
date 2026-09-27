@@ -1,5 +1,6 @@
 import type { Animal } from '../types';
 
+import { toDateOnly } from './toDateOnly';
 import type { UpdateAnimalFormInput } from './updateAnimalSchema';
 
 export function toUpdateAnimalFormValues(animal: Animal): UpdateAnimalFormInput {
@@ -8,7 +9,7 @@ export function toUpdateAnimalFormValues(animal: Animal): UpdateAnimalFormInput 
     species: animal.species,
     breed: animal.breed ?? '',
     sex: animal.sex,
-    intakeDate: animal.intakeDate,
-    birthDate: animal.birthDate ?? '',
+    intakeDate: toDateOnly(animal.intakeDate) ?? '',
+    birthDate: toDateOnly(animal.birthDate) ?? '',
   };
 }

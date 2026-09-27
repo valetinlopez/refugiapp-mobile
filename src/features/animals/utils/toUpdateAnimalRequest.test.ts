@@ -68,4 +68,31 @@ describe('toUpdateAnimalRequest', () => {
     const patch = toUpdateAnimalRequest(ANIMAL, { ...FORM, intakeDate: '2026-02-01' });
     expect(hasPatchChanges(patch)).toBe(true);
   });
+
+  it('normalizes ISO initial dates before comparing and omits unchanged dates', () => {
+    const request = toUpdateAnimalRequest(
+      { ...ANIMAL, intakeDate: '2026-01-10T00:00:00.000Z', birthDate: '2025-06-01T00:00:00.000Z' },
+      FORM
+    );
+    expect(request).toEqual({});
+    expect(hasPatchChanges(request)).toBe(false);
+  });
+
+  it('sends a date-only value when the user changes a date from an ISO initial', () => {
+    expect(
+      toUpdateAnimalRequest(
+        { ...ANIMAL, intakeDate: '2026-01-10T00:00:00.000Z' },
+        { ...FORM, intakeDate: '2026-02-01' }
+      )
+    ).toEqual({ intakeDate: '2026-02-01' });
+  });
+
+  it('sends null to clear the birth date when the initial is an ISO datetime', () => {
+    expect(
+      toUpdateAnimalRequest(
+        { ...ANIMAL, birthDate: '2025-06-01T00:00:00.000Z' },
+        { ...FORM, birthDate: undefined }
+      )
+    ).toEqual({ birthDate: null });
+  });
 });

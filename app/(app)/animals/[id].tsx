@@ -287,8 +287,9 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   row: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.md,
     justifyContent: 'space-between',
   },

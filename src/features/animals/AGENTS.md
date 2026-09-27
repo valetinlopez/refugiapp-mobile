@@ -26,6 +26,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Estados: `admitted`, `under_treatment`, `available_for_adoption`, `adopted`, `deceased`.
 - IDs: UUID.
 - La fecha de nacimiento no puede ser posterior al ingreso.
+- Las fechas de red `intakeDate` y `birthDate` llegan como ISO datetime (el backend declara `format: date` pero serializa `Date`). Se normalizan a `YYYY-MM-DD` en la frontera con `toDateOnly` (`toAnimalView`); los mappers de edición comparan y envían siempre `YYYY-MM-DD` y los formateadores `dateFormat` nunca reciben ISO crudo.
 - La foto se referencia mediante `profilePhotoMediaId`; no enviar URLs arbitrarias como contrato de creación o edición.
 - Transiciones válidas decididas por el backend (matriz en `utils/animalTransitions.ts`):
   - `admitted` → `under_treatment | available_for_adoption | deceased`
@@ -97,6 +98,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Edición `app/(app)/animals/[id]/edit.tsx` con guard visual por rol y formulario compartido `AnimalProfileForm` (modos create/edit).
 - Formulario con React Hook Form + Zod, mensajes en español y validación cruzada `birthDate <= intakeDate`.
 - PATCH diferencial en edición (`toUpdateAnimalRequest` + `hasPatchChanges`): omite campos intactos, envía `null` para limpiar `breed`/`birthDate` y no-op cuando no hay cambios.
+- Normalización de fechas en la frontera: `toDateOnly` convierte el ISO datetime del backend a `YYYY-MM-DD` en `toAnimalView` (detalle, listado y respuestas de escritura) y en `toUpdateAnimalFormValues`/`toUpdateAnimalRequest`; las filas del detalle envuelven en pantallas estrechas (`flexWrap`) según `docs/design.md`.
 - Errores de subida de foto y de guardado distinguidos en UI, con reintento y opción "Guardar sin foto"; errores Zod con scroll y foco al primer campo inválido.
 - Confirmación de cambio de estado con `StatusConfirmDialog` (modal del sistema de diseño, sin `Alert` nativo).
 - Traducción de errores de backend a mensajes claros (`toCreateAnimalErrorMessage`, `toUpdateAnimalErrorMessage`, `toChangeStatusErrorMessage`).
