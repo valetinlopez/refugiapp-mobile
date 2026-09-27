@@ -1,7 +1,14 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
+import { useAnimalPhoto } from '../hooks/useAnimalPhoto';
 import type { Animal } from '../types';
 import { AnimalCard } from './AnimalCard';
+
+jest.mock('../hooks/useAnimalPhoto', () => ({
+  useAnimalPhoto: jest.fn(),
+}));
+
+const mockUseAnimalPhoto = useAnimalPhoto as jest.Mock;
 
 function createAnimal(): Animal {
   return {
@@ -18,6 +25,14 @@ function createAnimal(): Animal {
 }
 
 describe('AnimalCard', () => {
+  beforeEach(() => {
+    mockUseAnimalPhoto.mockReturnValue({ data: undefined, isError: false, isPending: false });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('announces the animal and its status for accessibility', async () => {
     const screen = await render(<AnimalCard animal={createAnimal()} onPress={() => undefined} />);
 
@@ -38,5 +53,24 @@ describe('AnimalCard', () => {
     const screen = await render(<AnimalCard animal={createAnimal()} onPress={() => undefined} />);
 
     expect(screen.getByText('Disponible para adopción')).toBeTruthy();
+  });
+
+  it('shows the profile photo when the animal has a profilePhotoMediaId', async () => {
+    mockUseAnimalPhoto.mockReturnValue({ data: 'https://cdn.test/luna.jpg' });
+    const animal = {
+      ...createAnimal(),
+      profilePhotoMediaId: '6ba7b814-9dad-11d1-80b4-00c04fd430c8',
+    };
+    const screen = await render(<AnimalCard animal={animal} onPress={() => undefined} />);
+
+    expect(mockUseAnimalPhoto).toHaveBeenCalledWith(animal.profilePhotoMediaId);
+    expect(screen.getByTestId('app-avatar-image')).toBeTruthy();
+  });
+
+  it('falls back to initials when the animal has no profile photo', async () => {
+    const screen = await render(<AnimalCard animal={createAnimal()} onPress={() => undefined} />);
+
+    expect(screen.getByLabelText('Foto de Luna')).toHaveTextContent('LU');
+    expect(screen.queryByTestId('app-avatar-image')).toBeNull();
   });
 });

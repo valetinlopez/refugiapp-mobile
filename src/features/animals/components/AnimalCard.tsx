@@ -1,11 +1,13 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppAvatar, AppBadge, AppCard, AppText } from '@/components/primitives';
+import { AppBadge, AppCard, AppText } from '@/components/primitives';
 import { radii, sizes, spacing } from '@/theme';
 
 import type { Animal } from '../types';
 import { getStatusBadge } from '../utils/animalTransitions';
+
+import { AnimalCardAvatar } from './AnimalCardAvatar';
 
 export interface AnimalCardProps {
   animal: Animal;
@@ -23,11 +25,7 @@ export const AnimalCard = memo(function AnimalCard({ animal, onPress }: AnimalCa
       style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
     >
       <AppCard padded={false} style={styles.card}>
-        <AppAvatar
-          accessibilityLabel={`Foto de ${animal.name}`}
-          initials={animal.name.slice(0, 2)}
-          source={undefined}
-        />
+        <AnimalCardAvatar name={animal.name} profilePhotoMediaId={animal.profilePhotoMediaId} />
         <View style={styles.body}>
           <AppText variant="heading3">{animal.name}</AppText>
           <AppText color="textSecondary" numberOfLines={1}>
