@@ -56,7 +56,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 - `api/`: endpoints de animals (listado, alta, detalle, edición, cambio de estado y eventos generales) y media (alta huérfana y lectura).
 - `hooks/`: `animalKeys`, `useAnimals`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useCreateAnimalEvent`, `useAnimalHistory`, `useAnimalPhoto` e invalidaciones.
-- `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con confirmación, tarjeta de listado (`AnimalCard`) y sección de historial (`AnimalHistory`).
+- `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con confirmación, tarjeta de listado (`AnimalCard` con avatar `AnimalCardAvatar`) y sección de historial (`AnimalHistory`).
 - `types/`: modelos de vista y aliases derivados de OpenAPI.
 - `utils/`: esquemas Zod, mappers al DTO, matriz de transiciones, presentación de eventos e historial y traducción de errores de backend.
 - Los componentes reutilizables sin dominio permanecen en `src/components` (p. ej. `FilterChip`).
@@ -93,6 +93,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Si el picker omite `mimeType` o `fileName`, se infiere el tipo desde la extensión y se normaliza el nombre (`resolveMediaMimeType` + `normalizeMediaFileName` en `src/core/media`); si falta `fileSize`, se sube igualmente y el backend sigue siendo autoridad de tamaño.
 - Lectura de asset (`GET /media/:id`) para mostrar la foto actual en detalle y edición (`useAnimalPhoto`).
 - Listado paginado (`GET /animals`) con filtros `status`, `species`, `sex` y nombre parcial mediante `useAnimals` (paginación infinita) y `AnimalCard`, con ruta `app/(app)/(tabs)/explore.tsx` para los tres roles.
+- Foto de perfil en el listado: `AnimalCardAvatar` consulta `useAnimalPhoto(profilePhotoMediaId)` por tarjeta con caché compartida por `animalKeys.media` (query deduplicada por `mediaId` y `staleTime` de 5 min), sin fetch cuando `profilePhotoMediaId` es `null`, y fallback a iniciales ante error de red o fallo de imagen (`AppAvatar`). La invalidación de `animalKeys.all` al crear o editar la ficha mantiene la foto coherente sin optimistic updates; el reemplazo de foto genera un `mediaId` nuevo que entra como query nueva.
 - Lectura del historial general (`GET /animals/:animalId/events`) mediante `useAnimalHistory` y presentación en `AnimalHistory` dentro del detalle, con invalidación coherente al crear eventos.
 - Detalle `app/(app)/animals/[id].tsx` (los tres roles) con edición y cambio de estado solo para `admin`/`shelter_manager`, y enlace al listado de tareas filtrado por animal.
 - Edición `app/(app)/animals/[id]/edit.tsx` con guard visual por rol y formulario compartido `AnimalProfileForm` (modos create/edit).

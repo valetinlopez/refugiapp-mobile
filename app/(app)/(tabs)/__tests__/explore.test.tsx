@@ -4,6 +4,8 @@ import type { Animal } from '@/features/animals/types';
 
 import { useAnimals } from '@/features/animals/hooks/useAnimals';
 
+import { useAnimalPhoto } from '@/features/animals/hooks/useAnimalPhoto';
+
 import { useSession } from '@/features/auth/session';
 
 import ExploreScreen from '../explore';
@@ -20,8 +22,13 @@ jest.mock('@/features/animals/hooks/useAnimals', () => ({
   useAnimals: jest.fn(),
 }));
 
+jest.mock('@/features/animals/hooks/useAnimalPhoto', () => ({
+  useAnimalPhoto: jest.fn(),
+}));
+
 const mockUseAnimals = useAnimals as jest.Mock;
 const mockUseSession = useSession as jest.Mock;
+const mockUseAnimalPhoto = useAnimalPhoto as jest.Mock;
 const { router } = jest.requireMock('expo-router') as {
   router: { push: jest.Mock; replace: jest.Mock };
 };
@@ -59,6 +66,7 @@ describe('ExploreScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseSession.mockReturnValue({ user: { roles: ['admin'] } });
+    mockUseAnimalPhoto.mockReturnValue({ data: undefined, isError: false, isPending: false });
   });
 
   it('shows a loading state while fetching', async () => {
@@ -104,6 +112,50 @@ describe('ExploreScreen', () => {
       pathname: '/animals/[id]',
       params: { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6' },
     });
+  });
+
+  it('requests the profile photo for each card with a profilePhotoMediaId', async () => {
+    mockUseAnimals.mockReturnValue(
+      createQueryResult({
+        data: {
+          pages: [
+            {
+              items: [
+                createAnimal(),
+                { ...createAnimal(), id: '9fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'Simba' },
+              ],
+              page: 1,
+              limit: 20,
+              total: 2,
+            },
+          ],
+        },
+      })
+    );
+    await render(<ExploreScreen />);
+
+    expect(mockUseAnimalPhoto).toHaveBeenCalledWith(null);
+  });
+
+  it('requests the profile photo with the media id when the animal has one', async () => {
+    const mediaId = '6ba7b814-9dad-11d1-80b4-00c04fd430c8';
+    mockUseAnimals.mockReturnValue(
+      createQueryResult({
+        data: {
+          pages: [
+            {
+              items: [{ ...createAnimal(), profilePhotoMediaId: mediaId }],
+              page: 1,
+              limit: 20,
+              total: 1,
+            },
+          ],
+        },
+      })
+    );
+    await render(<ExploreScreen />);
+
+    expect(mockUseAnimalPhoto).toHaveBeenCalledWith(mediaId);
   });
 
   it('offers the alta action to writer roles', async () => {
