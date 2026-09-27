@@ -132,11 +132,22 @@ Muestran icono semántico, valor con Newsreader y etiqueta DM Sans. El número n
 
 Máximo cuatro o cinco destinos estables. Cada elemento combina icono y texto; el activo usa lima, peso visual e `accessibilityState.selected`. Altura base de 72 pt más el inset inferior del dispositivo. La barra queda fija mientras el contenido principal desplaza. El catálogo muestra el componente, pero no reemplaza todavía la navegación funcional de producción.
 
-## 21. Formularios
+## 21. Encabezado de retorno (`AppHeaderBack`)
+
+Patrón persistente de retorno para pantallas stack sin header nativo (`headerShown: false`). Se renderiza fijo en la parte superior, dentro del safe area y antes del contenido desplazable, y acompaña estados de carga, error, vacío y sin permisos.
+
+- Fila con icono `chevronLeft` y etiqueta visible ("Volver" por defecto), ambos en `textPrimary`.
+- Área táctil mínima de 44 × 44 y `hitSlop` de 4 pt; sin altura rígida alrededor del texto.
+- Comportamiento: si `router.canGoBack()` devuelve verdadero, retrocede; si no (deep link sin historial), reemplaza con un `fallbackHref` contextual decidido por la ruta (lista de origen o detalle del animal).
+- Texto escalable con el multiplicador máximo estándar (`maxFontSizeMultiplier: 1.8`).
+- El estado presionado usa `opacity`; no es una animación, por lo que es compatible con reduce motion por construcción. Si en el futuro se anima la transición, debe consultar `useReducedMotion`.
+- La lógica de retorno vive en `navigateBack(fallbackHref)` en `src/components/navigation` y es la única fuente de verdad, compartida con las acciones "Volver" de `EmptyState`.
+
+## 22. Formularios
 
 Etiqueta visible sobre el campo, ayuda y error debajo. No usar placeholder como única etiqueta. Altura mínima 48 pt, borde de foco claro, teclado y `autoComplete` apropiados, y agrupación semántica. Los errores explican qué corregir y se anuncian; no se indican solo en coral. Los datos monetarios se transforman a `amountCents` fuera del componente visual. Los selectores de estado muestran valores permitidos por el backend y respetan permisos del rol. Las fechas usan `DateTimeField`: picker del sistema en iOS/Android y entrada textual con formato explícito en web. Las fechas guardadas se presentan siempre formateadas en `es-AR` mediante `dateFormat` (nunca ISO crudo); las fechas de calendario (`YYYY-MM-DD`) se parsean como fecha local para evitar corrimientos de zona horaria. En filas etiqueta-valor, la etiqueta no se encoge y el valor envuelve alineado a la derecha.
 
-## 22. Estados de carga, vacío, error, offline y sin permisos
+## 23. Estados de carga, vacío, error, offline y sin permisos
 
 - **Carga:** spinner y texto que describe qué se carga; usar skeleton solo cuando refleje la estructura real y respetar reduce motion.
 - **Subida de archivos:** mostrar nombre, porcentaje textual y barra accesible; durante una subida activa ofrecer cancelación explícita. Los errores se anuncian como alertas y nunca dependen solo del color.
@@ -145,15 +156,15 @@ Etiqueta visible sobre el campo, ayuda y error debajo. No usar placeholder como 
 - **Offline:** distinguir falta de red de un error del servidor y explicar sincronización.
 - **Sin permisos:** explicar que el rol no habilita la acción; no mostrar un botón que fallará con 403. Puede ofrecer navegación segura.
 
-## 23. Accesibilidad
+## 24. Accesibilidad
 
 Objetivo mínimo WCAG 2.2 AA donde aplica. Probar texto normal con contraste 4,5:1 y texto grande con 3:1. Mantener áreas táctiles de 44 × 44, orden de foco lógico, labels en controles, estados accesibles y zoom de fuente. Nunca truncar silenciosamente nombre, estado, vencimiento o error. No agregar animación indispensable; cualquier animación futura consultará `useReducedMotion` o la preferencia del sistema y tendrá alternativa estática.
 
-## 24. Responsive layout
+## 25. Responsive layout
 
 El contenido principal usa `ScrollView`/listas y safe areas. En móvil estrecho, las tarjetas envuelven o pasan a una columna; en tablet, el ancho de lectura se limita. No fijar alturas en tarjetas con texto. Probar al menos 320 × 568, 390 × 844, tablet, orientación horizontal cuando la pantalla la admita y fuente al 200 %. La navegación fija debe sumar el inset inferior y el contenido debe reservar espacio para ella.
 
-## 25. Variantes según rol
+## 26. Variantes según rol
 
 - `admin`: puede ver administración, auditoría y todas las acciones; las acciones destructivas mantienen confirmación.
 - `shelter_manager`: prioriza ingresos, animales, gastos, tareas generales y dashboard sin actividad clínica reciente. No mostrar creación o cierre clínico prohibido.
@@ -161,7 +172,7 @@ El contenido principal usa `ScrollView`/listas y safe areas. En móvil estrecho,
 
 La diferencia de rol modifica acciones y módulos, no la identidad visual. Ocultar o deshabilitar depende del contexto: ocultar acciones irrelevantes; deshabilitar solo cuando explicar la restricción aporte valor.
 
-## 26. Correspondencia con enums del backend
+## 27. Correspondencia con enums del backend
 
 | Dominio        | Valor                    | Presentación sugerida                      |
 | -------------- | ------------------------ | ------------------------------------------ |
@@ -179,15 +190,15 @@ La diferencia de rol modifica acciones y módulos, no la identidad visual. Ocult
 
 `overdue`, `upcoming` y `clinical` no se persisten como estados. `resolveTaskPresentation` codifica la precedencia visual. Los tipos de API futuros deben generarse desde `openapi.json`; las uniones actuales documentan solo el contrato visual confirmado y no sustituyen esa generación.
 
-## 27. Elementos que necesitan SVG
+## 28. Elementos que necesitan SVG
 
 La primera versión no necesita `react-native-svg`: radios nativos resuelven tarjetas y `expo-symbols` resuelve iconografía. Incorporar SVG solo para una textura lineal de hojas, un separador orgánico escalable o una forma de marca que no pueda expresarse con layout. Debe ser decorativo, liviano y no contener texto ni información de estado.
 
-## 28. Aspectos conceptuales del mockup
+## 29. Aspectos conceptuales del mockup
 
 Son conceptuales: el perro recortado sobre la cabecera, las frases manuscritas, las hojas de fondo, la tarjeta ondulada, los conteos y nombres, el indicador de notificación y todos los ejemplos de agenda. No representan datos reales, requisitos de endpoint ni una obligación de layout. La pantalla de catálogo usa contenido ficticio explícito para validar componentes.
 
-## 29. Uso correcto e incorrecto
+## 30. Uso correcto e incorrecto
 
 | Correcto                                        | Incorrecto                                            |
 | ----------------------------------------------- | ----------------------------------------------------- |
@@ -199,12 +210,13 @@ Son conceptuales: el perro recortado sobre la cabecera, las frases manuscritas, 
 | Acción oculta cuando el rol no puede ejecutarla | Acción visible que siempre responde 403               |
 | Tarea clínica vencida presentada como “Vencida” | Azul clínico ocultando la urgencia                    |
 
-## 30. Checklist para nuevas pantallas
+## 31. Checklist para nuevas pantallas
 
 - [ ] La pantalla pertenece a una feature y la ruta solo compone.
 - [ ] Todos los colores, espacios, radios, tamaños y tipografías provienen de tokens.
 - [ ] Hay un único encabezado principal y una jerarquía legible.
 - [ ] El contenido puede desplazarse y respeta safe areas.
+- [ ] Las pantallas stack fuera de tabs muestran un header de retorno con fallback contextual.
 - [ ] Se probó pantalla pequeña, tablet y fuente ampliada.
 - [ ] Cada control tiene al menos 44 × 44 pt y nombre accesible.
 - [ ] Los estados combinan texto, icono y color.

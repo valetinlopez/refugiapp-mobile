@@ -115,20 +115,48 @@ npm run start:lan      # Metro directo + API por IP LAN detectada automaticament
 npm run start:share    # Metro por túnel + API por IP LAN detectada (misma WiFi, red aislada)
 ```
 
-Para personas en **otra red** (internet), además hay que publicar el backend. Ejemplos:
+### Receta de demo fuera de tu WiFi (compañero, profesor, etc.)
+
+Para que alguien en **otra red** use tu app con Expo Go necesitas **dos túneles**
+abiertos a la vez en tu PC (el de Metro no publica la API). Sin el túnel del
+backend, el QR carga pero el login falla con
+"No pudimos conectar con el servicio" (la mezcla `https` → `http` LAN la
+bloquea iOS/Expo Go; en Safari del teléfono la URL sí abre, en la app no).
+
+Terminal 1 — backend:
 
 ```bash
-# En ../refugiapp (una terminal)
-cloudflared tunnel --url http://localhost:3000   # o: ngrok http 3000
+cd ../refugiapp
+npm run start:dev
 ```
 
-Luego, en `.env.local` del móvil:
+Terminal 2 — túnel del backend (sin instalación previa):
 
 ```bash
-EXPO_PUBLIC_API_URL=https://<tunel-publico>/api/v1
+npx --yes cloudflared tunnel --url http://localhost:3000
+# o: ngrok http 3000
 ```
 
-y reiniciar con `npx expo start --clear` (la URL se inlinea en el bundle). Al ser https, pasa el validador de `development`.
+Copiar la URL pública, por ejemplo `https://abc123.trycloudflare.com`.
+
+Terminal 3 — móvil apuntando al túnel:
+
+```bash
+# En .env.local del móvil (ver plantilla comentada en el propio fichero):
+EXPO_PUBLIC_API_URL=https://abc123.trycloudflare.com/api/v1
+npm run start:share -- --clear
+```
+
+Verificar que el log muestre
+`[start-dev] EXPO_PUBLIC_API_URL explicita (.env.local): https://...` (un valor
+explícito tiene prioridad sobre la autodetección LAN). El `--clear` es
+obligatorio: las variables `EXPO_PUBLIC_` se inlinenan en el bundle.
+Ante cualquier duda de qué URL usará la app:
+`node scripts/start-dev.mjs --print-api-url`.
+
+Compartir el **QR `exp.direct`** de la terminal 3. Quien lo escanee solo
+necesita Expo Go, internet y un usuario de prueba (no hay registro público).
+Tu PC debe quedar encendida con las 3 terminales durante toda la demo.
 
 Notas:
 
@@ -136,6 +164,7 @@ Notas:
 - La URL pública del backend cambia a cada arranque con túneles gratuitos: actualizar `.env.local` y reiniciar con `--clear`.
 - Compartir el QR expone tu backend a internet mientras el túnel esté abierto: sesiones cortas y cerrarlo al terminar.
 - Túnel de Metro es más lento que LAN; si falla en Windows, revisar que el antivirus no haya en cuarentena el binario de ngrok (`https://status.ngrok.com`).
+- Para una URL estable que no cambie (p. ej. entrega al profesor), desplegar el backend en staging con `https` fija en vez de usar túneles.
 
 ## Scripts
 

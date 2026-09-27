@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeaderBack, navigateBack } from '@/components/navigation';
 import { EmptyState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
 import { AnimalCreateForm } from '@/features/animals/components/AnimalCreateForm';
@@ -9,14 +10,6 @@ import { useCreateAnimal } from '@/features/animals/hooks/useCreateAnimal';
 import { toCreateAnimalErrorMessage } from '@/features/animals/utils/animalErrorMessages';
 import { useSession } from '@/features/auth/session';
 import { colors, spacing } from '@/theme';
-
-function goBack(): void {
-  if (router.canGoBack()) {
-    router.back();
-  } else {
-    router.replace('/explore');
-  }
-}
 
 export default function NewAnimalScreen() {
   const { user } = useSession();
@@ -27,11 +20,17 @@ export default function NewAnimalScreen() {
   if (!canWrite) {
     return (
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerBack}>
+          <AppHeaderBack
+            accessibilityHint="Volver a la lista de animales"
+            fallbackHref="/explore"
+          />
+        </View>
         <View style={styles.container}>
           <EmptyState
             actionLabel="Volver"
             message="Tu rol permite consultar animales, pero no dar de alta nuevos registros."
-            onAction={goBack}
+            onAction={() => navigateBack('/explore')}
             title="Sin permiso"
           />
         </View>
@@ -41,6 +40,9 @@ export default function NewAnimalScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerBack}>
+        <AppHeaderBack accessibilityHint="Volver a la lista de animales" fallbackHref="/explore" />
+      </View>
       <ScrollView contentContainerStyle={styles.content}>
         <AppText variant="heading1">Alta de animal</AppText>
         <AppText color="textSecondary">
@@ -77,6 +79,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: spacing.sm,
     padding: spacing.lg,
+  },
+  headerBack: {
+    paddingHorizontal: spacing.lg,
   },
   safeArea: {
     backgroundColor: colors.background,

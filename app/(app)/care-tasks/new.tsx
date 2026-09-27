@@ -1,7 +1,8 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeaderBack, navigateBack } from '@/components/navigation';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
 import { CareTaskForm } from '@/features/care-tasks/components/CareTaskForm';
@@ -25,11 +26,17 @@ export default function CreateCareTaskScreen() {
   if (!canWrite) {
     return (
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerBack}>
+          <AppHeaderBack
+            accessibilityHint="Volver a la lista de tareas"
+            fallbackHref="/care-tasks"
+          />
+        </View>
         <View style={styles.centered}>
           <EmptyState
             actionLabel="Volver"
             message="Tu rol permite consultar tareas, pero no crearlas."
-            onAction={goBack}
+            onAction={() => navigateBack('/care-tasks')}
             title="Sin permiso"
           />
         </View>
@@ -39,6 +46,9 @@ export default function CreateCareTaskScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerBack}>
+        <AppHeaderBack accessibilityHint="Volver a la lista de tareas" fallbackHref="/care-tasks" />
+      </View>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppText variant="heading1">Crear tarea</AppText>
         <AppText color="textSecondary">
@@ -61,7 +71,7 @@ export default function CreateCareTaskScreen() {
             isSubmitting={createTask.isPending}
             mode="create"
             onSubmit={(data: CreateCareTaskRequest) =>
-              createTask.mutate(data, { onSuccess: goBack })
+              createTask.mutate(data, { onSuccess: () => navigateBack('/care-tasks') })
             }
             responsibleLabel={user?.email ?? 'Usuario autenticado'}
           />
@@ -71,13 +81,9 @@ export default function CreateCareTaskScreen() {
   );
 }
 
-function goBack(): void {
-  if (router.canGoBack()) router.back();
-  else router.replace('/care-tasks');
-}
-
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   content: { flexGrow: 1, gap: spacing.md, padding: spacing.lg },
+  headerBack: { paddingHorizontal: spacing.lg },
   safeArea: { backgroundColor: colors.background, flex: 1 },
 });

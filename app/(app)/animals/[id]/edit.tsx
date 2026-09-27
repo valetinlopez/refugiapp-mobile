@@ -1,10 +1,11 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, type Href } from 'expo-router';
 import { useRef, type RefObject } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/primitives';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { AppHeaderBack, navigateBack } from '@/components/navigation';
 import { AnimalProfileForm } from '@/features/animals/components/AnimalProfileForm';
 import { useSession } from '@/features/auth/session';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
@@ -24,6 +25,9 @@ export default function EditAnimalScreen() {
     user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
 
   const animalId = typeof id === 'string' && isUuid(id) ? id : '';
+  const fallbackHref: Href = animalId
+    ? { pathname: '/animals/[id]', params: { id: animalId } }
+    : '/explore';
   const animalQuery = useAnimal(animalId);
   const photoQuery = useAnimalPhoto(animalQuery.data?.profilePhotoMediaId ?? null);
   const updateAnimal = useUpdateAnimal(animalId);
@@ -38,11 +42,17 @@ export default function EditAnimalScreen() {
   if (!canWrite) {
     return (
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerBack}>
+          <AppHeaderBack
+            accessibilityHint="Volver al detalle del animal"
+            fallbackHref={fallbackHref}
+          />
+        </View>
         <View style={styles.container}>
           <EmptyState
             actionLabel="Volver"
             message="Tu rol permite consultar animales, pero no editar su ficha."
-            onAction={() => goBack()}
+            onAction={() => navigateBack(fallbackHref)}
             title="Sin permiso"
           />
         </View>
@@ -52,6 +62,12 @@ export default function EditAnimalScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerBack}>
+        <AppHeaderBack
+          accessibilityHint="Volver al detalle del animal"
+          fallbackHref={fallbackHref}
+        />
+      </View>
       <ScrollView ref={scrollRef} contentContainerStyle={styles.content}>
         <AppText variant="heading1">Editar animal</AppText>
         <AppText color="textSecondary">
@@ -61,11 +77,12 @@ export default function EditAnimalScreen() {
           currentPhotoUri={photoQuery.data ?? null}
           errorMessage={errorMessage}
           isSubmitting={updateAnimal.isPending}
+          onBack={() => navigateBack(fallbackHref)}
           onCancelUpload={updateAnimal.cancelUpload}
           onRetry={() => void animalQuery.refetch()}
           onSubmit={(input) =>
             updateAnimal.mutate(input, {
-              onSuccess: () => goBack(),
+              onSuccess: () => navigateBack(fallbackHref),
             })
           }
           photoErrorMessage={photoErrorMessage}
@@ -78,18 +95,11 @@ export default function EditAnimalScreen() {
   );
 }
 
-function goBack(): void {
-  if (router.canGoBack()) {
-    router.back();
-  } else {
-    router.replace('/explore');
-  }
-}
-
 interface EditFormProps {
   currentPhotoUri: string | null;
   errorMessage: string | null;
   isSubmitting: boolean;
+  onBack(): void;
   onRetry(): void;
   onCancelUpload(): void;
   onSubmit(input: UpdateAnimalInput): void;
@@ -103,6 +113,7 @@ function EditForm({
   currentPhotoUri,
   errorMessage,
   isSubmitting,
+  onBack,
   onCancelUpload,
   onRetry,
   onSubmit,
@@ -131,7 +142,7 @@ function EditForm({
       <EmptyState
         actionLabel="Volver"
         message="El animal que querés editar ya no está disponible."
-        onAction={goBack}
+        onAction={onBack}
         title="Animal no encontrado"
       />
     );
@@ -166,6 +177,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: spacing.sm,
     padding: spacing.lg,
+  },
+  headerBack: {
+    paddingHorizontal: spacing.lg,
   },
   safeArea: {
     backgroundColor: colors.background,

@@ -1,7 +1,8 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeaderBack, navigateBack } from '@/components/navigation';
 import { EmptyState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
 import { CreateAnimalEventForm } from '@/features/animals/components/CreateAnimalEventForm';
@@ -18,11 +19,20 @@ export default function CreateAnimalEventScreen() {
   const canWrite =
     user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
   const animalId = typeof id === 'string' && isUuid(id) ? id : '';
+  const fallbackHref: Href = animalId
+    ? { pathname: '/animals/[id]', params: { id: animalId } }
+    : '/explore';
   const createEvent = useCreateAnimalEvent(animalId);
 
   if (!canWrite || animalId === '') {
     return (
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerBack}>
+          <AppHeaderBack
+            accessibilityHint="Volver al detalle del animal"
+            fallbackHref={fallbackHref}
+          />
+        </View>
         <View style={styles.denied}>
           <EmptyState
             actionLabel="Volver"
@@ -31,7 +41,7 @@ export default function CreateAnimalEventScreen() {
                 ? 'No pudimos identificar el animal.'
                 : 'Tu rol permite consultar el historial, pero no registrar eventos generales.'
             }
-            onAction={goBack}
+            onAction={() => navigateBack(fallbackHref)}
             title={animalId === '' ? 'Animal inválido' : 'Sin permiso'}
           />
         </View>
@@ -40,11 +50,17 @@ export default function CreateAnimalEventScreen() {
   }
 
   function handleSubmit(event: CreateAnimalHistoryEventRequest): void {
-    createEvent.mutate(event, { onSuccess: goBack });
+    createEvent.mutate(event, { onSuccess: () => navigateBack(fallbackHref) });
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerBack}>
+        <AppHeaderBack
+          accessibilityHint="Volver al detalle del animal"
+          fallbackHref={fallbackHref}
+        />
+      </View>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppText variant="heading1">Registrar evento</AppText>
         <AppText color="textSecondary">
@@ -63,14 +79,6 @@ export default function CreateAnimalEventScreen() {
   );
 }
 
-function goBack(): void {
-  if (router.canGoBack()) {
-    router.back();
-  } else {
-    router.replace('/explore');
-  }
-}
-
 const styles = StyleSheet.create({
   content: {
     backgroundColor: colors.background,
@@ -82,6 +90,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: spacing.lg,
+  },
+  headerBack: {
+    paddingHorizontal: spacing.lg,
   },
   safeArea: {
     backgroundColor: colors.background,

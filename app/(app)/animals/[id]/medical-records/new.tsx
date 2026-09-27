@@ -1,7 +1,8 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeaderBack, navigateBack } from '@/components/navigation';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
@@ -19,6 +20,9 @@ export default function NewMedicalRecordScreen() {
   const canWriteClinical =
     user?.roles.some((role) => role === 'admin' || role === 'veterinarian') ?? false;
   const animalId = typeof id === 'string' && isUuid(id) ? id : '';
+  const fallbackHref: Href = animalId
+    ? { pathname: '/animals/[id]', params: { id: animalId } }
+    : '/explore';
   const animalQuery = useAnimal(animalId);
   const veterinariansQuery = useVeterinarianOptions();
   const createRecord = useCreateMedicalRecord();
@@ -26,6 +30,12 @@ export default function NewMedicalRecordScreen() {
   if (!canWriteClinical || animalId === '') {
     return (
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerBack}>
+          <AppHeaderBack
+            accessibilityHint="Volver al detalle del animal"
+            fallbackHref={fallbackHref}
+          />
+        </View>
         <View style={styles.centered}>
           <EmptyState
             actionLabel="Volver"
@@ -34,7 +44,7 @@ export default function NewMedicalRecordScreen() {
                 ? 'No pudimos identificar el animal.'
                 : 'Tu rol no habilita registrar datos clínicos.'
             }
-            onAction={goBack}
+            onAction={() => navigateBack(fallbackHref)}
             title={animalId === '' ? 'Animal inválido' : 'Sin permiso'}
           />
         </View>
@@ -47,6 +57,12 @@ export default function NewMedicalRecordScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerBack}>
+        <AppHeaderBack
+          accessibilityHint="Volver al detalle del animal"
+          fallbackHref={fallbackHref}
+        />
+      </View>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppText variant="heading1">Registrar consulta</AppText>
         <AppText color="textSecondary">
@@ -76,7 +92,7 @@ export default function NewMedicalRecordScreen() {
             onRetryVeterinarians={() => void veterinariansQuery.refetch()}
             onSubmit={(input) =>
               createRecord.mutate(input, {
-                onSuccess: () => goBack(),
+                onSuccess: () => navigateBack(fallbackHref),
               })
             }
             veterinarianOptions={veterinariansQuery.data ?? []}
@@ -89,16 +105,9 @@ export default function NewMedicalRecordScreen() {
   );
 }
 
-function goBack(): void {
-  if (router.canGoBack()) {
-    router.back();
-  } else {
-    router.replace('/explore');
-  }
-}
-
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   content: { flexGrow: 1, gap: spacing.md, padding: spacing.lg },
+  headerBack: { paddingHorizontal: spacing.lg },
   safeArea: { backgroundColor: colors.background, flex: 1 },
 });

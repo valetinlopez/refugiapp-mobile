@@ -153,6 +153,7 @@ Expo Router es la fuente de verdad de navegación:
 - `design-system` es una ruta interna de validación visual; no es una pantalla de producción.
 - `_layout.tsx` raíz carga fuentes, safe areas, tema, QueryClient y sesión global.
 - `Stack.Protected` expone `(auth)` solo sin sesión y `(app)` solo con una sesión validada.
+- Las pantallas stack del área autenticada usan `headerShown: false` y componen `AppHeaderBack` como retorno persistente con un `fallbackHref` contextual; `navigateBack` centraliza `canGoBack ? back : replace`.
 - El splash permanece visible hasta resolver fuentes y restauración de sesión, evitando mostrar una ruta incorrecta durante el bootstrap.
 
 ## 7. Integración con la API
@@ -312,6 +313,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Refresh single-flight y reintento único de la solicitud original.
 - Provider de sesión con restauración, login para los tres roles y logout best-effort.
 - Rutas protegidas con Expo Router y splash coordinado con el bootstrap de sesión.
+- Header de retorno persistente (`AppHeaderBack` en `src/components/navigation`) con `navigateBack` como fuente única de `canGoBack ? back : replace(fallback contextual)`, integrado en detalle, alta y edición de animales, eventos generales, registros médicos, tareas y gastos; elimina la lógica `goBack` duplicada por pantalla y hace predecible la navegación ante deep links sin historial.
 - TanStack Query conectado a NetInfo y AppState.
 - Adapter HTTP falso inyectable para desarrollo y tests.
 - Tipos de auth, animals y media generados desde el snapshot OpenAPI.
@@ -339,7 +341,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - CI móvil con generación de tipos, formato, lint, typecheck y tests RNTL.
 - ESLint, Prettier, typecheck y export web verificados.
 - Jerarquía de documentación y reglas locales por frontera.
-- Compartición en desarrollo con túnel: scripts `start:tunnel` (solo Metro por ngrok), `start:lan` y `start:share` (`scripts/start-dev.mjs` detecta la IP LAN de la máquina e inyecta `EXPO_PUBLIC_API_URL`, con prioridad sobre `.env.*` y respetando un valor explícito del shell), con `@expo/ngrok` como devDependency. El túnel de Metro no publica la API: cada dispositivo debe alcanzarla por IP LAN o mediante un túnel propio del backend (cloudflared/ngrok), y ese valor sigue validándose en `src/core/config/env.ts`.
+- Compartición en desarrollo con túnel: scripts `start:tunnel` (solo Metro por ngrok), `start:lan` y `start:share` (`scripts/start-dev.mjs` resuelve `EXPO_PUBLIC_API_URL` con prioridad shell > `.env.local` > IP LAN autodetectada e inyecta el resultado; `node scripts/start-dev.mjs --print-api-url` muestra la URL sin arrancar Metro), con `@expo/ngrok` como devDependency. El túnel de Metro no publica la API: cada dispositivo debe alcanzarla por IP LAN o mediante un túnel propio del backend (cloudflared/ngrok), y ese valor sigue validándose en `src/core/config/env.ts`. En Expo Go + `start:share` (bundle por `https`) la API también debe ser `https`: una API `http` LAN se bloquea y el cliente la reporta como `NETWORK_ERROR`.
 
 ## 17. Pendientes y deuda conocida
 
