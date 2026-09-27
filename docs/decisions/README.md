@@ -12,6 +12,8 @@ Los ADRs registran decisiones técnicas relevantes, su contexto y sus consecuenc
 | [ADR-0004](0004-native-datetimepicker.md)               | Selector de fecha nativo para registros médicos | Aceptado |
 | [ADR-0005](0005-media-selection-and-upload-progress.md) | Selección de media y progreso de subida         | Aceptado |
 | [ADR-0006](0006-web-session-storage.md)                 | Sesión web limitada a la pestaña                | Aceptado |
+| [ADR-0007](0007-occurred-at-skew-tolerance.md)          | Tolerancia de skew de reloj para `occurredAt`   | Aceptado |
+| [ADR-0008](0008-animal-date-only-normalization.md)      | Normalización de fechas de animal a `date-only` | Aceptado |
 
 ## Cómo agregar una decisión
 

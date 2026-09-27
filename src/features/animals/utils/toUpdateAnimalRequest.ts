@@ -1,5 +1,6 @@
 import type { Animal, UpdateAnimalRequest } from '../types';
 
+import { toDateOnly } from './toDateOnly';
 import type { UpdateAnimalFormValues } from './updateAnimalSchema';
 
 function isUnchanged(initial: string | null, current: string | undefined): boolean {
@@ -32,7 +33,8 @@ export function toUpdateAnimalRequest(
   if (values.sex !== initial.sex) {
     patch.sex = values.sex;
   }
-  if (values.intakeDate !== initial.intakeDate) {
+  const initialIntakeDate = toDateOnly(initial.intakeDate);
+  if (values.intakeDate !== initialIntakeDate) {
     patch.intakeDate = values.intakeDate;
   }
 
@@ -41,7 +43,7 @@ export function toUpdateAnimalRequest(
     patch.breed = breed.value;
   }
 
-  const birthDate = toPatchText(initial.birthDate, values.birthDate);
+  const birthDate = toPatchText(toDateOnly(initial.birthDate), values.birthDate);
   if (birthDate.changed) {
     patch.birthDate = birthDate.value;
   }
