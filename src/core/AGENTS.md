@@ -29,7 +29,8 @@
 ## Configuración
 
 - Toda variable nueva se declara en `.env.example`, se valida en `config` y se documenta en `README.md`.
-- `EXPO_PUBLIC_API_URL` puede inyectarse desde `scripts/start-dev.mjs` (`npm run start:lan` / `start:share`): detecta la IP LAN y la inyecta como variable de proceso, con prioridad sobre `.env.*`; un valor ya definido en el shell se respeta y no se sobreescribe.
+- `EXPO_PUBLIC_API_URL` puede inyectarse desde `scripts/start-dev.mjs` (`npm run start:lan` / `start:share`): prioridad shell > `.env.local` > autodetección de IP LAN; lo inyectado como variable de proceso tiene prioridad sobre los ficheros `.env` en Expo. `node scripts/start-dev.mjs --print-api-url` muestra la URL resuelta sin arrancar Metro (diagnóstico).
+- En Expo Go, `npm run start:share` sirve el bundle por `https` (túnel `exp.direct`): la API también debe ser `https` (túnel del backend). Una API `http` por IP LAN se bloquea en iOS/Expo Go (contenido mixto/ATS) y el cliente la reporta como `NETWORK_ERROR` (`errors.ts`), aunque Safari del mismo teléfono sí abra la URL.
 - No leer `process.env` fuera de configuración, salvo `app.config.ts` o scripts justificados.
 - Staging y production requieren HTTPS.
 

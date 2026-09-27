@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { createSocket } from 'node:dgram';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { networkInterfaces } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -80,11 +80,55 @@ async function probeBackend(url) {
   }
 }
 
+function readEnvLocalApiUrl() {
+  const envLocalPath = resolve(projectRoot, '.env.local');
+  if (!existsSync(envLocalPath)) {
+    return undefined;
+  }
+  try {
+    for (const line of readFileSync(envLocalPath, 'utf8').split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (trimmed === '' || trimmed.startsWith('#')) {
+        continue;
+      }
+      const match = /^EXPO_PUBLIC_API_URL\s*=\s*(.*)$/.exec(trimmed);
+      if (match !== null) {
+        const value = (match[1] ?? '').trim().replace(/^["']|["']$/g, '');
+        return value === '' ? undefined : value;
+      }
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+async function probeExplicit(url, source) {
+  const isReachable = await probeBackend(url);
+  if (!isReachable) {
+    console.warn(
+      `[start-dev] Aviso: no se detecto backend respondiendo en ${url} (${source}).` +
+        '\n[start-dev] Revisa que el backend este corriendo y que el firewall permita el puerto.'
+    );
+  }
+}
+
 async function resolveApiUrl() {
-  const explicitUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
-  if (explicitUrl !== undefined && explicitUrl !== '') {
-    console.log(`[start-dev] EXPO_PUBLIC_API_URL explicita: ${explicitUrl}`);
-    return explicitUrl;
+  // Prioridad: shell > .env.local > autodeteccion LAN. La variable inyectada
+  // como variable de proceso tiene prioridad sobre los ficheros .env en Expo,
+  // asi que un valor en .env.local debe respetarse aqui y no pisarse con la LAN.
+  const shellUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+  if (shellUrl !== undefined && shellUrl !== '') {
+    console.log(`[start-dev] EXPO_PUBLIC_API_URL explicita (shell): ${shellUrl}`);
+    await probeExplicit(shellUrl, 'shell');
+    return shellUrl;
+  }
+
+  const fileUrl = readEnvLocalApiUrl();
+  if (fileUrl !== undefined) {
+    console.log(`[start-dev] EXPO_PUBLIC_API_URL explicita (.env.local): ${fileUrl}`);
+    await probeExplicit(fileUrl, '.env.local');
+    return fileUrl;
   }
 
   const lanUrl = await resolveLanUrl();
@@ -108,6 +152,11 @@ async function resolveApiUrl() {
 
 async function main() {
   const extraArgs = process.argv.slice(2);
+  if (extraArgs.includes('--print-api-url')) {
+    const apiUrl = await resolveApiUrl();
+    console.log(apiUrl ?? '(fallback local de src/core/config/env.ts)');
+    return;
+  }
   const apiUrl = await resolveApiUrl();
 
   const expoCliPath = resolve(projectRoot, 'node_modules', 'expo', 'bin', 'cli');

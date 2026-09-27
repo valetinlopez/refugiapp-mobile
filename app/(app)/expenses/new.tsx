@@ -1,7 +1,8 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeaderBack, navigateBack } from '@/components/navigation';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
 import { useSession } from '@/features/auth/session';
@@ -15,17 +16,27 @@ export default function CreateExpenseScreen() {
   const { user } = useSession();
   const canWrite =
     user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
+  const fallbackHref: Href =
+    typeof animalId === 'string'
+      ? { pathname: '/animals/[id]', params: { id: animalId } }
+      : '/explore';
   const animals = useExpenseAnimals();
   const createExpense = useCreateExpense();
 
   if (!canWrite)
     return (
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerBack}>
+          <AppHeaderBack
+            accessibilityHint="Volver a la lista de animales"
+            fallbackHref={fallbackHref}
+          />
+        </View>
         <View style={styles.centered}>
           <EmptyState
             actionLabel="Volver"
             message="Tu rol permite consultar gastos, pero no registrarlos."
-            onAction={goBack}
+            onAction={() => navigateBack(fallbackHref)}
             title="Sin permiso"
           />
         </View>
@@ -34,6 +45,12 @@ export default function CreateExpenseScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerBack}>
+        <AppHeaderBack
+          accessibilityHint="Volver a la lista de animales"
+          fallbackHref={fallbackHref}
+        />
+      </View>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppText variant="heading1">Registrar gasto</AppText>
         <AppText color="textSecondary">
@@ -56,7 +73,10 @@ export default function CreateExpenseScreen() {
             isSubmitting={createExpense.isPending}
             onCancelUpload={createExpense.cancelUpload}
             onSubmit={(form, receipt) =>
-              createExpense.mutate({ form, receipt }, { onSuccess: goBack })
+              createExpense.mutate(
+                { form, receipt },
+                { onSuccess: () => navigateBack(fallbackHref) }
+              )
             }
             uploadProgress={createExpense.uploadProgress}
           />
@@ -66,13 +86,9 @@ export default function CreateExpenseScreen() {
   );
 }
 
-function goBack(): void {
-  if (router.canGoBack()) router.back();
-  else router.replace('/explore');
-}
-
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   content: { flexGrow: 1, gap: spacing.md, padding: spacing.lg },
+  headerBack: { paddingHorizontal: spacing.lg },
   safeArea: { backgroundColor: colors.background, flex: 1 },
 });

@@ -11,6 +11,7 @@
 - Mantener rutas delgadas: no llamar Axios, Secure Store ni APIs de plataforma directamente.
 - Extraer UI reutilizable a `src/components` o a la feature correspondiente.
 - Extraer queries, mutations y transformaciones a hooks o API de la feature.
+- Toda pantalla stack fuera de `(tabs)` debe componer `AppHeaderBack` como primer elemento de su `SafeAreaView`, con un `fallbackHref` contextual (lista de origen o detalle del animal). No reimplementar `router.canGoBack()` por pantalla; usar `navigateBack` de `src/components/navigation`.
 - Usar route groups para organización sin convertirlos en segmentos públicos.
 - Declarar providers globales solo en el layout raíz; providers de una feature deben vivir lo más cerca posible de su subárbol.
 

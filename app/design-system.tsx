@@ -3,7 +3,11 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
-import { BottomNavigation, type BottomNavigationItem } from '@/components/navigation';
+import {
+  AppHeaderBack,
+  BottomNavigation,
+  type BottomNavigationItem,
+} from '@/components/navigation';
 import { TaskRow } from '@/components/patterns';
 import {
   AppAvatar,
@@ -242,6 +246,26 @@ export default function DesignSystemScreen() {
             items={navigationItems}
             onSelect={setActiveNavigationItem}
           />
+        </Section>
+
+        <Section title="Encabezado de retorno">
+          <AppText color="textSecondary" variant="caption">
+            Vuelve con <AppText variant="label">canGoBack</AppText> o reemplaza con el fallback
+            contextual en deep links sin historial.
+          </AppText>
+          <View style={styles.stack}>
+            <AppHeaderBack
+              accessibilityHint="Volver a la lista de animales"
+              fallbackHref="/explore"
+            />
+            <AppHeaderBack
+              accessibilityHint="Volver al detalle del animal"
+              fallbackHref={{
+                pathname: '/animals/[id]',
+                params: { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6' },
+              }}
+            />
+          </View>
         </Section>
       </ScrollView>
     </SafeAreaView>

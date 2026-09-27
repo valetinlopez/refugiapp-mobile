@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppBadge, AppAvatar, AppButton, AppCard, AppText } from '@/components/primitives';
 import { formatDateMedium } from '@/components/patterns';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { AppHeaderBack, navigateBack } from '@/components/navigation';
 import { AnimalHistory } from '@/features/animals/components/AnimalHistory';
 import { AnimalStatusChanger } from '@/features/animals/components/AnimalStatusChanger';
 import { useSession } from '@/features/auth/session';
@@ -27,12 +28,19 @@ export default function AnimalDetailScreen() {
     user?.roles.some((role) => role === 'admin' || role === 'veterinarian') ?? false;
 
   const animalId = typeof id === 'string' && isUuid(id) ? id : '';
+  const fallbackHref: Href = '/explore';
   const animalQuery = useAnimal(animalId);
   const photoQuery = useAnimalPhoto(animalQuery.data?.profilePhotoMediaId ?? null);
   const changeStatus = useChangeAnimalStatus(animalId);
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerBack}>
+        <AppHeaderBack
+          accessibilityHint="Volver a la lista de animales"
+          fallbackHref={fallbackHref}
+        />
+      </View>
       <ScrollView contentContainerStyle={styles.content}>
         <AnimalDetailContent
           canWrite={canWrite}
@@ -41,6 +49,7 @@ export default function AnimalDetailScreen() {
             changeStatus.error ? toChangeStatusErrorMessage(changeStatus.error) : null
           }
           isSubmittingStatus={changeStatus.isPending}
+          onBack={() => navigateBack(fallbackHref)}
           onChangeStatus={(status) => changeStatus.mutate({ status })}
           onRetry={() => void animalQuery.refetch()}
           photoUri={photoQuery.data ?? null}
@@ -51,19 +60,12 @@ export default function AnimalDetailScreen() {
   );
 }
 
-function goBack(): void {
-  if (router.canGoBack()) {
-    router.back();
-  } else {
-    router.replace('/explore');
-  }
-}
-
 interface AnimalDetailContentProps {
   canWrite: boolean;
   canWriteClinical: boolean;
   changeStatusError: string | null;
   isSubmittingStatus: boolean;
+  onBack(): void;
   onChangeStatus(status: AnimalStatus): void;
   onRetry(): void;
   photoUri: string | null;
@@ -75,6 +77,7 @@ function AnimalDetailContent({
   canWriteClinical,
   changeStatusError,
   isSubmittingStatus,
+  onBack,
   onChangeStatus,
   onRetry,
   photoUri,
@@ -100,7 +103,7 @@ function AnimalDetailContent({
       <EmptyState
         actionLabel="Volver"
         message="El animal que buscás ya no está disponible."
-        onAction={goBack}
+        onAction={onBack}
         title="Animal no encontrado"
       />
     );
@@ -271,6 +274,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.md,
+  },
+  headerBack: {
+    paddingHorizontal: spacing.lg,
   },
   historySection: {
     gap: spacing.sm,

@@ -7,6 +7,7 @@ export type AppIconName =
   | 'alert'
   | 'calendar'
   | 'check'
+  | 'chevronLeft'
   | 'chevronRight'
   | 'clock'
   | 'close'
@@ -24,6 +25,7 @@ const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   alert: { ios: 'exclamationmark.circle.fill', android: 'error', web: 'error' },
   calendar: { ios: 'calendar', android: 'calendar_month', web: 'calendar_month' },
   check: { ios: 'checkmark.circle.fill', android: 'check_circle', web: 'check_circle' },
+  chevronLeft: { ios: 'chevron.left', android: 'chevron_left', web: 'chevron_left' },
   chevronRight: { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' },
   clock: { ios: 'clock.fill', android: 'schedule', web: 'schedule' },
   close: { ios: 'xmark', android: 'close', web: 'close' },
