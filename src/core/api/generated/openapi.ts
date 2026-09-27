@@ -245,6 +245,21 @@ export interface components {
       limit: number;
       total: number;
     };
+    DashboardTotalsDto: {
+      animals: number;
+      byStatus: Record<string, unknown>;
+    };
+    DashboardAnimalDto: {
+      id: string;
+      name: string;
+      species: string;
+      status: 'admitted' | 'under_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
+      profilePhotoMediaId?: string | null;
+    };
+    DashboardOverviewResponseDto: {
+      totals: components['schemas']['DashboardTotalsDto'];
+      recentAnimals: components['schemas']['DashboardAnimalDto'][];
+    };
     ErrorResponseDto: {
       statusCode: number;
       code: string;
