@@ -3,7 +3,7 @@ import { StyleSheet, View, type ViewProps } from 'react-native';
 import { AppButton, AppCard, AppIcon, AppText, type AppIconName } from '@/components/primitives';
 import { spacing } from '@/theme';
 
-type FeedbackStateProps = ViewProps & {
+export type FeedbackStateProps = ViewProps & {
   actionLabel?: string;
   icon: AppIconName;
   message: string;

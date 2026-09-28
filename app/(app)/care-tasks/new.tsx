@@ -3,14 +3,14 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { navigateBack } from '@/components/navigation';
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, FeedbackState, LoadingState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
+import { isUuid } from '@/core/validation';
 import { CareTaskForm } from '@/features/care-tasks/components/CareTaskForm';
 import { useCareTaskAnimals } from '@/features/care-tasks/hooks/useCareTaskAnimals';
 import { useCreateCareTask } from '@/features/care-tasks/hooks/useCreateCareTask';
 import type { CreateCareTaskRequest } from '@/features/care-tasks/types';
 import { toCareTaskErrorMessage } from '@/features/care-tasks/utils/careTaskErrorMessages';
-import { isUuid } from '@/features/care-tasks/utils/uuid';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useSession } from '@/features/auth/session';
 import { colors, spacing } from '@/theme';
@@ -21,7 +21,7 @@ export default function CreateCareTaskScreen() {
   const canWrite =
     user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
   const initialAnimalId = typeof animalId === 'string' && isUuid(animalId) ? animalId : undefined;
-  const animalsQuery = useCareTaskAnimals();
+  const animalsQuery = useCareTaskAnimals(initialAnimalId);
   const createTask = useCreateCareTask();
 
   if (!canWrite) {
@@ -58,9 +58,17 @@ export default function CreateCareTaskScreen() {
         {animalsQuery.isError ? (
           <ErrorState
             actionLabel="Reintentar"
-            message="No pudimos cargar los animales."
+            message={animalsQuery.errorMessage ?? 'No pudimos cargar los animales.'}
             onAction={() => void animalsQuery.refetch()}
             title="No se pudo preparar el formulario"
+          />
+        ) : null}
+        {animalsQuery.isFallback ? (
+          <FeedbackState
+            icon="info"
+            message="Se muestra solo el animal seleccionado; el listado completo no pudo cargarse."
+            title="Listado de animales incompleto"
+            tone="info"
           />
         ) : null}
         {animalsQuery.data ? (

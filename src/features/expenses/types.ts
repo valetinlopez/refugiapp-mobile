@@ -7,10 +7,7 @@ export type PaginatedExpensesResponse = components['schemas']['PaginatedExpenses
 export type ExpenseCategory = CreateExpenseRequest['category'];
 export type ReceiptFile = MediaFile;
 
-export interface AnimalOption {
-  id: string;
-  name: string;
-}
+export type { AnimalOption } from '@/application/animals';
 
 export interface Expense {
   id: string;

@@ -1,12 +1,10 @@
 import { apiClient, type HttpClient } from '@/core/api';
 
 import type {
-  AnimalOption,
   CareTask,
   CareTaskFilters,
   CareTaskResponse,
   CreateCareTaskRequest,
-  PaginatedAnimalOptionsResponse,
   PaginatedCareTasks,
   PaginatedCareTasksResponse,
   UpdateCareTaskRequest,
@@ -53,12 +51,5 @@ export const careTasksApi = {
   async cancel(id: string, client: HttpClient = apiClient): Promise<CareTask> {
     const response = await client.post<CareTaskResponse>(`/care-tasks/${id}/cancel`);
     return toCareTask(response.data);
-  },
-
-  async listAnimalOptions(client: HttpClient = apiClient): Promise<AnimalOption[]> {
-    const response = await client.get<PaginatedAnimalOptionsResponse>('/animals', {
-      params: { page: 1, limit: 100, sortBy: 'name', sortOrder: 'ASC' },
-    });
-    return response.data.items.map((animal) => ({ id: animal.id, name: animal.name }));
   },
 };

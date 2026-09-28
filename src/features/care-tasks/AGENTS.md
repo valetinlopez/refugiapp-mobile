@@ -25,9 +25,9 @@
 
 ## Estructura
 
-- `api/`: tareas y opciones mínimas de animales para el formulario.
+- `api/`: tareas (el listado de opciones de animales delega en `src/application/animals`).
 - `components/`: formulario, tarjetas y confirmaciones.
-- `hooks/`: queries, mutations e invalidaciones.
+- `hooks/`: queries, mutations, `useCareTaskAnimals` (delega las opciones de animales en `src/application/animals`) e invalidaciones.
 - `utils/`: validación, mapeo y presentación.
 - `types.ts`: modelos de vista y aliases del contrato generado.
 
@@ -54,6 +54,7 @@
 - Confirmaciones para completar y cancelar tareas pendientes.
 - Invalidación de las queries de tareas y dashboard después de cada mutación.
 - Guards visuales de escritura para `admin` y `shelter_manager`.
+- El selector de animal usa el contrato compartido `src/application/animals`: `GET /animals?page=1&limit=100` sin sort en el request (orden alfabético en cliente) y fallback a `GET /animals/:id` cuando llega un `animalId` UUID válido y el listado falla o no lo contiene; el error se traduce por causa y el reintento funciona.
 - Mensaje de solo lectura explicativo para roles sin permisos de escritura en el listado; no se muestran botones que responderían 403.
 - Estados finales (`completed`, `cancelled`) presentados con icono, texto y tono, sin acciones disponibles.
 - Bloqueo de acciones por fila durante una mutación (`pendingActionId`), no global; el resto de la lista permanece interactiva.

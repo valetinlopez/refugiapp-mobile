@@ -3,8 +3,9 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { navigateBack } from '@/components/navigation';
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, FeedbackState, LoadingState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
+import { isUuid } from '@/core/validation';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useSession } from '@/features/auth/session';
 import { ExpenseForm } from '@/features/expenses/components/ExpenseForm';
@@ -14,6 +15,7 @@ import { colors, spacing } from '@/theme';
 
 export default function CreateExpenseScreen() {
   const { animalId } = useLocalSearchParams<{ animalId?: string }>();
+  const initialAnimalId = typeof animalId === 'string' && isUuid(animalId) ? animalId : undefined;
   const { user } = useSession();
   const canWrite =
     user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
@@ -21,7 +23,7 @@ export default function CreateExpenseScreen() {
     typeof animalId === 'string'
       ? { pathname: '/animals/[id]', params: { id: animalId } }
       : '/explore';
-  const animals = useExpenseAnimals();
+  const animals = useExpenseAnimals(initialAnimalId);
   const createExpense = useCreateExpense();
 
   if (!canWrite)
@@ -57,16 +59,24 @@ export default function CreateExpenseScreen() {
         {animals.isError ? (
           <ErrorState
             actionLabel="Reintentar"
-            message="No pudimos cargar los animales."
+            message={animals.errorMessage ?? 'No pudimos cargar los animales.'}
             onAction={() => void animals.refetch()}
             title="No se pudo preparar el formulario"
+          />
+        ) : null}
+        {animals.isFallback ? (
+          <FeedbackState
+            icon="info"
+            message="Se muestra solo el animal seleccionado; el listado completo no pudo cargarse."
+            title="Listado de animales incompleto"
+            tone="info"
           />
         ) : null}
         {animals.data ? (
           <ExpenseForm
             animalOptions={animals.data}
             errorMessage={createExpense.error?.message ?? null}
-            {...(typeof animalId === 'string' ? { initialAnimalId: animalId } : {})}
+            {...(initialAnimalId ? { initialAnimalId } : {})}
             isSubmitting={createExpense.isPending}
             onCancelUpload={createExpense.cancelUpload}
             onSubmit={(form, receipt) =>
