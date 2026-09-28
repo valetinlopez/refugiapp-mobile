@@ -41,7 +41,8 @@
 
 - Alta de gasto con comprobante obligatorio, progreso/cancelación de subida y selección de animal.
 - Guard visual por rol e invalidación de gastos y dashboard.
+- Listado de gastos por animal en su detalle, con importe `amountCents` formateado en ARS, categoría, fecha, estados de carga/vacío/error y miniatura del comprobante cuando el contrato devuelve un UUID válido.
 
 ### Pendiente o deuda conocida
 
-- El listado visual de gastos no forma parte de este ticket; las query keys quedan preparadas para su consumo.
+- El listado por animal muestra la primera página de 20 gastos; todavía no expone paginación incremental.

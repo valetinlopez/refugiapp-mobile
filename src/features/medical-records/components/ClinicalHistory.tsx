@@ -1,11 +1,14 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppCard, AppIcon, AppText } from '@/components/primitives';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { FilterChip } from '@/components/patterns';
 import { sizes, spacing } from '@/theme';
 
 import { useMedicalRecordsByAnimal } from '../hooks/useMedicalRecordsByAnimal';
 import { formatRecordDate, getRecordTypeLabel } from '../utils/medicalRecordPresentation';
+import type { MedicalRecordType } from '../types';
 
 export interface ClinicalHistoryProps {
   animalId: string;
@@ -13,34 +16,96 @@ export interface ClinicalHistoryProps {
 }
 
 export function ClinicalHistory({ animalId, onEditRecord }: ClinicalHistoryProps) {
-  const recordsQuery = useMedicalRecordsByAnimal(animalId);
+  const [recordType, setRecordType] = useState<MedicalRecordType | undefined>();
+  const [rangeDays, setRangeDays] = useState<number | undefined>();
+  const filters = useMemo(() => {
+    const typeFilter = recordType === undefined ? {} : { recordType };
+    if (rangeDays === undefined) return typeFilter;
+    const from = new Date();
+    from.setDate(from.getDate() - rangeDays);
+    return { ...typeFilter, from: from.toISOString(), to: new Date().toISOString() };
+  }, [rangeDays, recordType]);
+  const recordsQuery = useMedicalRecordsByAnimal(animalId, filters);
+
+  const filtersView = (
+    <View style={styles.filters}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={styles.filterRow}>
+          <FilterChip
+            label="Todos los tipos"
+            onPress={() => setRecordType(undefined)}
+            selected={recordType === undefined}
+          />
+          {(['consultation', 'vaccination', 'treatment', 'other'] as MedicalRecordType[]).map(
+            (type) => (
+              <FilterChip
+                key={type}
+                label={getRecordTypeLabel(type)}
+                onPress={() => setRecordType(type)}
+                selected={recordType === type}
+              />
+            )
+          )}
+        </View>
+      </ScrollView>
+      <View style={styles.filterRow}>
+        <FilterChip
+          label="Todo el período"
+          onPress={() => setRangeDays(undefined)}
+          selected={rangeDays === undefined}
+        />
+        <FilterChip
+          label="Últimos 30 días"
+          onPress={() => setRangeDays(30)}
+          selected={rangeDays === 30}
+        />
+        <FilterChip
+          label="Últimos 90 días"
+          onPress={() => setRangeDays(90)}
+          selected={rangeDays === 90}
+        />
+      </View>
+    </View>
+  );
 
   if (recordsQuery.isPending) {
-    return <LoadingState label="Cargando evolución clínica" />;
+    return (
+      <>
+        {filtersView}
+        <LoadingState label="Cargando evolución clínica" />
+      </>
+    );
   }
 
   if (recordsQuery.isError) {
     return (
-      <ErrorState
-        actionLabel="Reintentar"
-        message="No pudimos cargar la evolución clínica del animal."
-        onAction={() => void recordsQuery.refetch()}
-        title="No se pudo cargar la evolución clínica"
-      />
+      <>
+        {filtersView}
+        <ErrorState
+          actionLabel="Reintentar"
+          message="No pudimos cargar la evolución clínica del animal."
+          onAction={() => void recordsQuery.refetch()}
+          title="No se pudo cargar la evolución clínica"
+        />
+      </>
     );
   }
 
   if (recordsQuery.data === undefined || recordsQuery.data.items.length === 0) {
     return (
-      <EmptyState
-        message="Todavía no hay registros clínicos para este animal."
-        title="Sin evolución clínica"
-      />
+      <>
+        {filtersView}
+        <EmptyState
+          message="Todavía no hay registros clínicos para este animal."
+          title="Sin evolución clínica"
+        />
+      </>
     );
   }
 
   return (
     <View accessibilityLabel="Evolución clínica" style={styles.list}>
+      {filtersView}
       {recordsQuery.data.items.map((record) => (
         <AppCard
           accessibilityLabel={`${getRecordTypeLabel(record.recordType)}, ${record.title}`}
@@ -93,6 +158,8 @@ function TextSection({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  filters: { gap: spacing.xs },
   cardActions: {
     alignItems: 'center',
     flexDirection: 'row',

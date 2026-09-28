@@ -44,7 +44,13 @@ export const medicalRecordsApi = {
     const response = await client.get<PaginatedMedicalRecordsResponse>(
       `/animals/${animalId}/medical-records`,
       {
-        params: { page, limit, recordType: filters.recordType },
+        params: {
+          page,
+          limit,
+          recordType: filters.recordType,
+          from: filters.from,
+          to: filters.to,
+        },
       }
     );
     return toPaginatedMedicalRecords(response.data);

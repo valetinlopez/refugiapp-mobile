@@ -62,6 +62,7 @@
 - Mensajes específicos para `OCCURRED_AT_IN_FUTURE` y `OCCURRED_AT_BEFORE_INTAKE`.
 - Adjuntos clínicos desde cámara, galería o selector de PDF: JPEG, PNG, WebP y PDF de hasta 10 MB; subida huérfana en creación (limpieza best-effort al cancelar o fallar el POST) y subida directa en edición, con progreso y cancelación.
 - `ClinicalHistory` para presentar la evolución clínica por animal.
+- `ClinicalHistory` permite filtrar por tipo y por ventanas de 30/90 días, enviando `recordType`, `from` y `to` al backend.
 - Invalidación de `medicalRecordKeys.listByAnimal(animalId)` tras crear o editar.
 - Guards visuales para `admin` y `veterinarian`.
 
