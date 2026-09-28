@@ -39,6 +39,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon color={color} name="calendar" />,
         }}
       />
+      <Tabs.Screen
+        name="account"
+        options={{
+          title: 'Cuenta',
+          tabBarIcon: ({ color }) => <TabBarIcon color={color} name="account" />,
+        }}
+      />
       <Tabs.Screen name="inbox" options={{ href: null }} />
     </Tabs>
   );

@@ -2,7 +2,7 @@ import { useLocalSearchParams, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppHeaderBack, navigateBack } from '@/components/navigation';
+import { navigateBack } from '@/components/navigation';
 import { EmptyState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
 import { CreateAnimalEventForm } from '@/features/animals/components/CreateAnimalEventForm';
@@ -10,6 +10,7 @@ import { useCreateAnimalEvent } from '@/features/animals/hooks/useCreateAnimalEv
 import type { CreateAnimalHistoryEventRequest } from '@/features/animals/types';
 import { toCreateAnimalEventErrorMessage } from '@/features/animals/utils/animalErrorMessages';
 import { isUuid } from '@/features/animals/utils/uuid';
+import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useSession } from '@/features/auth/session';
 import { colors, spacing } from '@/theme';
 
@@ -27,12 +28,10 @@ export default function CreateAnimalEventScreen() {
   if (!canWrite || animalId === '') {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerBack}>
-          <AppHeaderBack
-            accessibilityHint="Volver al detalle del animal"
-            fallbackHref={fallbackHref}
-          />
-        </View>
+        <AccountHeaderRow
+          accessibilityHint="Volver al detalle del animal"
+          fallbackHref={fallbackHref}
+        />
         <View style={styles.denied}>
           <EmptyState
             actionLabel="Volver"
@@ -55,12 +54,10 @@ export default function CreateAnimalEventScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerBack}>
-        <AppHeaderBack
-          accessibilityHint="Volver al detalle del animal"
-          fallbackHref={fallbackHref}
-        />
-      </View>
+      <AccountHeaderRow
+        accessibilityHint="Volver al detalle del animal"
+        fallbackHref={fallbackHref}
+      />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppText variant="heading1">Registrar evento</AppText>
         <AppText color="textSecondary">
@@ -90,9 +87,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: spacing.lg,
-  },
-  headerBack: {
-    paddingHorizontal: spacing.lg,
   },
   safeArea: {
     backgroundColor: colors.background,

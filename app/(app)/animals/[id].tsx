@@ -6,13 +6,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppBadge, AppAvatar, AppButton, AppCard, AppText } from '@/components/primitives';
 import { formatDateMedium } from '@/components/patterns';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
-import { AppHeaderBack, navigateBack } from '@/components/navigation';
+import { navigateBack } from '@/components/navigation';
 import { AnimalHistory } from '@/features/animals/components/AnimalHistory';
 import {
   AnimalDetailTabs,
   type AnimalDetailTab,
 } from '@/features/animals/components/AnimalDetailTabs';
 import { AnimalStatusChanger } from '@/features/animals/components/AnimalStatusChanger';
+import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useSession } from '@/features/auth/session';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
 import { useAnimalPhoto } from '@/features/animals/hooks/useAnimalPhoto';
@@ -40,12 +41,10 @@ export default function AnimalDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerBack}>
-        <AppHeaderBack
-          accessibilityHint="Volver a la lista de animales"
-          fallbackHref={fallbackHref}
-        />
-      </View>
+      <AccountHeaderRow
+        accessibilityHint="Volver a la lista de animales"
+        fallbackHref={fallbackHref}
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <AnimalDetailContent
           canWrite={capabilities.canEditAnimal}
@@ -313,9 +312,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.md,
-  },
-  headerBack: {
-    paddingHorizontal: spacing.lg,
   },
   historySection: {
     gap: spacing.sm,

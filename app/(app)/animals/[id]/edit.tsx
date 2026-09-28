@@ -5,8 +5,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/primitives';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
-import { AppHeaderBack, navigateBack } from '@/components/navigation';
+import { navigateBack } from '@/components/navigation';
 import { AnimalProfileForm } from '@/features/animals/components/AnimalProfileForm';
+import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useSession } from '@/features/auth/session';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
 import { useAnimalPhoto } from '@/features/animals/hooks/useAnimalPhoto';
@@ -42,12 +43,10 @@ export default function EditAnimalScreen() {
   if (!canWrite) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerBack}>
-          <AppHeaderBack
-            accessibilityHint="Volver al detalle del animal"
-            fallbackHref={fallbackHref}
-          />
-        </View>
+        <AccountHeaderRow
+          accessibilityHint="Volver al detalle del animal"
+          fallbackHref={fallbackHref}
+        />
         <View style={styles.container}>
           <EmptyState
             actionLabel="Volver"
@@ -62,12 +61,10 @@ export default function EditAnimalScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerBack}>
-        <AppHeaderBack
-          accessibilityHint="Volver al detalle del animal"
-          fallbackHref={fallbackHref}
-        />
-      </View>
+      <AccountHeaderRow
+        accessibilityHint="Volver al detalle del animal"
+        fallbackHref={fallbackHref}
+      />
       <ScrollView ref={scrollRef} contentContainerStyle={styles.content}>
         <AppText variant="heading1">Editar animal</AppText>
         <AppText color="textSecondary">
@@ -177,9 +174,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: spacing.sm,
     padding: spacing.lg,
-  },
-  headerBack: {
-    paddingHorizontal: spacing.lg,
   },
   safeArea: {
     backgroundColor: colors.background,

@@ -2,11 +2,12 @@ import { useLocalSearchParams, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppHeaderBack, navigateBack } from '@/components/navigation';
+import { navigateBack } from '@/components/navigation';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
 import { isUuid } from '@/features/animals/utils/uuid';
+import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useSession } from '@/features/auth/session';
 import { MedicalRecordForm } from '@/features/medical-records/components/MedicalRecordForm';
 import { useClinicalAttachments } from '@/features/medical-records/hooks/useClinicalAttachments';
@@ -35,12 +36,10 @@ export default function EditMedicalRecordScreen() {
   if (!canWriteClinical || animalId === '' || recordUuid === '') {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerBack}>
-          <AppHeaderBack
-            accessibilityHint="Volver al detalle del animal"
-            fallbackHref={fallbackHref}
-          />
-        </View>
+        <AccountHeaderRow
+          accessibilityHint="Volver al detalle del animal"
+          fallbackHref={fallbackHref}
+        />
         <View style={styles.centered}>
           <EmptyState
             actionLabel="Volver"
@@ -62,12 +61,10 @@ export default function EditMedicalRecordScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerBack}>
-        <AppHeaderBack
-          accessibilityHint="Volver al detalle del animal"
-          fallbackHref={fallbackHref}
-        />
-      </View>
+      <AccountHeaderRow
+        accessibilityHint="Volver al detalle del animal"
+        fallbackHref={fallbackHref}
+      />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppText variant="heading1">Editar registro clínico</AppText>
         <AppText color="textSecondary">
@@ -114,6 +111,5 @@ export default function EditMedicalRecordScreen() {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   content: { flexGrow: 1, gap: spacing.md, padding: spacing.lg },
-  headerBack: { paddingHorizontal: spacing.lg },
   safeArea: { backgroundColor: colors.background, flex: 1 },
 });

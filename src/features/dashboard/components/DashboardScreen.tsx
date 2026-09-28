@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState, ErrorState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
+import { AccountMenuButton } from '@/features/auth/components/AccountMenuButton';
 import { useSession } from '@/features/auth/session';
 import { colors, spacing } from '@/theme';
 
@@ -72,9 +73,12 @@ export function DashboardScreen() {
           />
         }
       >
-        <View style={styles.heading}>
-          <AppText variant="heading1">Inicio</AppText>
-          <AppText color="textSecondary">Resumen del refugio</AppText>
+        <View style={styles.headingRow}>
+          <View style={styles.heading}>
+            <AppText variant="heading1">Inicio</AppText>
+            <AppText color="textSecondary">Resumen del refugio</AppText>
+          </View>
+          <AccountMenuButton />
         </View>
 
         {isEmpty ? (
@@ -109,7 +113,14 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   heading: {
+    flex: 1,
     gap: spacing.xxs,
+  },
+  headingRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
+    justifyContent: 'space-between',
   },
   safeArea: {
     backgroundColor: colors.background,

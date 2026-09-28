@@ -2,9 +2,10 @@ import { useLocalSearchParams } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppHeaderBack, navigateBack } from '@/components/navigation';
+import { navigateBack } from '@/components/navigation';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
+import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useSession } from '@/features/auth/session';
 import { CareTaskForm } from '@/features/care-tasks/components/CareTaskForm';
 import { useCareTask } from '@/features/care-tasks/hooks/useCareTask';
@@ -33,9 +34,10 @@ export default function EditCareTaskScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerBack}>
-        <AppHeaderBack accessibilityHint="Volver a la lista de tareas" fallbackHref="/care-tasks" />
-      </View>
+      <AccountHeaderRow
+        accessibilityHint="Volver a la lista de tareas"
+        fallbackHref="/care-tasks"
+      />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppText variant="heading1">Editar tarea</AppText>
         {taskQuery.isPending || animalsQuery.isPending ? (
@@ -82,9 +84,10 @@ export default function EditCareTaskScreen() {
 function Denied() {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerBack}>
-        <AppHeaderBack accessibilityHint="Volver a la lista de tareas" fallbackHref="/care-tasks" />
-      </View>
+      <AccountHeaderRow
+        accessibilityHint="Volver a la lista de tareas"
+        fallbackHref="/care-tasks"
+      />
       <View style={styles.centered}>
         <EmptyState
           actionLabel="Volver"
@@ -100,6 +103,5 @@ function Denied() {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   content: { flexGrow: 1, gap: spacing.md, padding: spacing.lg },
-  headerBack: { paddingHorizontal: spacing.lg },
   safeArea: { backgroundColor: colors.background, flex: 1 },
 });
