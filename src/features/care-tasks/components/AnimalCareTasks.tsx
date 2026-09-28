@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
-import { AppText } from '@/components/primitives';
+import { AppButton, AppText } from '@/components/primitives';
 import { spacing } from '@/theme';
 
 import { useCancelCareTask, useCompleteCareTask } from '../hooks/useCareTaskActions';
@@ -23,31 +23,32 @@ export function AnimalCareTasks({
   const cancel = useCancelCareTask();
   const pendingId = complete.variables ?? cancel.variables;
 
-  if (query.isPending) return <LoadingState label="Cargando tareas" />;
-  if (query.isError) {
-    return (
-      <ErrorState
-        actionLabel="Reintentar"
-        message="No pudimos cargar las tareas de cuidado del animal."
-        onAction={() => void query.refetch()}
-        title="No se pudieron cargar las tareas"
-      />
-    );
-  }
-  if (!query.data?.items.length) {
-    return (
-      <EmptyState message="Este animal todavía no tiene tareas de cuidado." title="Sin tareas" />
-    );
-  }
-
   return (
     <View accessibilityLabel="Tareas de cuidado" style={styles.list}>
-      {!canWrite ? (
+      {canWrite ? (
+        <AppButton
+          icon="calendar"
+          label="Nueva tarea"
+          onPress={() => router.push({ pathname: '/care-tasks/new', params: { animalId } })}
+        />
+      ) : (
         <AppText color="textSecondary">
-          Tu rol permite consultar estas tareas, pero no modificarlas.
+          Tu rol permite consultar estas tareas, pero no crearlas ni modificarlas.
         </AppText>
+      )}
+      {query.isPending ? <LoadingState label="Cargando tareas" /> : null}
+      {query.isError ? (
+        <ErrorState
+          actionLabel="Reintentar"
+          message="No pudimos cargar las tareas de cuidado del animal."
+          onAction={() => void query.refetch()}
+          title="No se pudieron cargar las tareas"
+        />
       ) : null}
-      {query.data.items.map((task) => (
+      {!query.isPending && !query.isError && !query.data?.items.length ? (
+        <EmptyState message="Este animal todavía no tiene tareas de cuidado." title="Sin tareas" />
+      ) : null}
+      {query.data?.items.map((task) => (
         <CareTaskCard
           animalName={animalName}
           canWrite={canWrite}

@@ -1,4 +1,8 @@
-import { createAnimalEventSchema, MANUAL_ANIMAL_EVENT_TYPES } from './createAnimalEventSchema';
+import {
+  ANIMAL_EVENT_FUTURE_TOLERANCE_MS,
+  createAnimalEventSchema,
+  MANUAL_ANIMAL_EVENT_TYPES,
+} from './createAnimalEventSchema';
 
 describe('createAnimalEventSchema', () => {
   it.each(MANUAL_ANIMAL_EVENT_TYPES)('accepts the manual event type %s', (eventType) => {
@@ -49,5 +53,31 @@ describe('createAnimalEventSchema', () => {
         'La fecha y hora debe tener formato ISO 8601.'
       );
     }
+  });
+
+  it('accepts clock skew up to 60 seconds and rejects later future dates', () => {
+    const now = Date.now();
+    jest.spyOn(Date, 'now').mockReturnValue(now);
+    const values = { eventType: 'general_note', description: 'Control diario' } as const;
+
+    expect(
+      createAnimalEventSchema.safeParse({
+        ...values,
+        occurredAt: new Date(now + ANIMAL_EVENT_FUTURE_TOLERANCE_MS).toISOString(),
+      }).success
+    ).toBe(true);
+
+    const result = createAnimalEventSchema.safeParse({
+      ...values,
+      occurredAt: new Date(now + ANIMAL_EVENT_FUTURE_TOLERANCE_MS + 1).toISOString(),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.occurredAt).toContain(
+        'La fecha y hora no puede estar en el futuro.'
+      );
+    }
+
+    jest.restoreAllMocks();
   });
 });

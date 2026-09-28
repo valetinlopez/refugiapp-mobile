@@ -4,6 +4,7 @@ import { useState, type ComponentProps, type ReactNode } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/primitives';
+import { DateTimeField, toLocalDate } from '@/components/patterns';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
 import type { AnimalOption, ExpenseCategory, ReceiptFile } from '../types';
@@ -49,7 +50,7 @@ export function ExpenseForm({
       category: 'other',
       description: '',
       amountCents: '',
-      incurredAt: new Date().toISOString().slice(0, 10),
+      incurredAt: toLocalDate(new Date()),
     },
   });
 
@@ -140,12 +141,11 @@ export function ExpenseForm({
         name="incurredAt"
         render={({ field, fieldState }) => (
           <Field label="Fecha" error={fieldState.error?.message}>
-            <Input
+            <DateTimeField
               accessibilityLabel="Fecha"
-              editable={!isSubmitting}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="AAAA-MM-DD"
+              disabled={isSubmitting}
+              mode="date"
+              onChange={field.onChange}
               value={field.value}
             />
           </Field>

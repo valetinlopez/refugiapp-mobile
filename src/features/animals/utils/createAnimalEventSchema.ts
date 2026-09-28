@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const MANUAL_ANIMAL_EVENT_TYPES = ['general_note', 'behavior_note', 'transfer'] as const;
+export const ANIMAL_EVENT_FUTURE_TOLERANCE_MS = 60_000;
 
 export const createAnimalEventSchema = z.object({
   eventType: z.enum(MANUAL_ANIMAL_EVENT_TYPES, {
@@ -20,6 +21,11 @@ export const createAnimalEventSchema = z.object({
       (value) =>
         value === undefined || z.string().datetime({ offset: true }).safeParse(value).success,
       'La fecha y hora debe tener formato ISO 8601.'
+    )
+    .refine(
+      (value) =>
+        value === undefined || Date.parse(value) <= Date.now() + ANIMAL_EVENT_FUTURE_TOLERANCE_MS,
+      'La fecha y hora no puede estar en el futuro.'
     ),
 });
 

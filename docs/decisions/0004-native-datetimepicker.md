@@ -15,7 +15,7 @@ Los registros médicos exigen `occurredAt` (fecha y hora de atención) obligator
 
 ## Decisión
 
-- Usar `@react-native-community/datetimepicker` (versión fijada por `npx expo install` para SDK 57) para fechas de animales, vencimientos de tareas y `occurredAt` de registros médicos.
+- Usar `@react-native-community/datetimepicker` (versión fijada por `npx expo install` para SDK 57) para fechas de animales, eventos generales, vencimientos de tareas, gastos y `occurredAt` de registros médicos.
 - Centralizar el comportamiento en `DateTimeField`: selector nativo en iOS/Android, secuencia fecha-hora en Android y `TextInput` validado como fallback web.
 - Registrar el config plugin en `app.config.ts` (requerido para builds nativos).
 - El valor se serializa a ISO con offset local mediante `toLocalDateTimeIso`; el esquema Zod sigue validando formato, `intakeDate <= occurredAt <= now`.

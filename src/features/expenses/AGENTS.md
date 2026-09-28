@@ -40,9 +40,11 @@
 ### Implementado
 
 - Alta de gasto con comprobante obligatorio, progreso/cancelación de subida y selección de animal.
+- `incurredAt` se captura como fecha de calendario local mediante `DateTimeField`; el valor inicial usa el día local y se transforma a ISO solo en el mapper del request.
 - Guard visual por rol e invalidación de gastos y dashboard.
 - El selector de animal usa el contrato compartido `src/application/animals`: `GET /animals?page=1&limit=100` sin sort en el request (orden alfabético en cliente) y fallback a `GET /animals/:id` cuando llega un `animalId` UUID válido y el listado falla o no lo contiene; el error se traduce por causa y el reintento funciona.
 - Listado de gastos por animal en su detalle, con importe `amountCents` formateado en ARS, categoría, fecha, estados de carga/vacío/error y miniatura del comprobante cuando el contrato devuelve un UUID válido.
+- El listado por animal ofrece `Registrar gasto` a roles de escritura con `animalId` precargado. Como el backend no expone `PATCH /expenses/:id`, informa que la edición no está disponible y no muestra una acción rota; `veterinarian` conserva una vista de solo lectura.
 
 ### Pendiente o deuda conocida
 

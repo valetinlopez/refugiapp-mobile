@@ -1,12 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/primitives';
+import { DateTimeField } from '@/components/patterns';
 import { spacing } from '@/theme';
 
 import type { CreateAnimalHistoryEventRequest, ManualAnimalHistoryEventType } from '../types';
 import {
+  ANIMAL_EVENT_FUTURE_TOLERANCE_MS,
   createAnimalEventSchema,
   type CreateAnimalEventFormInput,
 } from '../utils/createAnimalEventSchema';
@@ -32,6 +35,9 @@ export function CreateAnimalEventForm({
   isSubmitting = false,
   onSubmit,
 }: CreateAnimalEventFormProps) {
+  const [maximumOccurredAt] = useState(
+    () => new Date(Date.now() + ANIMAL_EVENT_FUTURE_TOLERANCE_MS)
+  );
   const { control, handleSubmit } = useForm<CreateAnimalEventFormInput>({
     resolver: zodResolver(createAnimalEventSchema),
     defaultValues: {
@@ -86,14 +92,13 @@ export function CreateAnimalEventForm({
         name="occurredAt"
         render={({ field, fieldState }) => (
           <FormField error={fieldState.error?.message} label="Fecha y hora">
-            <FormTextInput
+            <DateTimeField
               accessibilityLabel="Fecha y hora"
-              autoCapitalize="none"
-              autoComplete="off"
-              editable={!isSubmitting}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="2026-09-21T14:30:00-03:00 (opcional)"
+              disabled={isSubmitting}
+              maximumDate={maximumOccurredAt}
+              mode="datetime"
+              onChange={field.onChange}
+              optional
               value={field.value ?? ''}
             />
             <AppText color="textSecondary" variant="caption">

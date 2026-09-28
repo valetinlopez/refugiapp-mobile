@@ -19,10 +19,9 @@ export default function CreateExpenseScreen() {
   const { user } = useSession();
   const canWrite =
     user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
-  const fallbackHref: Href =
-    typeof animalId === 'string'
-      ? { pathname: '/animals/[id]', params: { id: animalId } }
-      : '/explore';
+  const fallbackHref: Href = initialAnimalId
+    ? { pathname: '/animals/[id]', params: { id: initialAnimalId, tab: 'expenses' } }
+    : '/explore';
   const animals = useExpenseAnimals(initialAnimalId);
   const createExpense = useCreateExpense();
 

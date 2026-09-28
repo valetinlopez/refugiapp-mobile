@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -21,6 +21,9 @@ export default function CreateCareTaskScreen() {
   const canWrite =
     user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
   const initialAnimalId = typeof animalId === 'string' && isUuid(animalId) ? animalId : undefined;
+  const fallbackHref: Href = initialAnimalId
+    ? { pathname: '/animals/[id]', params: { id: initialAnimalId, tab: 'tasks' } }
+    : '/care-tasks';
   const animalsQuery = useCareTaskAnimals(initialAnimalId);
   const createTask = useCreateCareTask();
 
@@ -29,13 +32,13 @@ export default function CreateCareTaskScreen() {
       <SafeAreaView style={styles.safeArea}>
         <AccountHeaderRow
           accessibilityHint="Volver a la lista de tareas"
-          fallbackHref="/care-tasks"
+          fallbackHref={fallbackHref}
         />
         <View style={styles.centered}>
           <EmptyState
             actionLabel="Volver"
             message="Tu rol permite consultar tareas, pero no crearlas."
-            onAction={() => navigateBack('/care-tasks')}
+            onAction={() => navigateBack(fallbackHref)}
             title="Sin permiso"
           />
         </View>
@@ -47,7 +50,7 @@ export default function CreateCareTaskScreen() {
     <SafeAreaView style={styles.safeArea}>
       <AccountHeaderRow
         accessibilityHint="Volver a la lista de tareas"
-        fallbackHref="/care-tasks"
+        fallbackHref={fallbackHref}
       />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppText variant="heading1">Crear tarea</AppText>
@@ -79,7 +82,7 @@ export default function CreateCareTaskScreen() {
             isSubmitting={createTask.isPending}
             mode="create"
             onSubmit={(data: CreateCareTaskRequest) =>
-              createTask.mutate(data, { onSuccess: () => navigateBack('/care-tasks') })
+              createTask.mutate(data, { onSuccess: () => navigateBack(fallbackHref) })
             }
             responsibleLabel={user?.email ?? 'Usuario autenticado'}
           />
