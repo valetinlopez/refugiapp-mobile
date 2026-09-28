@@ -78,6 +78,13 @@ Una ruta no debe contener llamadas directas a Axios, persistencia, transformacio
 
 Un patrón puede representar una estructura recurrente —por ejemplo, una fila de tarea—, pero la traducción desde un DTO de API debe ocurrir en la feature que consume el patrón.
 
+### 3.5 Fronteras de aplicación compartidas
+
+`src/application` es la frontera explícita para coordinación entre features cuando existe reutilización real o una frontera técnica clara. No reemplaza a `core` (infraestructura) ni a `features` (dominio).
+
+- `src/application/animals/` centraliza el contrato de opciones mínimas de animales (`{ id, name }`) que consumen los formularios de `care-tasks` y `expenses`: lectura `GET /animals?page=1&limit=100` (sin parámetros de orden no documentados; orden alfabético en cliente), fallback `GET /animals/:id` ante un `animalId` UUID válido cuando el listado falla o no lo contiene, query keys compartidas entre features y traducción de errores por causa.
+- Una feature puede importar `src/application`; `application` nunca importa features, componentes ni tema.
+
 ## 4. Dirección de dependencias
 
 ```text
@@ -85,12 +92,17 @@ app
  ├─> features
  ├─> components
  ├─> theme
- └─> core (solo bootstrap/configuración transversal)
+ └─> core (solo bootstrap/configuración transversal y utilidades puras)
 
 features
+ ├─> application
  ├─> core
  ├─> components
  ├─> theme
+ └─> contratos API generados
+
+application
+ ├─> core
  └─> contratos API generados
 
 components ─> theme
@@ -101,6 +113,7 @@ core ─> librerías de infraestructura
 Reglas:
 
 - `core`, `components` y `theme` nunca importan features.
+- `application` nunca importa features, componentes ni tema.
 - Una feature no importa archivos internos de otra feature.
 - `app` no exporta lógica reutilizable hacia `src`.
 - Los aliases `@/*` apuntan a `src/*` y `@app/*` a `app/*`.
@@ -116,6 +129,8 @@ app/
   _layout.tsx              # Providers y stack raíz
   design-system.tsx        # Catálogo interno
 src/
+  application/
+    animals/               # Opciones de animales compartidas por care-tasks y expenses
   components/
     primitives/
     feedback/
@@ -126,6 +141,7 @@ src/
     config/
     query/
     storage/
+    validation/            # Validadores puros transversales (isUuid)
   features/
     auth/                    # API, formulario y estado global de sesión
     animals/
@@ -331,6 +347,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Lectura y presentación del historial general en el detalle del animal (`GET /animals/:animalId/events`) para los tres roles, con invalidación coherente al crear eventos.
 - Listado global de tareas (tab "Tareas", ruta `care-tasks`) y listado embebido por animal desde su detalle, con filtro por estado, formularios de alta y edición y confirmaciones para completar o cancelar; las mutaciones esperan confirmación del backend e invalidan las queries de tareas y dashboard. La ruta legacy `/inbox` redirige a `/care-tasks`.
 - Contratos de tareas derivados del snapshot OpenAPI y guards de escritura para `admin` y `shelter_manager`.
+- Contrato compartido de opciones de animales (`src/application/animals`): `GET /animals?page=1&limit=100` sin parámetros de orden no documentados (`sortBy`/`sortOrder` no existen en OpenAPI y el backend los rechaza con 400), orden alfabético por `name` en cliente, fallback `GET /animals/:id` ante un `animalId` UUID válido cuando el listado falla o no lo contiene, cache compartida entre features, mensajes de error accionables por causa y `isUuid` centralizado en `src/core/validation`. Desbloquea los formularios de `care-tasks` y `expenses` (S09) y el reintento vuelve a ser funcional.
 - Dependencias `react-hook-form`, `@hookform/resolvers` y `expo-image-picker` (ver ADR-0003).
 - Captura de imágenes desde cámara o galería y selección de PDF mediante `expo-document-picker`; validación local espejo de MIME/tamaño del backend y subida multipart con progreso y cancelación (ver ADR-0005).
 - Permiso de cámara/galería denegado con explicación y, si queda bloqueado permanentemente, acceso a los ajustes del dispositivo (`Linking.openSettings`). El picker de foto infiere MIME/nombre cuando el sistema omite metadatos (`resolveMediaMimeType`/`normalizeMediaFileName`) y permite subir sin `fileSize`, dejando al backend como autoridad de tamaño. `AppAvatar` cae a iniciales de forma silenciosa ante fallo de imagen (`onError`).

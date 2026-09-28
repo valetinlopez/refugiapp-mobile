@@ -10,8 +10,7 @@ export type UpdateCareTaskRequest = Omit<
 };
 export type CareTaskResponse = components['schemas']['CareTaskResponseDto'];
 export type PaginatedCareTasksResponse = components['schemas']['PaginatedCareTasksResponseDto'];
-export type AnimalOptionResponse = components['schemas']['AnimalResponseDto'];
-export type PaginatedAnimalOptionsResponse = components['schemas']['PaginatedAnimalsResponseDto'];
+export type { AnimalOption } from '@/application/animals';
 
 export type CareTaskStatus = CareTaskResponse['status'];
 
@@ -26,11 +25,6 @@ export interface CareTask {
   createdByUserId: string | null;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface AnimalOption {
-  id: string;
-  name: string;
 }
 
 export interface CareTaskFilters {

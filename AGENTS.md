@@ -19,7 +19,8 @@
 - El frontend usa arquitectura feature-based con Expo Router.
 - `app/` contiene rutas y layouts delgados; compone features y providers, pero no implementa reglas de negocio ni llamadas HTTP.
 - `src/features/<feature>/` contiene comportamiento por dominio organizado en `api`, `components`, `hooks` y `types` según necesidad.
-- `src/core/` contiene infraestructura transversal: cliente API, configuración, storage seguro y futuros adaptadores de plataforma.
+- `src/core/` contiene infraestructura transversal: cliente API, configuración, storage seguro, validadores puros y futuros adaptadores de plataforma.
+- `src/application/` contiene fronteras de aplicación explícitas para coordinación entre features con reutilización real (p. ej. `animals/`: opciones mínimas de animales para formularios de care-tasks y expenses). No importa features, componentes ni tema.
 - `src/components/` y `src/theme/` contienen UI compartida sin conocimiento de endpoints ni reglas de una feature concreta.
 - Una feature no debe importar internals de otra feature. La coordinación se realiza desde una ruta, un módulo de aplicación explícito o contratos compartidos.
 - No crear abstracciones compartidas hasta que exista reutilización real o una frontera técnica clara.

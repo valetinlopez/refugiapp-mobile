@@ -19,6 +19,11 @@
 - No registrar headers de autorización, tokens ni payloads sensibles.
 - Evitar loops o múltiples refresh simultáneos; cualquier cambio del flujo requiere tests de concurrencia y fallo.
 
+## Validación
+
+- `src/core/validation` centraliza validadores puros transversales sin dominio (p. ej. `isUuid`).
+- Las rutas y `src/application` consumen `isUuid` desde aquí en lugar de duplicar el patrón por feature; los `utils/uuid.ts` de features existentes re-exportan este validador.
+
 ## Storage
 
 - Tokens solo mediante el adaptador de `storage`; nunca AsyncStorage.
