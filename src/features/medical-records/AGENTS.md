@@ -62,9 +62,12 @@
 - Mensajes específicos para `OCCURRED_AT_IN_FUTURE` y `OCCURRED_AT_BEFORE_INTAKE`.
 - Adjuntos clínicos desde cámara, galería o selector de PDF: JPEG, PNG, WebP y PDF de hasta 10 MB; subida huérfana en creación (limpieza best-effort al cancelar o fallar el POST) y subida directa en edición, con progreso y cancelación.
 - `ClinicalHistory` para presentar la evolución clínica por animal.
-- `ClinicalHistory` permite filtrar por tipo y por ventanas de 30/90 días, enviando `recordType`, `from` y `to` al backend.
+- `ClinicalHistory` permite filtrar por los 7 tipos de `recordType` y por período: todo, últimos 30/90 días o rango personalizado con `DateTimeField` (`from`/`to` enviados al backend como ISO local, inicio y fin del día). Un rango personalizado incompleto o con `from > to` no dispara consulta: muestra mensaje en español.
+- `buildClinicalHistoryFilters`/`getCustomRangeError` en `utils/clinicalHistoryFilters.ts`: construcción pura y testeable de los filtros de evolución clínica.
+- El listado renderiza el orden del servidor (`occurredAt DESC, id DESC`) sin reordenar en cliente.
 - Invalidación de `medicalRecordKeys.listByAnimal(animalId)` tras crear o editar.
-- Guards visuales para `admin` y `veterinarian`.
+- Guards visuales para `admin` y `veterinarian`: un deep link `tab=clinical` para `shelter_manager` muestra acceso restringido sin montar `ClinicalHistory` ni ejecutar la query clínica.
+- Los datos clínicos solo viven en la cache en memoria de TanStack Query (sin persistencia a disco); se limpian al cerrar sesión.
 
 ### Pendiente o deuda conocida
 
