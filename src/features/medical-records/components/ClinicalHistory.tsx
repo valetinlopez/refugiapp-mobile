@@ -3,12 +3,18 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppCard, AppIcon, AppText } from '@/components/primitives';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
-import { FilterChip } from '@/components/patterns';
+import { DateTimeField, FilterChip } from '@/components/patterns';
 import { sizes, spacing } from '@/theme';
 
 import { useMedicalRecordsByAnimal } from '../hooks/useMedicalRecordsByAnimal';
-import { formatRecordDate, getRecordTypeLabel } from '../utils/medicalRecordPresentation';
 import type { MedicalRecordType } from '../types';
+import {
+  buildClinicalHistoryFilters,
+  getCustomRangeError,
+  type ClinicalRangeMode,
+} from '../utils/clinicalHistoryFilters';
+import { formatRecordDate, getRecordTypeLabel } from '../utils/medicalRecordPresentation';
+import { MEDICAL_RECORD_TYPE_VALUES } from '../utils/medicalRecordSchema';
 
 export interface ClinicalHistoryProps {
   animalId: string;
@@ -17,14 +23,22 @@ export interface ClinicalHistoryProps {
 
 export function ClinicalHistory({ animalId, onEditRecord }: ClinicalHistoryProps) {
   const [recordType, setRecordType] = useState<MedicalRecordType | undefined>();
-  const [rangeDays, setRangeDays] = useState<number | undefined>();
-  const filters = useMemo(() => {
-    const typeFilter = recordType === undefined ? {} : { recordType };
-    if (rangeDays === undefined) return typeFilter;
-    const from = new Date();
-    from.setDate(from.getDate() - rangeDays);
-    return { ...typeFilter, from: from.toISOString(), to: new Date().toISOString() };
-  }, [rangeDays, recordType]);
+  const [range, setRange] = useState<ClinicalRangeMode>('all');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+
+  const customRangeError = range === 'custom' ? getCustomRangeError(from, to) : null;
+
+  const filters = useMemo(
+    () =>
+      buildClinicalHistoryFilters({
+        from,
+        range,
+        to,
+        ...(recordType === undefined ? {} : { recordType }),
+      }),
+    [from, range, recordType, to]
+  );
   const recordsQuery = useMedicalRecordsByAnimal(animalId, filters);
 
   const filtersView = (
@@ -36,35 +50,59 @@ export function ClinicalHistory({ animalId, onEditRecord }: ClinicalHistoryProps
             onPress={() => setRecordType(undefined)}
             selected={recordType === undefined}
           />
-          {(['consultation', 'vaccination', 'treatment', 'other'] as MedicalRecordType[]).map(
-            (type) => (
-              <FilterChip
-                key={type}
-                label={getRecordTypeLabel(type)}
-                onPress={() => setRecordType(type)}
-                selected={recordType === type}
-              />
-            )
-          )}
+          {MEDICAL_RECORD_TYPE_VALUES.map((type) => (
+            <FilterChip
+              key={type}
+              label={getRecordTypeLabel(type)}
+              onPress={() => setRecordType(type)}
+              selected={recordType === type}
+            />
+          ))}
         </View>
       </ScrollView>
       <View style={styles.filterRow}>
         <FilterChip
           label="Todo el período"
-          onPress={() => setRangeDays(undefined)}
-          selected={rangeDays === undefined}
+          onPress={() => setRange('all')}
+          selected={range === 'all'}
         />
+        <FilterChip label="Últimos 30 días" onPress={() => setRange(30)} selected={range === 30} />
+        <FilterChip label="Últimos 90 días" onPress={() => setRange(90)} selected={range === 90} />
         <FilterChip
-          label="Últimos 30 días"
-          onPress={() => setRangeDays(30)}
-          selected={rangeDays === 30}
-        />
-        <FilterChip
-          label="Últimos 90 días"
-          onPress={() => setRangeDays(90)}
-          selected={rangeDays === 90}
+          label="Personalizado"
+          onPress={() => setRange('custom')}
+          selected={range === 'custom'}
         />
       </View>
+      {range === 'custom' ? (
+        <View style={styles.rangeFields}>
+          <View style={styles.rangeField}>
+            <AppText variant="label">Desde</AppText>
+            <DateTimeField
+              accessibilityLabel="Desde"
+              mode="date"
+              onChange={setFrom}
+              optional
+              value={from}
+            />
+          </View>
+          <View style={styles.rangeField}>
+            <AppText variant="label">Hasta</AppText>
+            <DateTimeField
+              accessibilityLabel="Hasta"
+              mode="date"
+              onChange={setTo}
+              optional
+              value={to}
+            />
+          </View>
+          {customRangeError ? (
+            <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
+              {customRangeError}
+            </AppText>
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 
@@ -158,8 +196,6 @@ function TextSection({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  filters: { gap: spacing.xs },
   cardActions: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -174,7 +210,11 @@ const styles = StyleSheet.create({
     minHeight: sizes.touchTarget,
     minWidth: sizes.touchTarget,
   },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  filters: { gap: spacing.xs },
   list: { gap: spacing.sm },
+  rangeField: { gap: spacing.xs },
+  rangeFields: { gap: spacing.xs, marginTop: spacing.xs },
   row: {
     alignItems: 'center',
     flexDirection: 'row',
