@@ -82,9 +82,23 @@ describe('ClinicalHistory', () => {
     mockUseMedicalRecordsByAnimal.mockReturnValue(createQueryResult());
     const screen = await render(<ClinicalHistory animalId={ANIMAL_ID} />);
 
-    expect(screen.getByText('Vacunación')).toBeTruthy();
+    expect(screen.getAllByText('Vacunación')).toHaveLength(2);
     expect(screen.getByText('Vacuna antirrábica')).toBeTruthy();
     expect(screen.getByText('Dosis única')).toBeTruthy();
+  });
+
+  it('filters by record type and date range', async () => {
+    mockUseMedicalRecordsByAnimal.mockReturnValue(createQueryResult());
+    const screen = await render(<ClinicalHistory animalId={ANIMAL_ID} />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Consulta' }));
+    expect(mockUseMedicalRecordsByAnimal).toHaveBeenLastCalledWith(ANIMAL_ID, {
+      recordType: 'consultation',
+    });
+    await fireEvent.press(screen.getByRole('button', { name: 'Últimos 30 días' }));
+    const filters = mockUseMedicalRecordsByAnimal.mock.calls.at(-1)?.[1];
+    expect(filters.recordType).toBe('consultation');
+    expect(filters.from).toEqual(expect.any(String));
+    expect(filters.to).toEqual(expect.any(String));
   });
 
   it('invokes the edit callback with the record id', async () => {

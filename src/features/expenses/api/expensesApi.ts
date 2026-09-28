@@ -1,7 +1,14 @@
 import { apiClient, type HttpClient } from '@/core/api';
 import type { components } from '@/core/api/generated/openapi';
 
-import type { AnimalOption, CreateExpenseRequest, ExpenseResponse } from '../types';
+import type {
+  AnimalOption,
+  CreateExpenseRequest,
+  ExpenseResponse,
+  PaginatedExpenses,
+  PaginatedExpensesResponse,
+} from '../types';
+import { toPaginatedExpenses } from '../types';
 
 type PaginatedAnimals = components['schemas']['PaginatedAnimalsResponseDto'];
 
@@ -19,5 +26,17 @@ export const expensesApi = {
       params: { page: 1, limit: 100, sortBy: 'name', sortOrder: 'ASC' },
     });
     return response.data.items.map(({ id, name }) => ({ id, name }));
+  },
+
+  async listByAnimal(
+    animalId: string,
+    page = 1,
+    limit = 20,
+    client: HttpClient = apiClient
+  ): Promise<PaginatedExpenses> {
+    const response = await client.get<PaginatedExpensesResponse>(`/animals/${animalId}/expenses`, {
+      params: { page, limit },
+    });
+    return toPaginatedExpenses(response.data);
   },
 };

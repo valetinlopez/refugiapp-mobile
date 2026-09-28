@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,6 +8,10 @@ import { formatDateMedium } from '@/components/patterns';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { AppHeaderBack, navigateBack } from '@/components/navigation';
 import { AnimalHistory } from '@/features/animals/components/AnimalHistory';
+import {
+  AnimalDetailTabs,
+  type AnimalDetailTab,
+} from '@/features/animals/components/AnimalDetailTabs';
 import { AnimalStatusChanger } from '@/features/animals/components/AnimalStatusChanger';
 import { useSession } from '@/features/auth/session';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
@@ -15,17 +20,17 @@ import { useChangeAnimalStatus } from '@/features/animals/hooks/useChangeAnimalS
 import { toChangeStatusErrorMessage } from '@/features/animals/utils/animalErrorMessages';
 import { getStatusBadge } from '@/features/animals/utils/animalTransitions';
 import { isUuid } from '@/features/animals/utils/uuid';
+import { getAnimalDetailCapabilities } from '@/features/animals/utils/animalDetailCapabilities';
+import { AnimalCareTasks } from '@/features/care-tasks/components/AnimalCareTasks';
+import { AnimalExpenses } from '@/features/expenses/components/AnimalExpenses';
 import { ClinicalHistory } from '@/features/medical-records/components/ClinicalHistory';
 import type { AnimalSex, AnimalStatus } from '@/features/animals/types';
 import { colors, spacing } from '@/theme';
 
 export default function AnimalDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const { user } = useSession();
-  const canWrite =
-    user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
-  const canWriteClinical =
-    user?.roles.some((role) => role === 'admin' || role === 'veterinarian') ?? false;
+  const capabilities = getAnimalDetailCapabilities(user?.roles ?? []);
 
   const animalId = typeof id === 'string' && isUuid(id) ? id : '';
   const fallbackHref: Href = '/explore';
@@ -43,8 +48,8 @@ export default function AnimalDetailScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         <AnimalDetailContent
-          canWrite={canWrite}
-          canWriteClinical={canWriteClinical}
+          canWrite={capabilities.canEditAnimal}
+          canReadClinicalRecords={capabilities.canReadClinicalRecords}
           changeStatusError={
             changeStatus.error ? toChangeStatusErrorMessage(changeStatus.error) : null
           }
@@ -54,6 +59,7 @@ export default function AnimalDetailScreen() {
           onRetry={() => void animalQuery.refetch()}
           photoUri={photoQuery.data ?? null}
           query={animalQuery}
+          {...(tab === undefined ? {} : { requestedTab: tab })}
         />
       </ScrollView>
     </SafeAreaView>
@@ -62,7 +68,7 @@ export default function AnimalDetailScreen() {
 
 interface AnimalDetailContentProps {
   canWrite: boolean;
-  canWriteClinical: boolean;
+  canReadClinicalRecords: boolean;
   changeStatusError: string | null;
   isSubmittingStatus: boolean;
   onBack(): void;
@@ -70,11 +76,12 @@ interface AnimalDetailContentProps {
   onRetry(): void;
   photoUri: string | null;
   query: ReturnType<typeof useAnimal>;
+  requestedTab?: string;
 }
 
 function AnimalDetailContent({
   canWrite,
-  canWriteClinical,
+  canReadClinicalRecords,
   changeStatusError,
   isSubmittingStatus,
   onBack,
@@ -82,7 +89,11 @@ function AnimalDetailContent({
   onRetry,
   photoUri,
   query,
+  requestedTab,
 }: AnimalDetailContentProps) {
+  const [activeTab, setActiveTab] = useState<AnimalDetailTab>(
+    isAnimalDetailTab(requestedTab) ? requestedTab : 'summary'
+  );
   if (query.isPending) {
     return <LoadingState label="Cargando animal" />;
   }
@@ -131,88 +142,104 @@ function AnimalDetailContent({
         </View>
       </View>
 
-      <AppCard>
-        <View style={styles.row}>
-          <AppText color="textSecondary" style={styles.rowLabel} variant="label">
-            Sexo
-          </AppText>
-          <AppText style={styles.rowValue}>{sexLabel(animal.sex)}</AppText>
-        </View>
-        <View style={styles.row}>
-          <AppText color="textSecondary" style={styles.rowLabel} variant="label">
-            Fecha de ingreso
-          </AppText>
-          <AppText style={styles.rowValue}>{formatDateMedium(animal.intakeDate)}</AppText>
-        </View>
-        <View style={styles.row}>
-          <AppText color="textSecondary" style={styles.rowLabel} variant="label">
-            Fecha de nacimiento
-          </AppText>
-          <AppText style={styles.rowValue}>
-            {animal.birthDate ? formatDateMedium(animal.birthDate) : 'No informada'}
-          </AppText>
-        </View>
-      </AppCard>
+      <AnimalDetailTabs
+        activeTab={activeTab}
+        canReadClinicalRecords={canReadClinicalRecords}
+        onChange={setActiveTab}
+      />
 
-      {canWrite ? (
-        <View style={styles.writeSection}>
-          <AppButton
-            icon="refresh"
-            label="Editar ficha"
-            onPress={() =>
-              router.push({
-                pathname: '/animals/[id]/edit',
-                params: { id: animal.id },
-              })
-            }
-            variant="secondary"
-          />
-          <AppButton
-            label="Registrar evento general"
-            onPress={() =>
-              router.push({
-                pathname: '/animals/[id]/events/new',
-                params: { id: animal.id },
-              })
-            }
-            variant="secondary"
-          />
-          <AppButton
-            label="Ver tareas de cuidado"
-            onPress={() =>
-              router.push({
-                pathname: '/care-tasks',
-                params: { animalId: animal.id, animalName: animal.name },
-              })
-            }
-            variant="secondary"
-          />
-          <AppButton
-            label="Registrar gasto"
-            onPress={() =>
-              router.push({
-                pathname: '/expenses/new',
-                params: { animalId: animal.id },
-              } as unknown as Href)
-            }
-            variant="secondary"
-          />
-          <AppText variant="heading2">Cambiar estado</AppText>
-          <AnimalStatusChanger
-            currentStatus={animal.status}
-            errorMessage={changeStatusError}
-            onConfirm={onChangeStatus}
-            submitting={isSubmittingStatus}
-          />
+      {activeTab === 'summary' ? (
+        <>
+          <AppCard accessibilityLabel="Resumen del animal">
+            <View style={styles.row}>
+              <AppText color="textSecondary" style={styles.rowLabel} variant="label">
+                Sexo
+              </AppText>
+              <AppText style={styles.rowValue}>{sexLabel(animal.sex)}</AppText>
+            </View>
+            <View style={styles.row}>
+              <AppText color="textSecondary" style={styles.rowLabel} variant="label">
+                Fecha de ingreso
+              </AppText>
+              <AppText style={styles.rowValue}>{formatDateMedium(animal.intakeDate)}</AppText>
+            </View>
+            <View style={styles.row}>
+              <AppText color="textSecondary" style={styles.rowLabel} variant="label">
+                Fecha de nacimiento
+              </AppText>
+              <AppText style={styles.rowValue}>
+                {animal.birthDate ? formatDateMedium(animal.birthDate) : 'No informada'}
+              </AppText>
+            </View>
+          </AppCard>
+
+          {canWrite ? (
+            <View style={styles.writeSection}>
+              <AppButton
+                icon="refresh"
+                label="Editar ficha"
+                onPress={() =>
+                  router.push({
+                    pathname: '/animals/[id]/edit',
+                    params: { id: animal.id },
+                  })
+                }
+                variant="secondary"
+              />
+              <AppButton
+                label="Registrar evento general"
+                onPress={() =>
+                  router.push({
+                    pathname: '/animals/[id]/events/new',
+                    params: { id: animal.id },
+                  })
+                }
+                variant="secondary"
+              />
+              <AppButton
+                label="Registrar gasto"
+                onPress={() =>
+                  router.push({
+                    pathname: '/expenses/new',
+                    params: { animalId: animal.id },
+                  } as unknown as Href)
+                }
+                variant="secondary"
+              />
+              <AppText variant="heading2">Cambiar estado</AppText>
+              <AnimalStatusChanger
+                currentStatus={animal.status}
+                errorMessage={changeStatusError}
+                onConfirm={onChangeStatus}
+                submitting={isSubmittingStatus}
+              />
+            </View>
+          ) : null}
+        </>
+      ) : null}
+
+      {activeTab === 'history' ? (
+        <View style={styles.historySection}>
+          <AppText variant="heading2">Historial</AppText>
+          <AnimalHistory animalId={animal.id} />
         </View>
       ) : null}
 
-      <View style={styles.historySection}>
-        <AppText variant="heading2">Historial</AppText>
-        <AnimalHistory animalId={animal.id} />
-      </View>
+      {activeTab === 'tasks' ? (
+        <View style={styles.historySection}>
+          <AppText variant="heading2">Tareas</AppText>
+          <AnimalCareTasks animalId={animal.id} animalName={animal.name} canWrite={canWrite} />
+        </View>
+      ) : null}
 
-      {canWriteClinical ? (
+      {activeTab === 'expenses' ? (
+        <View style={styles.historySection}>
+          <AppText variant="heading2">Gastos</AppText>
+          <AnimalExpenses animalId={animal.id} />
+        </View>
+      ) : null}
+
+      {activeTab === 'clinical' && canReadClinicalRecords ? (
         <View style={styles.historySection}>
           <View style={styles.clinicalHeader}>
             <AppText variant="heading2">Evolución clínica</AppText>
@@ -240,8 +267,20 @@ function AnimalDetailContent({
           />
         </View>
       ) : null}
+      {activeTab === 'clinical' && !canReadClinicalRecords ? (
+        <EmptyState
+          actionLabel="Ver resumen"
+          message="Tu rol no permite consultar datos clínicos. El servidor también protege esta información."
+          onAction={() => setActiveTab('summary')}
+          title="Acceso restringido"
+        />
+      ) : null}
     </View>
   );
+}
+
+function isAnimalDetailTab(value: string | undefined): value is AnimalDetailTab {
+  return ['summary', 'history', 'tasks', 'expenses', 'clinical'].includes(value ?? '');
 }
 
 function sexLabel(sex: AnimalSex): string {

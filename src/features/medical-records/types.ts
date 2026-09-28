@@ -43,6 +43,8 @@ export interface PaginatedMedicalRecords {
 
 export interface MedicalRecordFilters {
   recordType?: MedicalRecordType;
+  from?: string;
+  to?: string;
 }
 
 export interface VeterinarianOption {
