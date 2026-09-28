@@ -119,7 +119,7 @@ describe('animalsApi.getAll', () => {
     });
 
     const result = await animalsApi.getAll(
-      { status: 'admitted', sex: 'female', name: 'luna' },
+      { status: 'admitted', species: 'dog', sex: 'female', name: 'luna' },
       1,
       20,
       client
@@ -129,6 +129,7 @@ describe('animalsApi.getAll', () => {
       page: '1',
       limit: '20',
       status: 'admitted',
+      species: 'dog',
       sex: 'female',
       name: 'luna',
     });

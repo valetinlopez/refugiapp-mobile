@@ -63,7 +63,13 @@ describe('useAnimals', () => {
   it('passes the filters to the api', async () => {
     const getAll = jest.spyOn(animalsApi, 'getAll').mockResolvedValue(createPage([], 1, 0));
     const { result } = await renderHook(
-      () => useAnimals({ status: 'available_for_adoption', name: 'luna' }),
+      () =>
+        useAnimals({
+          status: 'available_for_adoption',
+          species: 'dog',
+          sex: 'female',
+          name: 'luna',
+        }),
       { wrapper }
     );
 
@@ -71,7 +77,16 @@ describe('useAnimals', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(getAll).toHaveBeenCalledWith({ status: 'available_for_adoption', name: 'luna' }, 1, 20);
+    expect(getAll).toHaveBeenCalledWith(
+      {
+        status: 'available_for_adoption',
+        species: 'dog',
+        sex: 'female',
+        name: 'luna',
+      },
+      1,
+      20
+    );
   });
 
   it('loads the next page while one exists', async () => {
