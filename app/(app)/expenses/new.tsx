@@ -2,9 +2,10 @@ import { useLocalSearchParams, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppHeaderBack, navigateBack } from '@/components/navigation';
+import { navigateBack } from '@/components/navigation';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
+import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useSession } from '@/features/auth/session';
 import { ExpenseForm } from '@/features/expenses/components/ExpenseForm';
 import { useCreateExpense } from '@/features/expenses/hooks/useCreateExpense';
@@ -26,12 +27,10 @@ export default function CreateExpenseScreen() {
   if (!canWrite)
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerBack}>
-          <AppHeaderBack
-            accessibilityHint="Volver a la lista de animales"
-            fallbackHref={fallbackHref}
-          />
-        </View>
+        <AccountHeaderRow
+          accessibilityHint="Volver a la lista de animales"
+          fallbackHref={fallbackHref}
+        />
         <View style={styles.centered}>
           <EmptyState
             actionLabel="Volver"
@@ -45,12 +44,10 @@ export default function CreateExpenseScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerBack}>
-        <AppHeaderBack
-          accessibilityHint="Volver a la lista de animales"
-          fallbackHref={fallbackHref}
-        />
-      </View>
+      <AccountHeaderRow
+        accessibilityHint="Volver a la lista de animales"
+        fallbackHref={fallbackHref}
+      />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppText variant="heading1">Registrar gasto</AppText>
         <AppText color="textSecondary">
@@ -89,6 +86,5 @@ export default function CreateExpenseScreen() {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   content: { flexGrow: 1, gap: spacing.md, padding: spacing.lg },
-  headerBack: { paddingHorizontal: spacing.lg },
   safeArea: { backgroundColor: colors.background, flex: 1 },
 });

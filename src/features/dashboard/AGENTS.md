@@ -33,6 +33,7 @@
 - `hooks/`: `dashboardKeys`, `useDashboardOverview` y `useDashboardAnimalPhoto`.
 - `utils/`: `capabilities` (matriz y filtrado), `quickActions` (registro de acciones rápidas), `dashboardErrorMessages` (errores seguros) y `presentation` (estados visuales).
 - `types.ts`: modelo de vista y mapper desde los DTO generados.
+- El atajo de cuenta del encabezado de Inicio usa `AccountMenuButton` de `src/features/auth/components` (superficie pública de la feature auth, mismo patrón que `useSession`); es el único import cruzado de dashboard y está documentado en `src/features/auth/AGENTS.md`.
 
 ## Seguridad y privacidad
 

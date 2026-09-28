@@ -84,7 +84,7 @@ Los radios disponibles son 6, 10, 16, 24, 32, 36 y píldora. `lg` (24) es el est
 
 ## 10. Iconografía
 
-`AppIcon` centraliza símbolos de `expo-symbols`, con SF Symbols en iOS y Material Symbols en Android/web. Se usan iconos simples, sólidos o de trazo consistente. Un icono decorativo se oculta a tecnologías de asistencia; uno interactivo requiere `accessibilityLabel` en el control que lo contiene. No se mezclan emojis con iconos de producto.
+`AppIcon` centraliza símbolos de `expo-symbols`, con SF Symbols en iOS y Material Symbols en Android/web. Se usan iconos simples, sólidos o de trazo consistente. Un icono decorativo se oculta a tecnologías de asistencia; uno interactivo requiere `accessibilityLabel` en el control que lo contiene. No se mezclan emojis con iconos de producto. El set incluye `account` (identidad/cuenta) y `logout` (salida), mapeados a SF Symbols y Material Symbols para los controles de cuenta.
 
 ## 11. Fotografía animal
 
@@ -228,6 +228,16 @@ Son conceptuales: el perro recortado sobre la cabecera, las frases manuscritas, 
 - [ ] Las imágenes tienen origen, recorte y alternativa definidos.
 - [ ] Las animaciones respetan reduce motion.
 - [ ] TypeScript, lint y tests pasan antes de integrar.
+
+## 32. Cuenta y cierre de sesión
+
+El acceso de cuenta es transversal al área autenticada y reutiliza el lenguaje visual del sistema sin introducir tokens nuevos.
+
+- **Acceso:** `AccountMenuButton`, botón solo-icono de 44 × 44 (`sizes.touchTarget`) con `accessibilityLabel` "Abrir menú de cuenta", icono `account` en `textPrimary` y `hitSlop` de 4 pt. Aparece en el encabezado de Inicio y, en las pantallas stack, junto al retorno (`AccountHeaderRow` = `AppHeaderBack` + botón). Navega a la pantalla de cuenta.
+- **Pantalla "Cuenta" (tab):** muestra identidad (correo y roles presentados en español; los valores de dominio permanecen en inglés) y la acción "Cerrar sesión" en variante `secondary` con icono `logout`.
+- **Confirmación (`AccountSignOutSheet`):** modal nativo con scrim, título "¿Querés cerrar sesión?", correo del usuario y acciones "Cancelar" (`ghost`) y "Cerrar sesión" (`danger`) con estado de carga (`loading`) que bloquea el cierre durante la operación. El error se anuncia como alerta con texto + color; no se exponen tokens ni payloads.
+- **Comportamiento:** se llama a `SessionProvider.signOut()` (POST `/auth/logout` best-effort); el cierre local (Secure Store + cache de TanStack Query) siempre ocurre, incluso offline o con refresh inválido, y `Stack.Protected` redirige a login sin dejar rutas `(app)` accesibles.
+- **Accesibilidad:** estados visibles con texto/icono además de color, áreas táctiles de 44 × 44 y labels en español.
 
 ## Referencias técnicas
 

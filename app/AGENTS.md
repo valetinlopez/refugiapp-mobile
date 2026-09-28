@@ -12,6 +12,7 @@
 - Extraer UI reutilizable a `src/components` o a la feature correspondiente.
 - Extraer queries, mutations y transformaciones a hooks o API de la feature.
 - Toda pantalla stack fuera de `(tabs)` debe componer `AppHeaderBack` como primer elemento de su `SafeAreaView`, con un `fallbackHref` contextual (lista de origen o detalle del animal). No reimplementar `router.canGoBack()` por pantalla; usar `navigateBack` de `src/components/navigation`.
+- Las pantallas stack del área autenticada exponen el acceso de cuenta componiendo `AccountHeaderRow` (fila de retorno `AppHeaderBack` + botón de cuenta) de la feature auth, en lugar de `AppHeaderBack` directo. La ruta de cuenta vive en el tab `account`; los atajos navegan con `router.push('/account')`.
 - Usar route groups para organización sin convertirlos en segmentos públicos.
 - Declarar providers globales solo en el layout raíz; providers de una feature deben vivir lo más cerca posible de su subárbol.
 
@@ -19,7 +20,7 @@
 
 - `(auth)`: login público; no existe registro público en el backend.
 - `(app)`: área autenticada.
-- `(app)/(tabs)`: destinos principales: `index` (Inicio, compone el dashboard de la feature `src/features/dashboard`), `explore` (Animales), `care-tasks` (Tareas). La ruta legacy `inbox` es un redirect oculto (`href: null`) hacia `care-tasks`.
+- `(app)/(tabs)`: destinos principales: `index` (Inicio, compone el dashboard de la feature `src/features/dashboard`), `explore` (Animales), `care-tasks` (Tareas) y `account` (Cuenta, compone `AccountScreen` de la feature auth para identidad y cierre de sesión). La ruta legacy `inbox` es un redirect oculto (`href: null`) hacia `care-tasks`.
 - `(app)/expenses/new`: alta de gasto con comprobante para `admin` y `shelter_manager`.
 - `design-system`: catálogo interno, no funcionalidad de producción.
 - El layout raíz protege `(auth)` y `(app)` con `Stack.Protected` según el Session Context.

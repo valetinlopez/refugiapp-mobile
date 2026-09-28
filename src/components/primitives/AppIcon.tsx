@@ -4,6 +4,7 @@ import { View, type ColorValue, type StyleProp, type ViewStyle } from 'react-nat
 import { colors, sizes, type ColorToken } from '@/theme';
 
 export type AppIconName =
+  | 'account'
   | 'alert'
   | 'calendar'
   | 'check'
@@ -15,6 +16,7 @@ export type AppIconName =
   | 'heart'
   | 'home'
   | 'info'
+  | 'logout'
   | 'medical'
   | 'menu'
   | 'money'
@@ -23,6 +25,7 @@ export type AppIconName =
   | 'refresh';
 
 const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
+  account: { ios: 'person.crop.circle.fill', android: 'account_circle', web: 'account_circle' },
   alert: { ios: 'exclamationmark.circle.fill', android: 'error', web: 'error' },
   calendar: { ios: 'calendar', android: 'calendar_month', web: 'calendar_month' },
   check: { ios: 'checkmark.circle.fill', android: 'check_circle', web: 'check_circle' },
@@ -34,6 +37,11 @@ const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   heart: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
   home: { ios: 'house.fill', android: 'home', web: 'home' },
   info: { ios: 'info.circle.fill', android: 'info', web: 'info' },
+  logout: {
+    ios: 'rectangle.portrait.and.arrow.right',
+    android: 'logout',
+    web: 'logout',
+  },
   medical: { ios: 'stethoscope', android: 'stethoscope', web: 'stethoscope' },
   menu: { ios: 'ellipsis', android: 'more_horiz', web: 'more_horiz' },
   money: { ios: 'banknote.fill', android: 'payments', web: 'payments' },
