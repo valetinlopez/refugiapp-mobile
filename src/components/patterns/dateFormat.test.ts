@@ -36,6 +36,13 @@ describe('formatDateMedium', () => {
   it('returns an empty string for invalid input', () => {
     expect(formatDateMedium('')).toBe('');
   });
+
+  it('formats an ISO datetime as a local calendar date', () => {
+    const value = '2026-09-22T14:30:00.000Z';
+    expect(formatDateMedium(value)).toBe(
+      new Intl.DateTimeFormat('es-AR', { dateStyle: 'medium' }).format(new Date(value))
+    );
+  });
 });
 
 describe('formatDateTime', () => {

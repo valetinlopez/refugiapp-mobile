@@ -234,7 +234,7 @@ function AnimalDetailContent({
       {activeTab === 'expenses' ? (
         <View style={styles.historySection}>
           <AppText variant="heading2">Gastos</AppText>
-          <AnimalExpenses animalId={animal.id} />
+          <AnimalExpenses animalId={animal.id} canWrite={canWrite} />
         </View>
       ) : null}
 

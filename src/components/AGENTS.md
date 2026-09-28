@@ -33,7 +33,7 @@
 - `feedback`: estados transversales de carga, vacío, error y offline.
 - `navigation`: piezas de navegación, sin conocer rutas concretas. Incluye `AppHeaderBack` y `navigateBack` (retorno persistente con fallback contextual `canGoBack ? back : replace`) y `BottomNavigation`. Las pantallas deciden el `fallbackHref`; el componente nunca codifica rutas.
 - `patterns`: composición reutilizable sin acceso a datos remotos.
-- `dateFormat` (patterns): formateadores `es-AR` hoisteados para fechas (`formatDateShort`, `formatDateMedium`, `formatDateTime`); las features y `DateTimeField` delegan en ellos en lugar de crear `Intl.DateTimeFormat` por render.
+- `dateFormat` (patterns): formateadores `es-AR` hoisteados para fechas (`formatDateShort`, `formatDateMedium`, `formatDateTime`); `formatDateMedium` acepta fecha de calendario o ISO `date-time`, y las features y `DateTimeField` delegan en ellos en lugar de crear `Intl.DateTimeFormat` por render.
 - `AppAvatar` cae a iniciales de forma silenciosa si la imagen no carga (`onError`); nunca muestra un avatar roto. El estado de fallo se resetea automáticamente al cambiar la URI.
 
 ## Testing

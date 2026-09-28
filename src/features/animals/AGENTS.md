@@ -36,6 +36,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - La UI anticipa las transiciones para usabilidad, pero el backend sigue siendo autoridad final; manejar `409`.
 - `adopted` y `deceased` son terminales.
 - Los eventos manuales permitidos son `general_note`, `behavior_note` y `transfer`; los eventos de sistema no se crean desde UI.
+- `occurredAt` de eventos manuales es opcional: vacío delega la hora actual al backend; cuando se informa usa `DateTimeField`, ISO con offset local y tolerancia visual/validación de hasta 60 segundos de skew futuro.
 - `PATCH /animals/:id` no cambia `status`; el cambio de estado usa `PATCH /animals/:id/status`.
 
 ## Listado
@@ -87,6 +88,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Edición de ficha (`PATCH /animals/:id`) para `admin` y `shelter_manager` mediante `useUpdateAnimal`, sin tocar `status`.
 - Cambio de estado (`PATCH /animals/:id/status`) para `admin` y `shelter_manager` mediante `useChangeAnimalStatus`, con matriz de transiciones local y confirmación de consecuencia.
 - Alta de eventos generales (`POST /animals/:animalId/events`) para `admin` y `shelter_manager`, limitada a `general_note`, `behavior_note` y `transfer`; el backend registra al actor autenticado y la mutation invalida `animalKeys.history(animalId)`.
+- La fecha opcional de eventos generales usa el selector compartido `DateTimeField` con límite futuro de 60 segundos, fallback textual web y ayuda explícita sobre el valor por defecto del backend.
 - Subida de foto de perfil como asset huérfano (`POST /media/upload` multipart) y vinculación con `profilePhotoMediaId` al crear o editar; limpieza best-effort del huérfano si la escritura falla después de subir.
 - La foto puede capturarse con cámara o elegirse desde galería; se aceptan JPEG, PNG y WebP de hasta 10 MB, con progreso y cancelación durante la subida.
 - Permiso de cámara/galería denegado con explicación; si el permiso queda bloqueado permanentemente (`canAskAgain=false`), se ofrece abrir los ajustes del dispositivo con `Linking.openSettings`.

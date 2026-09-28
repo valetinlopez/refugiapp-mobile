@@ -1,7 +1,8 @@
+import { router, type Href } from 'expo-router';
 import { Image, StyleSheet, View } from 'react-native';
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
-import { AppCard, AppText } from '@/components/primitives';
+import { AppButton, AppCard, AppText } from '@/components/primitives';
 import { colors, radii, sizes, spacing } from '@/theme';
 
 import { useAnimalExpenses } from '../hooks/useAnimalExpenses';
@@ -13,27 +14,42 @@ import {
   getExpenseCategoryLabel,
 } from '../utils/expensePresentation';
 
-export function AnimalExpenses({ animalId }: { animalId: string }) {
+export function AnimalExpenses({ animalId, canWrite }: { animalId: string; canWrite: boolean }) {
   const query = useAnimalExpenses(animalId);
-
-  if (query.isPending) return <LoadingState label="Cargando gastos" />;
-  if (query.isError) {
-    return (
-      <ErrorState
-        actionLabel="Reintentar"
-        message="No pudimos cargar los gastos del animal."
-        onAction={() => void query.refetch()}
-        title="No se pudieron cargar los gastos"
-      />
-    );
-  }
-  if (!query.data?.items.length) {
-    return <EmptyState message="Todavía no hay gastos registrados." title="Sin gastos" />;
-  }
 
   return (
     <View accessibilityLabel="Gastos del animal" style={styles.list}>
-      {query.data.items.map((expense) => (
+      {canWrite ? (
+        <>
+          <AppButton
+            icon="money"
+            label="Registrar gasto"
+            onPress={() =>
+              router.push({ pathname: '/expenses/new', params: { animalId } } as unknown as Href)
+            }
+          />
+          <AppText color="textSecondary" variant="caption">
+            La edición de gastos no está disponible en el backend.
+          </AppText>
+        </>
+      ) : (
+        <AppText color="textSecondary">
+          Tu rol permite consultar estos gastos, pero no registrarlos ni modificarlos.
+        </AppText>
+      )}
+      {query.isPending ? <LoadingState label="Cargando gastos" /> : null}
+      {query.isError ? (
+        <ErrorState
+          actionLabel="Reintentar"
+          message="No pudimos cargar los gastos del animal."
+          onAction={() => void query.refetch()}
+          title="No se pudieron cargar los gastos"
+        />
+      ) : null}
+      {!query.isPending && !query.isError && !query.data?.items.length ? (
+        <EmptyState message="Todavía no hay gastos registrados." title="Sin gastos" />
+      ) : null}
+      {query.data?.items.map((expense) => (
         <ExpenseCard expense={expense} key={expense.id} />
       ))}
     </View>

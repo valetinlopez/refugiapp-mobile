@@ -17,7 +17,7 @@ export function formatDateShort(value: string): string {
 }
 
 export function formatDateMedium(value: string): string {
-  const date = parseDateOnly(value);
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? parseDateOnly(value) : new Date(value);
   return Number.isNaN(date.getTime()) ? '' : dateOnlyMediumFormatter.format(date);
 }
 
