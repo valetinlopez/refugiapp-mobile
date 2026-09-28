@@ -32,24 +32,36 @@ export const DashboardAnimalRow = memo(function DashboardAnimalRow({
         initials={animal.name.slice(0, 2)}
         size="sm"
         source={photoQuery.data ? { uri: photoQuery.data } : undefined}
+        style={styles.fixed}
       />
       <View style={styles.copy}>
-        <AppText variant="bodyStrong">{animal.name}</AppText>
-        <AppText color="textSecondary" variant="caption">
+        <AppText ellipsizeMode="tail" numberOfLines={1} variant="bodyStrong">
+          {animal.name}
+        </AppText>
+        <AppText color="textSecondary" ellipsizeMode="tail" numberOfLines={1} variant="caption">
           {animal.species}
         </AppText>
       </View>
-      <AppBadge icon={presentation.icon} label={presentation.label} tone={presentation.tone} />
-      <AppIcon color="textSecondary" name="chevronRight" />
+      <View style={styles.badgeWrap}>
+        <AppBadge icon={presentation.icon} label={presentation.label} tone={presentation.tone} />
+      </View>
+      <AppIcon color="textSecondary" name="chevronRight" style={styles.fixed} />
     </Pressable>
   );
 });
 
 const styles = StyleSheet.create({
+  badgeWrap: {
+    flexShrink: 1,
+    minWidth: 0,
+  },
   copy: {
     flex: 1,
     gap: spacing.xxs,
     minWidth: 0,
+  },
+  fixed: {
+    flexShrink: 0,
   },
   pressed: {
     opacity: 0.84,

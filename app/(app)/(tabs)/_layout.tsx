@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
 
 import { AppIcon, type AppIconName } from '@/components/primitives';
-import { colors, fontFamilies } from '@/theme';
+import { colors, fontFamilies, sizes } from '@/theme';
 
 export default function TabsLayout() {
   return (
@@ -11,6 +11,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.positive,
         tabBarInactiveTintColor: colors.textSecondary,
+        tabBarItemStyle: { minHeight: sizes.touchTarget },
         tabBarLabelStyle: { fontFamily: fontFamilies.bodyStrong },
         tabBarStyle: {
           backgroundColor: colors.surfaceSubtle,

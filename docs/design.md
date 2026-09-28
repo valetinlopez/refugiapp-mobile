@@ -106,6 +106,8 @@ Un recorte transparente puede usarse una vez en una cabecera editorial. Debe con
 
 Los badges tienen texto, icono, tono y forma píldora. No se usa un punto de color aislado. Las etiquetas visibles se redactan en español; los valores de dominio permanecen en inglés. Para listas densas puede omitirse el icono solo si existe otra señal explícita y la etiqueta es inequívoca.
 
+Cuando un grupo de badges envuelve (por ejemplo en la tarjeta de métricas del panel), el contenedor usa `rowGap` y `columnGap` por tokens, alinea las filas al inicio y permite hasta dos líneas por etiqueta. Así se evitan líneas huérfanas, desalineaciones y colisiones en pantallas estrechas y con fuente ampliada.
+
 ### Chips de filtro (`FilterChip`)
 
 Patrón compartido para filtrar listados (animales por estado, tareas por estado). Píldora con label, área táctil mínima de 44 pt, borde en `border`; estado seleccionado con fondo `positive` y texto inverso. Cada chip expone `accessibilityState.selected` para que el estado no dependa solo del color. Los chips se agrupan en un `ScrollView` horizontal para evitar desbordes.
@@ -120,13 +122,17 @@ Orden recomendado: avatar, hora y animal, tarea, responsable opcional y badge. L
 
 Prioridad visual: `completed` o `cancelled` son estados finales; para `pending`, primero se evalúa `overdue`, después `upcoming`, después `clinical`, y finalmente `pending`. Una tarea clínica vencida es **Vencida** en coral; el contexto clínico permanece en el título, iconografía secundaria o detalle.
 
+### Filas de animales (recientes)
+
+Mismo patrón de fila operativa para animales: avatar, nombre, especie, badge de estado y chevron. El nombre y la especie se truncan a una línea con elipsis; el `accessibilityLabel` del control conserva el texto completo (nombre, especie y estado). El avatar y el chevron no se encogen; el badge cede ancho antes que el texto y puede envolver a dos líneas. Los divisores pertenecen al listado, no a la fila, y llevan margen vertical por tokens.
+
 ## 18. Tarjetas de animales
 
 Contienen fotografía, nombre como encabezado y estado explícito. La foto ocupa la zona superior; la información nunca se superpone a un área visual compleja. En móvil se muestran en carrusel accesible o cuadrícula adaptable; en listas operativas se prefiere una fila. No inventar estados como “en observación” si el backend no los expone.
 
 ## 19. Tarjetas de métricas
 
-Muestran icono semántico, valor con Newsreader y etiqueta DM Sans. El número no comunica por sí solo: siempre necesita una etiqueta. Una métrica puede ser enlace si ofrece pista de navegación y área táctil completa. Limitar la cantidad visible y permitir desplazamiento o envoltura.
+Muestran icono semántico, valor con Newsreader y etiqueta DM Sans. El número no comunica por sí solo: siempre necesita una etiqueta. Una métrica puede ser enlace si ofrece pista de navegación y área táctil completa. Limitar la cantidad visible y permitir desplazamiento o envoltura. El contenido interno mantiene un ritmo vertical por tokens (etiqueta, métrica, divisor y bloque de badges); el divisor separa la métrica del bloque de badges con respiro vertical por tokens.
 
 ## 20. Navegación inferior
 

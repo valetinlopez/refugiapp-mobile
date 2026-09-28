@@ -34,7 +34,7 @@ export function DashboardScreen() {
 
   if (overviewQuery.isPending) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
         <View style={styles.state}>
           <DashboardSkeleton />
         </View>
@@ -44,7 +44,7 @@ export function DashboardScreen() {
 
   if (overviewQuery.isError) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
         <View style={styles.state}>
           <ErrorState
             actionLabel="Reintentar"
@@ -61,7 +61,7 @@ export function DashboardScreen() {
   const isEmpty = overview.totals.animals === 0 && overview.recentAnimals.length === 0;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: spacing.lg,
     padding: spacing.lg,
+    paddingBottom: spacing['2xl'],
   },
   heading: {
     flex: 1,

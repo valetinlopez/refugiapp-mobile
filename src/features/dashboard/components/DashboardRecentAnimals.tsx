@@ -22,8 +22,8 @@ export function DashboardRecentAnimals({ animals, onPress }: DashboardRecentAnim
       ) : (
         <AppCard>
           {animals.map((animal, index) => (
-            <View key={animal.id}>
-              {index > 0 ? <AppDivider /> : null}
+            <View key={animal.id} style={styles.row}>
+              {index > 0 ? <AppDivider style={styles.divider} /> : null}
               <DashboardAnimalRow animal={animal} onPress={onPress} />
             </View>
           ))}
@@ -34,6 +34,12 @@ export function DashboardRecentAnimals({ animals, onPress }: DashboardRecentAnim
 }
 
 const styles = StyleSheet.create({
+  divider: {
+    marginVertical: spacing.xxs,
+  },
+  row: {
+    paddingVertical: spacing.xs,
+  },
   section: {
     gap: spacing.sm,
   },

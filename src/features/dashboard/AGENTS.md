@@ -44,6 +44,7 @@
 
 - Unit tests de `capabilitiesForRoles` (matriz congelada por rol y combinación) y `filterQuickActions`.
 - Component tests RNTL de `DashboardScreen`: skeleton, vacío, error con reintento, datos, navegación al detalle, consulta de foto por `profilePhotoMediaId` y filtrado de acciones por rol.
+- Component tests RNTL del polish responsive: un badge por estado en `DashboardTotalsCard` (wrap con `rowGap`/`columnGap` y alineación por tokens) y truncado controlado en `DashboardAnimalRow` (`numberOfLines={1}` en nombre/especie) con label accesible completo y navegación al detalle intacta.
 - El pull-to-refresh se valida sobre el `RefreshControl` del `ScrollView`.
 
 ## Estado

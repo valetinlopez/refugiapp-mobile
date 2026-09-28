@@ -128,6 +128,33 @@ describe('DashboardScreen', () => {
     });
   });
 
+  it('renders one badge per animal status in the totals card', async () => {
+    mockUseDashboardOverview.mockReturnValue(createQuery());
+    const screen = await render(<DashboardScreen />);
+
+    expect(screen.getByText('Ingresado: 1')).toBeTruthy();
+    expect(screen.getByText('En tratamiento: 1')).toBeTruthy();
+    expect(screen.getByText('Disponible para adopción: 1')).toBeTruthy();
+    expect(screen.getByText('Adoptado: 0')).toBeTruthy();
+    expect(screen.getByText('Fallecido: 0')).toBeTruthy();
+  });
+
+  it('truncates long recent animal name and species but keeps the full label accessible', async () => {
+    const overview = createOverview();
+    overview.recentAnimals = [createAnimal({ name: 'Flavia Azzara', species: 'Perra' })];
+    mockUseDashboardOverview.mockReturnValue(createQuery({ data: overview }));
+    const screen = await render(<DashboardScreen />);
+
+    expect(screen.getByText('Flavia Azzara').props.numberOfLines).toBe(1);
+    expect(screen.getByText('Perra').props.numberOfLines).toBe(1);
+
+    await fireEvent.press(screen.getByRole('button', { name: /Flavia Azzara, Perra/ }));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/animals/[id]',
+      params: { id: ANIMAL_ID },
+    });
+  });
+
   it('requests the profile photo when the animal has a media id', async () => {
     const overview = createOverview();
     overview.recentAnimals = [createAnimal({ profilePhotoMediaId: MEDIA_ID })];
