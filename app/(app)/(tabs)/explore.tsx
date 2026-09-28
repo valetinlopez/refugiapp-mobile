@@ -1,6 +1,13 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+  type ListRenderItem,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
@@ -9,24 +16,59 @@ import { AppButton, AppText } from '@/components/primitives';
 import { useSession } from '@/features/auth/session';
 import { AnimalCard } from '@/features/animals/components/AnimalCard';
 import { useAnimals } from '@/features/animals/hooks/useAnimals';
-import type { AnimalStatus } from '@/features/animals/types';
+import type { Animal, AnimalSex, AnimalStatus } from '@/features/animals/types';
 import { ANIMAL_STATUS_ORDER, getStatusLabel } from '@/features/animals/utils/animalTransitions';
 import { colors, radii, sizes, spacing } from '@/theme';
+
+const SEARCH_DEBOUNCE_MS = 400;
+const SEX_OPTIONS: { label: string; value: AnimalSex }[] = [
+  { label: 'Hembra', value: 'female' },
+  { label: 'Macho', value: 'male' },
+  { label: 'Desconocido', value: 'unknown' },
+];
 
 export default function AnimalsScreen() {
   const { user } = useSession();
   const canWrite =
     user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
   const [searchInput, setSearchInput] = useState('');
+  const [speciesInput, setSpeciesInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<AnimalStatus | undefined>(undefined);
-  const search = useDebouncedValue(searchInput, 300);
+  const [sexFilter, setSexFilter] = useState<AnimalSex | undefined>(undefined);
+  const search = useDebouncedValue(searchInput, SEARCH_DEBOUNCE_MS);
+  const species = useDebouncedValue(speciesInput, SEARCH_DEBOUNCE_MS);
 
-  const animalsQuery = useAnimals({
-    ...(statusFilter !== undefined ? { status: statusFilter } : {}),
-    ...(search.trim() !== '' ? { name: search.trim() } : {}),
-  });
+  const filters = useMemo(
+    () => ({
+      ...(statusFilter !== undefined ? { status: statusFilter } : {}),
+      ...(sexFilter !== undefined ? { sex: sexFilter } : {}),
+      ...(species.trim() !== '' ? { species: species.trim() } : {}),
+      ...(search.trim() !== '' ? { name: search.trim() } : {}),
+    }),
+    [search, sexFilter, species, statusFilter]
+  );
+  const animalsQuery = useAnimals(filters);
 
   const animals = animalsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+
+  const handleAnimalPress = useCallback((animal: Animal) => {
+    router.push({ pathname: '/animals/[id]', params: { id: animal.id } });
+  }, []);
+
+  const renderAnimal = useCallback<ListRenderItem<Animal>>(
+    ({ item }) => <AnimalCard animal={item} onPress={handleAnimalPress} />,
+    [handleAnimalPress]
+  );
+
+  const handleEndReached = useCallback(() => {
+    if (animalsQuery.hasNextPage && !animalsQuery.isFetchingNextPage) {
+      void animalsQuery.fetchNextPage();
+    }
+  }, [animalsQuery]);
+
+  const handleRefresh = useCallback(() => {
+    void animalsQuery.refetch();
+  }, [animalsQuery]);
 
   const header = (
     <View style={styles.header}>
@@ -53,7 +95,18 @@ export default function AnimalsScreen() {
         style={styles.search}
         value={searchInput}
       />
+      <TextInput
+        accessibilityLabel="Filtrar por especie"
+        autoCapitalize="none"
+        autoCorrect={false}
+        onChangeText={setSpeciesInput}
+        placeholder="Especie (ej. dog)"
+        placeholderTextColor={colors.textSecondary}
+        style={styles.search}
+        value={speciesInput}
+      />
       <StatusFilter selected={statusFilter} onSelect={setStatusFilter} />
+      <SexFilter selected={sexFilter} onSelect={setSexFilter} />
       <AppText accessibilityLiveRegion="polite" color="textSecondary" variant="caption">
         {animalsQuery.isSuccess ? `${animalsQuery.data?.pages[0]?.total ?? 0} animales` : ' '}
       </AppText>
@@ -70,7 +123,7 @@ export default function AnimalsScreen() {
     );
   }
 
-  if (animalsQuery.isError) {
+  if (animalsQuery.isError && animalsQuery.data === undefined) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.state}>
@@ -102,25 +155,62 @@ export default function AnimalsScreen() {
           />
         }
         ListFooterComponent={
-          animalsQuery.isFetchingNextPage ? <LoadingState label="Cargando más animales" /> : null
+          animalsQuery.isFetchingNextPage ? (
+            <LoadingState label="Cargando más animales" />
+          ) : animalsQuery.isFetchNextPageError ? (
+            <View style={styles.paginationError}>
+              <AppText color="danger">No pudimos cargar más animales.</AppText>
+              <AppButton
+                label="Reintentar carga"
+                onPress={() => void animalsQuery.fetchNextPage()}
+                variant="secondary"
+              />
+            </View>
+          ) : null
         }
         ListHeaderComponent={header}
-        onEndReached={() => {
-          if (animalsQuery.hasNextPage) void animalsQuery.fetchNextPage();
-        }}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={0.4}
-        onRefresh={() => void animalsQuery.refetch()}
+        onRefresh={handleRefresh}
         refreshing={animalsQuery.isRefetching}
-        renderItem={({ item }) => (
-          <AnimalCard
-            animal={item}
-            onPress={(animal) =>
-              router.push({ pathname: '/animals/[id]', params: { id: animal.id } })
-            }
-          />
-        )}
+        renderItem={renderAnimal}
+        testID="animals-list"
       />
     </SafeAreaView>
+  );
+}
+
+function SexFilter({
+  onSelect,
+  selected,
+}: {
+  onSelect(sex: AnimalSex | undefined): void;
+  selected: AnimalSex | undefined;
+}) {
+  return (
+    <View style={styles.filterGroup}>
+      <AppText variant="label">Sexo</AppText>
+      <ScrollView
+        accessibilityLabel="Filtrar por sexo"
+        contentContainerStyle={styles.filters}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+      >
+        <FilterChip
+          label="Todos"
+          onPress={() => onSelect(undefined)}
+          selected={selected === undefined}
+        />
+        {SEX_OPTIONS.map((option) => (
+          <FilterChip
+            key={option.value}
+            label={option.label}
+            onPress={() => onSelect(selected === option.value ? undefined : option.value)}
+            selected={selected === option.value}
+          />
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -143,30 +233,34 @@ function StatusFilter({
   selected: AnimalStatus | undefined;
 }) {
   return (
-    <ScrollView
-      accessibilityLabel="Filtrar por estado"
-      contentContainerStyle={styles.filters}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-    >
-      <FilterChip
-        label="Todas"
-        onPress={() => onSelect(undefined)}
-        selected={selected === undefined}
-      />
-      {ANIMAL_STATUS_ORDER.map((status) => (
+    <View style={styles.filterGroup}>
+      <AppText variant="label">Estado</AppText>
+      <ScrollView
+        accessibilityLabel="Filtrar por estado"
+        contentContainerStyle={styles.filters}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+      >
         <FilterChip
-          key={status}
-          label={getStatusLabel(status)}
-          onPress={() => onSelect(selected === status ? undefined : status)}
-          selected={selected === status}
+          label="Todos"
+          onPress={() => onSelect(undefined)}
+          selected={selected === undefined}
         />
-      ))}
-    </ScrollView>
+        {ANIMAL_STATUS_ORDER.map((status) => (
+          <FilterChip
+            key={status}
+            label={getStatusLabel(status)}
+            onPress={() => onSelect(selected === status ? undefined : status)}
+            selected={selected === status}
+          />
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  filterGroup: { gap: spacing.xxs },
   filters: { gap: spacing.xs, paddingVertical: spacing.xs },
   header: { gap: spacing.sm, marginBottom: spacing.md },
   heading: { flex: 1, gap: spacing.xxs },
@@ -178,6 +272,11 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   safeArea: { backgroundColor: colors.background, flex: 1 },
+  paginationError: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+  },
   search: {
     backgroundColor: colors.surface,
     borderColor: colors.border,

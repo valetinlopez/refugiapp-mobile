@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import type { Animal } from '@/features/animals/types';
 
@@ -53,6 +53,7 @@ function createQueryResult(overrides: Record<string, unknown> = {}) {
     fetchNextPage: jest.fn(),
     hasNextPage: false,
     isError: false,
+    isFetchNextPageError: false,
     isFetchingNextPage: false,
     isPending: false,
     isRefetching: false,
@@ -114,6 +115,52 @@ describe('ExploreScreen', () => {
     });
   });
 
+  it('loads the next page once when the end is reached', async () => {
+    const fetchNextPage = jest.fn();
+    mockUseAnimals.mockReturnValue(
+      createQueryResult({ fetchNextPage, hasNextPage: true, isFetchingNextPage: false })
+    );
+    const screen = await render(<ExploreScreen />);
+
+    fireEvent(screen.getByTestId('animals-list'), 'endReached');
+
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not request another page while one is already loading', async () => {
+    const fetchNextPage = jest.fn();
+    mockUseAnimals.mockReturnValue(
+      createQueryResult({ fetchNextPage, hasNextPage: true, isFetchingNextPage: true })
+    );
+    const screen = await render(<ExploreScreen />);
+
+    fireEvent(screen.getByTestId('animals-list'), 'endReached');
+
+    expect(fetchNextPage).not.toHaveBeenCalled();
+  });
+
+  it('retries a failed incremental page', async () => {
+    const fetchNextPage = jest.fn();
+    mockUseAnimals.mockReturnValue(
+      createQueryResult({ fetchNextPage, isFetchNextPageError: true })
+    );
+    const screen = await render(<ExploreScreen />);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Reintentar carga' }));
+
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('refreshes the list with pull-to-refresh', async () => {
+    const refetch = jest.fn();
+    mockUseAnimals.mockReturnValue(createQueryResult({ refetch }));
+    const screen = await render(<ExploreScreen />);
+
+    fireEvent(screen.getByTestId('animals-list'), 'refresh');
+
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   it('requests the profile photo for each card with a profilePhotoMediaId', async () => {
     mockUseAnimals.mockReturnValue(
       createQueryResult({
@@ -171,5 +218,35 @@ describe('ExploreScreen', () => {
     const screen = await render(<ExploreScreen />);
 
     expect(screen.queryByRole('button', { name: 'Alta' })).toBeNull();
+  });
+
+  it('debounces name search by 400ms', async () => {
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+
+    fireEvent.changeText(screen.getByLabelText('Buscar animal'), '  Luna  ');
+
+    expect(mockUseAnimals).toHaveBeenLastCalledWith({});
+
+    await waitFor(() => {
+      expect(mockUseAnimals).toHaveBeenLastCalledWith({ name: 'Luna' });
+    });
+  });
+
+  it('combines status, species and sex filters', async () => {
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Disponible para adopción' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Hembra' }));
+    fireEvent.changeText(screen.getByLabelText('Filtrar por especie'), '  dog  ');
+
+    await waitFor(() => {
+      expect(mockUseAnimals).toHaveBeenLastCalledWith({
+        status: 'available_for_adoption',
+        sex: 'female',
+        species: 'dog',
+      });
+    });
   });
 });
