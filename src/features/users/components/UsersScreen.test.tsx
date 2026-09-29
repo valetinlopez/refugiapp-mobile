@@ -1,0 +1,142 @@
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
+
+import { ApiError } from '@/core/api';
+
+import { useActivateUser, useDeactivateUser } from '../hooks/useUserMutations';
+import { useUsers } from '../hooks/useUsers';
+import { UsersScreen } from './UsersScreen';
+
+jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('../hooks/useUsers', () => ({ useUsers: jest.fn() }));
+jest.mock('../hooks/useUserMutations', () => ({
+  useActivateUser: jest.fn(),
+  useDeactivateUser: jest.fn(),
+}));
+
+const mockUseUsers = useUsers as jest.Mock;
+const mockUseActivateUser = useActivateUser as jest.Mock;
+const mockUseDeactivateUser = useDeactivateUser as jest.Mock;
+const activeUser = {
+  id: '11111111-1111-4111-8111-111111111111',
+  email: 'ana@refugiapp.local',
+  firstName: 'Ana',
+  lastName: 'Perez',
+  roles: ['admin'] as const,
+  isActive: true,
+  createdAt: '2026-09-01T00:00:00.000Z',
+  updatedAt: '2026-09-01T00:00:00.000Z',
+};
+const inactiveUser = {
+  ...activeUser,
+  id: '22222222-2222-4222-8222-222222222222',
+  email: 'vet@refugiapp.local',
+  firstName: 'Valeria',
+  lastName: 'Torres',
+  roles: ['veterinarian'] as const,
+  isActive: false,
+};
+
+function mutation(mutate: jest.Mock = jest.fn()) {
+  return { error: null, isPending: false, mutate, reset: jest.fn() };
+}
+
+describe('UsersScreen', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseUsers.mockReturnValue({
+      data: { pages: [{ items: [activeUser, inactiveUser], page: 1, limit: 20, total: 2 }] },
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isError: false,
+      isFetchingNextPage: false,
+      isPending: false,
+      isRefetching: false,
+      refetch: jest.fn(),
+    });
+    mockUseActivateUser.mockReturnValue(mutation());
+    mockUseDeactivateUser.mockReturnValue(mutation());
+  });
+
+  it('shows each user role and state', async () => {
+    const screen = await render(<UsersScreen />);
+    expect(screen.getByText('Ana Perez')).toBeTruthy();
+    expect(screen.getByText('Administrador')).toBeTruthy();
+    expect(screen.getByText('Activo')).toBeTruthy();
+    expect(screen.getByText('Inactivo')).toBeTruthy();
+  });
+
+  it('confirms before deactivating an active user', async () => {
+    const mutate = jest.fn();
+    mockUseDeactivateUser.mockReturnValue(mutation(mutate));
+    const screen = await render(<UsersScreen />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Desactivar usuario' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar desactivar' }));
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith(activeUser.id, expect.any(Object)));
+  });
+
+  it('confirms before activating an inactive user', async () => {
+    const mutate = jest.fn();
+    mockUseActivateUser.mockReturnValue(mutation(mutate));
+    const screen = await render(<UsersScreen />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Activar usuario' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar activar' }));
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith(inactiveUser.id, expect.any(Object)));
+  });
+
+  it('translates a 403 response', async () => {
+    mockUseUsers.mockReturnValue({
+      error: new ApiError({
+        code: 'FORBIDDEN',
+        message: 'Forbidden',
+        requestId: 'request-id',
+        status: 403,
+      }),
+      isError: true,
+      isPending: false,
+      refetch: jest.fn(),
+    });
+    const screen = await render(<UsersScreen />);
+    expect(screen.getByText('Tu rol no tiene permiso para gestionar usuarios.')).toBeTruthy();
+  });
+
+  it('loads the next page when the list reaches the end', async () => {
+    const fetchNextPage = jest.fn();
+    mockUseUsers.mockReturnValue({
+      data: { pages: [{ items: [activeUser], page: 1, limit: 20, total: 21 }] },
+      fetchNextPage,
+      hasNextPage: true,
+      isError: false,
+      isFetchingNextPage: false,
+      isPending: false,
+      isRefetching: false,
+      refetch: jest.fn(),
+    });
+    const screen = await render(<UsersScreen />);
+
+    fireEvent(screen.getByTestId('users-list'), 'onEndReached');
+
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows status mutation errors in the confirmation dialog', async () => {
+    const deactivateMutation = mutation();
+    mockUseDeactivateUser.mockReturnValue(deactivateMutation);
+    const screen = await render(<UsersScreen />);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Desactivar usuario' }));
+    mockUseDeactivateUser.mockReturnValue({
+      ...deactivateMutation,
+      error: new ApiError({
+        code: 'FORBIDDEN',
+        message: 'Forbidden',
+        requestId: 'request-id',
+        status: 403,
+      }),
+    });
+    await screen.rerender(<UsersScreen />);
+
+    expect(screen.getByText('Tu rol no tiene permiso para gestionar usuarios.')).toBeTruthy();
+  });
+});

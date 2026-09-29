@@ -178,6 +178,7 @@ describe('DashboardScreen', () => {
     expect(screen.getByRole('button', { name: 'Alta animal' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Nueva tarea' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Registrar gasto' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Gestionar usuarios' })).toBeTruthy();
   });
 
   it('hides writer quick actions for a veterinarian', async () => {
@@ -187,6 +188,7 @@ describe('DashboardScreen', () => {
 
     expect(screen.queryByRole('button', { name: 'Alta animal' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Registrar gasto' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Gestionar usuarios' })).toBeNull();
   });
 
   it('triggers a refetch on pull to refresh', async () => {

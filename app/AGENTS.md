@@ -22,6 +22,7 @@
 - `(app)`: área autenticada.
 - `(app)/(tabs)`: destinos principales: `index` (Inicio, compone el dashboard de la feature `src/features/dashboard`), `explore` (Animales), `care-tasks` (Tareas) y `account` (Cuenta, compone `AccountScreen` de la feature auth para identidad y cierre de sesión). La ruta legacy `inbox` es un redirect oculto (`href: null`) hacia `care-tasks`.
 - `(app)/expenses/new`: alta de gasto con comprobante para `admin` y `shelter_manager`.
+- `(app)/users`: listado paginado y alta de usuarios internos, visible solo para `admin`; activacion y desactivacion se confirman desde el listado.
 - `design-system`: catálogo interno, no funcionalidad de producción.
 - El layout raíz protege `(auth)` y `(app)` con `Stack.Protected` según el Session Context.
 

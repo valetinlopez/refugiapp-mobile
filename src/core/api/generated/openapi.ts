@@ -239,6 +239,29 @@ export interface components {
       limit: number;
       total: number;
     };
+    UserResponseDto: {
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      roles: ('admin' | 'shelter_manager' | 'veterinarian')[];
+      isActive: boolean;
+      createdAt: string;
+      updatedAt: string;
+    };
+    PaginatedUsersResponseDto: {
+      items: components['schemas']['UserResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
+    CreateUserDto: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+      roles?: ('admin' | 'shelter_manager' | 'veterinarian')[];
+    };
     PaginatedMediaAssetsResponseDto: {
       items: components['schemas']['MediaAssetResponseDto'][];
       page: number;
