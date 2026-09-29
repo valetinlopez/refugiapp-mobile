@@ -4,7 +4,7 @@ import type { AppIconName } from '@/components/primitives';
 
 import { hasCapability, type Capability, type RoleCapabilities } from './capabilities';
 
-export type DashboardActionId = 'new-animal' | 'new-task' | 'new-expense';
+export type DashboardActionId = 'new-animal' | 'new-task' | 'new-expense' | 'manage-users';
 
 export interface DashboardQuickAction {
   capability: Capability;
@@ -35,6 +35,13 @@ export const QUICK_ACTIONS: readonly DashboardQuickAction[] = [
     icon: 'money',
     id: 'new-expense',
     label: 'Registrar gasto',
+  },
+  {
+    capability: 'canManageUsers',
+    href: '/users' as Href,
+    icon: 'account',
+    id: 'manage-users',
+    label: 'Gestionar usuarios',
   },
 ];
 

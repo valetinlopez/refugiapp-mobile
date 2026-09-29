@@ -189,7 +189,7 @@ Las features exponen funciones HTTP en su carpeta `api`. Los componentes y rutas
 
 ### 7.3 Contratos
 
-El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, alta y gestión de animales, dashboard, eventos generales, tareas de cuidado, registros médicos, veterinarios y media consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts`; el CI verifica que el resultado esté versionado y actualizado. El flujo es:
+El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, usuarios, alta y gestión de animales, dashboard, eventos generales, tareas de cuidado, registros médicos, veterinarios y media consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts`; el CI verifica que el resultado esté versionado y actualizado. El flujo es:
 
 ```text
 openapi.json del backend
@@ -333,6 +333,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Rutas protegidas con Expo Router y splash coordinado con el bootstrap de sesión.
 - Header de retorno persistente (`AppHeaderBack` en `src/components/navigation`) con `navigateBack` como fuente única de `canGoBack ? back : replace(fallback contextual)`, integrado en detalle, alta y edición de animales, eventos generales, registros médicos, tareas y gastos; elimina la lógica `goBack` duplicada por pantalla y hace predecible la navegación ante deep links sin historial.
 - Acceso de cuenta y cierre de sesión desde toda el área autenticada: tab "Cuenta" (`app/(app)/(tabs)/account.tsx` con `AccountScreen`) con identidad por rol y salida con confirmación; `AccountMenuButton` (44 × 44, label accesible "Abrir menú de cuenta") en Inicio y en la fila de retorno de las pantallas stack (`AccountHeaderRow` = `AppHeaderBack` + botón, en `src/features/auth/components`). El cierre usa `SessionProvider.signOut()` (POST `/auth/logout` best-effort) y `useSignOut` (`src/features/auth/session`), con `AccountSignOutSheet` como confirmación nativa con carga y error seguro: siempre se limpia Secure Store y la cache de TanStack Query, incluso offline o con refresh inválido, y `Stack.Protected` redirige a login sin dejar rutas `(app)` accesibles.
+- Gestión de usuarios para `admin`: acceso desde el dashboard, rutas `app/(app)/users/index.tsx` y `app/(app)/users/new.tsx`, listado paginado mediante `GET /users` que incluye cuentas activas e inactivas en orden determinista, alta con email normalizado, nombre, apellido, password inicial y rol, confirmación para activar o desactivar, traducción segura de 403/404/409 e invalidación de la lista tras cada mutación.
 - TanStack Query conectado a NetInfo y AppState.
 - Adapter HTTP falso inyectable para desarrollo y tests.
 - Tipos de auth, animals y media generados desde el snapshot OpenAPI.
