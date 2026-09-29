@@ -1,13 +1,16 @@
 import type { Href } from 'expo-router';
 
 import type { AppIconName } from '@/components/primitives';
-
-import { hasCapability, type Capability, type RoleCapabilities } from './capabilities';
+import {
+  filterAuthorizedDestinations,
+  type Capability,
+  type RoleCapabilities,
+} from '@/application/authorization';
 
 export type DashboardActionId = 'new-animal' | 'new-task' | 'new-expense' | 'manage-users';
 
 export interface DashboardQuickAction {
-  capability: Capability;
+  requiredCapability: Capability;
   href: Href;
   icon: AppIconName;
   id: DashboardActionId;
@@ -16,28 +19,28 @@ export interface DashboardQuickAction {
 
 export const QUICK_ACTIONS: readonly DashboardQuickAction[] = [
   {
-    capability: 'canEditAnimal',
+    requiredCapability: 'canEditAnimal',
     href: { pathname: '/animals/new' },
     icon: 'paw',
     id: 'new-animal',
     label: 'Alta animal',
   },
   {
-    capability: 'canEditAnimal',
+    requiredCapability: 'canEditAnimal',
     href: { pathname: '/care-tasks/new' },
     icon: 'calendar',
     id: 'new-task',
     label: 'Nueva tarea',
   },
   {
-    capability: 'canManageExpenses',
+    requiredCapability: 'canManageExpenses',
     href: { pathname: '/expenses/new' },
     icon: 'money',
     id: 'new-expense',
     label: 'Registrar gasto',
   },
   {
-    capability: 'canManageUsers',
+    requiredCapability: 'canManageUsers',
     href: '/users' as Href,
     icon: 'account',
     id: 'manage-users',
@@ -49,5 +52,5 @@ export function filterQuickActions(
   actions: readonly DashboardQuickAction[],
   capabilities: RoleCapabilities
 ): DashboardQuickAction[] {
-  return actions.filter((action) => hasCapability(capabilities, action.capability));
+  return filterAuthorizedDestinations(actions, capabilities);
 }

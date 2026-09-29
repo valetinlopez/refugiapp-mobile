@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { FilterChip } from '@/components/patterns';
 import { AppButton, AppText } from '@/components/primitives';
-import { useSession } from '@/features/auth/session';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { AnimalCard } from '@/features/animals/components/AnimalCard';
 import { useAnimals } from '@/features/animals/hooks/useAnimals';
 import type { Animal, AnimalSex, AnimalStatus } from '@/features/animals/types';
@@ -28,9 +28,7 @@ const SEX_OPTIONS: { label: string; value: AnimalSex }[] = [
 ];
 
 export default function AnimalsScreen() {
-  const { user } = useSession();
-  const canWrite =
-    user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
+  const { canEditAnimal: canWrite } = useCapabilities();
   const [searchInput, setSearchInput] = useState('');
   const [speciesInput, setSpeciesInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<AnimalStatus | undefined>(undefined);

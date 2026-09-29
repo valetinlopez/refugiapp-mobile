@@ -23,7 +23,7 @@
   - `canManageUsers`: `admin`.
   - `canManageVets`: `admin`, `shelter_manager`.
   - `canReadAudit`: `admin` (único rol con auditoría).
-- `capabilitiesForRoles` combina los roles del usuario con OR. La UI nunca decide por rol directo: siempre pasa por el registro de capacidades.
+- `capabilitiesForRoles` combina los roles del usuario con OR desde `src/application/authorization`. La UI nunca decide por rol directo: siempre pasa por el registro central de capacidades.
 - La autorización visual no reemplaza al backend; un `403` se traduce a mensaje seguro.
 
 ## Estructura
@@ -31,7 +31,7 @@
 - `api/`: `GET /dashboard/overview` y lectura de `GET /media/:id` para fotos de recientes.
 - `components/`: `DashboardScreen` (orquestación y estados), `DashboardTotalsCard`, `DashboardRecentAnimals`, `DashboardAnimalRow`, `DashboardQuickActions` y `DashboardSkeleton`.
 - `hooks/`: `dashboardKeys`, `useDashboardOverview` y `useDashboardAnimalPhoto`.
-- `utils/`: `capabilities` (matriz y filtrado), `quickActions` (registro de acciones rápidas), `dashboardErrorMessages` (errores seguros) y `presentation` (estados visuales).
+- `utils/`: `quickActions` (registro declarativo de acciones con `requiredCapability`), `dashboardErrorMessages` (errores seguros) y `presentation` (estados visuales).
 - `types.ts`: modelo de vista y mapper desde los DTO generados.
 - El atajo de cuenta del encabezado de Inicio usa `AccountMenuButton` de `src/features/auth/components` (superficie pública de la feature auth, mismo patrón que `useSession`); es el único import cruzado de dashboard y está documentado en `src/features/auth/AGENTS.md`.
 
@@ -42,7 +42,7 @@
 
 ## Testing
 
-- Unit tests de `capabilitiesForRoles` (matriz congelada por rol y combinación) y `filterQuickActions`.
+- Unit tests de `filterQuickActions`; la matriz y el filtrado genérico se prueban en `src/application/authorization`.
 - Component tests RNTL de `DashboardScreen`: skeleton, vacío, error con reintento, datos, navegación al detalle, consulta de foto por `profilePhotoMediaId` y filtrado de acciones por rol.
 - Component tests RNTL del polish responsive: un badge por estado en `DashboardTotalsCard` (wrap con `rowGap`/`columnGap` y alineación por tokens) y truncado controlado en `DashboardAnimalRow` (`numberOfLines={1}` en nombre/especie) con label accesible completo y navegación al detalle intacta.
 - El pull-to-refresh se valida sobre el `RefreshControl` del `ScrollView`.
@@ -52,7 +52,7 @@
 ### Implementado
 
 - `GET /dashboard/overview` consumido en el tab "Inicio" para los tres roles.
-- Registro de capacidades espejo del backend y filtrado de acciones rápidas por rol.
+- Acciones rápidas filtradas mediante el registro central de capacidades de aplicación.
 - Estados de UI: skeleton inicial (placeholder estático, respeta reduce motion), vacío, error con reintento y pull-to-refresh.
 - Totales por estado y animales recientes con foto de perfil (`useDashboardAnimalPhoto` consulta solo cuando `profilePhotoMediaId` está presente; `AppAvatar` cae a iniciales ante fallo).
 - Acciones rápidas: "Alta animal", "Nueva tarea" y "Registrar gasto" según `canEditAnimal`/`canManageExpenses`.

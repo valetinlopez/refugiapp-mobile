@@ -1,4 +1,4 @@
-import { capabilitiesForRoles } from './capabilities';
+import { capabilitiesForRoles } from '@/application/authorization';
 import { filterQuickActions, QUICK_ACTIONS } from './quickActions';
 
 describe('filterQuickActions', () => {

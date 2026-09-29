@@ -8,7 +8,7 @@ import { AppText } from '@/components/primitives';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
 import { isUuid } from '@/features/animals/utils/uuid';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
-import { useSession } from '@/features/auth/session';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { MedicalRecordForm } from '@/features/medical-records/components/MedicalRecordForm';
 import { useCreateMedicalRecord } from '@/features/medical-records/hooks/useCreateMedicalRecord';
 import { useVeterinarianOptions } from '@/features/medical-records/hooks/useVeterinarianOptions';
@@ -17,9 +17,7 @@ import { colors, spacing } from '@/theme';
 
 export default function NewMedicalRecordScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user } = useSession();
-  const canWriteClinical =
-    user?.roles.some((role) => role === 'admin' || role === 'veterinarian') ?? false;
+  const { canReadClinicalRecords: canWriteClinical } = useCapabilities();
   const animalId = typeof id === 'string' && isUuid(id) ? id : '';
   const fallbackHref: Href = animalId
     ? { pathname: '/animals/[id]', params: { id: animalId } }

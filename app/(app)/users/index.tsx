@@ -4,18 +4,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '@/components/feedback';
 import { navigateBack } from '@/components/navigation';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
-import { useSession } from '@/features/auth/session';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { UsersScreen } from '@/features/users/components/UsersScreen';
 import { colors, spacing } from '@/theme';
 
 export default function UsersRoute() {
-  const { user } = useSession();
-  const isAdmin = user?.roles.includes('admin') ?? false;
+  const { canManageUsers } = useCapabilities();
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <AccountHeaderRow accessibilityHint="Volver al inicio" fallbackHref="/" />
-      {isAdmin ? (
+      {canManageUsers ? (
         <UsersScreen />
       ) : (
         <View style={styles.centered}>
