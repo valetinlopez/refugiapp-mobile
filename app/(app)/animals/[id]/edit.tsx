@@ -8,7 +8,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { navigateBack } from '@/components/navigation';
 import { AnimalProfileForm } from '@/features/animals/components/AnimalProfileForm';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
-import { useSession } from '@/features/auth/session';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
 import { useAnimalPhoto } from '@/features/animals/hooks/useAnimalPhoto';
 import { useUpdateAnimal, type UpdateAnimalInput } from '@/features/animals/hooks/useUpdateAnimal';
@@ -21,9 +21,7 @@ import { colors, spacing } from '@/theme';
 
 export default function EditAnimalScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user } = useSession();
-  const canWrite =
-    user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
+  const { canEditAnimal: canWrite } = useCapabilities();
 
   const animalId = typeof id === 'string' && isUuid(id) ? id : '';
   const fallbackHref: Href = animalId

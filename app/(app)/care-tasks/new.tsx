@@ -12,14 +12,14 @@ import { useCreateCareTask } from '@/features/care-tasks/hooks/useCreateCareTask
 import type { CreateCareTaskRequest } from '@/features/care-tasks/types';
 import { toCareTaskErrorMessage } from '@/features/care-tasks/utils/careTaskErrorMessages';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { useSession } from '@/features/auth/session';
 import { colors, spacing } from '@/theme';
 
 export default function CreateCareTaskScreen() {
   const { animalId } = useLocalSearchParams<{ animalId?: string }>();
   const { user } = useSession();
-  const canWrite =
-    user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
+  const { canEditAnimal: canWrite } = useCapabilities();
   const initialAnimalId = typeof animalId === 'string' && isUuid(animalId) ? animalId : undefined;
   const fallbackHref: Href = initialAnimalId
     ? { pathname: '/animals/[id]', params: { id: initialAnimalId, tab: 'tasks' } }

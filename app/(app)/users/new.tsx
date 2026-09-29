@@ -6,19 +6,18 @@ import { EmptyState } from '@/components/feedback';
 import { navigateBack } from '@/components/navigation';
 import { AppText } from '@/components/primitives';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
-import { useSession } from '@/features/auth/session';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { UserForm } from '@/features/users/components/UserForm';
 import { useCreateUser } from '@/features/users/hooks/useUserMutations';
 import { toUserErrorMessage } from '@/features/users/utils/userPresentation';
 import { colors, spacing } from '@/theme';
 
 export default function NewUserRoute() {
-  const { user } = useSession();
-  const isAdmin = user?.roles.includes('admin') ?? false;
+  const { canManageUsers } = useCapabilities();
   const createUser = useCreateUser();
   const usersHref = '/users' as Href;
 
-  if (!isAdmin) {
+  if (!canManageUsers) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <AccountHeaderRow accessibilityHint="Volver a usuarios" fallbackHref={usersHref} />

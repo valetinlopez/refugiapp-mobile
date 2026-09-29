@@ -7,7 +7,7 @@ import { EmptyState, ErrorState, FeedbackState, LoadingState } from '@/component
 import { AppText } from '@/components/primitives';
 import { isUuid } from '@/core/validation';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
-import { useSession } from '@/features/auth/session';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { ExpenseForm } from '@/features/expenses/components/ExpenseForm';
 import { useCreateExpense } from '@/features/expenses/hooks/useCreateExpense';
 import { useExpenseAnimals } from '@/features/expenses/hooks/useExpenseAnimals';
@@ -17,9 +17,7 @@ import { colors, spacing } from '@/theme';
 export default function CreateExpenseScreen() {
   const { animalId } = useLocalSearchParams<{ animalId?: string }>();
   const initialAnimalId = typeof animalId === 'string' && isUuid(animalId) ? animalId : undefined;
-  const { user } = useSession();
-  const canWrite =
-    user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
+  const { canManageExpenses: canWrite } = useCapabilities();
   const fallbackHref: Href = initialAnimalId
     ? { pathname: '/animals/[id]', params: { id: initialAnimalId, tab: 'expenses' } }
     : '/explore';

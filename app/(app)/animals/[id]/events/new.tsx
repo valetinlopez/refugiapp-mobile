@@ -11,14 +11,12 @@ import type { CreateAnimalHistoryEventRequest } from '@/features/animals/types';
 import { toCreateAnimalEventErrorMessage } from '@/features/animals/utils/animalErrorMessages';
 import { isUuid } from '@/features/animals/utils/uuid';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
-import { useSession } from '@/features/auth/session';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { colors, spacing } from '@/theme';
 
 export default function CreateAnimalEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user } = useSession();
-  const canWrite =
-    user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
+  const { canEditAnimal: canWrite } = useCapabilities();
   const animalId = typeof id === 'string' && isUuid(id) ? id : '';
   const fallbackHref: Href = animalId
     ? { pathname: '/animals/[id]', params: { id: animalId } }

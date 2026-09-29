@@ -6,6 +6,7 @@ import { navigateBack } from '@/components/navigation';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { useSession } from '@/features/auth/session';
 import { CareTaskForm } from '@/features/care-tasks/components/CareTaskForm';
 import { useCareTask } from '@/features/care-tasks/hooks/useCareTask';
@@ -18,8 +19,7 @@ import { colors, spacing } from '@/theme';
 export default function EditCareTaskScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useSession();
-  const canWrite =
-    user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
+  const { canEditAnimal: canWrite } = useCapabilities();
   const taskId = typeof id === 'string' && isUuid(id) ? id : '';
   const taskQuery = useCareTask(taskId);
   const animalsQuery = useCareTaskAnimals();

@@ -131,6 +131,7 @@ app/
 src/
   application/
     animals/               # Opciones de animales compartidas por care-tasks y expenses
+    authorization/         # Registro central de capacidades y filtrado de destinos
   components/
     primitives/
     feedback/
@@ -227,6 +228,8 @@ Roles válidos:
 - `veterinarian`
 
 Los access y refresh tokens se almacenan juntos con Expo Secure Store en Android/iOS. En web, donde Secure Store no existe, el adaptador usa `sessionStorage`: la sesión sobrevive recargas en la misma pestaña y se elimina al cerrar esa pestaña. Nunca se usa `localStorage` ni AsyncStorage para tokens. La aplicación no debe inferir permisos únicamente desde la presencia de un botón: el backend sigue siendo autoridad final.
+
+`src/application/authorization` refleja la matriz `ROLE_CAPABILITIES` del backend y es la única fuente de capacidades visuales. `useCapabilities` conecta esa matriz con la sesión y `useAuthorizedNavigation` filtra destinos que declaran `requiredCapability`. Las rutas y features no comparan nombres de rol directamente; reciben o consultan capacidades. Las cuatro pestañas principales actuales son comunes a todos los roles y permanecen visibles.
 
 El contrato actual del backend implementa login, refresh, logout y `GET /users/me`. No se expone registro público mientras el backend no publique ese endpoint.
 
@@ -346,7 +349,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Los formularios de fecha reutilizan `DateTimeField`: selector nativo en iOS/Android, fallback textual web y serialización local consistente. Eventos generales y gastos ya no solicitan fechas ISO manuales; las presentaciones delegan en los formateadores `es-AR` compartidos.
 - Listado paginado de animales en `app/(app)/(tabs)/explore.tsx` (tab "Animales") con búsqueda por nombre, filtro por estado y navegación al detalle; disponible para los tres roles.
 - Foto de perfil en el listado de animales: `AnimalCardAvatar` consulta `useAnimalPhoto(profilePhotoMediaId)` por tarjeta con caché compartida por `animalKeys.media` (deduplicación por `mediaId`, `staleTime` 5 min), sin fetch para animales sin foto y fallback silencioso a iniciales ante error; la invalidación de `animalKeys.all` tras crear o editar la ficha mantiene la foto coherente sin optimistic updates.
-- Dashboard de portada en el tab "Inicio" (`app/(app)/(tabs)/index.tsx`): feature `src/features/dashboard` que consume `GET /dashboard/overview` para los tres roles, con totales por estado y animales recientes (foto de perfil vía `GET /media/:id` solo cuando `profilePhotoMediaId` está presente, sin fetch si es `null`), estados de skeleton inicial, vacío, error con reintento y pull-to-refresh. La autorización visual sale del registro de capacidades `capabilitiesForRoles` (espejo de `ROLE_CAPABILITIES` del backend): "Alta animal"/"Nueva tarea" requieren `canEditAnimal` y "Registrar gasto" requiere `canManageExpenses`; `canReadAudit` queda reservado a `admin` sin consumidor de UI todavía. `dashboardKeys.all = ['dashboard']` es la key canónica del panel; las mutaciones de tareas y gastos la invalidan por prefijo (constantes locales en cada feature, sin imports cruzados).
+- Dashboard de portada en el tab "Inicio" (`app/(app)/(tabs)/index.tsx`): feature `src/features/dashboard` que consume `GET /dashboard/overview` para los tres roles, con totales por estado y animales recientes (foto de perfil vía `GET /media/:id` solo cuando `profilePhotoMediaId` está presente, sin fetch si es `null`), estados de skeleton inicial, vacío, error con reintento y pull-to-refresh. La autorización visual sale del registro central `src/application/authorization`: "Alta animal"/"Nueva tarea" requieren `canEditAnimal`, "Registrar gasto" requiere `canManageExpenses` y "Gestionar usuarios" requiere `canManageUsers`; `canReadAudit` queda reservado a `admin` sin consumidor de UI todavía. `dashboardKeys.all = ['dashboard']` es la key canónica del panel; las mutaciones de tareas y gastos la invalidan por prefijo (constantes locales en cada feature, sin imports cruzados).
 - Lectura y presentación del historial general en el detalle del animal (`GET /animals/:animalId/events`) para los tres roles, con invalidación coherente al crear eventos.
 - Listado global de tareas (tab "Tareas", ruta `care-tasks`) y listado embebido por animal desde su detalle, con filtro por estado, formularios de alta y edición y confirmaciones para completar o cancelar; las mutaciones esperan confirmación del backend e invalidan las queries de tareas y dashboard. La ruta legacy `/inbox` redirige a `/care-tasks`.
 - Contratos de tareas derivados del snapshot OpenAPI y guards de escritura para `admin` y `shelter_manager`.

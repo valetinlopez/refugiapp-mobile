@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { FilterChip } from '@/components/patterns';
 import { AppButton, AppText } from '@/components/primitives';
-import { useSession } from '@/features/auth/session';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { CareTaskCard } from '@/features/care-tasks/components/CareTaskCard';
 import { useCareTaskAnimals } from '@/features/care-tasks/hooks/useCareTaskAnimals';
 import {
@@ -28,9 +28,7 @@ const STATUS_FILTERS: { label: string; value: CareTaskStatus | undefined }[] = [
 
 export default function CareTasksScreen() {
   const params = useLocalSearchParams<{ animalId?: string; animalName?: string }>();
-  const { user } = useSession();
-  const canWrite =
-    user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
+  const { canEditAnimal: canWrite } = useCapabilities();
   const [statusFilter, setStatusFilter] = useState<CareTaskStatus | undefined>(undefined);
   const animalId =
     typeof params.animalId === 'string' && isUuid(params.animalId) ? params.animalId : undefined;

@@ -1,32 +1,27 @@
 import { router } from 'expo-router';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState, ErrorState } from '@/components/feedback';
 import { AppText } from '@/components/primitives';
 import { AccountMenuButton } from '@/features/auth/components/AccountMenuButton';
-import { useSession } from '@/features/auth/session';
+import { useAuthorizedNavigation, useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { colors, spacing } from '@/theme';
 
 import { useDashboardOverview } from '../hooks/useDashboardOverview';
 import type { DashboardAnimal } from '../types';
-import { capabilitiesForRoles } from '../utils/capabilities';
 import { toDashboardErrorMessage } from '../utils/dashboardErrorMessages';
-import { filterQuickActions, QUICK_ACTIONS } from '../utils/quickActions';
+import { QUICK_ACTIONS } from '../utils/quickActions';
 import { DashboardQuickActions } from './DashboardQuickActions';
 import { DashboardRecentAnimals } from './DashboardRecentAnimals';
 import { DashboardSkeleton } from './DashboardSkeleton';
 import { DashboardTotalsCard } from './DashboardTotalsCard';
 
 export function DashboardScreen() {
-  const { user } = useSession();
-  const capabilities = useMemo(() => capabilitiesForRoles(user?.roles ?? []), [user?.roles]);
+  const capabilities = useCapabilities();
   const overviewQuery = useDashboardOverview();
-  const quickActions = useMemo(
-    () => filterQuickActions(QUICK_ACTIONS, capabilities),
-    [capabilities]
-  );
+  const quickActions = useAuthorizedNavigation(QUICK_ACTIONS);
 
   const handlePressAnimal = useCallback((animal: DashboardAnimal) => {
     router.push({ pathname: '/animals/[id]', params: { id: animal.id } });

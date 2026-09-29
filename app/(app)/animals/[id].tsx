@@ -14,14 +14,13 @@ import {
 } from '@/features/animals/components/AnimalDetailTabs';
 import { AnimalStatusChanger } from '@/features/animals/components/AnimalStatusChanger';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
-import { useSession } from '@/features/auth/session';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
 import { useAnimalPhoto } from '@/features/animals/hooks/useAnimalPhoto';
 import { useChangeAnimalStatus } from '@/features/animals/hooks/useChangeAnimalStatus';
 import { toChangeStatusErrorMessage } from '@/features/animals/utils/animalErrorMessages';
 import { getStatusBadge } from '@/features/animals/utils/animalTransitions';
 import { isUuid } from '@/features/animals/utils/uuid';
-import { getAnimalDetailCapabilities } from '@/features/animals/utils/animalDetailCapabilities';
 import { AnimalCareTasks } from '@/features/care-tasks/components/AnimalCareTasks';
 import { AnimalExpenses } from '@/features/expenses/components/AnimalExpenses';
 import { ClinicalHistory } from '@/features/medical-records/components/ClinicalHistory';
@@ -30,8 +29,7 @@ import { colors, spacing } from '@/theme';
 
 export default function AnimalDetailScreen() {
   const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
-  const { user } = useSession();
-  const capabilities = getAnimalDetailCapabilities(user?.roles ?? []);
+  const capabilities = useCapabilities();
 
   const animalId = typeof id === 'string' && isUuid(id) ? id : '';
   const fallbackHref: Href = '/explore';

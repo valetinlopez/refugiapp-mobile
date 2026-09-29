@@ -9,13 +9,11 @@ import { AnimalCreateForm } from '@/features/animals/components/AnimalCreateForm
 import { useCreateAnimal } from '@/features/animals/hooks/useCreateAnimal';
 import { toCreateAnimalErrorMessage } from '@/features/animals/utils/animalErrorMessages';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
-import { useSession } from '@/features/auth/session';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { colors, spacing } from '@/theme';
 
 export default function NewAnimalScreen() {
-  const { user } = useSession();
-  const canWrite =
-    user?.roles.some((role) => role === 'admin' || role === 'shelter_manager') ?? false;
+  const { canEditAnimal: canWrite } = useCapabilities();
   const createAnimal = useCreateAnimal();
 
   if (!canWrite) {

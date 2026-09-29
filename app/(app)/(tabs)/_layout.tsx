@@ -2,9 +2,20 @@ import { Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
 
 import { AppIcon, type AppIconName } from '@/components/primitives';
+import { useAuthorizedNavigation } from '@/features/auth/hooks/useCapabilities';
 import { colors, fontFamilies, sizes } from '@/theme';
 
+const TAB_DESTINATIONS = [
+  { name: 'index' },
+  { name: 'explore' },
+  { name: 'care-tasks' },
+  { name: 'account' },
+] as const;
+
 export default function TabsLayout() {
+  const authorizedTabs = useAuthorizedNavigation(TAB_DESTINATIONS);
+  const authorizedTabNames = new Set(authorizedTabs.map(({ name }) => name));
+
   return (
     <Tabs
       screenOptions={{
@@ -22,6 +33,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          ...(authorizedTabNames.has('index') ? {} : { href: null }),
           title: 'Inicio',
           tabBarIcon: ({ color }) => <TabBarIcon color={color} name="home" />,
         }}
@@ -29,6 +41,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="explore"
         options={{
+          ...(authorizedTabNames.has('explore') ? {} : { href: null }),
           title: 'Animales',
           tabBarIcon: ({ color }) => <TabBarIcon color={color} name="paw" />,
         }}
@@ -36,6 +49,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="care-tasks"
         options={{
+          ...(authorizedTabNames.has('care-tasks') ? {} : { href: null }),
           title: 'Tareas',
           tabBarIcon: ({ color }) => <TabBarIcon color={color} name="calendar" />,
         }}
@@ -43,6 +57,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="account"
         options={{
+          ...(authorizedTabNames.has('account') ? {} : { href: null }),
           title: 'Cuenta',
           tabBarIcon: ({ color }) => <TabBarIcon color={color} name="account" />,
         }}

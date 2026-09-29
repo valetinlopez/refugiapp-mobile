@@ -39,7 +39,7 @@ Las rutas de `app/(auth)` se limitan a composición y navegación. La pantalla d
 ## Permisos
 
 - Auth identifica roles; no contiene la matriz completa de autorización de cada dominio.
-- Las features consultan capacidades derivadas desde una API de sesión estable.
+- `useCapabilities` deriva la matriz central desde la sesión y `useAuthorizedNavigation` filtra registros declarativos con `requiredCapability`; ambos son superficie pública estable de auth.
 - El backend vuelve a validar toda operación protegida.
 
 ## Testing
