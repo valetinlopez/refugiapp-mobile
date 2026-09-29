@@ -54,7 +54,9 @@ export default function CreateExpenseScreen() {
         <AppText color="textSecondary">
           El importe se registra en centavos y el comprobante queda asociado al gasto.
         </AppText>
-        {animals.isPending ? <LoadingState label="Cargando animales" /> : null}
+        {animals.isPending && animals.data === undefined ? (
+          <LoadingState label="Cargando animales" />
+        ) : null}
         {animals.isError ? (
           <ErrorState
             actionLabel="Reintentar"

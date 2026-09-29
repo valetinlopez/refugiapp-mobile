@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { PropsWithChildren } from 'react';
 
 import { ApiError } from '@/core/api';
@@ -49,6 +49,19 @@ describe('useAnimalOptionsWithFallback', () => {
     await waitFor(() => expect(result.current.data).toEqual([{ id: ANIMAL_ID, name: 'Luna' }]));
     expect(result.current.isFallback).toBe(false);
     expect(result.current.isError).toBe(false);
+    expect(result.current.isPending).toBe(false);
+    expect(getById).not.toHaveBeenCalled();
+  });
+
+  it('does not keep the loader pending forever when no animal id is given', async () => {
+    jest.spyOn(animalOptionsApi, 'list').mockResolvedValue([{ id: ANIMAL_ID, name: 'Luna' }]);
+    const getById = jest.spyOn(animalOptionsApi, 'getById');
+
+    const { result } = await renderHook(() => useAnimalOptionsWithFallback(), { wrapper });
+
+    await waitFor(() => expect(result.current.data).toEqual([{ id: ANIMAL_ID, name: 'Luna' }]));
+    expect(result.current.isPending).toBe(false);
+    expect(result.current.isError).toBe(false);
     expect(getById).not.toHaveBeenCalled();
   });
 
@@ -61,6 +74,7 @@ describe('useAnimalOptionsWithFallback', () => {
     await waitFor(() => expect(result.current.data).toEqual([{ id: ANIMAL_ID, name: 'Luna' }]));
     expect(result.current.isFallback).toBe(true);
     expect(result.current.isError).toBe(false);
+    expect(result.current.isPending).toBe(false);
   });
 
   it('reports a mapped error when the list fails and no animal id is given', async () => {
@@ -80,7 +94,31 @@ describe('useAnimalOptionsWithFallback', () => {
     expect(result.current.errorMessage).toBe(
       'Tu rol no tiene permiso para consultar los animales.'
     );
+    expect(result.current.isPending).toBe(false);
     expect(getById).not.toHaveBeenCalled();
+  });
+
+  it('reports a mapped server error and recovers through retry', async () => {
+    jest
+      .spyOn(animalOptionsApi, 'list')
+      .mockRejectedValueOnce(serverError())
+      .mockResolvedValueOnce([{ id: ANIMAL_ID, name: 'Luna' }]);
+
+    const { result } = await renderHook(() => useAnimalOptionsWithFallback(), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.isPending).toBe(false);
+    expect(result.current.errorMessage).toBe(
+      'Ocurrió un error en el servidor. Intenta nuevamente.'
+    );
+
+    await act(async () => {
+      await result.current.refetch();
+    });
+
+    await waitFor(() => expect(result.current.data).toEqual([{ id: ANIMAL_ID, name: 'Luna' }]));
+    expect(result.current.isError).toBe(false);
+    expect(result.current.isPending).toBe(false);
   });
 
   it('does not attempt a fallback for a non-uuid animal param', async () => {
@@ -123,5 +161,6 @@ describe('useAnimalOptionsWithFallback', () => {
     await waitFor(() => expect(result.current.data?.length).toBe(2));
     expect(result.current.data).toContainEqual({ id: ANIMAL_ID, name: 'Luna' });
     expect(result.current.isError).toBe(false);
+    expect(result.current.isPending).toBe(false);
   });
 });
