@@ -7,4 +7,4 @@ export type {
   HttpTransportResponse,
   TokenStorageAdapter,
 } from './client';
-export { ApiError } from './errors';
+export { ApiError, toApiErrorMessage } from './errors';

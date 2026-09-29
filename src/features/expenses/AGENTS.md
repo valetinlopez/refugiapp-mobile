@@ -25,9 +25,9 @@
 - `api/`: gastos y subida/borrado del comprobante.
 - `components/`: formulario y selector de comprobante.
 - `hooks/`: alta, invalidaciones y `useExpenseAnimals` (delega las opciones de animales en `src/application/animals`).
-- `utils/`: esquema Zod y mapper del request.
+- `utils/`: esquema Zod, mapper del request y `expenseErrorMessages` (`toCreateExpenseErrorMessage` traduce 400/422, 403, 404, 409, cancelación de subida y red/timeout a español rioplatense, delegando el fallback en `toApiErrorMessage` de `core/api`).
 - No registrar importes, comprobantes, tokens ni payloads financieros en logs.
-- Si el alta falla después de subir media, borrar el asset huérfano best-effort.
+- Si el alta falla después de subir media, borrar el asset huérfano best-effort (limpieza silenciosa; no es una acción iniciada por el usuario y no requiere confirmación).
 
 ## Testing
 
@@ -45,6 +45,7 @@
 - El selector de animal usa el contrato compartido `src/application/animals`: `GET /animals?page=1&limit=100` sin sort en el request (orden alfabético en cliente) y fallback a `GET /animals/:id` cuando llega un `animalId` UUID válido y el listado falla o no lo contiene; el error se traduce por causa y el reintento funciona.
 - Listado de gastos por animal en su detalle, con importe `amountCents` formateado en ARS, categoría, fecha, estados de carga/vacío/error y miniatura del comprobante cuando el contrato devuelve un UUID válido.
 - El listado por animal ofrece `Registrar gasto` a roles de escritura con `animalId` precargado. Como el backend no expone `PATCH /expenses/:id`, informa que la edición no está disponible y no muestra una acción rota; `veterinarian` conserva una vista de solo lectura.
+- Errores del alta traducidos con `toCreateExpenseErrorMessage` (validación, permisos, recurso ausente, comprobante vinculado, cancelación de subida y red/timeout), sin exponer payloads ni tokens.
 
 ### Pendiente o deuda conocida
 

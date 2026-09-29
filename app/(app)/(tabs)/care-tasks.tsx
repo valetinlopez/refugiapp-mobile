@@ -145,7 +145,7 @@ export default function CareTasksScreen() {
         <View style={styles.state}>
           <ErrorState
             actionLabel="Reintentar"
-            message="No pudimos cargar las tareas. Revisa tu conexión."
+            message="No pudimos cargar las tareas. Revisá tu conexión."
             onAction={() => void tasksQuery.refetch()}
             title="No se pudieron cargar las tareas"
           />

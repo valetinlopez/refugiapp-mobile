@@ -1,4 +1,4 @@
-import { ApiError } from '@/core/api';
+import { ApiError, toApiErrorMessage } from '@/core/api';
 
 export function toAnimalOptionsErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -16,5 +16,5 @@ export function toAnimalOptionsErrorMessage(error: unknown): string {
         return error.message;
     }
   }
-  return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+  return toApiErrorMessage(error);
 }

@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { ConfirmDialog } from '@/components/feedback';
 import { AppButton, AppIcon, AppText } from '@/components/primitives';
 import { DOCUMENT_MEDIA_TYPES, validateMediaFile } from '@/core/media';
 import { colors, radii, sizes, spacing } from '@/theme';
@@ -33,7 +34,9 @@ export function ClinicalAttachmentPicker({
 }: ClinicalAttachmentPickerProps) {
   const [isPicking, setIsPicking] = useState(false);
   const [pickerError, setPickerError] = useState<string | null>(null);
+  const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
   const total = value.length + existing.length;
+  const pendingRemoval = existing.find((file) => file.id === pendingRemovalId) ?? null;
 
   function addFile(file: AttachmentFile): void {
     if (total >= MAX_MEDICAL_ATTACHMENTS) {
@@ -129,7 +132,7 @@ export function ClinicalAttachmentPicker({
               disabled={disabled}
               key={file.id}
               name={file.name}
-              onRemove={() => onRemoveExisting(file.id)}
+              onRemove={() => setPendingRemovalId(file.id)}
             />
           ))}
           {value.map((file, index) => (
@@ -171,6 +174,21 @@ export function ClinicalAttachmentPicker({
       <AppText color="textSecondary" variant="caption">
         Opcional. Hasta {MAX_MEDICAL_ATTACHMENTS} imágenes o PDF de 10 MB como máximo.
       </AppText>
+      {pendingRemoval !== null ? (
+        <ConfirmDialog
+          confirmLabel="Confirmar quitar"
+          confirming={disabled}
+          consequence={`“${pendingRemoval.name}” se eliminará del registro clínico cuando guardes los cambios.`}
+          onCancel={() => setPendingRemovalId(null)}
+          onConfirm={() => {
+            onRemoveExisting(pendingRemoval.id);
+            setPendingRemovalId(null);
+          }}
+          title="¿Querés quitar este adjunto?"
+          variant="danger"
+          visible
+        />
+      ) : null}
     </View>
   );
 }

@@ -28,7 +28,7 @@ export default function LoginScreen() {
               setErrorMessage(
                 error instanceof ApiError
                   ? error.message
-                  : 'No pudimos iniciar sesión. Intenta nuevamente.'
+                  : 'No pudimos iniciar sesión. Intentá nuevamente.'
               );
             }
           }}

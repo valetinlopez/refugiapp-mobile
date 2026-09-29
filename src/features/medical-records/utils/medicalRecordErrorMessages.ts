@@ -1,4 +1,4 @@
-import { ApiError } from '@/core/api';
+import { ApiError, toApiErrorMessage } from '@/core/api';
 import { UploadCancelledError } from '@/core/media';
 
 export type CreateMedicalRecordPhase = 'attachment' | 'create';
@@ -52,7 +52,7 @@ export function toCreateMedicalRecordErrorMessage(error: unknown): string {
   if (root instanceof ApiError) {
     if (root.status === 400 || root.status === 422) {
       if (phase === 'attachment') {
-        return 'Un adjunto no es válido. Elige archivos de hasta 10 MB e inténtalo de nuevo.';
+        return 'Un adjunto no es válido. Elegí archivos de hasta 10 MB e intentá de nuevo.';
       }
       if (root.code === 'OCCURRED_AT_IN_FUTURE') {
         return 'La fecha y hora no puede ser futura.';
@@ -60,7 +60,7 @@ export function toCreateMedicalRecordErrorMessage(error: unknown): string {
       if (root.code === 'OCCURRED_AT_BEFORE_INTAKE') {
         return 'La fecha y hora no puede ser anterior al ingreso del animal.';
       }
-      return 'Revisa los datos del registro clínico e inténtalo de nuevo.';
+      return 'Revisá los datos del registro clínico e intentá de nuevo.';
     }
 
     switch (root.status) {
@@ -70,14 +70,14 @@ export function toCreateMedicalRecordErrorMessage(error: unknown): string {
         return 'El animal, el veterinario o un adjunto ya no están disponibles.';
       case 409:
         return root.code === 'VETERINARIAN_INACTIVE'
-          ? 'El veterinario seleccionado ya no está activo. Elige otro e inténtalo de nuevo.'
-          : 'Un adjunto ya está vinculado a otro registro. Elige otro archivo e inténtalo de nuevo.';
+          ? 'El veterinario seleccionado ya no está activo. Elegí otro e intentá de nuevo.'
+          : 'Un adjunto ya está vinculado a otro registro. Elegí otro archivo e intentá de nuevo.';
       default:
         return root.message;
     }
   }
 
-  return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+  return toApiErrorMessage(root);
 }
 
 export function toUpdateMedicalRecordErrorMessage(error: unknown): string {
@@ -90,7 +90,7 @@ export function toUpdateMedicalRecordErrorMessage(error: unknown): string {
   if (root instanceof ApiError) {
     if (root.status === 400 || root.status === 422) {
       if (phase === 'attachment') {
-        return 'Un adjunto no es válido. Elige archivos de hasta 10 MB e inténtalo de nuevo.';
+        return 'Un adjunto no es válido. Elegí archivos de hasta 10 MB e intentá de nuevo.';
       }
       if (root.code === 'OCCURRED_AT_IN_FUTURE') {
         return 'La fecha y hora no puede ser futura.';
@@ -98,7 +98,7 @@ export function toUpdateMedicalRecordErrorMessage(error: unknown): string {
       if (root.code === 'OCCURRED_AT_BEFORE_INTAKE') {
         return 'La fecha y hora no puede ser anterior al ingreso del animal.';
       }
-      return 'Revisa los datos del registro clínico e inténtalo de nuevo.';
+      return 'Revisá los datos del registro clínico e intentá de nuevo.';
     }
 
     switch (root.status) {
@@ -108,12 +108,12 @@ export function toUpdateMedicalRecordErrorMessage(error: unknown): string {
         return 'El registro clínico ya no está disponible.';
       case 409:
         return root.code === 'VETERINARIAN_INACTIVE'
-          ? 'El veterinario seleccionado ya no está activo. Elige otro e inténtalo de nuevo.'
+          ? 'El veterinario seleccionado ya no está activo. Elegí otro e intentá de nuevo.'
           : root.message;
       default:
         return root.message;
     }
   }
 
-  return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+  return toApiErrorMessage(root);
 }

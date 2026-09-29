@@ -233,7 +233,7 @@ export default function DesignSystemScreen() {
             />
             <OfflineState
               actionLabel="Volver a intentar"
-              message="Revisa tu conexión para sincronizar los cambios."
+              message="Revisá tu conexión para sincronizar los cambios."
               onAction={() => undefined}
               title="Sin conexión"
             />

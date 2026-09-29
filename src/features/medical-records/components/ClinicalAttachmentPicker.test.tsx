@@ -1,5 +1,6 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 
+import type { AttachmentFile } from '../api/clinicalAttachmentsApi';
 import { ClinicalAttachmentPicker } from './ClinicalAttachmentPicker';
 
 const MOCK_ASSET = {
@@ -23,6 +24,10 @@ jest.mock('expo-image-picker', () => ({
 
 const documentPicker = jest.requireMock('expo-document-picker');
 const imagePicker = jest.requireMock('expo-image-picker');
+
+function localFile(name: string): AttachmentFile {
+  return { uri: `file:///tmp/${name}`, name, mimeType: 'application/pdf' };
+}
 
 describe('ClinicalAttachmentPicker', () => {
   beforeEach(() => jest.clearAllMocks());
@@ -116,18 +121,63 @@ describe('ClinicalAttachmentPicker', () => {
     }
   });
 
-  it('allows removing an existing attachment', async () => {
+  it('requires confirmation before removing an uploaded attachment', async () => {
     const onRemoveExisting = jest.fn();
     const screen = await render(
       <ClinicalAttachmentPicker
         existing={[{ id: 'media-1', name: 'rx.jpg', secureUrl: 'https://cdn.test/rx.jpg' }]}
-        onChange={() => undefined}
+        onChange={jest.fn()}
         onRemoveExisting={onRemoveExisting}
         value={[]}
       />
     );
 
     await fireEvent.press(screen.getByLabelText('Quitar rx.jpg'));
+
+    expect(screen.getByText('¿Querés quitar este adjunto?')).toBeTruthy();
+    expect(
+      screen.getByText('“rx.jpg” se eliminará del registro clínico cuando guardes los cambios.')
+    ).toBeTruthy();
+    expect(onRemoveExisting).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    await waitFor(() => {
+      expect(onRemoveExisting).not.toHaveBeenCalled();
+    });
+    expect(screen.queryByText('¿Querés quitar este adjunto?')).toBeNull();
+  });
+
+  it('removes an uploaded attachment only after confirming', async () => {
+    const onRemoveExisting = jest.fn();
+    const screen = await render(
+      <ClinicalAttachmentPicker
+        existing={[{ id: 'media-1', name: 'rx.jpg', secureUrl: 'https://cdn.test/rx.jpg' }]}
+        onChange={jest.fn()}
+        onRemoveExisting={onRemoveExisting}
+        value={[]}
+      />
+    );
+
+    await fireEvent.press(screen.getByLabelText('Quitar rx.jpg'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar quitar' }));
+
     expect(onRemoveExisting).toHaveBeenCalledWith('media-1');
+  });
+
+  it('removes a new local file immediately without confirmation', async () => {
+    const onChange = jest.fn();
+    const screen = await render(
+      <ClinicalAttachmentPicker
+        onChange={onChange}
+        onRemoveExisting={jest.fn()}
+        value={[localFile('nuevo.pdf')]}
+      />
+    );
+
+    await fireEvent.press(screen.getByLabelText('Quitar nuevo.pdf'));
+
+    expect(onChange).toHaveBeenCalledWith([]);
+    expect(screen.queryByText('¿Querés quitar este adjunto?')).toBeNull();
   });
 });

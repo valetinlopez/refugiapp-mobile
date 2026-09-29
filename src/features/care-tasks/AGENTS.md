@@ -52,7 +52,7 @@
 - Ruta principal `app/(app)/(tabs)/care-tasks.tsx` (tab "Tareas"); la ruta legacy `/inbox` redirige a `/care-tasks`.
 - Alta y edición mediante formularios validados.
 - `dueAt` opcional mediante selector nativo compartido; si se informa debe ser futuro, con fallback textual web.
-- Confirmaciones para completar y cancelar tareas pendientes.
+- Confirmaciones para completar y cancelar tareas pendientes mediante `CareTaskActionDialog`, que envuelve el `ConfirmDialog` compartido del sistema de diseño (danger para cancelar, primary para completar).
 - Invalidación de las queries de tareas y dashboard después de cada mutación.
 - Guards visuales de escritura para `admin` y `shelter_manager`.
 - El selector de animal usa el contrato compartido `src/application/animals`: `GET /animals?page=1&limit=100` sin sort en el request (orden alfabético en cliente) y fallback a `GET /animals/:id` cuando llega un `animalId` UUID válido y el listado falla o no lo contiene; el error se traduce por causa y el reintento funciona.

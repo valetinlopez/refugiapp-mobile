@@ -142,14 +142,12 @@ describe('AnimalProfileForm edit mode', () => {
         animal={createAnimal()}
         currentPhotoUri={null}
         onSubmit={onSubmit}
-        photoErrorMessage="La foto no es válida. Elige una imagen de hasta 10 MB e inténtalo de nuevo."
+        photoErrorMessage="La foto no es válida. Elegí una imagen de hasta 10 MB e intentá de nuevo."
       />
     );
 
     expect(
-      screen.getByText(
-        'La foto no es válida. Elige una imagen de hasta 10 MB e inténtalo de nuevo.'
-      )
+      screen.getByText('La foto no es válida. Elegí una imagen de hasta 10 MB e intentá de nuevo.')
     ).toBeTruthy();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Reintentar' }));

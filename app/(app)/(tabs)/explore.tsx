@@ -129,7 +129,7 @@ export default function AnimalsScreen() {
         <View style={styles.state}>
           <ErrorState
             actionLabel="Reintentar"
-            message="No pudimos cargar los animales. Revisa tu conexión."
+            message="No pudimos cargar los animales. Revisá tu conexión."
             onAction={() => void animalsQuery.refetch()}
             title="No se pudieron cargar los animales"
           />

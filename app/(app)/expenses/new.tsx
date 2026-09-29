@@ -11,6 +11,7 @@ import { useSession } from '@/features/auth/session';
 import { ExpenseForm } from '@/features/expenses/components/ExpenseForm';
 import { useCreateExpense } from '@/features/expenses/hooks/useCreateExpense';
 import { useExpenseAnimals } from '@/features/expenses/hooks/useExpenseAnimals';
+import { toCreateExpenseErrorMessage } from '@/features/expenses/utils/expenseErrorMessages';
 import { colors, spacing } from '@/theme';
 
 export default function CreateExpenseScreen() {
@@ -76,7 +77,9 @@ export default function CreateExpenseScreen() {
         {animals.data ? (
           <ExpenseForm
             animalOptions={animals.data}
-            errorMessage={createExpense.error?.message ?? null}
+            errorMessage={
+              createExpense.error ? toCreateExpenseErrorMessage(createExpense.error) : null
+            }
             {...(initialAnimalId ? { initialAnimalId } : {})}
             isSubmitting={createExpense.isPending}
             onCancelUpload={createExpense.cancelUpload}

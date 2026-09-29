@@ -311,7 +311,7 @@ export class HttpClient {
       await this.invalidateSession();
       throw new ApiError({
         code: 'SESSION_EXPIRED',
-        message: 'Tu sesión venció. Inicia sesión nuevamente.',
+        message: 'Tu sesión venció. Iniciá sesión nuevamente.',
         requestId: createRequestId(),
         status: 401,
       });

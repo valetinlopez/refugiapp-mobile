@@ -16,6 +16,7 @@
 
 - `apiClient` usa una base URL que ya contiene `/api/v1`; las features usan paths relativos como `/animals`.
 - Centralizar headers, timeouts, autenticación, normalización técnica de errores y correlation IDs cuando se incorporen.
+- `errors.ts` normaliza estados HTTP (400, 401, 403, 404, 409, 422, 429, 500, 502-504) a mensajes accionables en español rioplatense y diferencia red (`NETWORK_ERROR`) de timeout (`REQUEST_TIMEOUT`). `toApiErrorMessage` es el fallback seguro para errores desconocidos y nunca interpola payloads, tokens ni `requestId`; las features lo usan como base y lo especializan por código/dominio.
 - No registrar headers de autorización, tokens ni payloads sensibles.
 - Evitar loops o múltiples refresh simultáneos; cualquier cambio del flujo requiere tests de concurrencia y fallo.
 
