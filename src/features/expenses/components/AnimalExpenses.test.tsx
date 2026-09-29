@@ -42,6 +42,38 @@ describe('AnimalExpenses', () => {
     expect(screen.getByLabelText('Comprobante del gasto')).toBeTruthy();
   });
 
+  it('lets the text column shrink and keeps the receipt from shrinking on narrow layouts', async () => {
+    mockUseAnimalExpenses.mockReturnValue({
+      data: {
+        items: [
+          {
+            id: 'expense-1',
+            animalId: 'animal-1',
+            category: 'veterinary',
+            amountCents: 123456,
+            currency: 'ARS',
+            description: 'Consulta anual con placas de control',
+            ticketMediaId: 'media-1',
+            incurredAt: '2026-09-22T14:30:00.000Z',
+          },
+        ],
+      },
+      isError: false,
+      isPending: false,
+    });
+    const screen = await render(<AnimalExpenses animalId="animal-1" canWrite={false} />);
+
+    const text = screen.getByText(/Consulta anual con placas/).parent;
+    expect(text).toHaveStyle({ flex: 1, minWidth: 0 });
+
+    const receipt = screen.getByLabelText('Comprobante del gasto');
+    expect(receipt).toHaveStyle({ flexShrink: 0 });
+
+    expect(screen.getByText(/1\.234,56/)).toHaveProp('numberOfLines', 1);
+    expect(screen.getByText(/Consulta anual con placas/)).toHaveProp('numberOfLines', 3);
+    expect(screen.getByLabelText(/Consulta anual con placas de control/)).toBeTruthy();
+  });
+
   it('renders an explicit empty state', async () => {
     mockUseAnimalExpenses.mockReturnValue({
       data: { items: [] },

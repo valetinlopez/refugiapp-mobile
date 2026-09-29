@@ -42,14 +42,24 @@ export function AnimalHistory({ animalId }: AnimalHistoryProps) {
     <View accessibilityLabel="Historial de eventos" style={styles.list}>
       {eventsQuery.data.items.map((event) => (
         <AppCard
-          accessibilityLabel={`${getAnimalEventTypeLabel(event.eventType)}, ${event.description}`}
+          accessibilityLabel={`${getAnimalEventTypeLabel(event.eventType)}, ${event.description}, ${formatAnimalEventDate(event.occurredAt)}`}
           key={event.id}
         >
           <View style={styles.row}>
-            <AppText color="textSecondary" style={styles.rowLabel} variant="label">
+            <AppText
+              color="textSecondary"
+              numberOfLines={1}
+              style={styles.rowLabel}
+              variant="label"
+            >
               {getAnimalEventTypeLabel(event.eventType)}
             </AppText>
-            <AppText color="textSecondary" style={styles.rowMeta} variant="caption">
+            <AppText
+              color="textSecondary"
+              numberOfLines={1}
+              style={styles.rowMeta}
+              variant="caption"
+            >
               {formatAnimalEventDate(event.occurredAt)}
             </AppText>
           </View>
@@ -65,14 +75,17 @@ const styles = StyleSheet.create({
   row: {
     alignItems: 'center',
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
     justifyContent: 'space-between',
   },
   rowLabel: {
     flexShrink: 0,
+    maxWidth: '100%',
   },
   rowMeta: {
     flex: 1,
+    minWidth: 0,
     textAlign: 'right',
   },
 });

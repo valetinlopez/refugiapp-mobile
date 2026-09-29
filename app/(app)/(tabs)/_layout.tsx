@@ -15,7 +15,7 @@ export default function TabsLayout() {
         tabBarLabelStyle: { fontFamily: fontFamilies.bodyStrong },
         tabBarStyle: {
           backgroundColor: colors.surfaceSubtle,
-          borderTopColor: colors.border,
+          borderTopWidth: 0,
         },
       }}
     >

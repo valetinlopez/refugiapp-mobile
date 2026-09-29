@@ -102,6 +102,16 @@ Un recorte transparente puede usarse una vez en una cabecera editorial. Debe con
 
 `default` agrupa contenido, `elevated` señala jerarquía, `outlined` sirve a bloques secundarios y `organic` identifica un único punto focal. No anidar más de dos niveles de superficie. Una tarjeta clicable debe usar un control accesible y no depender de que el usuario adivine la interacción.
 
+### Layout interno de tarjetas de contenido (tareas, gastos, historial)
+
+Patrón responsive compartido por `CareTaskCard`, las tarjetas de gastos y el historial general, sin variantes nuevas:
+
+- El contenido se ordena en un contenedor vertical con `gap` por tokens; nunca alturas fijas alrededor de texto.
+- En el encabezado de fila (título + badge o texto + miniatura), la columna de texto usa `flex: 1` y `minWidth: 0`; el badge, el comprobante o el avatar usa `flexShrink: 0` para no encogerse. Así el texto cede y envuelve antes que la señal de estado o la media.
+- Las filas etiqueta-valor y de metadatos pueden envolver (`flexWrap: 'wrap'`) en pantallas estrechas y con fuente ampliada; la fecha/envío se trunca a una línea y queda alineada sin colisionar.
+- El texto de metadatos (título largo, nombre, fecha, descripción) se trunca con `numberOfLines` (título hasta 2 líneas, nombre/fecha 1, descripción hasta 3), pero el `accessibilityLabel` de la tarjeta conserva siempre el texto completo para tecnologías de asistencia.
+- Las acciones de una tarjeta se agrupan en una fila con `flexWrap` y `gap` por tokens, manteniendo áreas táctiles de 44 × 44 y labels accesibles.
+
 ## 15. Badges y estados
 
 Los badges tienen texto, icono, tono y forma píldora. No se usa un punto de color aislado. Las etiquetas visibles se redactan en español; los valores de dominio permanecen en inglés. Para listas densas puede omitirse el icono solo si existe otra señal explícita y la etiqueta es inequívoca.

@@ -80,4 +80,36 @@ describe('AnimalHistory', () => {
     expect(screen.getByText('Cambio de estado')).toBeTruthy();
     expect(screen.getByText('Pasó a disponible para adopción.')).toBeTruthy();
   });
+
+  it('wraps the label/date row on narrow layouts without losing the full text', async () => {
+    mockUseAnimalHistory.mockReturnValue(
+      createQueryResult({
+        data: {
+          items: [
+            {
+              id: '7fa85f64-5717-4562-b3fc-2c963f66afa6',
+              animalId: ANIMAL_ID,
+              eventType: 'general_note',
+              description: 'Ajuste de alimentación por indicación veterinaria.',
+              occurredAt: '2026-09-21T14:30:00.000Z',
+              createdByUserId: null,
+            },
+          ],
+          page: 1,
+          limit: 20,
+          total: 1,
+        },
+      })
+    );
+    const screen = await render(<AnimalHistory animalId={ANIMAL_ID} />);
+
+    const row = screen.getByText('Nota general').parent;
+    expect(row).toHaveStyle({ flexDirection: 'row', flexWrap: 'wrap' });
+
+    expect(screen.getByText('Nota general')).toHaveProp('numberOfLines', 1);
+    expect(screen.getByText(/ajuste de alimentación/i)).toBeTruthy();
+    expect(
+      screen.getByLabelText(/Ajuste de alimentación por indicación veterinaria\./)
+    ).toBeTruthy();
+  });
 });

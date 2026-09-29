@@ -39,39 +39,45 @@ export function CareTaskCard({
 
   return (
     <AppCard accessibilityLabel={`${task.title}, ${animalName}, ${presentation.label}`}>
-      <View style={styles.header}>
-        <View style={styles.heading}>
-          <AppText variant="heading3">{task.title}</AppText>
-          <AppText color="textSecondary">{animalName}</AppText>
+      <View style={styles.body}>
+        <View style={styles.header}>
+          <View style={styles.heading}>
+            <AppText numberOfLines={2} variant="heading3">
+              {task.title}
+            </AppText>
+            <AppText color="textSecondary" numberOfLines={1}>
+              {animalName}
+            </AppText>
+          </View>
+          <AppBadge
+            icon={presentation.icon}
+            label={presentation.label}
+            style={styles.badge}
+            tone={presentation.tone}
+          />
         </View>
-        <AppBadge
-          icon={presentation.icon}
-          label={presentation.label}
-          style={styles.badge}
-          tone={presentation.tone}
-        />
+        {task.description ? <AppText>{task.description}</AppText> : null}
+        <AppText color="textSecondary" numberOfLines={1} variant="caption">
+          Fecha: {formatCareTaskDate(task.dueAt)}
+        </AppText>
+        {actionable ? (
+          <View style={styles.actions}>
+            <AppButton
+              disabled={isBusy}
+              label="Editar"
+              onPress={() => onEdit(task.id)}
+              variant="secondary"
+            />
+            <AppButton disabled={isBusy} label="Completar" onPress={() => setAction('complete')} />
+            <AppButton
+              disabled={isBusy}
+              label="Cancelar tarea"
+              onPress={() => setAction('cancel')}
+              variant="danger"
+            />
+          </View>
+        ) : null}
       </View>
-      {task.description ? <AppText>{task.description}</AppText> : null}
-      <AppText color="textSecondary" variant="caption">
-        Fecha: {formatCareTaskDate(task.dueAt)}
-      </AppText>
-      {actionable ? (
-        <View style={styles.actions}>
-          <AppButton
-            disabled={isBusy}
-            label="Editar"
-            onPress={() => onEdit(task.id)}
-            variant="secondary"
-          />
-          <AppButton disabled={isBusy} label="Completar" onPress={() => setAction('complete')} />
-          <AppButton
-            disabled={isBusy}
-            label="Cancelar tarea"
-            onPress={() => setAction('cancel')}
-            variant="danger"
-          />
-        </View>
-      ) : null}
       {action ? (
         <CareTaskActionDialog
           action={action}
@@ -89,6 +95,7 @@ export function CareTaskCard({
 const styles = StyleSheet.create({
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   badge: { flexShrink: 0 },
+  body: { gap: spacing.sm },
   header: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.sm },
   heading: { flex: 1, gap: spacing.xxs, minWidth: 0 },
 });
