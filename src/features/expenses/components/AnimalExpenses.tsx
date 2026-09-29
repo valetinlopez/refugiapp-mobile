@@ -60,15 +60,17 @@ function ExpenseCard({ expense }: { expense: Expense }) {
   const receipt = useExpenseReceipt(expense.ticketMediaId);
   return (
     <AppCard
-      accessibilityLabel={`${getExpenseCategoryLabel(expense.category)}, ${formatAmountCents(expense.amountCents)}`}
+      accessibilityLabel={`${getExpenseCategoryLabel(expense.category)}, ${formatAmountCents(expense.amountCents)}, ${expense.description}`}
     >
       <View style={styles.row}>
         <View style={styles.text}>
-          <AppText variant="heading3">{formatAmountCents(expense.amountCents)}</AppText>
-          <AppText color="textSecondary" variant="label">
+          <AppText numberOfLines={1} variant="heading3">
+            {formatAmountCents(expense.amountCents)}
+          </AppText>
+          <AppText color="textSecondary" numberOfLines={2} variant="label">
             {getExpenseCategoryLabel(expense.category)} · {formatExpenseDate(expense.incurredAt)}
           </AppText>
-          <AppText>{expense.description}</AppText>
+          <AppText numberOfLines={3}>{expense.description}</AppText>
         </View>
         {receipt.data ? (
           <Image
@@ -91,15 +93,21 @@ function ExpenseCard({ expense }: { expense: Expense }) {
 
 const styles = StyleSheet.create({
   list: { gap: spacing.sm },
-  receipt: { borderRadius: radii.md, height: sizes.avatarLg, width: sizes.avatarLg },
+  receipt: {
+    borderRadius: radii.md,
+    flexShrink: 0,
+    height: sizes.avatarLg,
+    width: sizes.avatarLg,
+  },
   receiptFallback: {
     alignItems: 'center',
     backgroundColor: colors.surfaceSubtle,
     borderRadius: radii.md,
+    flexShrink: 0,
     height: sizes.avatarLg,
     justifyContent: 'center',
     width: sizes.avatarLg,
   },
   row: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.md },
-  text: { flex: 1, gap: spacing.xxs },
+  text: { flex: 1, gap: spacing.xxs, minWidth: 0 },
 });
