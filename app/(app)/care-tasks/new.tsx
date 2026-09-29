@@ -57,7 +57,9 @@ export default function CreateCareTaskScreen() {
         <AppText color="textSecondary">
           La tarea quedará pendiente y el backend registrará tu usuario como creador.
         </AppText>
-        {animalsQuery.isPending ? <LoadingState label="Cargando animales" /> : null}
+        {animalsQuery.isPending && animalsQuery.data === undefined ? (
+          <LoadingState label="Cargando animales" />
+        ) : null}
         {animalsQuery.isError ? (
           <ErrorState
             actionLabel="Reintentar"

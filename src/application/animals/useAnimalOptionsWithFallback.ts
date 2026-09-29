@@ -37,13 +37,22 @@ export function useAnimalOptionsWithFallback(animalId?: string): AnimalOptionsSt
   const isError = optionsQuery.isError && (!hasValidAnimalId || fallbackQuery.isError);
   const error =
     hasValidAnimalId && fallbackQuery.error !== null ? fallbackQuery.error : optionsQuery.error;
+  const isPending =
+    data === undefined && (optionsQuery.isPending || (needsFallback && fallbackQuery.isPending));
+  const refetch = async () => {
+    const listResult = await optionsQuery.refetch();
+    if (needsFallback) {
+      await fallbackQuery.refetch();
+    }
+    return listResult;
+  };
 
   return {
     data,
     errorMessage: isError && error !== null ? toAnimalOptionsErrorMessage(error) : null,
     isError,
     isFallback: optionsQuery.isError && fallbackOption !== undefined,
-    isPending: optionsQuery.isPending || fallbackQuery.isPending,
-    refetch: optionsQuery.refetch,
+    isPending,
+    refetch,
   };
 }

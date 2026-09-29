@@ -40,7 +40,8 @@
 - Contrato compartido de opciones de animales para los formularios de `care-tasks` y `expenses`.
 - Lectura `GET /animals?page=1&limit=100` sin parámetros no documentados, con orden alfabético en cliente.
 - Fallback `GET /animals/:id` ante `animalId` UUID válido cuando el listado falla o no contiene al animal.
-- Mensajes de error accionables por causa y reintento funcional.
+- Mensajes de error accionables por causa y reintento funcional (vuelve a pedir el listado y, cuando corresponde, el fallback por animal único).
+- `isPending` solo se expone en `true` mientras no hay datos (`data === undefined`); una query de fallback deshabilitada no mantiene el loader activo.
 
 ### Pendiente o deuda conocida
 
