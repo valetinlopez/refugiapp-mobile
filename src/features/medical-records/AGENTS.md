@@ -61,6 +61,8 @@
 - El formulario clínico no se bloquea por `GET /veterinarians`: estados de carga, error y vacío con reintento, y guardado posible sin veterinario.
 - Mensajes específicos para `OCCURRED_AT_IN_FUTURE` y `OCCURRED_AT_BEFORE_INTAKE`.
 - Adjuntos clínicos desde cámara, galería o selector de PDF: JPEG, PNG, WebP y PDF de hasta 10 MB; subida huérfana en creación (limpieza best-effort al cancelar o fallar el POST) y subida directa en edición, con progreso y cancelación.
+- Quitar un adjunto ya subido en edición requiere confirmación (`ConfirmDialog` del sistema de diseño): el borrado real (`DELETE /media/:id`) ocurre al guardar; la limpieza huérfana automática post-fallo es silenciosa por no ser iniciada por el usuario.
+- Los mensajes de error de registro clínico usan voseo rioplatense y delegan el fallback genérico en `toApiErrorMessage` de `core/api`.
 - `ClinicalHistory` para presentar la evolución clínica por animal.
 - `ClinicalHistory` permite filtrar por los 7 tipos de `recordType` y por período: todo, últimos 30/90 días o rango personalizado con `DateTimeField` (`from`/`to` enviados al backend como ISO local, inicio y fin del día). Un rango personalizado incompleto o con `from > to` no dispara consulta: muestra mensaje en español.
 - `buildClinicalHistoryFilters`/`getCustomRangeError` en `utils/clinicalHistoryFilters.ts`: construcción pura y testeable de los filtros de evolución clínica.

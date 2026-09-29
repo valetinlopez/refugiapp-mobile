@@ -28,7 +28,7 @@ describe('toCreateMedicalRecordErrorMessage', () => {
       status: 409,
     });
     expect(toCreateMedicalRecordErrorMessage(error)).toBe(
-      'El veterinario seleccionado ya no está activo. Elige otro e inténtalo de nuevo.'
+      'El veterinario seleccionado ya no está activo. Elegí otro e intentá de nuevo.'
     );
   });
 
@@ -43,7 +43,7 @@ describe('toCreateMedicalRecordErrorMessage', () => {
       })
     );
     expect(toCreateMedicalRecordErrorMessage(error)).toBe(
-      'Un adjunto no es válido. Elige archivos de hasta 10 MB e inténtalo de nuevo.'
+      'Un adjunto no es válido. Elegí archivos de hasta 10 MB e intentá de nuevo.'
     );
   });
 
@@ -71,7 +71,7 @@ describe('toCreateMedicalRecordErrorMessage', () => {
 
   it('falls back to a safe message for unknown errors', () => {
     expect(toCreateMedicalRecordErrorMessage(new Error('boom'))).toBe(
-      'Ocurrió un error inesperado. Inténtalo de nuevo.'
+      'Ocurrió un error inesperado. Intentá de nuevo.'
     );
   });
 });
@@ -112,7 +112,7 @@ describe('toUpdateMedicalRecordErrorMessage', () => {
       })
     );
     expect(toUpdateMedicalRecordErrorMessage(error)).toBe(
-      'Un adjunto no es válido. Elige archivos de hasta 10 MB e inténtalo de nuevo.'
+      'Un adjunto no es válido. Elegí archivos de hasta 10 MB e intentá de nuevo.'
     );
   });
 
@@ -140,7 +140,7 @@ describe('toUpdateMedicalRecordErrorMessage', () => {
 
   it('falls back to a safe message for unknown errors', () => {
     expect(toUpdateMedicalRecordErrorMessage(new Error('boom'))).toBe(
-      'Ocurrió un error inesperado. Inténtalo de nuevo.'
+      'Ocurrió un error inesperado. Intentá de nuevo.'
     );
   });
 });

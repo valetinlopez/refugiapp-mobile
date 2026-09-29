@@ -13,5 +13,5 @@ export function toDashboardErrorMessage(error: unknown): string {
         return error.message;
     }
   }
-  return 'No pudimos cargar el panel. Revisá tu conexión e inténtalo de nuevo.';
+  return 'No pudimos cargar el panel. Revisá tu conexión e intentá de nuevo.';
 }

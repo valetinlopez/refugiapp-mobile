@@ -101,7 +101,7 @@ function AnimalDetailContent({
     return (
       <ErrorState
         actionLabel="Reintentar"
-        message="No pudimos cargar la ficha del animal. Revisa tu conexión e inténtalo de nuevo."
+        message="No pudimos cargar la ficha del animal. Revisá tu conexión e intentá de nuevo."
         onAction={onRetry}
         title="No se pudo cargar el animal"
       />

@@ -251,9 +251,19 @@ El acceso de cuenta es transversal al área autenticada y reutiliza el lenguaje 
 
 - **Acceso:** `AccountMenuButton`, botón solo-icono de 44 × 44 (`sizes.touchTarget`) con `accessibilityLabel` "Abrir menú de cuenta", icono `account` en `textPrimary` y `hitSlop` de 4 pt. Aparece en el encabezado de Inicio y, en las pantallas stack, junto al retorno (`AccountHeaderRow` = `AppHeaderBack` + botón). Navega a la pantalla de cuenta.
 - **Pantalla "Cuenta" (tab):** muestra identidad (correo y roles presentados en español; los valores de dominio permanecen en inglés) y la acción "Cerrar sesión" en variante `secondary` con icono `logout`.
-- **Confirmación (`AccountSignOutSheet`):** modal nativo con scrim, título "¿Querés cerrar sesión?", correo del usuario y acciones "Cancelar" (`ghost`) y "Cerrar sesión" (`danger`) con estado de carga (`loading`) que bloquea el cierre durante la operación. El error se anuncia como alerta con texto + color; no se exponen tokens ni payloads.
+- **Confirmación (`AccountSignOutSheet`):** envuelve a `ConfirmDialog` (ver §33) con título "¿Querés cerrar sesión?", correo del usuario y acciones "Cancelar" (`ghost`) y "Cerrar sesión" (`danger`) con estado de carga (`loading`) que bloquea el cierre durante la operación. El error se anuncia como alerta con texto + color; no se exponen tokens ni payloads.
 - **Comportamiento:** se llama a `SessionProvider.signOut()` (POST `/auth/logout` best-effort); el cierre local (Secure Store + cache de TanStack Query) siempre ocurre, incluso offline o con refresh inválido, y `Stack.Protected` redirige a login sin dejar rutas `(app)` accesibles.
 - **Accesibilidad:** estados visibles con texto/icono además de color, áreas táctiles de 44 × 44 y labels en español.
+
+## 33. Confirmaciones destructivas (`ConfirmDialog`)
+
+`ConfirmDialog` es el diálogo compartido del sistema de diseño para acciones con consecuencia, sin `Alert` nativo. Reemplaza los diálogos duplicados por feature (cambio de estado de animal, completar/cancelar tarea, cierre de sesión) y se usa en todo borrado iniciado por el usuario.
+
+- **Composición:** modal nativo transparente con scrim y `accessibilityViewIsModal`; contenido centrado, tarjeta `surfaceElevated` con radio `lg` y ancho máx 480. `role="alert"` y `liveRegion` para anunciar el diálogo y sus errores.
+- **Contenido:** título con pregunta directa, detalle de la consecuencia y mensaje de error seguro opcional.
+- **Acciones:** `Cancelar`/`Volver` (`ghost`, deshabilitado durante la operación) y confirmación (`primary` o `danger`, con `danger` por defecto) con estado de carga que bloquea ambas acciones mientras se ejecuta (`confirming`).
+- **Regla:** toda acción destructiva exige confirmación explícita; nunca se ejecuta de forma inmediata. El borrado de un adjunto clínico ya subido (`DELETE /media/:id`) confirma antes de encolarse al guardado. La limpieza huérfana automática posterior a un fallo (foto de perfil, comprobante, adjuntos) permanece silenciosa porque no la inicia el usuario.
+- **Tono del producto:** los mensajes de confirmación y de error usan voseo rioplatense ("¿Querés...?", "Revisá...", "Intentá...") de forma consistente en toda la app.
 
 ## Referencias técnicas
 

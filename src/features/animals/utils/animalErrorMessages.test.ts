@@ -20,13 +20,13 @@ function apiError(status: number): ApiError {
 describe('toCreateAnimalErrorMessage', () => {
   it('translates validation failures during creation', () => {
     expect(toCreateAnimalErrorMessage(new CreateAnimalError('create', apiError(422)))).toBe(
-      'Revisa los datos del formulario e inténtalo de nuevo.'
+      'Revisá los datos del formulario e intentá de nuevo.'
     );
   });
 
   it('translates photo upload failures with photo guidance', () => {
     expect(toCreateAnimalErrorMessage(new CreateAnimalError('photo', apiError(400)))).toBe(
-      'La foto no es válida. Elige una imagen de hasta 10 MB e inténtalo de nuevo.'
+      'La foto no es válida. Elegí una imagen de hasta 10 MB e intentá de nuevo.'
     );
   });
 
@@ -38,13 +38,13 @@ describe('toCreateAnimalErrorMessage', () => {
 
   it('guides re-selecting the photo when the orphan asset is gone', () => {
     expect(toCreateAnimalErrorMessage(apiError(404))).toBe(
-      'La foto seleccionada ya no está disponible. Vuelve a elegirla e inténtalo de nuevo.'
+      'La foto seleccionada ya no está disponible. Volvé a elegirla e intentá de nuevo.'
     );
   });
 
   it('explains already-linked photo conflicts', () => {
     expect(toCreateAnimalErrorMessage(apiError(409))).toBe(
-      'La foto ya está vinculada a otro registro. Elige otra foto e inténtalo de nuevo.'
+      'La foto ya está vinculada a otro registro. Elegí otra foto e intentá de nuevo.'
     );
   });
 
@@ -55,11 +55,9 @@ describe('toCreateAnimalErrorMessage', () => {
 
   it('falls back to a safe message for unknown errors', () => {
     expect(toCreateAnimalErrorMessage(new Error('boom'))).toBe(
-      'Ocurrió un error inesperado. Inténtalo de nuevo.'
+      'Ocurrió un error inesperado. Intentá de nuevo.'
     );
-    expect(toCreateAnimalErrorMessage(null)).toBe(
-      'Ocurrió un error inesperado. Inténtalo de nuevo.'
-    );
+    expect(toCreateAnimalErrorMessage(null)).toBe('Ocurrió un error inesperado. Intentá de nuevo.');
   });
 });
 
@@ -76,13 +74,13 @@ describe('toUpdateAnimalErrorMessage', () => {
 
   it('guides re-selecting the photo when the orphan asset is gone', () => {
     expect(toUpdateAnimalErrorMessage(new UpdateAnimalError('photo', apiError(404)))).toBe(
-      'La foto seleccionada ya no está disponible. Vuelve a elegirla e inténtalo de nuevo.'
+      'La foto seleccionada ya no está disponible. Volvé a elegirla e intentá de nuevo.'
     );
   });
 
   it('translates photo conflicts during update', () => {
     expect(toUpdateAnimalErrorMessage(new UpdateAnimalError('photo', apiError(409)))).toBe(
-      'La foto ya está vinculada a otro registro. Elige otra foto e inténtalo de nuevo.'
+      'La foto ya está vinculada a otro registro. Elegí otra foto e intentá de nuevo.'
     );
   });
 
@@ -92,13 +90,13 @@ describe('toUpdateAnimalErrorMessage', () => {
 
   it('translates validation failures during update', () => {
     expect(toUpdateAnimalErrorMessage(new UpdateAnimalError('update', apiError(422)))).toBe(
-      'Revisa los datos del formulario e inténtalo de nuevo.'
+      'Revisá los datos del formulario e intentá de nuevo.'
     );
   });
 
   it('falls back to a safe message for unknown errors', () => {
     expect(toUpdateAnimalErrorMessage(new Error('boom'))).toBe(
-      'Ocurrió un error inesperado. Inténtalo de nuevo.'
+      'Ocurrió un error inesperado. Intentá de nuevo.'
     );
   });
 });
@@ -126,7 +124,7 @@ describe('toChangeStatusErrorMessage', () => {
 
   it('falls back to a safe message for unknown errors', () => {
     expect(toChangeStatusErrorMessage(new Error('boom'))).toBe(
-      'Ocurrió un error inesperado. Inténtalo de nuevo.'
+      'Ocurrió un error inesperado. Intentá de nuevo.'
     );
   });
 });

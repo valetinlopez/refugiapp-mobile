@@ -103,8 +103,8 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - PATCH diferencial en edición (`toUpdateAnimalRequest` + `hasPatchChanges`): omite campos intactos, envía `null` para limpiar `breed`/`birthDate` y no-op cuando no hay cambios.
 - Normalización de fechas en la frontera: `toDateOnly` convierte el ISO datetime del backend a `YYYY-MM-DD` en `toAnimalView` (detalle, listado y respuestas de escritura) y en `toUpdateAnimalFormValues`/`toUpdateAnimalRequest`; las filas del detalle envuelven en pantallas estrechas (`flexWrap`) según `docs/design.md`.
 - Errores de subida de foto y de guardado distinguidos en UI, con reintento y opción "Guardar sin foto"; errores Zod con scroll y foco al primer campo inválido.
-- Confirmación de cambio de estado con `StatusConfirmDialog` (modal del sistema de diseño, sin `Alert` nativo).
-- Traducción de errores de backend a mensajes claros (`toCreateAnimalErrorMessage`, `toUpdateAnimalErrorMessage`, `toChangeStatusErrorMessage`).
+- Confirmación de cambio de estado con `StatusConfirmDialog`, que envuelve el `ConfirmDialog` compartido del sistema de diseño (sin `Alert` nativo) y reserva el tono danger para estados terminales.
+- Traducción de errores de backend a mensajes claros (`toCreateAnimalErrorMessage`, `toUpdateAnimalErrorMessage`, `toChangeStatusErrorMessage`) en voseo rioplatense, con fallback genérico delegado en `toApiErrorMessage` de `core/api`.
 - Unit tests (matriz de transiciones, esquemas, mappers, mensajes), integración multipart con transporte falso y component tests con RNTL.
 
 ### Deuda conocida

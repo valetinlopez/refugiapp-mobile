@@ -1,11 +1,11 @@
-import { ApiError } from '@/core/api';
+import { ApiError, toApiErrorMessage } from '@/core/api';
 
 export function toCareTaskErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     switch (error.status) {
       case 400:
       case 422:
-        return 'Revisá los datos de la tarea e inténtalo de nuevo.';
+        return 'Revisá los datos de la tarea e intentá de nuevo.';
       case 403:
         return 'Tu rol no tiene permiso para realizar esta acción.';
       case 404:
@@ -16,5 +16,5 @@ export function toCareTaskErrorMessage(error: unknown): string {
         return error.message;
     }
   }
-  return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+  return toApiErrorMessage(error);
 }

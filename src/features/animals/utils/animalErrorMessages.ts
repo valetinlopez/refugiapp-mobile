@@ -1,4 +1,4 @@
-import { ApiError } from '@/core/api';
+import { ApiError, toApiErrorMessage } from '@/core/api';
 import { UploadCancelledError } from '@/core/media';
 
 export type CreateAnimalPhase = 'photo' | 'create';
@@ -52,23 +52,23 @@ export function toCreateAnimalErrorMessage(error: unknown): string {
   if (root instanceof ApiError) {
     if (root.status === 400 || root.status === 422) {
       return phase === 'photo'
-        ? 'La foto no es válida. Elige una imagen de hasta 10 MB e inténtalo de nuevo.'
-        : 'Revisa los datos del formulario e inténtalo de nuevo.';
+        ? 'La foto no es válida. Elegí una imagen de hasta 10 MB e intentá de nuevo.'
+        : 'Revisá los datos del formulario e intentá de nuevo.';
     }
 
     switch (root.status) {
       case 403:
         return 'Tu rol no tiene permiso para dar de alta animales.';
       case 404:
-        return 'La foto seleccionada ya no está disponible. Vuelve a elegirla e inténtalo de nuevo.';
+        return 'La foto seleccionada ya no está disponible. Volvé a elegirla e intentá de nuevo.';
       case 409:
-        return 'La foto ya está vinculada a otro registro. Elige otra foto e inténtalo de nuevo.';
+        return 'La foto ya está vinculada a otro registro. Elegí otra foto e intentá de nuevo.';
       default:
         return root.message;
     }
   }
 
-  return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+  return toApiErrorMessage(root);
 }
 
 export function toUpdateAnimalErrorMessage(error: unknown): string {
@@ -81,8 +81,8 @@ export function toUpdateAnimalErrorMessage(error: unknown): string {
   if (root instanceof ApiError) {
     if (root.status === 400 || root.status === 422) {
       return phase === 'photo'
-        ? 'La foto no es válida. Elige una imagen de hasta 10 MB e inténtalo de nuevo.'
-        : 'Revisa los datos del formulario e inténtalo de nuevo.';
+        ? 'La foto no es válida. Elegí una imagen de hasta 10 MB e intentá de nuevo.'
+        : 'Revisá los datos del formulario e intentá de nuevo.';
     }
 
     switch (root.status) {
@@ -90,18 +90,18 @@ export function toUpdateAnimalErrorMessage(error: unknown): string {
         return 'Tu rol no tiene permiso para editar animales.';
       case 404:
         return phase === 'photo'
-          ? 'La foto seleccionada ya no está disponible. Vuelve a elegirla e inténtalo de nuevo.'
+          ? 'La foto seleccionada ya no está disponible. Volvé a elegirla e intentá de nuevo.'
           : 'El animal ya no está disponible.';
       case 409:
         return phase === 'photo'
-          ? 'La foto ya está vinculada a otro registro. Elige otra foto e inténtalo de nuevo.'
+          ? 'La foto ya está vinculada a otro registro. Elegí otra foto e intentá de nuevo.'
           : root.message;
       default:
         return root.message;
     }
   }
 
-  return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+  return toApiErrorMessage(root);
 }
 
 export function toChangeStatusErrorMessage(error: unknown): string {
@@ -118,7 +118,7 @@ export function toChangeStatusErrorMessage(error: unknown): string {
     }
   }
 
-  return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+  return toApiErrorMessage(error);
 }
 
 export function toCreateAnimalEventErrorMessage(error: unknown): string {
@@ -126,7 +126,7 @@ export function toCreateAnimalEventErrorMessage(error: unknown): string {
     switch (error.status) {
       case 400:
       case 422:
-        return 'Revisa el tipo, la descripción y la fecha del evento.';
+        return 'Revisá el tipo, la descripción y la fecha del evento.';
       case 403:
         return 'Tu rol no tiene permiso para registrar eventos generales.';
       case 404:
@@ -136,5 +136,5 @@ export function toCreateAnimalEventErrorMessage(error: unknown): string {
     }
   }
 
-  return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+  return toApiErrorMessage(error);
 }
