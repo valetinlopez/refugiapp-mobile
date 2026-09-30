@@ -15,21 +15,39 @@ export const UserCard = memo(function UserCard({
   user: UserResponse;
 }) {
   const fullName = `${user.firstName} ${user.lastName}`;
+  const roleText = user.roles.map(roleLabel).join(', ');
+  const statusLabel = user.isActive ? 'Activo' : 'Inactivo';
+
   return (
     <AppCard
-      accessibilityLabel={`${fullName}, ${user.email}`}
+      accessibilityLabel={`${fullName}, ${user.email}, ${roleText}, ${statusLabel}`}
       style={styles.card}
       variant="outlined"
     >
       <View style={styles.header}>
         <View style={styles.identity}>
-          <AppText variant="heading3">{fullName}</AppText>
-          <AppText color="textSecondary" style={styles.email}>
+          <AppText
+            accessibilityLabel={fullName}
+            ellipsizeMode="tail"
+            numberOfLines={1}
+            variant="heading3"
+          >
+            {fullName}
+          </AppText>
+          <AppText
+            accessibilityLabel={user.email}
+            color="textSecondary"
+            ellipsizeMode="tail"
+            numberOfLines={1}
+          >
             {user.email}
           </AppText>
         </View>
         <AppBadge
-          label={user.isActive ? 'Activo' : 'Inactivo'}
+          icon={user.isActive ? 'check' : 'close'}
+          label={statusLabel}
+          labelNumberOfLines={1}
+          style={styles.status}
           tone={user.isActive ? 'positive' : 'neutral'}
         />
       </View>
@@ -38,24 +56,37 @@ export const UserCard = memo(function UserCard({
           <AppBadge key={role} label={roleLabel(role)} />
         ))}
       </View>
-      <AppButton
-        label={user.isActive ? 'Desactivar usuario' : 'Activar usuario'}
-        onPress={() => onChangeStatus(user)}
-        variant={user.isActive ? 'danger' : 'secondary'}
-      />
+      <View style={styles.actions}>
+        <AppButton
+          label={user.isActive ? 'Desactivar usuario' : 'Activar usuario'}
+          onPress={() => onChangeStatus(user)}
+          variant={user.isActive ? 'secondary' : 'primary'}
+        />
+      </View>
     </AppCard>
   );
 });
 
 const styles = StyleSheet.create({
+  actions: {
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
   card: { gap: spacing.md },
-  email: { flexShrink: 1 },
   header: {
     alignItems: 'flex-start',
     flexDirection: 'row',
     gap: spacing.sm,
     justifyContent: 'space-between',
   },
-  identity: { flex: 1, gap: spacing.xxs },
-  roles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  identity: { flex: 1, gap: spacing.xxs, minWidth: 0 },
+  roles: {
+    columnGap: spacing.xs,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    rowGap: spacing.xs,
+  },
+  status: { flexShrink: 0, maxWidth: '45%' },
 });

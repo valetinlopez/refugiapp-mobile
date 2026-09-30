@@ -113,6 +113,8 @@ Patrón responsive compartido por `CareTaskCard`, las tarjetas de gastos y el hi
 - Las filas etiqueta-valor y de metadatos pueden envolver (`flexWrap: 'wrap'`) en pantallas estrechas y con fuente ampliada; la fecha/envío se trunca a una línea y queda alineada sin colisionar.
 - El texto de metadatos (título largo, nombre, fecha, descripción) se trunca con `numberOfLines` (título hasta 2 líneas, nombre/fecha 1, descripción hasta 3), pero el `accessibilityLabel` de la tarjeta conserva siempre el texto completo para tecnologías de asistencia.
 - Las acciones de una tarjeta se agrupan en una fila con `flexWrap` y `gap` por tokens, manteniendo áreas táctiles de 44 × 44 y labels accesibles.
+- Cuando una tarjeta de listado (p. ej. cuentas de usuario) expone una acción de estado, se usa una variante contenida (`secondary` para desactivar, `primary` para activar) alineada al inicio o fin de la fila de acciones; nunca una acción destructiva `danger` a lo ancho como CTA dominante. La consecuencia destructiva se explica en el diálogo de confirmación (`ConfirmDialog`), no en el botón de la fila.
+- En tarjetas de cuentas (usuario interno), el nombre y el email se truncan a una línea con elipsis (`numberOfLines={1}` + `ellipsizeMode="tail"`) y la columna de texto usa `flex: 1` + `minWidth: 0`; el `accessibilityLabel` de la tarjeta y de cada texto conserva siempre el valor completo (nombre, email, roles y estado). El badge de estado incluye icono + texto (`check`/`close`) y no se encoge.
 
 ## 15. Badges y estados
 
