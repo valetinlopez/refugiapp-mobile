@@ -62,27 +62,30 @@ export function AccountScreen({
 
         {children}
 
-        <AppCard>
-          <View style={styles.field}>
-            <AppText color="textSecondary" variant="label">
-              Correo
-            </AppText>
-            <AppText variant="bodyStrong">{user.email}</AppText>
-          </View>
-          <View style={styles.field}>
-            <AppText color="textSecondary" variant="label">
-              Rol
-            </AppText>
-            <AppText>{roleLabels(user.roles).join(' · ')}</AppText>
-          </View>
-        </AppCard>
+        <View style={styles.section}>
+          <AppText variant="heading2">Cuenta</AppText>
+          <AppCard>
+            <View style={styles.field}>
+              <AppText color="textSecondary" variant="label">
+                Correo
+              </AppText>
+              <AppText variant="bodyStrong">{user.email}</AppText>
+            </View>
+            <View style={styles.field}>
+              <AppText color="textSecondary" variant="label">
+                Rol
+              </AppText>
+              <AppText>{roleLabels(user.roles).join(' · ')}</AppText>
+            </View>
+          </AppCard>
 
-        <AppButton
-          icon="logout"
-          label="Cerrar sesión"
-          onPress={handleOpenSheet}
-          variant="secondary"
-        />
+          <AppButton
+            icon="logout"
+            label="Cerrar sesión"
+            onPress={handleOpenSheet}
+            variant="secondary"
+          />
+        </View>
 
         <AccountSignOutSheet
           errorMessage={errorMessage}
@@ -113,6 +116,9 @@ const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: colors.background,
     flex: 1,
+  },
+  section: {
+    gap: spacing.md,
   },
   state: {
     flex: 1,

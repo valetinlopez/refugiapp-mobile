@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { Text } from 'react-native';
 
 import { tokenStorage } from '@/core/storage';
 
@@ -52,6 +53,24 @@ describe('AccountScreen', () => {
     await waitFor(() => expect(screen.getByText(EMAIL)).toBeTruthy());
     expect(screen.getByText('Administrador · Veterinario')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeTruthy();
+  });
+
+  it('renders the slot before the Cuenta section heading', async () => {
+    const screen = await render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <SessionProvider>
+          <AccountScreen heading="Más">
+            <Text>Gestión</Text>
+          </AccountScreen>
+        </SessionProvider>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => expect(screen.getByText('Gestión')).toBeTruthy());
+    expect(screen.getByText('Cuenta')).toBeTruthy();
+    expect(screen.getByText('Cuenta').props.children).not.toBeNull();
   });
 
   it('confirms sign out and closes the local session', async () => {
