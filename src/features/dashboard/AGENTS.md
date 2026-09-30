@@ -44,7 +44,7 @@
 
 - Unit tests de `filterQuickActions`; la matriz y el filtrado genérico se prueban en `src/application/authorization`.
 - Component tests RNTL de `DashboardScreen`: skeleton, vacío, error con reintento, datos, navegación al detalle, consulta de foto por `profilePhotoMediaId` y filtrado de acciones por rol.
-- Component tests RNTL del polish responsive: un badge por estado en `DashboardTotalsCard` (wrap con `rowGap`/`columnGap` y alineación por tokens) y truncado controlado en `DashboardAnimalRow` (`numberOfLines={1}` en nombre/especie) con label accesible completo y navegación al detalle intacta.
+- Component tests RNTL del polish responsive: un badge por estado en `DashboardTotalsCard` (wrap con `rowGap`/`columnGap` y alineación por tokens), acciones de Inicio en columna full-width con orden canónico, targets 44 × 44 y ausencia de "Ver auditoría" (migrado a Más) y truncado controlado en `DashboardAnimalRow` (`numberOfLines={1}` en nombre/especie) con label accesible completo y navegación al detalle intacta.
 - El pull-to-refresh se valida sobre el `RefreshControl` del `ScrollView`.
 
 ## Estado
@@ -55,11 +55,11 @@
 - Acciones rápidas filtradas mediante el registro central de capacidades de aplicación.
 - Estados de UI: skeleton inicial (placeholder estático, respeta reduce motion), vacío, error con reintento y pull-to-refresh.
 - Totales por estado y animales recientes con foto de perfil (`useDashboardAnimalPhoto` consulta solo cuando `profilePhotoMediaId` está presente; `AppAvatar` cae a iniciales ante fallo).
-- Acciones rápidas: "Alta animal", "Nueva tarea" y "Registrar gasto" según `canEditAnimal`/`canManageExpenses`.
+- Acciones rápidas en Inicio: "Alta animal", "Nueva tarea" y "Registrar gasto" según `canEditAnimal`/`canManageExpenses` y "Gestionar usuarios" según `canManageUsers`; se ordenan en columna full-width con gap por tokens y áreas táctiles de 44 × 44.
 - Navegación de un animal reciente a `/animals/[id]`.
 - `dashboardKeys.all = ['dashboard']` como key canónica del panel; las features de `expenses` y `care-tasks` conservan una constante local idéntica solo para invalidar tras sus mutaciones (prefijo compartido por valor, sin imports cruzados entre features).
 
 ### Pendiente o deuda conocida
 
-- El acceso rápido "Ver auditoría" se muestra solo cuando `canReadAudit` está habilitada y navega a `/audit`.
+- El acceso de auditoría migró de Inicio a la pantalla "Más" (`/audit` para `admin` vía `canReadAudit`); el destino y su polish visual los coordina RFG-118.
 - El esqueleto es local a la feature; si otro contexto lo reutiliza, promover a `src/components/feedback` con su token y documentar en `docs/design.md`.

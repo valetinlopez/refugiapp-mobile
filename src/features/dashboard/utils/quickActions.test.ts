@@ -2,15 +2,29 @@ import { capabilitiesForRoles } from '@/application/authorization';
 import { filterQuickActions, QUICK_ACTIONS } from './quickActions';
 
 describe('filterQuickActions', () => {
-  it('offers alta, nueva tarea and gasto to admin', () => {
+  it('offers alta, nueva tarea, gasto and gestión to admin', () => {
     const actions = filterQuickActions(QUICK_ACTIONS, capabilitiesForRoles(['admin']));
     expect(actions.map((action) => action.id)).toEqual([
       'new-animal',
       'new-task',
       'new-expense',
       'manage-users',
-      'view-audit',
     ]);
+  });
+
+  it('keeps the canonical action order declared by the registry', () => {
+    expect(QUICK_ACTIONS.map((action) => action.id)).toEqual([
+      'new-animal',
+      'new-task',
+      'new-expense',
+      'manage-users',
+    ]);
+  });
+
+  it('never exposes the audit destination from home', () => {
+    expect(QUICK_ACTIONS.every((action) => action.requiredCapability !== 'canReadAudit')).toBe(
+      true
+    );
   });
 
   it('offers the same writer actions to shelter managers', () => {
