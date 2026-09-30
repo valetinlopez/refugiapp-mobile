@@ -30,3 +30,10 @@ maestro test maestro/admin.yaml --env APP_ID=app.refugiapp.mobile.staging
 | `session-expired.yaml` | admin           | logout + sin restauración de sesión             |
 
 La rotación concurrente queda en RFG-86. Sin binarios en E2E.
+
+## CI
+
+El workflow `mobile-e2e.yml` valida los flows en cada PR (~1 min) y levanta el
+emulador solo cuando cambia `maestro/**`, en push a `develop` o con dispatch
+manual. Para forzar el emulador en un PR que no toca `maestro/`, agregar el
+label `e2e`. El job pesado usa cachés de Gradle, AVD y Maestro CLI.
