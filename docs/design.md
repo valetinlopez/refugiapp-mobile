@@ -136,7 +136,9 @@ Prioridad visual: `completed` o `cancelled` son estados finales; para `pending`,
 
 ### Filas de animales (recientes)
 
-Mismo patrón de fila operativa para animales: avatar, nombre, especie, badge de estado y chevron. El nombre y la especie se truncan a una línea con elipsis; el `accessibilityLabel` del control conserva el texto completo (nombre, especie y estado). El avatar y el chevron no se encogen; el badge cede ancho antes que el texto y puede envolver a dos líneas. Los divisores pertenecen al listado, no a la fila, y llevan margen vertical por tokens.
+Mismo patrón de fila operativa para animales: avatar, nombre, especie, badge de estado y chevron. La columna de texto usa `flex: 1` y `minWidth: 0`; el nombre y la especie se truncan a una línea con elipsis (`numberOfLines={1}` + `ellipsizeMode="tail"`) y el `accessibilityLabel` del control conserva el texto completo (nombre, especie y estado). El avatar y el chevron no se encogen (`flexShrink: 0`).
+
+El badge de estado es estable: no se encoge (`flexShrink: 0`) y se limita a un tope proporcional de ancho (`maxWidth` ≈ 45 % de la fila, medida relativa de layout, no un token de medida) con una sola línea y elipsis. Así un estado largo (p. ej. `Disponible para adopción`) no empuja ni corta el nombre, no colisiona con el chevron y conserva altura de fila estable en pantallas estrechas y con fuente ampliada. El `labelNumberOfLines` de `AppBadge` permite forzar una línea en filas densas sin cambiar el default de dos líneas del componente. Los divisores pertenecen al listado, no a la fila, y llevan margen vertical por tokens.
 
 ## 18. Tarjetas de animales
 

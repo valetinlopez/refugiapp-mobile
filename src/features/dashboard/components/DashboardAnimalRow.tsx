@@ -43,7 +43,12 @@ export const DashboardAnimalRow = memo(function DashboardAnimalRow({
         </AppText>
       </View>
       <View style={styles.badgeWrap}>
-        <AppBadge icon={presentation.icon} label={presentation.label} tone={presentation.tone} />
+        <AppBadge
+          icon={presentation.icon}
+          label={presentation.label}
+          labelNumberOfLines={1}
+          tone={presentation.tone}
+        />
       </View>
       <AppIcon color="textSecondary" name="chevronRight" style={styles.fixed} />
     </Pressable>
@@ -52,8 +57,8 @@ export const DashboardAnimalRow = memo(function DashboardAnimalRow({
 
 const styles = StyleSheet.create({
   badgeWrap: {
-    flexShrink: 1,
-    minWidth: 0,
+    flexShrink: 0,
+    maxWidth: '45%',
   },
   copy: {
     flex: 1,

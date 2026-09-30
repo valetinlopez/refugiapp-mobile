@@ -45,6 +45,7 @@
 - Unit tests de `filterQuickActions`; la matriz y el filtrado genérico se prueban en `src/application/authorization`.
 - Component tests RNTL de `DashboardScreen`: skeleton, vacío, error con reintento, datos, navegación al detalle, consulta de foto por `profilePhotoMediaId` y filtrado de acciones por rol.
 - Component tests RNTL del polish responsive: un badge por estado en `DashboardTotalsCard` (wrap con `rowGap`/`columnGap` y alineación por tokens), acciones de Inicio en columna full-width con orden canónico, targets 44 × 44 y ausencia de "Ver auditoría" (migrado a Más) y truncado controlado en `DashboardAnimalRow` (`numberOfLines={1}` en nombre/especie) con label accesible completo y navegación al detalle intacta.
+- Component tests RNTL de `DashboardAnimalRow`: badge de estado estable (`flexShrink: 0`, una línea con `labelNumberOfLines={1}`), truncado de nombre/especie a una línea con `ellipsizeMode="tail"`, label accesible con nombre + especie + estado completos, navegación al detalle y foto con/sin `profilePhotoMediaId` (fallback a iniciales sin fetch cuando es `null`).
 - El pull-to-refresh se valida sobre el `RefreshControl` del `ScrollView`.
 
 ## Estado
@@ -57,6 +58,7 @@
 - Totales por estado y animales recientes con foto de perfil (`useDashboardAnimalPhoto` consulta solo cuando `profilePhotoMediaId` está presente; `AppAvatar` cae a iniciales ante fallo).
 - Acciones rápidas en Inicio: "Alta animal", "Nueva tarea" y "Registrar gasto" según `canEditAnimal`/`canManageExpenses` y "Gestionar usuarios" según `canManageUsers`; se ordenan en columna full-width con gap por tokens y áreas táctiles de 44 × 44.
 - Navegación de un animal reciente a `/animals/[id]`.
+- `DashboardAnimalRow` con layout responsive (RFG-117): columna de texto `flex: 1` + `minWidth: 0` (nombre/especie a una línea con elipsis), badge de estado estable (`flexShrink: 0`, `maxWidth` proporcional ~45 %, una línea) que no empuja el nombre, avatar y chevron fijos, y label accesible con nombre + especie + estado completos.
 - `dashboardKeys.all = ['dashboard']` como key canónica del panel; las features de `expenses` y `care-tasks` conservan una constante local idéntica solo para invalidar tras sus mutaciones (prefijo compartido por valor, sin imports cruzados entre features).
 
 ### Pendiente o deuda conocida

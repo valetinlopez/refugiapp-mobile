@@ -9,6 +9,7 @@ import { AppText } from './AppText';
 export type AppBadgeProps = ViewProps & {
   icon?: AppIconName;
   label: string;
+  labelNumberOfLines?: number;
   tone?: BadgeTone;
 };
 
@@ -21,13 +22,20 @@ const toneStyles: Record<BadgeTone, ViewStyle> = {
   default: { backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1 },
 };
 
-export function AppBadge({ icon, label, style, tone = 'default', ...props }: AppBadgeProps) {
+export function AppBadge({
+  icon,
+  label,
+  labelNumberOfLines = 2,
+  style,
+  tone = 'default',
+  ...props
+}: AppBadgeProps) {
   const contentColor = tone === 'default' ? 'textPrimary' : 'textInverse';
 
   return (
     <View accessibilityLabel={label} style={[styles.base, toneStyles[tone], style]} {...props}>
       {icon ? <AppIcon color={contentColor} name={icon} size={sizes.iconSm} /> : null}
-      <AppText color={contentColor} numberOfLines={2} variant="label">
+      <AppText color={contentColor} numberOfLines={labelNumberOfLines} variant="label">
         {label}
       </AppText>
     </View>
