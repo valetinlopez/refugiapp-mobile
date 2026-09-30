@@ -24,6 +24,7 @@
 - `(app)/expenses/new`: alta de gasto con comprobante para `admin` y `shelter_manager`.
 - `(app)/users`: listado paginado y alta de usuarios internos, visible solo para `admin`; activacion y desactivacion se confirman desde el listado.
 - `(app)/veterinarians`: listado, alta, detalle y edición de veterinarios; lectura para los tres roles y escritura para `admin`/`shelter_manager` (`canManageVets`). La desactivación se confirma desde el detalle.
+- `(app)/audit`: listado paginado y detalle de auditoría, visible solo para `admin` mediante `canReadAudit`.
 - `design-system`: catálogo interno, no funcionalidad de producción.
 - El layout raíz protege `(auth)` y `(app)` con `Stack.Protected` según el Session Context.
 

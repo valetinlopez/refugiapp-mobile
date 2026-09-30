@@ -61,5 +61,5 @@
 
 ### Pendiente o deuda conocida
 
-- No existe aún una sección de auditoría navegable en la app; `canReadAudit` queda en el registro de capacidades y con tests, listo para el primer consumidor real.
+- El acceso rápido "Ver auditoría" se muestra solo cuando `canReadAudit` está habilitada y navega a `/audit`.
 - El esqueleto es local a la feature; si otro contexto lo reutiliza, promover a `src/components/feedback` con su token y documentar en `docs/design.md`.

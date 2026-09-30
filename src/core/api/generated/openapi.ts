@@ -301,6 +301,42 @@ export interface components {
       totals: components['schemas']['DashboardTotalsDto'];
       recentAnimals: components['schemas']['DashboardAnimalDto'][];
     };
+    AuditLogResponseDto: {
+      id: string;
+      actorUserId?: string | null;
+      action:
+        | 'user.create'
+        | 'user.deactivate'
+        | 'user.activate'
+        | 'user.role_assign'
+        | 'medical_record.create'
+        | 'medical_record.update'
+        | 'medical_record.soft_delete'
+        | 'medical_record.restore'
+        | 'expense.create'
+        | 'expense.soft_delete'
+        | 'care_task.create'
+        | 'care_task.update'
+        | 'care_task.complete'
+        | 'care_task.cancel'
+        | 'auth.login_success'
+        | 'auth.login_failure'
+        | 'auth.refresh_success'
+        | 'auth.refresh_failure'
+        | 'access.denied';
+      resourceType:
+        'user' | 'medical_record' | 'expense' | 'care_task' | 'auth_session' | 'authorization';
+      resourceId?: string | null;
+      metadata: Record<string, unknown>;
+      occurredAt: string;
+      createdAt: string;
+    };
+    PaginatedAuditLogsResponseDto: {
+      items: components['schemas']['AuditLogResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
     ErrorResponseDto: {
       statusCode: number;
       code: string;
