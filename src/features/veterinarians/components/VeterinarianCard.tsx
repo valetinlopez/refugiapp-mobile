@@ -32,6 +32,11 @@ export const VeterinarianCard = memo(function VeterinarianCard({
           <View style={styles.identity}>
             <AppText variant="heading3">{name}</AppText>
             <AppText color="textSecondary">Matrícula {veterinarian.licenseNumber}</AppText>
+            {veterinarian.user?.email ? (
+              <AppText color="textSecondary" variant="caption">
+                Usuario: {veterinarian.user.email}
+              </AppText>
+            ) : null}
           </View>
           <AppBadge
             label={veterinarian.isActive ? 'Activo' : 'Inactivo'}

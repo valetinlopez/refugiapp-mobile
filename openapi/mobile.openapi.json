@@ -896,7 +896,10 @@
             }
           },
           "409": {
-            "description": "License number or user already linked."
+            "description": "License number, email or user already linked.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
           }
         }
       }
@@ -1864,6 +1867,21 @@
           "total": { "type": "number" }
         }
       },
+      "CreateVeterinarianUserDto": {
+        "type": "object",
+        "required": ["password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 12,
+            "writeOnly": true
+          },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" }
+        }
+      },
       "CreateVeterinarianDto": {
         "type": "object",
         "required": ["firstName", "lastName", "licenseNumber"],
@@ -1874,6 +1892,7 @@
           "email": { "type": "string", "format": "email" },
           "phone": { "type": "string" },
           "userId": { "type": "string", "format": "uuid", "nullable": true },
+          "createUser": { "$ref": "#/components/schemas/CreateVeterinarianUserDto" },
           "notes": { "type": "string", "nullable": true }
         }
       },
@@ -1903,7 +1922,8 @@
           "notes": { "type": "string", "nullable": true },
           "isActive": { "type": "boolean" },
           "createdAt": { "type": "string", "format": "date-time" },
-          "updatedAt": { "type": "string", "format": "date-time" }
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "user": { "$ref": "#/components/schemas/UserResponseDto", "nullable": true }
         }
       },
       "PaginatedVeterinariansResponseDto": {

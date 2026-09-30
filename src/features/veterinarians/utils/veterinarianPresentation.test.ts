@@ -34,6 +34,24 @@ describe('toVeterinarianErrorMessage', () => {
     );
   });
 
+  it('translates an email already registered as a user', () => {
+    expect(toVeterinarianErrorMessage(apiError(409, 'EMAIL_ALREADY_EXISTS'))).toBe(
+      'Ese email ya está registrado como usuario. Usá otro o contactá a un administrador.'
+    );
+  });
+
+  it('translates a conflicting userId and createUser payload', () => {
+    expect(toVeterinarianErrorMessage(apiError(400, 'VET_USER_PAYLOAD_CONFLICT'))).toBe(
+      'No se puede vincular un usuario y crear otro a la vez. Elegí una sola opción.'
+    );
+  });
+
+  it('translates a missing email when creating a user', () => {
+    expect(toVeterinarianErrorMessage(apiError(400, 'VET_CREATE_USER_EMAIL_REQUIRED'))).toBe(
+      'Falta el email para crear el acceso. Completá el email del veterinario o del usuario.'
+    );
+  });
+
   it('translates a 403 response', () => {
     expect(toVeterinarianErrorMessage(apiError(403))).toBe(
       'Tu rol no tiene permiso para gestionar veterinarios.'

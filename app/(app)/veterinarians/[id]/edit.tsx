@@ -125,6 +125,7 @@ function EditForm({ errorMessage, isSubmitting, onBack, onRetry, onSubmit, query
       errorMessage={errorMessage}
       initialValues={toVeterinarianFormValues(query.data)}
       isSubmitting={isSubmitting}
+      mode="edit"
       onSubmit={onSubmit}
       submitLabel="Guardar cambios"
     />

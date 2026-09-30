@@ -88,7 +88,13 @@ export function VeterinarianDetail({
       <AppCard accessibilityLabel="Datos del veterinario">
         <Field label="Email" value={veterinarian.email ?? 'No informado'} />
         <Field label="Teléfono" value={veterinarian.phone ?? 'No informado'} />
-        <Field label="Usuario vinculado" value={veterinarian.userId ?? 'No vinculado'} />
+        <Field
+          label="Usuario vinculado"
+          value={veterinarian.user?.email ?? 'Sin acceso vinculado'}
+        />
+        {veterinarian.user ? (
+          <Field label="Rol del usuario" value={formatUserRole(veterinarian.user.roles)} />
+        ) : null}
         <Field label="Notas" value={veterinarian.notes ?? 'Sin notas'} />
       </AppCard>
 
@@ -143,6 +149,20 @@ function Field({ label, value }: { label: string; value: string }) {
       <AppText>{value}</AppText>
     </View>
   );
+}
+
+function formatUserRole(roles: readonly string[]): string {
+  if (roles.length === 0) {
+    return 'Sin rol';
+  }
+  return roles
+    .map((role) => {
+      if (role === 'veterinarian') return 'Veterinario';
+      if (role === 'admin') return 'Administrador';
+      if (role === 'shelter_manager') return 'Encargado de refugio';
+      return role;
+    })
+    .join(', ');
 }
 
 const styles = StyleSheet.create({

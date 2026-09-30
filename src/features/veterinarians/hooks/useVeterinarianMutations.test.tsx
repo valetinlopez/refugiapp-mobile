@@ -17,7 +17,7 @@ const createInput: CreateVeterinarianRequest = {
   firstName: 'Sofía',
   lastName: 'Romero',
   licenseNumber: 'VET-001',
-  userId: USER_ID,
+  createUser: { email: 'vet@refugiapp.local', password: 'Refugia-2026-secure' },
 };
 const createdVeterinarian: VeterinarianResponse = {
   id: VET_ID,
