@@ -7,8 +7,7 @@ import {
   type RoleCapabilities,
 } from '@/application/authorization';
 
-export type DashboardActionId =
-  'new-animal' | 'new-task' | 'new-expense' | 'manage-users' | 'view-audit';
+export type DashboardActionId = 'new-animal' | 'new-task' | 'new-expense' | 'manage-users';
 
 export interface DashboardQuickAction {
   requiredCapability: Capability;
@@ -46,13 +45,6 @@ export const QUICK_ACTIONS: readonly DashboardQuickAction[] = [
     icon: 'account',
     id: 'manage-users',
     label: 'Gestionar usuarios',
-  },
-  {
-    requiredCapability: 'canReadAudit',
-    href: '/audit' as Href,
-    icon: 'clock',
-    id: 'view-audit',
-    label: 'Ver auditoría',
   },
 ];
 

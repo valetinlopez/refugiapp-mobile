@@ -28,8 +28,7 @@ export function DashboardQuickActions({ actions }: { actions: readonly Dashboard
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: 'column',
     gap: spacing.sm,
   },
 });

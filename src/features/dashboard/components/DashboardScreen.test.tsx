@@ -181,6 +181,13 @@ describe('DashboardScreen', () => {
     expect(screen.getByRole('button', { name: 'Gestionar usuarios' })).toBeTruthy();
   });
 
+  it('does not show the audit shortcut on home, even for an admin', async () => {
+    mockUseDashboardOverview.mockReturnValue(createQuery());
+    const screen = await render(<DashboardScreen />);
+
+    expect(screen.queryByRole('button', { name: 'Ver auditoría' })).toBeNull();
+  });
+
   it('hides writer quick actions for a veterinarian', async () => {
     mockUseSession.mockReturnValue({ user: { roles: ['veterinarian'] } });
     mockUseDashboardOverview.mockReturnValue(createQuery());
