@@ -836,6 +836,8 @@
             "in": "query",
             "schema": { "type": "integer", "minimum": 1, "maximum": 100 }
           },
+          { "name": "name", "in": "query", "schema": { "type": "string" } },
+          { "name": "licenseNumber", "in": "query", "schema": { "type": "string" } },
           { "name": "isActive", "in": "query", "schema": { "type": "boolean" } }
         ],
         "responses": {
@@ -845,6 +847,189 @@
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/PaginatedVeterinariansResponseDto" }
               }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createVeterinarian",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateVeterinarianDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Veterinarian created.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VeterinarianResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "409": {
+            "description": "License number or user already linked."
+          }
+        }
+      }
+    },
+    "/veterinarians/{id}": {
+      "get": {
+        "operationId": "getVeterinarian",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Veterinarian profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VeterinarianResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateVeterinarian",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateVeterinarianDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Veterinarian updated.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VeterinarianResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "409": {
+            "description": "License number or user already linked."
+          }
+        }
+      }
+    },
+    "/veterinarians/{id}/deactivate": {
+      "post": {
+        "operationId": "deactivateVeterinarian",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Veterinarian deactivated." },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
             }
           }
         }
@@ -1677,6 +1862,31 @@
           "page": { "type": "number" },
           "limit": { "type": "number" },
           "total": { "type": "number" }
+        }
+      },
+      "CreateVeterinarianDto": {
+        "type": "object",
+        "required": ["firstName", "lastName", "licenseNumber"],
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "licenseNumber": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phone": { "type": "string" },
+          "userId": { "type": "string", "format": "uuid", "nullable": true },
+          "notes": { "type": "string", "nullable": true }
+        }
+      },
+      "UpdateVeterinarianDto": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "licenseNumber": { "type": "string" },
+          "userId": { "type": "string", "format": "uuid", "nullable": true },
+          "email": { "type": "string", "format": "email", "nullable": true },
+          "phone": { "type": "string", "nullable": true },
+          "notes": { "type": "string", "nullable": true }
         }
       },
       "VeterinarianResponseDto": {

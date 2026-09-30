@@ -220,6 +220,24 @@ export interface components {
       limit: number;
       total: number;
     };
+    CreateVeterinarianDto: {
+      firstName: string;
+      lastName: string;
+      licenseNumber: string;
+      email?: string;
+      phone?: string;
+      userId?: string | null;
+      notes?: string | null;
+    };
+    UpdateVeterinarianDto: {
+      firstName?: string;
+      lastName?: string;
+      licenseNumber?: string;
+      userId?: string | null;
+      email?: string | null;
+      phone?: string | null;
+      notes?: string | null;
+    };
     VeterinarianResponseDto: {
       id: string;
       userId?: string | null;

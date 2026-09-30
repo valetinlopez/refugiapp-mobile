@@ -24,6 +24,10 @@ export default function AppLayout() {
       <Stack.Screen name="expenses/new" options={{ title: 'Registrar gasto' }} />
       <Stack.Screen name="users/index" options={{ title: 'Usuarios' }} />
       <Stack.Screen name="users/new" options={{ title: 'Nuevo usuario' }} />
+      <Stack.Screen name="veterinarians/index" options={{ title: 'Veterinarios' }} />
+      <Stack.Screen name="veterinarians/new" options={{ title: 'Nuevo veterinario' }} />
+      <Stack.Screen name="veterinarians/[id]" options={{ title: 'Detalle del veterinario' }} />
+      <Stack.Screen name="veterinarians/[id]/edit" options={{ title: 'Editar veterinario' }} />
       <Stack.Screen name="audit/index" options={{ title: 'Auditoría' }} />
       <Stack.Screen name="audit/[id]" options={{ title: 'Detalle de auditoría' }} />
     </Stack>

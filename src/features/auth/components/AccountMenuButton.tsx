@@ -10,7 +10,7 @@ export function AccountMenuButton() {
       accessibilityLabel="Abrir menú de cuenta"
       accessibilityRole="button"
       hitSlop={spacing.xxs}
-      onPress={() => router.push('/account')}
+      onPress={() => router.push('/more')}
       style={({ pressed }) => [styles.base, pressed && styles.pressed]}
     >
       <AppIcon color="textPrimary" name="account" size={sizes.iconMd} />
