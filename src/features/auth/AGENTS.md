@@ -32,7 +32,7 @@ Verificar OpenAPI antes de modificar payloads. La arquitectura actual del backen
 - `types/`: modelos de vista y aliases derivados de OpenAPI.
 - `utils/`: presentación de roles en español (`roleLabels`); los valores de dominio permanecen en inglés.
 
-Las rutas de `app/(auth)` se limitan a composición y navegación. La pantalla de cuenta es la superficie donde auth expone identidad y cierre de sesión; se compone desde el tab `account`.
+Las rutas de `app/(auth)` se limitan a composición y navegación. La pantalla de cuenta es la superficie donde auth expone identidad y cierre de sesión; se compone desde el tab `more` con un slot `children` opcional para contenido de gestión.
 
 `AccountMenuButton` y `AccountHeaderRow` son parte de la superficie pública de cuenta de auth (análoga a `useSession`): las rutas de `app` las componen y otras features pueden importar `AccountMenuButton` para exponer el atajo de cuenta (hoy `dashboard` lo usa en el encabezado de Inicio). Este es un límite documentado; no importar otros internals de auth desde otras features.
 
@@ -59,7 +59,7 @@ Las rutas de `app/(auth)` se limitan a composición y navegación. La pantalla d
 - Refresh single-flight y limpieza central ante sesión inválida.
 - Session Context/reducer, restauración sin parpadeo y logout best-effort.
 - Formulario de login accesible y rutas protegidas.
-- Acceso de cuenta desde toda el área autenticada: tab "Cuenta" (`app/(app)/(tabs)/account.tsx` con `AccountScreen`) y atajo `AccountMenuButton` (44 × 44, `accessibilityLabel` "Abrir menú de cuenta") en Inicio y en la fila de retorno de las pantallas stack (`AccountHeaderRow` = `AppHeaderBack` + botón de cuenta).
+- Acceso de cuenta desde toda el área autenticada: tab "Más" (`app/(app)/(tabs)/more.tsx` con `AccountScreen`) y atajo `AccountMenuButton` (44 × 44, `accessibilityLabel` "Abrir menú de cuenta") en Inicio y en la fila de retorno de las pantallas stack (`AccountHeaderRow` = `AppHeaderBack` + botón de cuenta). `AccountScreen` acepta un slot `children` (renderizado entre el encabezado y la identidad) y props `heading`/`subtitle`; la ruta del tab lo usa para componer la sección "Gestión".
 - Pantalla de cuenta con identidad (correo y roles presentados en español con `roleLabels`) y acción "Cerrar sesión".
 - `AccountSignOutSheet`: confirmación nativa antes de salir (modal con scrim y tokens del sistema), estado de carga que bloquea el cierre y error seguro en español sin exponer tokens ni payloads.
 - `useSignOut` en `session/`: envuelve `SessionProvider.signOut()`, evita doble tap, expone `isSigningOut` y `errorMessage` seguro; el cierre local (Secure Store + cache de TanStack Query) siempre se ejecuta, incluso offline o con refresh inválido, porque `signOut` del provider es best-effort y el cierre local está en su `finally`.

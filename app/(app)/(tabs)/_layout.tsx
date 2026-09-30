@@ -9,7 +9,7 @@ const TAB_DESTINATIONS = [
   { name: 'index' },
   { name: 'explore' },
   { name: 'care-tasks' },
-  { name: 'account' },
+  { name: 'more' },
 ] as const;
 
 export default function TabsLayout() {
@@ -55,11 +55,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="account"
+        name="more"
         options={{
-          ...(authorizedTabNames.has('account') ? {} : { href: null }),
-          title: 'Cuenta',
-          tabBarIcon: ({ color }) => <TabBarIcon color={color} name="account" />,
+          ...(authorizedTabNames.has('more') ? {} : { href: null }),
+          title: 'Más',
+          tabBarIcon: ({ color }) => <TabBarIcon color={color} name="menu" />,
         }}
       />
       <Tabs.Screen name="inbox" options={{ href: null }} />

@@ -21,7 +21,7 @@ describe('AccountMenuButton', () => {
 
     await fireEvent.press(screen.getByRole('button', { name: 'Abrir menú de cuenta' }));
 
-    expect(router.push).toHaveBeenCalledWith('/account');
+    expect(router.push).toHaveBeenCalledWith('/more');
   });
 
   it('keeps a 44x44 minimum touch target', async () => {

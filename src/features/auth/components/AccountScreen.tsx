@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,7 +11,18 @@ import { useSignOut } from '../session/useSignOut';
 import { roleLabels } from '../utils/roleLabels';
 import { AccountSignOutSheet } from './AccountSignOutSheet';
 
-export function AccountScreen() {
+export interface AccountScreenProps {
+  /** Slot opcional renderizado entre el encabezado y la identidad de cuenta. */
+  children?: ReactNode;
+  heading?: string;
+  subtitle?: string;
+}
+
+export function AccountScreen({
+  children,
+  heading = 'Cuenta',
+  subtitle = 'Datos de tu sesión y salida segura',
+}: AccountScreenProps) {
   const { status, user } = useSession();
   const { errorMessage, isSigningOut, reset, signOut } = useSignOut();
   const [sheetVisible, setSheetVisible] = useState(false);
@@ -45,9 +56,11 @@ export function AccountScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.heading}>
-          <AppText variant="heading1">Cuenta</AppText>
-          <AppText color="textSecondary">Datos de tu sesión y salida segura</AppText>
+          <AppText variant="heading1">{heading}</AppText>
+          <AppText color="textSecondary">{subtitle}</AppText>
         </View>
+
+        {children}
 
         <AppCard>
           <View style={styles.field}>
