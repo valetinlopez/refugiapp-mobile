@@ -8,3 +8,8 @@ jest.mock('expo-symbols', () => {
     SymbolView: ({ name: _name, ...props }) => React.createElement(Text, props, 'icon'),
   };
 });
+
+jest.mock(
+  'react-native-safe-area-context',
+  () => require('react-native-safe-area-context/jest/mock').default
+);

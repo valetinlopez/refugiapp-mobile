@@ -16,6 +16,10 @@ jest.mock('../hooks/useUserMutations', () => ({
 const mockUseUsers = useUsers as jest.Mock;
 const mockUseActivateUser = useActivateUser as jest.Mock;
 const mockUseDeactivateUser = useDeactivateUser as jest.Mock;
+
+function renderUsersScreen() {
+  return render(<UsersScreen />);
+}
 const activeUser = {
   id: '11111111-1111-4111-8111-111111111111',
   email: 'ana@refugiapp.local',
@@ -58,7 +62,7 @@ describe('UsersScreen', () => {
   });
 
   it('shows each user role and state', async () => {
-    const screen = await render(<UsersScreen />);
+    const screen = await renderUsersScreen();
     expect(screen.getByText('Ana Perez')).toBeTruthy();
     expect(screen.getByText('Administrador')).toBeTruthy();
     expect(screen.getByText('Activo')).toBeTruthy();
@@ -68,20 +72,20 @@ describe('UsersScreen', () => {
   it('confirms before deactivating an active user', async () => {
     const mutate = jest.fn();
     mockUseDeactivateUser.mockReturnValue(mutation(mutate));
-    const screen = await render(<UsersScreen />);
+    const screen = await renderUsersScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Desactivar usuario' }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar desactivar' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar desactivación' }));
     await waitFor(() => expect(mutate).toHaveBeenCalledWith(activeUser.id, expect.any(Object)));
   });
 
   it('confirms before activating an inactive user', async () => {
     const mutate = jest.fn();
     mockUseActivateUser.mockReturnValue(mutation(mutate));
-    const screen = await render(<UsersScreen />);
+    const screen = await renderUsersScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Activar usuario' }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar activar' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar activación' }));
     await waitFor(() => expect(mutate).toHaveBeenCalledWith(inactiveUser.id, expect.any(Object)));
   });
 
@@ -97,7 +101,7 @@ describe('UsersScreen', () => {
       isPending: false,
       refetch: jest.fn(),
     });
-    const screen = await render(<UsersScreen />);
+    const screen = await renderUsersScreen();
     expect(screen.getByText('Tu rol no tiene permiso para gestionar usuarios.')).toBeTruthy();
   });
 
@@ -113,9 +117,10 @@ describe('UsersScreen', () => {
       isRefetching: false,
       refetch: jest.fn(),
     });
-    const screen = await render(<UsersScreen />);
+    const screen = await renderUsersScreen();
 
     fireEvent(screen.getByTestId('users-list'), 'onEndReached');
+    await Promise.resolve();
 
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
@@ -123,9 +128,10 @@ describe('UsersScreen', () => {
   it('shows status mutation errors in the confirmation dialog', async () => {
     const deactivateMutation = mutation();
     mockUseDeactivateUser.mockReturnValue(deactivateMutation);
-    const screen = await render(<UsersScreen />);
+    const screen = await renderUsersScreen();
 
     fireEvent.press(screen.getByRole('button', { name: 'Desactivar usuario' }));
+    await Promise.resolve();
     mockUseDeactivateUser.mockReturnValue({
       ...deactivateMutation,
       error: new ApiError({

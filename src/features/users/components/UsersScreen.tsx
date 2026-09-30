@@ -1,6 +1,7 @@
 import { router, type Href } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { AppButton, AppText } from '@/components/primitives';
@@ -14,6 +15,7 @@ import { UserCard } from './UserCard';
 import { UserStatusDialog } from './UserStatusDialog';
 
 export function UsersScreen() {
+  const insets = useSafeAreaInsets();
   const usersQuery = useUsers();
   const activateUser = useActivateUser();
   const deactivateUser = useDeactivateUser();
@@ -69,10 +71,11 @@ export function UsersScreen() {
           icon="account"
           label="Nuevo usuario"
           onPress={() => router.push('/users/new' as Href)}
+          style={styles.headingAction}
         />
       </View>
       <FlatList
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: spacing['2xl'] + insets.bottom }]}
         data={users}
         testID="users-list"
         keyExtractor={(user) => user.id}
@@ -125,6 +128,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     justifyContent: 'space-between',
   },
-  list: { gap: spacing.sm, paddingBottom: spacing['2xl'] },
-  title: { flex: 1, gap: spacing.xxs },
+  headingAction: { flexShrink: 0 },
+  list: { gap: spacing.sm },
+  title: { flex: 1, gap: spacing.xxs, minWidth: 0 },
 });
