@@ -13,7 +13,7 @@ export interface DashboardRecentAnimalsProps {
 
 export function DashboardRecentAnimals({ animals, onPress }: DashboardRecentAnimalsProps) {
   return (
-    <View style={styles.section}>
+    <View style={styles.section} testID="dashboard-recent">
       <AppText variant="heading2">Animales recientes</AppText>
       {animals.length === 0 ? (
         <AppCard>

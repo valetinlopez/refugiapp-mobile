@@ -110,4 +110,4 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 ### Deuda conocida
 
 - El listado e historial operan con una página de 20 ítems; no hay paginación UI visible para cargar más historial (el listado de animales sí pagina).
-- Falta E2E en dispositivo para alta, edición, cambio de estado y registro de eventos generales (éxito, validación y error 403).
+- E2E de alta de animal cubierto con Maestro por rol (`maestro/admin.yaml`, `shelter-manager.yaml`; selectores `animals-list`, `animal-card`). Falta E2E en dispositivo para edición, cambio de estado y registro de eventos generales (éxito, validación y error 403).

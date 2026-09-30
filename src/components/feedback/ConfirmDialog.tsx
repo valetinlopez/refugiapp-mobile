@@ -51,7 +51,12 @@ export function ConfirmDialog({
           onPress={onCancel}
           style={styles.backdrop}
         />
-        <View accessibilityLiveRegion="polite" accessibilityRole="alert" style={styles.card}>
+        <View
+          accessibilityLiveRegion="polite"
+          accessibilityRole="alert"
+          style={styles.card}
+          testID="confirm-dialog"
+        >
           <AppText variant="heading3">{title}</AppText>
           <AppText color="textSecondary">{consequence}</AppText>
           {errorMessage ? (
@@ -64,6 +69,7 @@ export function ConfirmDialog({
               disabled={confirming}
               label={cancelLabel}
               onPress={onCancel}
+              testID="confirm-cancel"
               variant="ghost"
             />
             <AppButton
@@ -71,6 +77,7 @@ export function ConfirmDialog({
               label={confirmLabel}
               loading={confirming}
               onPress={onConfirm}
+              testID="confirm-accept"
               variant={variant}
             />
           </View>

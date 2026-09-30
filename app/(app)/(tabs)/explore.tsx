@@ -91,6 +91,7 @@ export default function AnimalsScreen() {
         placeholder="Buscar por nombre"
         placeholderTextColor={colors.textSecondary}
         style={styles.search}
+        testID="animal-search"
         value={searchInput}
       />
       <TextInput
@@ -101,6 +102,7 @@ export default function AnimalsScreen() {
         placeholder="Especie (ej. dog)"
         placeholderTextColor={colors.textSecondary}
         style={styles.search}
+        testID="animal-species"
         value={speciesInput}
       />
       <StatusFilter selected={statusFilter} onSelect={setStatusFilter} />

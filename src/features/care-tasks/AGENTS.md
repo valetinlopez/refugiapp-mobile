@@ -63,3 +63,4 @@
 ### Pendiente o deuda conocida
 
 - El backend debe incorporar `type` y asignación de responsable antes de exponerlos en el formulario móvil.
+- E2E `login → dashboard → detalle → completar tarea` por rol cubierto con Maestro (`maestro/*.yaml`; selectores `task-list`, `task-complete`, `task-cancel`, `confirm-dialog`). Sin binarios en E2E.

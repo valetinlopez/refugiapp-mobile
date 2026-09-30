@@ -59,6 +59,7 @@ export function DashboardScreen() {
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.content}
+        testID="dashboard-screen"
         refreshControl={
           <RefreshControl
             colors={[colors.positive]}

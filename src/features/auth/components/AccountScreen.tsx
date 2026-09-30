@@ -62,9 +62,9 @@ export function AccountScreen({
 
         {children}
 
-        <View style={styles.section}>
+        <View style={styles.section} testID="account-section">
           <AppText variant="heading2">Cuenta</AppText>
-          <AppCard>
+          <AppCard testID="account-identity">
             <View style={styles.field}>
               <AppText color="textSecondary" variant="label">
                 Correo
@@ -83,6 +83,7 @@ export function AccountScreen({
             icon="logout"
             label="Cerrar sesión"
             onPress={handleOpenSheet}
+            testID="account-logout"
             variant="secondary"
           />
         </View>

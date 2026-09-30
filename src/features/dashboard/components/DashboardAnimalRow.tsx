@@ -26,6 +26,7 @@ export const DashboardAnimalRow = memo(function DashboardAnimalRow({
       accessibilityRole="button"
       onPress={() => onPress(animal)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      testID="dashboard-animal-row"
     >
       <AppAvatar
         accessibilityLabel={`Foto de ${animal.name}`}

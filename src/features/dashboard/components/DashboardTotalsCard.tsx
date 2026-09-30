@@ -8,7 +8,7 @@ import { getStatusPresentation } from '../utils/presentation';
 
 export function DashboardTotalsCard({ totals }: { totals: DashboardTotals }) {
   return (
-    <AppCard variant="organic">
+    <AppCard testID="dashboard-totals" variant="organic">
       <View style={styles.body}>
         <AppText color="textSecondary" variant="label">
           Animales activos

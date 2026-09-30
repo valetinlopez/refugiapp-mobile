@@ -23,6 +23,7 @@ export const AnimalCard = memo(function AnimalCard({ animal, onPress }: AnimalCa
       accessibilityRole="button"
       onPress={() => onPress(animal)}
       style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
+      testID="animal-card"
     >
       <AppCard padded={false} style={styles.card}>
         <AnimalCardAvatar name={animal.name} profilePhotoMediaId={animal.profilePhotoMediaId} />

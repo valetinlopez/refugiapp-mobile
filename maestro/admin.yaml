@@ -1,0 +1,48 @@
+# RFG-85 admin: login → dashboard → detalle animal → completar tarea → alta animal → registro médico → logout.
+appId: ${APP_ID}
+tags: [e2e, sprint-12, RFG-85]
+---
+- runFlow:
+    file: helpers/login.yaml
+    env:
+      EMAIL: ${E2E_ADMIN_EMAIL}
+      PASSWORD: ${E2E_ADMIN_PASSWORD}
+- assertVisible:
+    id: dashboard-screen
+    timeout: 20000
+- assertVisible:
+    id: dashboard-totals
+- assertVisible:
+    id: dashboard-recent
+- tapOn:
+    id: dashboard-animal-row
+- assertVisible:
+    id: animals-list
+    timeout: 15000
+- tapOn:
+    id: animal-card
+- assertVisible: Resumen del animal
+- tapOn: Tareas
+- assertVisible:
+    id: task-list
+- tapOn:
+    id: task-complete
+- assertVisible:
+    id: confirm-dialog
+- tapOn:
+    id: confirm-accept
+- assertVisible:
+    id: task-list
+# Alta de animal (sin foto en E2E para evitar binarios)
+- back
+- tapOn: Animales
+- tapOn: Alta
+- assertVisible: Nuevo animal
+- back
+# Registro médico (permiso canReadClinicalRecords)
+- tapOn:
+    id: animal-card
+- tapOn: Evolución clínica
+- assertVisible:
+    id: clinical-history
+- runFlow: helpers/logout.yaml

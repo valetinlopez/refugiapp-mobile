@@ -1,0 +1,15 @@
+# Helper de cierre de sesión desde el tab Más.
+appId: ${APP_ID}
+---
+- tapOn: Más
+- assertVisible:
+    id: account-section
+- tapOn:
+    id: account-logout
+- assertVisible:
+    id: confirm-dialog
+- tapOn:
+    id: confirm-accept
+- assertVisible:
+    id: login-form
+    timeout: 15000

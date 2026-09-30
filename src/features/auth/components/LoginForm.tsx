@@ -36,7 +36,7 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
   const visibleError = validationMessage ?? errorMessage;
 
   return (
-    <View style={styles.form}>
+    <View style={styles.form} testID="login-form">
       <View style={styles.field}>
         <AppText variant="label">Correo electrónico</AppText>
         <TextInput
@@ -49,6 +49,7 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
           placeholder="nombre@refugiapp.org"
           placeholderTextColor={colors.textSecondary}
           style={styles.input}
+          testID="login-email"
           value={email}
         />
       </View>
@@ -64,11 +65,12 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
           placeholderTextColor={colors.textSecondary}
           secureTextEntry
           style={styles.input}
+          testID="login-password"
           value={password}
         />
       </View>
       {visibleError ? (
-        <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
+        <AppText accessibilityLiveRegion="polite" color="danger" role="alert" testID="login-error">
           {visibleError}
         </AppText>
       ) : null}
@@ -76,6 +78,7 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
         label="Iniciar sesión"
         loading={isSubmitting}
         onPress={() => void handleSubmit()}
+        testID="login-submit"
       />
     </View>
   );

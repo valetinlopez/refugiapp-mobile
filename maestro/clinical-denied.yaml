@@ -1,0 +1,25 @@
+# RFG-85: shelter_manager no accede a clínica (guard visual, sin query clínica).
+appId: ${APP_ID}
+tags: [e2e, sprint-12, RFG-85]
+---
+- runFlow:
+    file: helpers/login.yaml
+    env:
+      EMAIL: ${E2E_MANAGER_EMAIL}
+      PASSWORD: ${E2E_MANAGER_PASSWORD}
+- assertVisible:
+    id: dashboard-screen
+    timeout: 20000
+- tapOn:
+    id: dashboard-animal-row
+- assertVisible:
+    id: animals-list
+    timeout: 15000
+- tapOn:
+    id: animal-card
+- assertVisible: Resumen del animal
+- assertNotVisible: Evolución clínica
+- assertNotVisible:
+    id: clinical-history
+- assertVisible: Tareas
+- runFlow: helpers/logout.yaml

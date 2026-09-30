@@ -12,7 +12,7 @@ export function DashboardQuickActions({ actions }: { actions: readonly Dashboard
   }
 
   return (
-    <View accessibilityLabel="Acciones rápidas" style={styles.container}>
+    <View accessibilityLabel="Acciones rápidas" style={styles.container} testID="dashboard-actions">
       {actions.map((action) => (
         <AppButton
           icon={action.icon}

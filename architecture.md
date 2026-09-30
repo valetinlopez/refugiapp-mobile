@@ -377,6 +377,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Mapa de errores en español rioplatense unificado: `src/core/api/errors.ts` normaliza 400, 401, 403, 404, 409, 422, 429, 500 y 502-504 a mensajes accionables, diferencia red (`NETWORK_ERROR`) de timeout (`REQUEST_TIMEOUT`) y expone `toApiErrorMessage` como fallback seguro para errores desconocidos (nunca filtra payloads, tokens ni `requestId`); las features (animals, care-tasks, medical-records, dashboard, expenses y `src/application/animals`) especializan por código/dominio y delegan el fallback genérico en el core. `expenses` incorpora `toCreateExpenseErrorMessage` y login/errores de ruta quedan en voseo.
 - Sistema de diseño, componentes compartidos y catálogo interno.
 - Tests unitarios y de componentes.
+- E2E por rol con Maestro (ver ADR-0011): `maestro/` cubre `login → dashboard → detalle de animal → completar tarea` para `admin`, `shelter_manager` y `veterinarian`, alta de animal y registro médico para roles con permiso, negativa clínica de `shelter_manager` (`clinical-denied`) y logout más expiración básica (`session-expired`). Selectores duales `accessibilityLabel` en español más `testID` en inglés (`login-form`, `dashboard-screen`, `animals-list`, `task-list`, `clinical-history`, `confirm-dialog`, `account-logout`); credenciales solo por entorno y sin binarios en E2E. Scripts `npm run e2e*` y workflow `mobile-e2e.yml` en CI.
 - CI móvil con generación de tipos, formato, lint, typecheck y tests RNTL.
 - ESLint, Prettier, typecheck y export web verificados.
 - Jerarquía de documentación y reglas locales por frontera.
@@ -388,7 +389,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - El formulario de tareas no puede ofrecer `type` ni un responsable asignable hasta que el backend los incorpore al contrato. Hoy el backend registra al actor autenticado en `createdByUserId`.
 - El historial general del animal se presenta con una sola página (20 ítems); falta paginación UI de historial.
 - La evolución clínica se presenta con una sola página (20 ítems); falta paginación UI.
-- Agregar tests E2E de flujos críticos, incluidos alta, edición y cambio de estado de animales y registro de consultas.
+- Ampliar E2E con edición y cambio de estado de animales y edición de consultas; RFG-85 deja cubierta el alta, la creación clínica, la negativa por rol y la sesión básica. La rotación concurrente y el single-flight quedan en RFG-86.
 - `npm run typecheck` no exige `.expo/types`: verificado que compila sin el directorio generado por Expo Router. Si en el futuro el código depende de tipos de ruta generados, agregar el typegen al Mobile CI en ese momento.
 - Configurar en GitHub la protección de `develop`/`master` para exigir el check `Mobile CI / lint, typecheck and tests` antes del merge.
 - Validar el sistema visual y el selector de fecha nativo en dispositivos iOS y Android reales.

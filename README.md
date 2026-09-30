@@ -187,6 +187,9 @@ Notas:
 | `npm test`                  | Jest (unit tests)                                        |
 | `npm run test:watch`        | Jest en modo watch                                       |
 | `npm run ci`                | Ejecuta localmente todos los gates del CI móvil          |
+| `npm run e2e`               | Maestro: todas las suites por rol (staging con seeds)    |
+| `npm run e2e:admin`         | Maestro: flow de `admin`                                 |
+| `npm run e2e:roles`         | Maestro: `admin` + `shelter_manager` + `veterinarian`    |
 
 ## Estructura del proyecto
 
@@ -232,7 +235,7 @@ src/components/patterns/    # Patrones compuestos, como filas de tareas
 
 - Unit tests para logica de negocio y config (`src/core/config/env.test.ts`, `src/core/api/client.test.ts`).
 - Component tests con React Native Testing Library (tooling ya configurado en `jest.config.js`).
-- E2E solo para flujos criticos (login, flujo principal).
+- E2E con Maestro para flujos criticos por rol (`maestro/`): `login → dashboard → detalle → completar tarea` para `admin`, `shelter_manager` y `veterinarian`, alta de animal y registro médico con permiso, negativa clínica de `shelter_manager` y sesión básica. Ver `maestro/README.md`; requiere staging con seeds y credenciales por entorno.
 
 El límite HTTP es inyectable. `createFakeHttpTransport` permite definir rutas falsas para desarrollo aislado y tests sin depender de una API real.
 
@@ -240,7 +243,7 @@ En Android/iOS, el par de tokens se persiste exclusivamente con Expo SecureStore
 
 ## CI móvil
 
-`.github/workflows/mobile-ci.yml` ejecuta instalación reproducible, generación de tipos OpenAPI, formato, lint, typecheck y tests unitarios/componentes con cobertura. Para bloquear merges, configurar en GitHub el check requerido `Mobile CI / lint, typecheck and tests` sobre `develop` y `master`.
+`.github/workflows/mobile-ci.yml` ejecuta instalación reproducible, generación de tipos OpenAPI, formato, lint, typecheck y tests unitarios/componentes con cobertura. `.github/workflows/mobile-e2e.yml` ejecuta las suites Maestro por rol sobre staging con seeds (secrets `STAGING_API_URL` y `E2E_*_*`, reporte JUnit y screenshots en fallo). Para bloquear merges, configurar en GitHub el check requerido `Mobile CI / lint, typecheck and tests` sobre `develop` y `master`.
 
 ## Troubleshooting
 

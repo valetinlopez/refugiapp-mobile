@@ -109,6 +109,7 @@ export default function CareTasksScreen() {
         contentContainerStyle={styles.filters}
         horizontal
         showsHorizontalScrollIndicator={false}
+        testID="task-filter"
       >
         {STATUS_FILTERS.map(({ label, value }) => (
           <FilterChip
@@ -158,6 +159,7 @@ export default function CareTasksScreen() {
         contentContainerStyle={styles.list}
         data={tasksQuery.data.items}
         keyExtractor={(task) => task.id}
+        testID="task-list"
         ListEmptyComponent={
           <EmptyState
             message={animalId ? 'Este animal todavía no tiene tareas.' : 'Todavía no hay tareas.'}

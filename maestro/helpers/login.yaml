@@ -1,0 +1,18 @@
+# Helper reutilizable de login. Llamar con runFlow y env EMAIL + PASSWORD.
+# No registra credenciales: usa inputText con valores de entorno.
+appId: ${APP_ID}
+---
+- clearState
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: login-form
+    timeout: 20000
+- tapOn:
+    id: login-email
+- inputText: ${EMAIL}
+- tapOn:
+    id: login-password
+- inputText: ${PASSWORD}
+- tapOn:
+    id: login-submit

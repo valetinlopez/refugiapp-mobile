@@ -1,0 +1,21 @@
+# RFG-85 alcance acotado: logout + sesión expirada básica.
+# La rotación concurrente y single-flight quedan en RFG-86.
+appId: ${APP_ID}
+tags: [e2e, sprint-12, RFG-85]
+---
+- runFlow:
+    file: helpers/login.yaml
+    env:
+      EMAIL: ${E2E_ADMIN_EMAIL}
+      PASSWORD: ${E2E_ADMIN_PASSWORD}
+- assertVisible:
+    id: dashboard-screen
+    timeout: 20000
+# Logout best-effort siempre limpia Secure Store + cache y vuelve a login
+- runFlow: helpers/logout.yaml
+# Relanzar sin estado confirma que no hay sesión restaurada
+- launchApp:
+    clearState: false
+- assertVisible:
+    id: login-form
+    timeout: 15000
