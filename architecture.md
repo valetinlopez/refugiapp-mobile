@@ -149,6 +149,7 @@ src/
     care-tasks/              # Listado, formulario y transiciones de tareas
     dashboard/               # Panel de portada con totales, recientes y capacidades por rol
     expenses/                # Alta de gastos con comprobante y permisos por rol
+    audit/                   # Consulta paginada y detalle de auditoría para admin
     medical-records/         # Registros clínicos y evolución clínica
   theme/
   types/
@@ -255,6 +256,7 @@ La matriz completa vive en la arquitectura del backend. Para el frontend:
 - Los tres roles consultan tareas; solo `admin` y `shelter_manager` pueden crearlas, editarlas, completarlas o cancelarlas.
 - `shelter_manager` no recibe actividad clínica reciente en dashboard.
 - Solo `admin` consulta auditoría y administra usuarios.
+- Auditoría consume `GET /audit-logs` y `GET /audit-logs/:id`, ofrece filtros por acción y fechas, y vuelve a sanitizar metadata antes de presentarla.
 - Los tres roles consultan gastos; solo `admin` y `shelter_manager` pueden registrarlos o eliminarlos.
 
 La UI por rol se deriva de esta matriz y debe actualizarse cuando cambie el backend.

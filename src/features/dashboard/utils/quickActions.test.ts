@@ -9,6 +9,7 @@ describe('filterQuickActions', () => {
       'new-task',
       'new-expense',
       'manage-users',
+      'view-audit',
     ]);
   });
 

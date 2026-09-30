@@ -1818,6 +1818,66 @@
           }
         }
       },
+      "AuditLogResponseDto": {
+        "type": "object",
+        "required": ["id", "action", "resourceType", "metadata", "occurredAt", "createdAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "actorUserId": { "type": "string", "format": "uuid", "nullable": true },
+          "action": {
+            "type": "string",
+            "enum": [
+              "user.create",
+              "user.deactivate",
+              "user.activate",
+              "user.role_assign",
+              "medical_record.create",
+              "medical_record.update",
+              "medical_record.soft_delete",
+              "medical_record.restore",
+              "expense.create",
+              "expense.soft_delete",
+              "care_task.create",
+              "care_task.update",
+              "care_task.complete",
+              "care_task.cancel",
+              "auth.login_success",
+              "auth.login_failure",
+              "auth.refresh_success",
+              "auth.refresh_failure",
+              "access.denied"
+            ]
+          },
+          "resourceType": {
+            "type": "string",
+            "enum": [
+              "user",
+              "medical_record",
+              "expense",
+              "care_task",
+              "auth_session",
+              "authorization"
+            ]
+          },
+          "resourceId": { "type": "string", "format": "uuid", "nullable": true },
+          "metadata": { "type": "object", "additionalProperties": true },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedAuditLogsResponseDto": {
+        "type": "object",
+        "required": ["items", "page", "limit", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AuditLogResponseDto" }
+          },
+          "page": { "type": "number" },
+          "limit": { "type": "number" },
+          "total": { "type": "number" }
+        }
+      },
       "ErrorResponseDto": {
         "type": "object",
         "required": ["statusCode", "code", "message", "error", "timestamp", "path"],
