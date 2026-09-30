@@ -19,6 +19,7 @@ describe('buildClinicalHistoryFilters', () => {
       recordType: 'consultation',
       to: '',
     });
+    const after = new Date();
 
     expect(filters.recordType).toBe('consultation');
     expect(typeof filters.from).toBe('string');
@@ -26,7 +27,8 @@ describe('buildClinicalHistoryFilters', () => {
     const from = new Date(filters.from as string);
     const to = new Date(filters.to as string);
     expect(from.getTime()).toBeLessThan(to.getTime());
-    expect(to.getTime()).toBeLessThanOrEqual(before.getTime());
+    expect(to.getTime()).toBeGreaterThanOrEqual(before.getTime());
+    expect(to.getTime()).toBeLessThanOrEqual(after.getTime());
   });
 
   it('builds a full local-day range for a valid custom period', () => {
