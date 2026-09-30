@@ -66,8 +66,28 @@ describe('VeterinarianDetail', () => {
     const screen = await renderDetail({ query: detailQuery({ data: withoutOptionals }) });
 
     expect(screen.getAllByText('No informado')).toHaveLength(2);
-    expect(screen.getByText('No vinculado')).toBeTruthy();
+    expect(screen.getByText('Sin acceso vinculado')).toBeTruthy();
     expect(screen.getByText('Sin notas')).toBeTruthy();
+  });
+
+  it('shows the linked user email and role instead of a raw uuid', async () => {
+    const linked = {
+      ...VET,
+      user: {
+        id: '22222222-2222-4222-8222-222222222222',
+        email: 'vet-user@refugiapp.local',
+        firstName: 'Sofía',
+        lastName: 'Romero',
+        roles: ['veterinarian'],
+        isActive: true,
+        createdAt: '2026-09-01T00:00:00.000Z',
+        updatedAt: '2026-09-01T00:00:00.000Z',
+      },
+    };
+    const screen = await renderDetail({ query: detailQuery({ data: linked }) });
+
+    expect(screen.getByText('vet-user@refugiapp.local')).toBeTruthy();
+    expect(screen.getByText('Veterinario')).toBeTruthy();
   });
 
   it('offers edit and deactivate actions with write permission', async () => {

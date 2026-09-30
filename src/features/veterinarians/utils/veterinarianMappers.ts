@@ -8,14 +8,25 @@ import type { VeterinarianFormValues } from './veterinarianSchema';
 export function toCreateVeterinarianRequest(
   values: VeterinarianFormValues
 ): CreateVeterinarianRequest {
-  return {
+  const request: CreateVeterinarianRequest = {
     firstName: values.firstName,
     lastName: values.lastName,
     licenseNumber: values.licenseNumber,
     ...(values.email !== undefined ? { email: values.email } : {}),
     ...(values.phone !== undefined ? { phone: values.phone } : {}),
-    ...(values.userId !== undefined ? { userId: values.userId } : {}),
     ...(values.notes !== undefined ? { notes: values.notes } : {}),
+  };
+
+  if (!values.shouldCreateUser) {
+    return request;
+  }
+
+  return {
+    ...request,
+    createUser: {
+      password: values.createUserPassword ?? '',
+      ...(values.createUserEmail !== undefined ? { email: values.createUserEmail } : {}),
+    },
   };
 }
 
@@ -40,9 +51,6 @@ export function toUpdateVeterinarianRequest(
   if ((values.phone ?? null) !== (original.phone ?? null)) {
     patch.phone = values.phone ?? null;
   }
-  if ((values.userId ?? null) !== (original.userId ?? null)) {
-    patch.userId = values.userId ?? null;
-  }
   if ((values.notes ?? null) !== (original.notes ?? null)) {
     patch.notes = values.notes ?? null;
   }
@@ -63,7 +71,9 @@ export function toVeterinarianFormValues(
     licenseNumber: veterinarian.licenseNumber,
     email: veterinarian.email ?? undefined,
     phone: veterinarian.phone ?? undefined,
-    userId: veterinarian.userId ?? undefined,
     notes: veterinarian.notes ?? undefined,
+    shouldCreateUser: false,
+    createUserEmail: undefined,
+    createUserPassword: undefined,
   };
 }

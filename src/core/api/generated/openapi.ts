@@ -220,6 +220,12 @@ export interface components {
       limit: number;
       total: number;
     };
+    CreateVeterinarianUserDto: {
+      email?: string;
+      password: string;
+      firstName?: string;
+      lastName?: string;
+    };
     CreateVeterinarianDto: {
       firstName: string;
       lastName: string;
@@ -227,6 +233,7 @@ export interface components {
       email?: string;
       phone?: string;
       userId?: string | null;
+      createUser?: components['schemas']['CreateVeterinarianUserDto'];
       notes?: string | null;
     };
     UpdateVeterinarianDto: {
@@ -250,6 +257,7 @@ export interface components {
       isActive: boolean;
       createdAt?: string;
       updatedAt?: string;
+      user?: components['schemas']['UserResponseDto'] | null;
     };
     PaginatedVeterinariansResponseDto: {
       items: components['schemas']['VeterinarianResponseDto'][];

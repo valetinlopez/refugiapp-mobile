@@ -1,13 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
-import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { StyleSheet, Switch, TextInput, View, type TextInputProps } from 'react-native';
 
 import { AppButton, AppText } from '@/components/primitives';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
 import {
   veterinarianFormSchema,
+  type VeterinarianFieldName,
   type VeterinarianFormInput,
+  type VeterinarianFormMode,
   type VeterinarianFormValues,
 } from '../utils/veterinarianSchema';
 
@@ -15,6 +17,7 @@ interface VeterinarianFormProps {
   errorMessage?: string | null;
   initialValues?: VeterinarianFormValues;
   isSubmitting: boolean;
+  mode?: VeterinarianFormMode;
   onSubmit(values: VeterinarianFormValues): void;
   submitLabel: string;
 }
@@ -25,8 +28,10 @@ const DEFAULT_VALUES: VeterinarianFormValues = {
   licenseNumber: '',
   email: undefined,
   phone: undefined,
-  userId: undefined,
   notes: undefined,
+  shouldCreateUser: false,
+  createUserEmail: undefined,
+  createUserPassword: undefined,
 };
 
 interface FormFieldConfig {
@@ -35,12 +40,14 @@ interface FormFieldConfig {
   keyboardType?: TextInputProps['keyboardType'];
   label: string;
   multiline?: boolean;
-  name: FieldName;
+  name: TextFieldName;
+  secureTextEntry?: boolean;
+  textContentType?: TextInputProps['textContentType'];
 }
 
-type FieldName = keyof typeof veterinarianFormSchema.shape;
+type TextFieldName = Exclude<VeterinarianFieldName, 'shouldCreateUser'>;
 
-const FIELDS: readonly FormFieldConfig[] = [
+const BASE_FIELDS: readonly FormFieldConfig[] = [
   { name: 'firstName', label: 'Nombre', autoComplete: 'given-name' },
   { name: 'lastName', label: 'Apellido', autoComplete: 'family-name' },
   { name: 'licenseNumber', label: 'Matrícula' },
@@ -52,14 +59,31 @@ const FIELDS: readonly FormFieldConfig[] = [
     keyboardType: 'email-address',
   },
   { name: 'phone', label: 'Teléfono (opcional)', keyboardType: 'phone-pad' },
-  { name: 'userId', label: 'ID de usuario vinculado (opcional)', autoCapitalize: 'none' },
   { name: 'notes', label: 'Notas (opcional)', multiline: true },
+];
+
+const CREATE_USER_FIELDS: readonly FormFieldConfig[] = [
+  {
+    name: 'createUserEmail',
+    label: 'Email del usuario',
+    autoCapitalize: 'none',
+    autoComplete: 'email',
+    keyboardType: 'email-address',
+  },
+  {
+    name: 'createUserPassword',
+    label: 'Contraseña inicial',
+    autoComplete: 'new-password',
+    secureTextEntry: true,
+    textContentType: 'newPassword',
+  },
 ];
 
 export function VeterinarianForm({
   errorMessage,
   initialValues,
   isSubmitting,
+  mode = 'create',
   onSubmit,
   submitLabel,
 }: VeterinarianFormProps) {
@@ -69,36 +93,61 @@ export function VeterinarianForm({
       defaultValues: initialValues ?? DEFAULT_VALUES,
     }
   );
+  const shouldCreateUser = useWatch({ control, name: 'shouldCreateUser' });
   const submit = handleSubmit(onSubmit);
 
   return (
     <View style={styles.form}>
-      {FIELDS.map((field) => (
-        <Controller
+      {BASE_FIELDS.map((field) => (
+        <FieldController
           key={field.name}
           control={control}
-          name={field.name as FieldName}
-          render={({ field: fieldController, fieldState }) => {
-            const inputProps: TextInputProps = {
-              autoCapitalize: field.autoCapitalize,
-              autoComplete: field.autoComplete,
-              editable: !isSubmitting,
-              keyboardType: field.keyboardType,
-              multiline: field.multiline,
-              onBlur: fieldController.onBlur,
-              onChangeText: fieldController.onChange,
-              value: fieldController.value ?? '',
-            };
-            return (
-              <Field
-                error={fieldState.error?.message ?? null}
-                label={field.label}
-                {...inputProps}
-              />
-            );
-          }}
+          field={field}
+          isSubmitting={isSubmitting}
         />
       ))}
+
+      {mode === 'create' ? (
+        <View style={styles.createUserSection}>
+          <AppText variant="label">Crear acceso para el veterinario</AppText>
+          <Controller
+            control={control}
+            name="shouldCreateUser"
+            render={({ field: { onChange, value } }) => (
+              <View style={styles.switchRow}>
+                <View style={styles.switchCopy}>
+                  <AppText>Crear usuario de acceso</AppText>
+                  <AppText color="textSecondary" variant="caption">
+                    Crea un usuario con rol veterinario y lo vincula automáticamente.
+                  </AppText>
+                </View>
+                <Switch
+                  accessibilityHint="Si se activa, se crea un usuario con rol veterinario en la misma operación."
+                  accessibilityLabel="Crear usuario de acceso"
+                  disabled={isSubmitting}
+                  onValueChange={onChange}
+                  thumbColor={value ? colors.textPrimary : colors.disabledText}
+                  trackColor={{ false: colors.disabledSurface, true: colors.info }}
+                  value={value}
+                />
+              </View>
+            )}
+          />
+          {shouldCreateUser ? (
+            <View style={styles.createUserFields}>
+              {CREATE_USER_FIELDS.map((field) => (
+                <FieldController
+                  key={field.name}
+                  control={control}
+                  field={field}
+                  isSubmitting={isSubmitting}
+                />
+              ))}
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
       {errorMessage ? (
         <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
           {errorMessage}
@@ -106,6 +155,40 @@ export function VeterinarianForm({
       ) : null}
       <AppButton label={submitLabel} loading={isSubmitting} onPress={() => void submit()} />
     </View>
+  );
+}
+
+interface FieldControllerProps {
+  control: ReturnType<
+    typeof useForm<VeterinarianFormInput, unknown, VeterinarianFormValues>
+  >['control'];
+  field: FormFieldConfig;
+  isSubmitting: boolean;
+}
+
+function FieldController({ control, field, isSubmitting }: FieldControllerProps) {
+  return (
+    <Controller
+      control={control}
+      name={field.name}
+      render={({ field: fieldController, fieldState }) => {
+        const inputProps: TextInputProps = {
+          autoCapitalize: field.autoCapitalize,
+          autoComplete: field.autoComplete,
+          editable: !isSubmitting,
+          keyboardType: field.keyboardType,
+          multiline: field.multiline,
+          onBlur: fieldController.onBlur,
+          onChangeText: fieldController.onChange,
+          secureTextEntry: field.secureTextEntry,
+          textContentType: field.textContentType,
+          value: fieldController.value ?? '',
+        };
+        return (
+          <Field error={fieldState.error?.message ?? null} label={field.label} {...inputProps} />
+        );
+      }}
+    />
   );
 }
 
@@ -130,6 +213,14 @@ function Field(props: TextInputProps & { error?: string | null; label: string })
 }
 
 const styles = StyleSheet.create({
+  createUserFields: { gap: spacing.md },
+  createUserSection: {
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    gap: spacing.sm,
+    padding: spacing.md,
+  },
   field: { gap: spacing.xs },
   form: { gap: spacing.md, width: '100%' },
   input: {
@@ -145,4 +236,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   multiline: { minHeight: 96, textAlignVertical: 'top' },
+  switchCopy: { flex: 1, gap: spacing.xxs },
+  switchRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
+    minHeight: 44,
+  },
 });

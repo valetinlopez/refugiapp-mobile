@@ -46,13 +46,15 @@ export default function NewVeterinarianRoute() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppText variant="heading1">Nuevo veterinario</AppText>
         <AppText color="textSecondary">
-          La matrícula debe ser única. Podés vincular opcionalmente un usuario interno.
+          La matrícula debe ser única. Podés crearle su acceso con rol veterinario o dejarlo sin
+          vínculo.
         </AppText>
         <VeterinarianForm
           errorMessage={
             createVeterinarian.error ? toVeterinarianErrorMessage(createVeterinarian.error) : null
           }
           isSubmitting={createVeterinarian.isPending}
+          mode="create"
           onSubmit={(values) =>
             createVeterinarian.mutate(toCreateVeterinarianRequest(values), {
               onSuccess: () => router.replace(veterinariansHref),
