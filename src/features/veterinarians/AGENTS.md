@@ -32,7 +32,8 @@
 ## Estructura
 
 - `api/`: `veterinariansApi` (listado, detalle, alta, edición y desactivación).
-- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianDetail`, `VeterinarianForm` y `DeactivateVeterinarianDialog`.
+- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianDetail`, `VeterinarianForm`, `DeactivateVeterinarianDialog` y la sección de gestión de la pestaña "Más" (`ManagementSection`, `ManagementCard`).
+- `ManagementSection` compone la sección "Gestión" del tab "Más" y enlaza rutas de administración por capacidades: veterinarios (todos los roles), usuarios (`canManageUsers`) y auditoría (`canReadAudit`). No ejecuta red ni importa internals de otras features; la ruta le inyecta las capacidades.
 - `hooks/`: keys, listado infinito, detalle y mutations.
 - `types.ts`: aliases derivados del contrato generado.
 - `utils/`: esquema Zod, mappers create/edit (PATCH diferencial) y presentación/errores.
@@ -70,3 +71,4 @@
 
 - Reactivación: requiere endpoint `POST /veterinarians/:id/activate` del backend para habilitar el botón.
 - El listado de gestión no expone búsqueda por `licenseNumber` en UI; el API sí lo soporta.
+- `ManagementSection` coordina destinos de tres dominios (veterinarios, usuarios, auditoría) dentro de la feature `veterinarians`. Si la sección "Gestión" agrega más entradas o un rol distinto necesita otra coordinación, extraerla a una frontera de `src/application` o a un patrón compartido de `src/components`, no ampliar su responsabilidad aquí.

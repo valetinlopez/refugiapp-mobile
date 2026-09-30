@@ -20,7 +20,7 @@
 
 - `(auth)`: login público; no existe registro público en el backend.
 - `(app)`: área autenticada.
-- `(app)/(tabs)`: destinos principales: `index` (Inicio, compone el dashboard de la feature `src/features/dashboard`), `explore` (Animales), `care-tasks` (Tareas) y `more` (Más, compone `AccountScreen` de la feature auth con la sección "Gestión" de `ManagementSection`). La ruta legacy `inbox` es un redirect oculto (`href: null`) hacia `care-tasks`.
+- `(app)/(tabs)`: destinos principales: `index` (Inicio, compone el dashboard de la feature `src/features/dashboard`), `explore` (Animales), `care-tasks` (Tareas) y `more` (Más, compone `AccountScreen` de la feature auth con la sección "Gestión" de `ManagementSection`; la jerarquía es Gestión > Cuenta > Salida, con "Veterinarios" para todos los roles, "Usuarios" solo `canManageUsers` y "Ver auditoría" solo `canReadAudit`). La ruta legacy `inbox` es un redirect oculto (`href: null`) hacia `care-tasks`.
 - `(app)/expenses/new`: alta de gasto con comprobante para `admin` y `shelter_manager`.
 - `(app)/users`: listado paginado y alta de usuarios internos, visible solo para `admin`; activacion y desactivacion se confirman desde el listado.
 - `(app)/veterinarians`: listado, alta, detalle y edición de veterinarios; lectura para los tres roles y escritura para `admin`/`shelter_manager` (`canManageVets`). La desactivación se confirma desde el detalle.

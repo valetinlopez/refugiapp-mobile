@@ -8,32 +8,45 @@ import { ManagementCard } from './ManagementCard';
 
 export interface ManagementSectionProps {
   canManageUsers: boolean;
+  canReadAudit: boolean;
 }
 
 /**
  * Sección "Gestión" de la pestaña "Más". Coordina la navegación hacia las
- * rutas de administración existentes (veterinarios y usuarios) filtrando por
- * capacidades. La card de veterinarios se muestra a todos los roles porque la
- * lectura está permitida; la de usuarios solo a quien puede gestionarlos.
+ * rutas de administración existentes (veterinarios, usuarios y auditoría)
+ * filtrando por capacidades. La card de veterinarios se muestra a todos los
+ * roles porque la lectura está permitida; la de usuarios solo a quien puede
+ * gestionarlos y la de auditoría solo a quien puede leerla (`canReadAudit`).
  * No importa internals de otras features; solo enlaza rutas.
  */
-export function ManagementSection({ canManageUsers }: ManagementSectionProps) {
+export function ManagementSection({ canManageUsers, canReadAudit }: ManagementSectionProps) {
   return (
     <View style={styles.section}>
       <AppText variant="heading2">Gestión</AppText>
       <View style={styles.cards}>
         <ManagementCard
           description="Listado, detalle y estados de profesionales"
+          hint="Ir a veterinarios"
+          icon="medical"
           label="Veterinarios"
           onPress={() => router.push('/veterinarians' as Href)}
-          variant="primary"
         />
         {canManageUsers ? (
           <ManagementCard
             description="Cuentas internas del refugio"
+            hint="Ir a usuarios"
+            icon="account"
             label="Usuarios"
             onPress={() => router.push('/users' as Href)}
-            variant="secondary"
+          />
+        ) : null}
+        {canReadAudit ? (
+          <ManagementCard
+            description="Trazabilidad de acciones del refugio"
+            hint="Ir a auditoría"
+            icon="clock"
+            label="Ver auditoría"
+            onPress={() => router.push('/audit' as Href)}
           />
         ) : null}
       </View>
