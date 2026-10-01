@@ -180,4 +180,89 @@ describe('HttpClient', () => {
     expect(tokenStore.clearTokens).toHaveBeenCalledTimes(1);
     expect(invalidated).toHaveBeenCalledTimes(1);
   });
+
+  it.each(['REFRESH_TOKEN_EXPIRED', 'REFRESH_REUSE_DETECTED', 'INVALID_REFRESH_TOKEN'])(
+    'clears the session with a clear message when refresh fails with %s',
+    async (code) => {
+      const tokenStore = createTokenStore({
+        accessToken: 'expired-access',
+        refreshToken: 'stale-refresh',
+      });
+      const invalidated = jest.fn();
+      const client = createHttpClient({
+        baseUrl: 'https://api.test/api/v1',
+        timeoutMs: 1000,
+        tokenStore,
+        transport: createFakeHttpTransport({
+          'GET /api/v1/animals': () => ({ body: { code: 'UNAUTHORIZED' }, status: 401 }),
+          'POST /api/v1/auth/refresh': () => ({ body: { code }, status: 401 }),
+        }),
+      });
+      client.setSessionInvalidatedHandler(invalidated);
+
+      await expect(client.get('/animals')).rejects.toBeInstanceOf(ApiError);
+
+      expect(tokenStore.clearTokens).toHaveBeenCalledTimes(1);
+      expect(invalidated).toHaveBeenCalledWith('Tu sesión venció. Iniciá sesión nuevamente.');
+    }
+  );
+
+  it('adopts the concurrent refresh winner persisted by another instance without clearing the session', async () => {
+    const tokenStore = createTokenStore({
+      accessToken: 'expired-access',
+      refreshToken: 'stale-refresh',
+    });
+    const invalidated = jest.fn();
+    let animalCalls = 0;
+    const client = createHttpClient({
+      baseUrl: 'https://api.test/api/v1',
+      timeoutMs: 1000,
+      tokenStore,
+      transport: createFakeHttpTransport({
+        'GET /api/v1/animals': ({ headers }) => {
+          animalCalls += 1;
+          return headers.Authorization === 'Bearer fresh-access'
+            ? { body: [] }
+            : { body: { code: 'UNAUTHORIZED' }, status: 401 };
+        },
+        'POST /api/v1/auth/refresh': async () => {
+          await tokenStore.setTokens('fresh-access', 'fresh-refresh');
+          return { body: { code: 'REFRESH_TOKEN_CONCURRENT_USE' }, status: 401 };
+        },
+      }),
+    });
+    client.setSessionInvalidatedHandler(invalidated);
+
+    await expect(client.get('/animals')).resolves.toMatchObject({ status: 200 });
+
+    expect(animalCalls).toBe(2);
+    expect(tokenStore.clearTokens).not.toHaveBeenCalled();
+    expect(invalidated).not.toHaveBeenCalled();
+  });
+
+  it('clears the session when a concurrent refresh winner was never persisted', async () => {
+    const tokenStore = createTokenStore({
+      accessToken: 'expired-access',
+      refreshToken: 'stale-refresh',
+    });
+    const invalidated = jest.fn();
+    const client = createHttpClient({
+      baseUrl: 'https://api.test/api/v1',
+      timeoutMs: 1000,
+      tokenStore,
+      transport: createFakeHttpTransport({
+        'GET /api/v1/animals': () => ({ body: { code: 'UNAUTHORIZED' }, status: 401 }),
+        'POST /api/v1/auth/refresh': () => ({
+          body: { code: 'REFRESH_TOKEN_CONCURRENT_USE' },
+          status: 401,
+        }),
+      }),
+    });
+    client.setSessionInvalidatedHandler(invalidated);
+
+    await expect(client.get('/animals')).rejects.toBeInstanceOf(ApiError);
+
+    expect(tokenStore.clearTokens).toHaveBeenCalledTimes(1);
+    expect(invalidated).toHaveBeenCalledWith('Tu sesión venció. Iniciá sesión nuevamente.');
+  });
 });

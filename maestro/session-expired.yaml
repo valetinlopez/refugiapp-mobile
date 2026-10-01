@@ -1,7 +1,11 @@
-# RFG-85 alcance acotado: logout + sesión expirada básica.
-# La rotación concurrente y single-flight quedan en RFG-86.
+# RFG-85/RFG-86 proxy de expiración en dispositivo.
+# Sin TTL real en staging: la rotación y el single-flight se cubren con unit
+# tests del cliente (src/core/api/client.test.ts) y con los E2E de rotación del
+# backend (Testcontainers). Aquí verificamos el proxy:
+#  - logout best-effort siempre limpia Secure Store + cache y vuelve a login.
+#  - relaunch sin estado no restaura una sesión inválida/ausente.
 appId: ${APP_ID}
-tags: [e2e, sprint-12, RFG-85]
+tags: [e2e, sprint-12, RFG-85, RFG-86]
 ---
 - runFlow:
     file: helpers/login.yaml

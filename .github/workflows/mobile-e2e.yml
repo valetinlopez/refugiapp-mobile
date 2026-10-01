@@ -50,7 +50,7 @@ jobs:
 
       - name: Validate Maestro flows present
         run: |
-          for f in maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/helpers/login.yaml maestro/helpers/logout.yaml; do
+          for f in maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/session-restore.yaml maestro/helpers/login.yaml maestro/helpers/logout.yaml; do
             [ -f "$f" ] || { echo "missing $f"; exit 1; }
           done
           echo 'maestro flows present'
@@ -145,9 +145,16 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -no-audio -no-boot-anim -camera-back none -camera-front none
           script: |
+            set -x
             export PATH="$HOME/.maestro/bin:$PATH"
-            adb install -r android/app/build/outputs/apk/debug/app-debug.apk
-            maestro test maestro --env APP_ID="$APP_ID" --format junit --output maestro-report.xml
+            command -v adb || { echo "adb not found in PATH"; exit 127; }
+            command -v maestro || { echo "maestro not found in PATH"; ls -la "$HOME/.maestro/bin" || true; exit 127; }
+            maestro --version
+            adb wait-for-device
+            APK="android/app/build/outputs/apk/debug/app-debug.apk"
+            [ -f "$APK" ] || { echo "missing $APK"; exit 1; }
+            adb install -r "$APK"
+            maestro test maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/session-restore.yaml --env APP_ID="$APP_ID" --format junit --output maestro-report.xml
         env:
           E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
           E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
@@ -163,5 +170,5 @@ jobs:
           name: maestro-report
           path: |
             maestro-report.xml
-            ~/.maestro/tests/**/screenshots
+            $HOME/.maestro/tests/**/screenshots
           if-no-files-found: warn

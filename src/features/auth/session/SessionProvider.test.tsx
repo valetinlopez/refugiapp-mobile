@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Button, Text, View } from 'react-native';
 
+import { ApiError } from '@/core/api';
 import { tokenStorage } from '@/core/storage';
 
 import { authApi } from '../api/authApi';
@@ -17,11 +18,12 @@ function createUser(roles: UserRole[]): User {
 }
 
 function SessionHarness() {
-  const { signIn, signOut, status, user } = useSession();
+  const { signIn, signOut, status, user, notice } = useSession();
   return (
     <View>
       <Text testID="status">{status}</Text>
       <Text testID="roles">{user?.roles.join(',') ?? ''}</Text>
+      <Text testID="notice">{notice ?? ''}</Text>
       <Button
         title="Sign in"
         onPress={() =>
@@ -109,6 +111,28 @@ describe('SessionProvider', () => {
 
     await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated'));
     expect(tokenStorage.clearTokens).toHaveBeenCalled();
+  });
+
+  it('surfaces a clear message when a stored session expired', async () => {
+    jest.mocked(tokenStorage.getTokens).mockResolvedValue({
+      accessToken: 'expired-access',
+      refreshToken: 'expired-refresh',
+    });
+    jest.spyOn(authApi, 'getCurrentUser').mockRejectedValue(
+      new ApiError({
+        code: 'SESSION_EXPIRED',
+        message: 'Tu sesión venció. Iniciá sesión nuevamente.',
+        requestId: 'request-id',
+        status: 401,
+      })
+    );
+
+    const screen = await renderSession();
+
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated'));
+    expect(screen.getByTestId('notice')).toHaveTextContent(
+      'Tu sesión venció. Iniciá sesión nuevamente.'
+    );
   });
 
   it('always clears the device session when logout is offline', async () => {

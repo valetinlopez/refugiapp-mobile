@@ -8,8 +8,8 @@ import { useSession } from '@/features/auth/session';
 import { colors, spacing } from '@/theme';
 
 export default function LoginScreen() {
-  const { signIn } = useSession();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { notice, signIn } = useSession();
+  const [errorMessage, setErrorMessage] = useState<string | null>(notice);
 
   return (
     <View style={styles.container}>
