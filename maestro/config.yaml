@@ -1,0 +1,8 @@
+# Configuración compartida E2E RFG-85.
+# Las credenciales llegan por variables de entorno (secrets CI), nunca en YAML.
+# Requiere staging con seeds: admin, shelter_manager, veterinarian + 1 animal con 1 tarea pending.
+appId: ${APP_ID}
+env:
+  STAGING_URL: ${STAGING_URL}
+launchTimeout: 30000
+tapTimeout: 10000

@@ -1,0 +1,36 @@
+# RFG-85 shelter_manager: mismo recorrido operativo, sin clínica.
+appId: ${APP_ID}
+tags: [e2e, sprint-12, RFG-85]
+---
+- runFlow:
+    file: helpers/login.yaml
+    env:
+      EMAIL: ${E2E_MANAGER_EMAIL}
+      PASSWORD: ${E2E_MANAGER_PASSWORD}
+- assertVisible:
+    id: dashboard-screen
+    timeout: 20000
+- assertVisible:
+    id: dashboard-totals
+- tapOn:
+    id: dashboard-animal-row
+- assertVisible:
+    id: animals-list
+    timeout: 15000
+- tapOn:
+    id: animal-card
+- assertVisible: Resumen del animal
+- tapOn: Tareas
+- assertVisible:
+    id: task-list
+- tapOn:
+    id: task-complete
+- assertVisible:
+    id: confirm-dialog
+- tapOn:
+    id: confirm-accept
+# Negativa clínica: no existe la pestaña ni el historial para este rol
+- assertNotVisible: Evolución clínica
+- assertNotVisible:
+    id: clinical-history
+- runFlow: helpers/logout.yaml

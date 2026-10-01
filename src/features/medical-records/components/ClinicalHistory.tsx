@@ -142,7 +142,7 @@ export function ClinicalHistory({ animalId, onEditRecord }: ClinicalHistoryProps
   }
 
   return (
-    <View accessibilityLabel="Evolución clínica" style={styles.list}>
+    <View accessibilityLabel="Evolución clínica" style={styles.list} testID="clinical-history">
       {filtersView}
       {recordsQuery.data.items.map((record) => (
         <AppCard

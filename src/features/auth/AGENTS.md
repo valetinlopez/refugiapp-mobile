@@ -67,4 +67,4 @@ Las rutas de `app/(auth)` se limitan a composición y navegación. La pantalla d
 ### Deuda conocida
 
 - No existe self-registration público porque el backend no publica ese contrato.
-- Falta E2E en dispositivo para login, recuperación y logout.
+- E2E en dispositivo para login, logout y sesión expirada básica cubierto con Maestro (`maestro/helpers/login.yaml`, `helpers/logout.yaml`, `session-expired.yaml` más suites por rol; selectores `login-form`, `login-email`, `login-password`, `login-submit`, `account-logout`, `confirm-dialog`). La rotación concurrente y el single-flight quedan en RFG-86.

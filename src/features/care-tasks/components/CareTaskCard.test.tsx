@@ -10,7 +10,7 @@ function createTask(overrides: Partial<CareTask> = {}): CareTask {
     title: 'Dar medicación',
     description: 'Una dosis',
     status: 'pending',
-    dueAt: '2026-09-30T18:00:00.000Z',
+    dueAt: '2099-01-01T00:00:00.000Z',
     completedAt: null,
     createdByUserId: null,
     createdAt: '2026-09-20T10:00:00.000Z',

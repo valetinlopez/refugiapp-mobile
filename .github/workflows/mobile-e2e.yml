@@ -1,0 +1,167 @@
+name: Mobile E2E
+
+on:
+  pull_request:
+    branches: [develop, master]
+    paths:
+      - 'maestro/**'
+      - 'src/**'
+      - 'app/**'
+      - '.github/workflows/mobile-e2e.yml'
+  push:
+    branches: [develop]
+    paths:
+      - 'maestro/**'
+      - 'src/**'
+      - 'app/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Job rápido (~1 min): valida flows y decide si vale pagar el emulador.
+  # Los PRs que solo tocan src/ o app/ sin cambios en maestro/** corren solo
+  # esto, salvo label `e2e`. Push a develop y dispatch manual corren todo.
+  validate:
+    name: validate flows
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      maestro: ${{ steps.changes.outputs.maestro }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Maestro changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            maestro:
+              - 'maestro/**'
+              - '.github/workflows/mobile-e2e.yml'
+
+      - name: Validate Maestro flows present
+        run: |
+          for f in maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/helpers/login.yaml maestro/helpers/logout.yaml; do
+            [ -f "$f" ] || { echo "missing $f"; exit 1; }
+          done
+          echo 'maestro flows present'
+
+  e2e:
+    name: maestro per role on staging
+    needs: validate
+    if: >
+      needs.validate.outputs.maestro == 'true' ||
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'e2e')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      APP_ID: app.refugiapp.mobile.staging
+      EXPO_PUBLIC_ENV: staging
+      EXPO_PUBLIC_API_URL: ${{ secrets.STAGING_API_URL }}
+      GRADLE_OPTS: -Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.jvmargs=-Xmx3g
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Maestro CLI
+        id: cache-maestro
+        uses: actions/cache@v4
+        with:
+          path: ~/.maestro
+          key: maestro-${{ runner.os }}-v1
+
+      # NOTE: no se reinstala el SDK. ubuntu-latest ya trae el Android SDK
+      # preinstalado (ANDROID_SDK_ROOT). Reinstalarlo con
+      # android-actions/setup-android@v3 descarga commandlinetools y corre
+      # `sdkmanager --licenses`, que se queda colgado en "Fetch remote
+      # repository..." y tumba el job.
+      - name: Install Maestro CLI
+        if: steps.cache-maestro.outputs.cache-hit != 'true'
+        run: curl -Ls "https://get.maestro.mobile.dev" | bash
+
+      - name: Cache AVD
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/avd
+          key: avd-${{ runner.os }}-api34-pixel6-v1
+
+      - name: Prebuild Android (staging)
+        run: npx expo prebuild --platform android --no-install --clean
+        env:
+          EXPO_PUBLIC_ENV: staging
+
+      # Cache de Gradle DESPUÉS del prebuild: `expo prebuild` genera android/
+      # en runtime, así que cualquier caché con `**/*.gradle*` antes de este
+      # punto falla con "No file matched" (setup-java cache:gradle) y tumba el
+      # job. Este paso cachea ~/.gradle por hash de package-lock.json.
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle
+          key: gradle-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Assemble debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+        env:
+          EXPO_PUBLIC_ENV: staging
+
+      - name: Run Maestro per role on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: default
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: false
+          disable-animations: true
+          emulator-options: -no-window -no-audio -no-boot-anim -camera-back none -camera-front none
+          script: |
+            export PATH="$HOME/.maestro/bin:$PATH"
+            adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+            maestro test maestro --env APP_ID="$APP_ID" --format junit --output maestro-report.xml
+        env:
+          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          E2E_MANAGER_EMAIL: ${{ secrets.E2E_MANAGER_EMAIL }}
+          E2E_MANAGER_PASSWORD: ${{ secrets.E2E_MANAGER_PASSWORD }}
+          E2E_VET_EMAIL: ${{ secrets.E2E_VET_EMAIL }}
+          E2E_VET_PASSWORD: ${{ secrets.E2E_VET_PASSWORD }}
+
+      - name: Upload E2E report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-report
+          path: |
+            maestro-report.xml
+            ~/.maestro/tests/**/screenshots
+          if-no-files-found: warn

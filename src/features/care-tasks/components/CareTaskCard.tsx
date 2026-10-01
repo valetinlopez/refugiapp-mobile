@@ -38,7 +38,10 @@ export function CareTaskCard({
   }
 
   return (
-    <AppCard accessibilityLabel={`${task.title}, ${animalName}, ${presentation.label}`}>
+    <AppCard
+      accessibilityLabel={`${task.title}, ${animalName}, ${presentation.label}`}
+      testID="care-task-card"
+    >
       <View style={styles.body}>
         <View style={styles.header}>
           <View style={styles.heading}>
@@ -66,13 +69,20 @@ export function CareTaskCard({
               disabled={isBusy}
               label="Editar"
               onPress={() => onEdit(task.id)}
+              testID="task-edit"
               variant="secondary"
             />
-            <AppButton disabled={isBusy} label="Completar" onPress={() => setAction('complete')} />
+            <AppButton
+              disabled={isBusy}
+              label="Completar"
+              onPress={() => setAction('complete')}
+              testID="task-complete"
+            />
             <AppButton
               disabled={isBusy}
               label="Cancelar tarea"
               onPress={() => setAction('cancel')}
+              testID="task-cancel"
               variant="danger"
             />
           </View>
