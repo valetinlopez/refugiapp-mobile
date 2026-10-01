@@ -8,7 +8,7 @@ import {
   useReducer,
 } from 'react';
 
-import { apiClient } from '@/core/api';
+import { apiClient, ApiError } from '@/core/api';
 import { tokenStorage } from '@/core/storage';
 
 import { authApi } from '../api/authApi';
@@ -33,9 +33,9 @@ export function SessionProvider({ children }: PropsWithChildren) {
   }, [queryClient]);
 
   useEffect(() => {
-    return apiClient.setSessionInvalidatedHandler(() => {
+    return apiClient.setSessionInvalidatedHandler((message) => {
       queryClient.clear();
-      dispatch({ type: 'unauthenticated' });
+      dispatch({ type: 'unauthenticated', notice: message ?? null });
     });
   }, [queryClient]);
 
@@ -56,11 +56,14 @@ export function SessionProvider({ children }: PropsWithChildren) {
         if (active) {
           dispatch({ type: 'authenticated', user });
         }
-      } catch {
+      } catch (error) {
         await tokenStorage.clearTokens();
         queryClient.clear();
         if (active) {
-          dispatch({ type: 'unauthenticated' });
+          dispatch({
+            type: 'unauthenticated',
+            notice: error instanceof ApiError ? error.message : null,
+          });
         }
       }
     }

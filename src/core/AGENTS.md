@@ -51,6 +51,7 @@
 - Las subidas multipart con `onUploadProgress` usan el adaptador XHR del cliente y aceptan `AbortSignal`; no fijar manualmente el boundary de `FormData`.
 - Reintentos limitados a métodos idempotentes.
 - Refresh single-flight con invalidación de sesión y reintento único.
+- Ante `REFRESH_TOKEN_CONCURRENT_USE` (401 benigno de rotación concurrente dentro de la ventana de gracia) el cliente adopta el par ganador ya persistido en storage sin invalidar la sesión; si no hay ganador persistido, invalida sesión. El resto de los fallos de refresh (`REFRESH_TOKEN_EXPIRED`, `REFRESH_REUSE_DETECTED`, `INVALID_REFRESH_TOKEN`) siempre limpian sesión. `invalidateSession` propaga un mensaje seguro (nunca tokens) al handler de sesión.
 - Par de tokens persistido atómicamente mediante una única entrada de Secure Store en Android/iOS y una entrada de `sessionStorage` por pestaña en web.
 - TanStack Query conectado a NetInfo y AppState.
 - Adapter HTTP falso inyectable en desarrollo y tests.

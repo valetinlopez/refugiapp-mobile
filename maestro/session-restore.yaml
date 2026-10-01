@@ -1,0 +1,20 @@
+# RFG-86 proxy: una sesión persistida se restaura sin volver a login.
+# La restauración es el punto donde se detecta un refresh/access inválido:
+# si los tokens siguen vigentes, el relaunch aterriza en el dashboard.
+appId: ${APP_ID}
+tags: [e2e, sprint-12, RFG-86]
+---
+- runFlow:
+    file: helpers/login.yaml
+    env:
+      EMAIL: ${E2E_ADMIN_EMAIL}
+      PASSWORD: ${E2E_ADMIN_PASSWORD}
+- assertVisible:
+    id: dashboard-screen
+    timeout: 20000
+# Relaunch sin limpiar estado: Secure Store conserva el par y la sesión se restaura
+- launchApp:
+    clearState: false
+- assertVisible:
+    id: dashboard-screen
+    timeout: 30000

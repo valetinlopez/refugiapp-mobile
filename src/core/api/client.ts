@@ -6,6 +6,8 @@ import { createRequestId } from './requestId';
 
 const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE']);
 const RETRYABLE_STATUS_CODES = new Set([500, 502, 503, 504]);
+const REFRESH_CONCURRENT_USE_CODE = 'REFRESH_TOKEN_CONCURRENT_USE';
+const SESSION_EXPIRED_MESSAGE = 'Tu sesión venció. Iniciá sesión nuevamente.';
 
 export interface HttpTransportResponse {
   readonly headers: { get(name: string): string | null };
@@ -55,7 +57,7 @@ interface HttpClientOptions {
   transport?: HttpTransport;
 }
 
-type SessionInvalidatedHandler = () => void | Promise<void>;
+type SessionInvalidatedHandler = (message?: string) => void | Promise<void>;
 
 function defaultTransport(
   url: string,
@@ -308,10 +310,10 @@ export class HttpClient {
   private async performRefresh(): Promise<string> {
     const tokenPair = await this.tokenStore.getTokens();
     if (tokenPair === null) {
-      await this.invalidateSession();
+      await this.invalidateSession(SESSION_EXPIRED_MESSAGE);
       throw new ApiError({
         code: 'SESSION_EXPIRED',
-        message: 'Tu sesión venció. Iniciá sesión nuevamente.',
+        message: SESSION_EXPIRED_MESSAGE,
         requestId: createRequestId(),
         status: 401,
       });
@@ -344,7 +346,14 @@ export class HttpClient {
       await this.tokenStore.setTokens(data.accessToken, data.refreshToken);
       return data.accessToken;
     } catch (error) {
-      await this.invalidateSession();
+      const winnerAccessToken =
+        error instanceof ApiError && error.code === REFRESH_CONCURRENT_USE_CODE
+          ? await this.adoptConcurrentRefreshWinner(tokenPair.refreshToken)
+          : null;
+      if (winnerAccessToken !== null) {
+        return winnerAccessToken;
+      }
+      await this.invalidateSession(error instanceof ApiError ? error.message : undefined);
       if (error instanceof ApiError) {
         throw error;
       }
@@ -352,9 +361,17 @@ export class HttpClient {
     }
   }
 
-  private async invalidateSession(): Promise<void> {
+  private async adoptConcurrentRefreshWinner(staleRefreshToken: string): Promise<string | null> {
+    const current = await this.tokenStore.getTokens();
+    if (current !== null && current.refreshToken !== staleRefreshToken) {
+      return current.accessToken;
+    }
+    return null;
+  }
+
+  private async invalidateSession(message?: string): Promise<void> {
     await this.tokenStore.clearTokens();
-    await this.sessionInvalidatedHandler?.();
+    await this.sessionInvalidatedHandler?.(message);
   }
 }
 

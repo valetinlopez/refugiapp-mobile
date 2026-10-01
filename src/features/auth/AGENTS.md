@@ -58,6 +58,7 @@ Las rutas de `app/(auth)` se limitan a composición y navegación. La pantalla d
 - Secure storage atómico del par de tokens en `core`.
 - Refresh single-flight y limpieza central ante sesión inválida.
 - Session Context/reducer, restauración sin parpadeo y logout best-effort.
+- Mensaje claro de sesión vencida: ante refresh inválido/vencido el estado `unauthenticated` lleva un `notice` (p. ej. "Tu sesión venció. Iniciá sesión nuevamente.") que la pantalla de login muestra al ser redirigida; no se filtran tokens ni payloads. El `notice` se limpia al volver a autenticar.
 - Formulario de login accesible y rutas protegidas.
 - Acceso de cuenta desde toda el área autenticada: tab "Más" (`app/(app)/(tabs)/more.tsx` con `AccountScreen`) y atajo `AccountMenuButton` (44 × 44, `accessibilityLabel` "Abrir menú de cuenta") en Inicio y en la fila de retorno de las pantallas stack (`AccountHeaderRow` = `AppHeaderBack` + botón de cuenta). `AccountScreen` acepta un slot `children` (renderizado entre el encabezado y la identidad) y props `heading`/`subtitle`; la ruta del tab lo usa para componer la sección "Gestión".
 - Pantalla de cuenta con identidad (correo y roles presentados en español con `roleLabels`) y acción "Cerrar sesión".
@@ -67,4 +68,5 @@ Las rutas de `app/(auth)` se limitan a composición y navegación. La pantalla d
 ### Deuda conocida
 
 - No existe self-registration público porque el backend no publica ese contrato.
-- E2E en dispositivo para login, logout y sesión expirada básica cubierto con Maestro (`maestro/helpers/login.yaml`, `helpers/logout.yaml`, `session-expired.yaml` más suites por rol; selectores `login-form`, `login-email`, `login-password`, `login-submit`, `account-logout`, `confirm-dialog`). La rotación concurrente y el single-flight quedan en RFG-86.
+- El backend no publica `POST /auth/logout` (ver `docs/frontend-login.md` del backend): el cierre de sesión móvil es local (Secure Store + cache) y el refresh token expira por TTL. Por eso hoy "cerrar sesión en un dispositivo no cierra la sesión en otro": cada login crea una familia de refresh tokens independiente y no hay revocación server-side. Cuando el backend implemente logout, deberá revocar solo el token/familia presentada y este AGENTS.md se actualizará.
+- E2E en dispositivo para login, logout, expiración y restauración cubierto con Maestro (`maestro/helpers/login.yaml`, `helpers/logout.yaml`, `session-expired.yaml`, `session-restore.yaml` más suites por rol; selectores `login-form`, `login-email`, `login-password`, `login-submit`, `account-logout`, `confirm-dialog`, `dashboard-screen`). La rotación concurrente y el single-flight se cubren con unit tests del cliente HTTP (`src/core/api/client.test.ts`) y con los E2E de rotación del backend (Testcontainers), porque staging no expone TTL corto ni inyección de tokens vencidos.
