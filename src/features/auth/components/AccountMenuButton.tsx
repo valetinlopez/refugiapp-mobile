@@ -2,14 +2,15 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { AppIcon } from '@/components/primitives';
-import { radii, sizes, spacing } from '@/theme';
+import { radii, sizes } from '@/theme';
 
 export function AccountMenuButton() {
   return (
     <Pressable
+      accessibilityHint="Abre la pantalla Más con cuenta y gestión"
       accessibilityLabel="Abrir menú de cuenta"
       accessibilityRole="button"
-      hitSlop={spacing.xxs}
+      hitSlop={sizes.hitSlop}
       onPress={() => router.push('/more')}
       style={({ pressed }) => [styles.base, pressed && styles.pressed]}
     >

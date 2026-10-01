@@ -34,4 +34,12 @@ describe('FilterChip', () => {
 
     expect(screen.getByRole('button', { name: 'Filtrar por estado Pendientes' })).toBeTruthy();
   });
+
+  it('exposes a minimum touch target with hitSlop (RFG-88)', async () => {
+    const screen = await render(
+      <FilterChip label="Todas" onPress={() => undefined} selected={false} />
+    );
+
+    expect(screen.getByRole('button', { name: 'Todas' }).props.hitSlop).toEqual(8);
+  });
 });

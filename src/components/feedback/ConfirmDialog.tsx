@@ -1,7 +1,7 @@
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppButton, AppText } from '@/components/primitives';
-import { colors, radii, spacing } from '@/theme';
+import { colors, radii, sizes, spacing } from '@/theme';
 
 export type ConfirmDialogVariant = 'primary' | 'danger';
 
@@ -48,6 +48,7 @@ export function ConfirmDialog({
           accessibilityLabel={cancelAccessibilityLabel}
           accessibilityRole="button"
           disabled={confirming}
+          hitSlop={sizes.hitSlop}
           onPress={onCancel}
           style={styles.backdrop}
         />

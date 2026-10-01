@@ -1,7 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type ComponentProps, type ReactNode } from 'react';
+import { useRef, type ComponentProps, type ReactNode } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  type TextInput as TextInputType,
+} from 'react-native';
 
 import { AppButton, AppText } from '@/components/primitives';
 import { DateTimeField } from '@/components/patterns';
@@ -80,6 +86,7 @@ function CreateForm({
                     accessibilityRole="radio"
                     accessibilityState={{ disabled: isSubmitting, selected }}
                     disabled={isSubmitting}
+                    hitSlop={sizes.hitSlop}
                     key={animal.id}
                     onPress={() => field.onChange(animal.id)}
                     style={[styles.option, selected && styles.optionSelected]}
@@ -164,6 +171,7 @@ function TaskFields({
   control: ReturnType<typeof useForm<CreateCareTaskFormInput>>['control'];
   disabled: boolean;
 }) {
+  const descriptionRef = useRef<TextInputType>(null);
   return (
     <>
       <Controller
@@ -173,11 +181,14 @@ function TaskFields({
           <Field error={fieldState.error?.message} label="Título">
             <FormInput
               accessibilityLabel="Título"
+              blurOnSubmit={false}
               editable={!disabled}
               maxLength={160}
               onBlur={field.onBlur}
               onChangeText={field.onChange}
+              onSubmitEditing={() => descriptionRef.current?.focus()}
               placeholder="Ej. Dar medicación"
+              returnKeyType="next"
               value={field.value}
             />
           </Field>
@@ -196,6 +207,8 @@ function TaskFields({
               onBlur={field.onBlur}
               onChangeText={field.onChange}
               placeholder="Indicaciones opcionales"
+              ref={descriptionRef}
+              returnKeyType="default"
               style={styles.multiline}
               textAlignVertical="top"
               value={field.value ?? ''}
@@ -246,10 +259,15 @@ function Field({
   );
 }
 
-function FormInput({ style, ...props }: ComponentProps<typeof TextInput>) {
+function FormInput({
+  ref,
+  style,
+  ...props
+}: ComponentProps<typeof TextInput> & { ref?: React.Ref<TextInput> }) {
   return (
     <TextInput
       placeholderTextColor={colors.textSecondary}
+      ref={ref}
       style={[styles.input, style]}
       {...props}
     />
@@ -302,6 +320,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: 'center',
     minHeight: sizes.touchTarget,
+    minWidth: sizes.touchTarget,
     paddingHorizontal: spacing.md,
   },
   optionSelected: { borderColor: colors.positive },

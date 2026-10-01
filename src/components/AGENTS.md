@@ -21,8 +21,11 @@
 
 ## Accesibilidad
 
-- Área táctil mínima de 44 × 44.
+- Área táctil mínima de 44 × 44 (`sizes.touchTarget`) con `hitSlop` estándar de 8 (`sizes.hitSlop`) en icon-only y opciones `radio`.
 - `accessibilityLabel`, role y state en controles.
+- `AppBadge` usa `role="text"`; filas informativas usan `role="summary"`.
+- `DateTimeField` expone `accessibilityHint` con formato y apertura del picker.
+- Formularios con `returnKeyType next/done` y `onSubmitEditing` para orden de foco.
 - Texto escalable y contenedores sin alturas rígidas cuando contienen información.
 - Estado comunicado con texto/icono además de color.
 - Animación futura compatible con reduce motion.

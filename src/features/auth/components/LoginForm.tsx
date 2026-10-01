@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { StyleSheet, TextInput, View, type TextInput as TextInputType } from 'react-native';
 
 import { AppButton, AppText } from '@/components/primitives';
 import { colors, fontFamilies, radii, spacing } from '@/theme';
@@ -16,6 +16,7 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const passwordRef = useRef<TextInputType>(null);
 
   async function handleSubmit(): Promise<void> {
     const normalizedEmail = email.trim().toLowerCase();
@@ -43,11 +44,15 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
           accessibilityLabel="Correo electrónico"
           autoCapitalize="none"
           autoComplete="email"
+          blurOnSubmit={false}
           editable={!isSubmitting}
           inputMode="email"
+          keyboardType="email-address"
           onChangeText={setEmail}
+          onSubmitEditing={() => passwordRef.current?.focus()}
           placeholder="nombre@refugiapp.org"
           placeholderTextColor={colors.textSecondary}
+          returnKeyType="next"
           style={styles.input}
           testID="login-email"
           value={email}
@@ -61,8 +66,11 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
           autoComplete="current-password"
           editable={!isSubmitting}
           onChangeText={setPassword}
+          onSubmitEditing={() => void handleSubmit()}
           placeholder="Tu contraseña"
           placeholderTextColor={colors.textSecondary}
+          ref={passwordRef}
+          returnKeyType="done"
           secureTextEntry
           style={styles.input}
           testID="login-password"
