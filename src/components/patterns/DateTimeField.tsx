@@ -8,6 +8,7 @@ import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 import { formatDateTime, formatDateShort } from './dateFormat';
 
 export interface DateTimeFieldProps {
+  accessibilityHint?: string;
   accessibilityLabel: string;
   disabled?: boolean;
   maximumDate?: Date;
@@ -19,6 +20,7 @@ export interface DateTimeFieldProps {
 }
 
 export function DateTimeField({
+  accessibilityHint,
   accessibilityLabel,
   disabled = false,
   maximumDate,
@@ -35,6 +37,7 @@ export function DateTimeField({
   if (Platform.OS === 'web') {
     return (
       <TextInput
+        accessibilityHint={accessibilityHint ?? 'Formato año mes día, por ejemplo 2026-10-01'}
         accessibilityLabel={accessibilityLabel}
         autoCapitalize="none"
         editable={!disabled}
@@ -77,6 +80,7 @@ export function DateTimeField({
   return (
     <View style={styles.container}>
       <AppButton
+        accessibilityHint={accessibilityHint ?? 'Abre el selector de fecha del sistema'}
         accessibilityLabel={
           value
             ? `${accessibilityLabel}: ${formatValue(value, mode)}`

@@ -1,7 +1,7 @@
 import { ActivityIndicator, StyleSheet, View, type ViewProps } from 'react-native';
 
 import { AppText } from '@/components/primitives';
-import { colors, spacing } from '@/theme';
+import { colors, sizes, spacing } from '@/theme';
 
 export type LoadingStateProps = ViewProps & {
   label?: string;
@@ -27,6 +27,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.sm,
-    minHeight: 44,
+    minHeight: sizes.touchTarget,
   },
 });

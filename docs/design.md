@@ -182,6 +182,17 @@ Etiqueta visible sobre el campo, ayuda y error debajo. No usar placeholder como 
 
 Objetivo mínimo WCAG 2.2 AA donde aplica. Probar texto normal con contraste 4,5:1 y texto grande con 3:1. Mantener áreas táctiles de 44 × 44, orden de foco lógico, labels en controles, estados accesibles y zoom de fuente. Nunca truncar silenciosamente nombre, estado, vencimiento o error. No agregar animación indispensable; cualquier animación futura consultará `useReducedMotion` o la preferencia del sistema y tendrá alternativa estática.
 
+Tabla verificada (RFG-88, `src/theme/contrast.test.ts` como guard):
+
+| Par                                                                            | Ratio                             | Estado                                                                       |
+| ------------------------------------------------------------------------------ | --------------------------------- | ---------------------------------------------------------------------------- |
+| `textPrimary` sobre `background`/`surfaceElevated`/`surfaceSubtle`             | 13,61 / 7,61 / 11,56              | Pasa                                                                         |
+| `textSecondary` sobre `surface`/`surfaceElevated`/`surfaceSubtle`/`background` | 5,94 / 4,59 / 6,97 / 8,21         | Pasa                                                                         |
+| `textInverse` sobre `positive`/`warning`/`danger`/`info`/`neutral`             | 10,86 / 7,74 / 5,08 / 6,48 / 6,79 | Pasa                                                                         |
+| `disabledText` (`#CCBEB1`) sobre `disabledSurface`                             | 4,64                              | Pasa (sin `opacity`; el estilo `disabled` de `AppButton` no reduce opacidad) |
+
+Reglas RFG-88: `sizes.touchTarget = 44` y `sizes.hitSlop = 8` como estándar en icon-only (`AppButton`, `FilterChip`, `AppHeaderBack`, `BottomNavigation`, `AccountMenuButton`, backdrop de `ConfirmDialog`); `minWidth: 44` en `FilterChip` y opciones `radio`; `AppBadge` con `role="text"`; filas informativas con `role="summary"`; `DateTimeField` con `accessibilityHint` de formato; formularios con cadena `returnKeyType next/done` + `onSubmitEditing`.
+
 ## 25. Responsive layout
 
 El contenido principal usa `ScrollView`/listas y safe areas. En móvil estrecho, las tarjetas envuelven o pasan a una columna; en tablet, el ancho de lectura se limita. No fijar alturas en tarjetas con texto. Probar al menos 320 × 568, 390 × 844, tablet, orientación horizontal cuando la pantalla la admita y fuente al 200 %. La navegación fija debe sumar el inset inferior y el contenido debe reservar espacio para ella.
@@ -255,7 +266,7 @@ Son conceptuales: el perro recortado sobre la cabecera, las frases manuscritas, 
 
 El acceso de cuenta es transversal al área autenticada y reutiliza el lenguaje visual del sistema sin introducir tokens nuevos.
 
-- **Acceso:** `AccountMenuButton`, botón solo-icono de 44 × 44 (`sizes.touchTarget`) con `accessibilityLabel` "Abrir menú de cuenta", icono `account` en `textPrimary` y `hitSlop` de 4 pt. Aparece en el encabezado de Inicio y, en las pantallas stack, junto al retorno (`AccountHeaderRow` = `AppHeaderBack` + botón). Navega a la pantalla de cuenta.
+- **Acceso:** `AccountMenuButton`, botón solo-icono de 44 × 44 (`sizes.touchTarget`) con `accessibilityLabel` "Abrir menú de cuenta", icono `account` en `textPrimary` y `hitSlop` de 8 pt (`sizes.hitSlop`). Aparece en el encabezado de Inicio y, en las pantallas stack, junto al retorno (`AccountHeaderRow` = `AppHeaderBack` + botón). Navega a la pantalla de cuenta.
 - **Pantalla "Más" (tab):** mantiene una jerarquía explícita `Gestión > Cuenta > Salida`. La sección "Gestión" (completada por la ruta con `ManagementSection`) agrupa entradas de administración como cards `outlined` unificadas con icono, título y descripción, diferenciadas por icono y texto y nunca por color aislado; muestra "Veterinarios" para los tres roles, "Usuarios" solo con `canManageUsers` y "Ver auditoría" solo con `canReadAudit`. La sección "Cuenta" muestra identidad (correo y roles presentados en español; los valores de dominio permanecen en inglés) y la acción "Cerrar sesión" en variante `secondary` con icono `logout`.
 - **Confirmación (`AccountSignOutSheet`):** envuelve a `ConfirmDialog` (ver §33) con título "¿Querés cerrar sesión?", correo del usuario y acciones "Cancelar" (`ghost`) y "Cerrar sesión" (`danger`) con estado de carga (`loading`) que bloquea el cierre durante la operación. El error se anuncia como alerta con texto + color; no se exponen tokens ni payloads.
 - **Comportamiento:** se llama a `SessionProvider.signOut()` (POST `/auth/logout` best-effort); el cierre local (Secure Store + cache de TanStack Query) siempre ocurre, incluso offline o con refresh inválido, y `Stack.Protected` redirige a login sin dejar rutas `(app)` accesibles.

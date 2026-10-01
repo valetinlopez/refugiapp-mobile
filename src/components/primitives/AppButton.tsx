@@ -37,6 +37,7 @@ const variantStyles: Record<AppButtonVariant, ViewStyle> = {
 export function AppButton({
   accessibilityLabel,
   disabled = false,
+  hitSlop = sizes.hitSlop,
   icon,
   label,
   loading = false,
@@ -54,6 +55,7 @@ export function AppButton({
       accessibilityRole="button"
       accessibilityState={{ busy: loading, disabled: isDisabled }}
       disabled={isDisabled}
+      hitSlop={hitSlop}
       style={({ pressed }) => [
         styles.base,
         variantStyles[variant],
@@ -94,7 +96,8 @@ const styles = StyleSheet.create({
   },
   disabled: {
     backgroundColor: colors.disabledSurface,
-    opacity: 0.72,
+    borderColor: colors.border,
+    borderWidth: 1,
   },
   pressed: {
     opacity: 0.84,

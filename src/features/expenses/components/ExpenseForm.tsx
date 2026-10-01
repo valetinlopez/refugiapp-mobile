@@ -1,7 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { useState, type ComponentProps, type ReactNode } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { useRef, useState, type ComponentProps, type ReactNode } from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  type TextInput as TextInputType,
+} from 'react-native';
 
 import { AppButton, AppText } from '@/components/primitives';
 import { DateTimeField, toLocalDate } from '@/components/patterns';
@@ -43,6 +49,7 @@ export function ExpenseForm({
 }) {
   const [receipt, setReceipt] = useState<ReceiptFile | null>(null);
   const [receiptError, setReceiptError] = useState<string | null>(null);
+  const amountRef = useRef<TextInputType>(null);
   const { control, handleSubmit } = useForm<ExpenseFormInput, unknown, ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -91,10 +98,13 @@ export function ExpenseForm({
           <Field label="Concepto" error={fieldState.error?.message}>
             <Input
               accessibilityLabel="Concepto"
+              blurOnSubmit={false}
               editable={!isSubmitting}
               onBlur={field.onBlur}
               onChangeText={field.onChange}
+              onSubmitEditing={() => amountRef.current?.focus()}
               placeholder="Ej. Vacuna antirrábica"
+              returnKeyType="next"
               value={field.value}
             />
           </Field>
@@ -131,6 +141,8 @@ export function ExpenseForm({
               onBlur={field.onBlur}
               onChangeText={field.onChange}
               placeholder="1250"
+              ref={amountRef}
+              returnKeyType="done"
               value={field.value}
             />
           </Field>
@@ -203,8 +215,18 @@ function Field({
     </View>
   );
 }
-function Input(props: ComponentProps<typeof TextInput>) {
-  return <TextInput placeholderTextColor={colors.textSecondary} style={styles.input} {...props} />;
+function Input({
+  ref,
+  ...props
+}: ComponentProps<typeof TextInput> & { ref?: React.Ref<TextInput> }) {
+  return (
+    <TextInput
+      placeholderTextColor={colors.textSecondary}
+      ref={ref}
+      style={styles.input}
+      {...props}
+    />
+  );
 }
 function Option({
   disabled,
@@ -219,9 +241,11 @@ function Option({
 }) {
   return (
     <Pressable
+      accessibilityLabel={label}
       accessibilityRole="radio"
       accessibilityState={{ checked: selected, disabled }}
       disabled={disabled}
+      hitSlop={sizes.hitSlop}
       onPress={onPress}
       style={[styles.option, selected && styles.selected]}
     >
@@ -252,6 +276,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: 'center',
     minHeight: sizes.touchTarget,
+    minWidth: sizes.touchTarget,
     paddingHorizontal: spacing.md,
   },
   options: { gap: spacing.xs },

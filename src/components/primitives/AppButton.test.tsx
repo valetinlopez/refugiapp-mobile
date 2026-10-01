@@ -29,4 +29,19 @@ describe('AppButton', () => {
       disabled: true,
     });
   });
+
+  it('applies the 44x44 minimum target with a default hitSlop (RFG-88)', async () => {
+    const screen = await render(<AppButton label="Guardar" onPress={() => undefined} />);
+
+    const button = screen.getByRole('button', { name: 'Guardar' });
+    expect(button.props.hitSlop).toEqual(8);
+  });
+
+  it('keeps an accessible label when showing an icon-only action (RFG-88)', async () => {
+    const screen = await render(
+      <AppButton accessibilityLabel="Cerrar" label="X" onPress={() => undefined} />
+    );
+
+    expect(screen.getByRole('button', { name: 'Cerrar' })).toBeTruthy();
+  });
 });

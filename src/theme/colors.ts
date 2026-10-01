@@ -16,7 +16,7 @@ export const colors = {
   focus: '#F1D99D',
   pressedOverlay: '#FFFFFF14',
   disabledSurface: '#5A4A43',
-  disabledText: '#A89A91',
+  disabledText: '#CCBEB1',
   scrim: '#1B100CCC',
   transparent: '#00000000',
 } as const;

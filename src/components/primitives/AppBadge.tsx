@@ -33,7 +33,12 @@ export function AppBadge({
   const contentColor = tone === 'default' ? 'textPrimary' : 'textInverse';
 
   return (
-    <View accessibilityLabel={label} style={[styles.base, toneStyles[tone], style]} {...props}>
+    <View
+      accessibilityLabel={label}
+      accessibilityRole="text"
+      style={[styles.base, toneStyles[tone], style]}
+      {...props}
+    >
       {icon ? <AppIcon color={contentColor} name={icon} size={sizes.iconSm} /> : null}
       <AppText color={contentColor} numberOfLines={labelNumberOfLines} variant="label">
         {label}

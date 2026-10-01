@@ -37,7 +37,7 @@ export function AppHeaderBack({
       accessibilityHint={accessibilityHint}
       accessibilityLabel={label}
       accessibilityRole="button"
-      hitSlop={spacing.xxs}
+      hitSlop={sizes.hitSlop}
       onPress={() => navigateBack(fallbackHref)}
       style={({ pressed }) => [styles.base, pressed && styles.pressed, style]}
       {...props}

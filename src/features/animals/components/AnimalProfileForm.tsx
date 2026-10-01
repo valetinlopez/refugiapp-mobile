@@ -91,6 +91,7 @@ export function OptionGroup<T extends string>({
               accessibilityRole="radio"
               accessibilityState={{ disabled, selected }}
               disabled={disabled}
+              hitSlop={sizes.hitSlop}
               onPress={() => onChange(option.value)}
               style={[styles.option, selected && styles.optionSelected]}
             >
@@ -597,6 +598,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.xs,
     minHeight: sizes.touchTarget,
+    minWidth: sizes.touchTarget,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
   },

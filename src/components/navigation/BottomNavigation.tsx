@@ -34,7 +34,7 @@ export function BottomNavigation({
             accessibilityLabel={item.accessibilityLabel ?? item.label}
             accessibilityRole="tab"
             accessibilityState={{ selected: isActive }}
-            hitSlop={spacing.xxs}
+            hitSlop={sizes.hitSlop}
             key={item.id}
             onPress={() => onSelect(item.id)}
             style={({ pressed }) => [styles.item, pressed && styles.pressed]}

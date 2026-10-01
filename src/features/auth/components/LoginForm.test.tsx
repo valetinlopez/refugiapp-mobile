@@ -32,4 +32,12 @@ describe('LoginForm', () => {
     );
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it('exposes a logical keyboard focus order (RFG-88)', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined);
+    const screen = await render(<LoginForm onSubmit={onSubmit} />);
+
+    expect(screen.getByLabelText('Correo electrónico').props.returnKeyType).toBe('next');
+    expect(screen.getByLabelText('Contraseña').props.returnKeyType).toBe('done');
+  });
 });

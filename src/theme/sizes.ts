@@ -1,5 +1,6 @@
 export const sizes = {
   touchTarget: 44,
+  hitSlop: 8,
   buttonHeight: 48,
   buttonHeightCompact: 44,
   iconSm: 16,

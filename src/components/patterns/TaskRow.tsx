@@ -77,6 +77,7 @@ export function TaskRow({
   return (
     <View
       accessibilityLabel={`${timeLabel}, ${animalName}, ${title}, ${presentation.label}${assignee ? `, ${assignee}` : ''}`}
+      accessibilityRole="summary"
       style={[styles.container, style]}
       {...props}
     >
