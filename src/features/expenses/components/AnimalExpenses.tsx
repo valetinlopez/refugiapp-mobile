@@ -1,8 +1,10 @@
 import { router, type Href } from 'expo-router';
 import { Image, StyleSheet, View } from 'react-native';
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
+import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { AppButton, AppCard, AppText } from '@/components/primitives';
+import { isNetworkError } from '@/core/network';
 import { colors, radii, sizes, spacing } from '@/theme';
 
 import { useAnimalExpenses } from '../hooks/useAnimalExpenses';
@@ -39,12 +41,22 @@ export function AnimalExpenses({ animalId, canWrite }: { animalId: string; canWr
       )}
       {query.isPending ? <LoadingState label="Cargando gastos" /> : null}
       {query.isError ? (
-        <ErrorState
-          actionLabel="Reintentar"
-          message="No pudimos cargar los gastos del animal."
-          onAction={() => void query.refetch()}
-          title="No se pudieron cargar los gastos"
-        />
+        isNetworkError(query.error) ? (
+          <OfflineState
+            actionLabel={offlineCopy.actionLabel}
+            message={offlineCopy.message}
+            onAction={() => void query.refetch()}
+            testID={OFFLINE_STATE_TEST_ID}
+            title={offlineCopy.title}
+          />
+        ) : (
+          <ErrorState
+            actionLabel="Reintentar"
+            message="No pudimos cargar los gastos del animal."
+            onAction={() => void query.refetch()}
+            title="No se pudieron cargar los gastos"
+          />
+        )
       ) : null}
       {!query.isPending && !query.isError && !query.data?.items.length ? (
         <EmptyState message="Todavía no hay gastos registrados." title="Sin gastos" />

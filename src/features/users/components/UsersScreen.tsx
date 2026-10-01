@@ -3,8 +3,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
+import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { AppButton, AppText } from '@/components/primitives';
+import { isNetworkError } from '@/core/network';
 import { colors, spacing } from '@/theme';
 
 import { useActivateUser, useDeactivateUser } from '../hooks/useUserMutations';
@@ -48,6 +50,17 @@ export function UsersScreen() {
 
   if (usersQuery.isPending) return <LoadingState label="Cargando usuarios" />;
   if (usersQuery.isError) {
+    if (isNetworkError(usersQuery.error)) {
+      return (
+        <OfflineState
+          actionLabel={offlineCopy.actionLabel}
+          message={offlineCopy.message}
+          onAction={() => void usersQuery.refetch()}
+          testID={OFFLINE_STATE_TEST_ID}
+          title={offlineCopy.title}
+        />
+      );
+    }
     return (
       <ErrorState
         actionLabel="Reintentar"

@@ -1,7 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
+import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { AppBadge, AppButton, AppCard, AppText } from '@/components/primitives';
+import { isNetworkError } from '@/core/network';
 import { spacing } from '@/theme';
 
 import type { VeterinarianResponse } from '../types';
@@ -48,6 +50,17 @@ export function VeterinarianDetail({
   }
 
   if (query.isError) {
+    if (isNetworkError(query.error)) {
+      return (
+        <OfflineState
+          actionLabel={offlineCopy.actionLabel}
+          message={offlineCopy.message}
+          onAction={onRetry}
+          testID={OFFLINE_STATE_TEST_ID}
+          title={offlineCopy.title}
+        />
+      );
+    }
     return (
       <ErrorState
         actionLabel="Reintentar"

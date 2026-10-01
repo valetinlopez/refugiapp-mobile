@@ -1,5 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
+import { ApiError } from '@/core/api';
 import { useSession } from '@/features/auth/session';
 import { DashboardScreen } from '@/features/dashboard/components/DashboardScreen';
 import { useDashboardAnimalPhoto } from '@/features/dashboard/hooks/useDashboardAnimalPhoto';
@@ -98,6 +99,30 @@ describe('DashboardScreen', () => {
     const screen = await render(<DashboardScreen />);
 
     expect(screen.getByText('No se pudo cargar el panel')).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
+  it('shows an offline state with retry when the network is unavailable', async () => {
+    const refetch = jest.fn();
+    mockUseDashboardOverview.mockReturnValue(
+      createQuery({
+        data: undefined,
+        error: new ApiError({
+          code: 'NETWORK_ERROR',
+          message: 'No pudimos conectar con el servicio. Revisá tu conexión.',
+          requestId: 'request-id',
+          status: 0,
+        }),
+        isError: true,
+        refetch,
+      })
+    );
+    const screen = await render(<DashboardScreen />);
+
+    expect(screen.getByTestId('offline-state')).toBeTruthy();
+    expect(screen.getByText('Sin conexión')).toBeTruthy();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Reintentar' }));
     expect(refetch).toHaveBeenCalled();

@@ -151,4 +151,25 @@ describe('SessionProvider', () => {
     await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated'));
     expect(tokenStorage.clearTokens).toHaveBeenCalled();
   });
+
+  it('preserves stored tokens when restore fails without connectivity', async () => {
+    jest.mocked(tokenStorage.getTokens).mockResolvedValue({
+      accessToken: 'stored-access',
+      refreshToken: 'stored-refresh',
+    });
+    jest.spyOn(authApi, 'getCurrentUser').mockRejectedValue(
+      new ApiError({
+        code: 'NETWORK_ERROR',
+        message: 'No pudimos conectar con el servicio. Revisá tu conexión.',
+        requestId: 'request-id',
+        status: 0,
+      })
+    );
+
+    const screen = await renderSession();
+
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated'));
+    expect(tokenStorage.clearTokens).not.toHaveBeenCalled();
+    expect(screen.queryByText('Tu sesión venció. Iniciá sesión nuevamente.')).toBeNull();
+  });
 });

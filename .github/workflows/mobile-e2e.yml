@@ -50,7 +50,7 @@ jobs:
 
       - name: Validate Maestro flows present
         run: |
-          for f in maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/session-restore.yaml maestro/helpers/login.yaml maestro/helpers/logout.yaml; do
+          for f in maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/session-restore.yaml maestro/offline.yaml maestro/online-restore.yaml maestro/helpers/login.yaml maestro/helpers/logout.yaml; do
             [ -f "$f" ] || { echo "missing $f"; exit 1; }
           done
           echo 'maestro flows present'
@@ -94,7 +94,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.maestro
-          key: maestro-${{ runner.os }}-v1
+          key: maestro-${{ runner.os }}-v2
 
       # NOTE: no se reinstala el SDK. ubuntu-latest ya trae el Android SDK
       # preinstalado (ANDROID_SDK_ROOT). Reinstalarlo con
@@ -103,7 +103,11 @@ jobs:
       # repository..." y tumba el job.
       - name: Install Maestro CLI
         if: steps.cache-maestro.outputs.cache-hit != 'true'
-        run: curl -Ls "https://get.maestro.mobile.dev" | bash
+        run: |
+          if [ ! -x "$HOME/.maestro/bin/maestro" ]; then
+            curl -Ls "https://get.maestro.mobile.dev" | bash
+          fi
+          test -x "$HOME/.maestro/bin/maestro"
 
       - name: Cache AVD
         uses: actions/cache@v4
@@ -146,15 +150,27 @@ jobs:
           emulator-options: -no-window -no-audio -no-boot-anim -camera-back none -camera-front none
           script: |
             set -x
-            export PATH="$HOME/.maestro/bin:$PATH"
+            MAESTRO="$HOME/.maestro/bin/maestro"
+            if [ ! -x "$MAESTRO" ]; then
+              echo "maestro binary missing, installing..."
+              curl -Ls "https://get.maestro.mobile.dev" | bash
+            fi
             command -v adb || { echo "adb not found in PATH"; exit 127; }
-            command -v maestro || { echo "maestro not found in PATH"; ls -la "$HOME/.maestro/bin" || true; exit 127; }
-            maestro --version
+            test -x "$MAESTRO" || { echo "maestro not found at $MAESTRO"; ls -la "$HOME/.maestro/bin" || true; exit 127; }
+            "$MAESTRO" --version
             adb wait-for-device
             APK="android/app/build/outputs/apk/debug/app-debug.apk"
             [ -f "$APK" ] || { echo "missing $APK"; exit 1; }
             adb install -r "$APK"
-            maestro test maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/session-restore.yaml --env APP_ID="$APP_ID" --format junit --output maestro-report.xml
+            "$MAESTRO" test maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/session-restore.yaml --env APP_ID="$APP_ID" --format junit --output maestro-report.xml
+            adb shell svc wifi disable
+            adb shell svc data disable || true
+            "$MAESTRO" test maestro/offline.yaml --env APP_ID="$APP_ID" --format junit --output maestro-offline-report.xml
+            adb shell svc wifi enable
+            adb shell svc data enable || true
+            adb wait-for-device
+            sleep 10
+            "$MAESTRO" test maestro/online-restore.yaml --env APP_ID="$APP_ID" --format junit --output maestro-online-report.xml
         env:
           E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
           E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
@@ -170,5 +186,7 @@ jobs:
           name: maestro-report
           path: |
             maestro-report.xml
+            maestro-offline-report.xml
+            maestro-online-report.xml
             $HOME/.maestro/tests/**/screenshots
           if-no-files-found: warn

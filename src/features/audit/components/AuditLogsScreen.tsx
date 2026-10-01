@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
+import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { AppText } from '@/components/primitives';
+import { isNetworkError } from '@/core/network';
 import { colors, spacing } from '@/theme';
 
 import { useAuditLogs } from '../hooks/useAuditLogs';
@@ -42,7 +44,18 @@ export function AuditLogsScreen() {
   }
 
   if (query.isPending) return <LoadingState label="Cargando auditoría" />;
-  if (query.isError)
+  if (query.isError) {
+    if (isNetworkError(query.error)) {
+      return (
+        <OfflineState
+          actionLabel={offlineCopy.actionLabel}
+          message={offlineCopy.message}
+          onAction={() => void query.refetch()}
+          testID={OFFLINE_STATE_TEST_ID}
+          title={offlineCopy.title}
+        />
+      );
+    }
     return (
       <ErrorState
         actionLabel="Reintentar"
@@ -51,6 +64,7 @@ export function AuditLogsScreen() {
         title="No se pudo cargar la auditoría"
       />
     );
+  }
 
   return (
     <View style={styles.container}>

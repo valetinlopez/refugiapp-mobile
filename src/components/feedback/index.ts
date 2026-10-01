@@ -10,5 +10,6 @@ export { LoadingState } from './LoadingState';
 export type { LoadingStateProps } from './LoadingState';
 export { OfflineState } from './OfflineState';
 export type { OfflineStateProps } from './OfflineState';
+export { OFFLINE_STATE_TEST_ID, offlineCopy } from './offlineCopy';
 export { MediaUploadStatus } from './MediaUploadStatus';
 export type { MediaUploadStatusProps } from './MediaUploadStatus';

@@ -105,6 +105,27 @@ describe('UsersScreen', () => {
     expect(screen.getByText('Tu rol no tiene permiso para gestionar usuarios.')).toBeTruthy();
   });
 
+  it('shows an offline state with retry when the network is unavailable', async () => {
+    const refetch = jest.fn();
+    mockUseUsers.mockReturnValue({
+      error: new ApiError({
+        code: 'NETWORK_ERROR',
+        message: 'No pudimos conectar con el servicio. Revisá tu conexión.',
+        requestId: 'request-id',
+        status: 0,
+      }),
+      isError: true,
+      isPending: false,
+      refetch,
+    });
+    const screen = await renderUsersScreen();
+    expect(screen.getByTestId('offline-state')).toBeTruthy();
+    expect(screen.getByText('Sin conexión')).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
   it('loads the next page when the list reaches the end', async () => {
     const fetchNextPage = jest.fn();
     mockUseUsers.mockReturnValue({

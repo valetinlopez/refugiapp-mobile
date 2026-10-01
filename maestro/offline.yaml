@@ -1,0 +1,24 @@
+# RFG-87: comportamiento sin conexión con sesión autenticada vigente.
+# Precondición: session-restore deja al admin autenticado en el dashboard.
+# CI corta la red (adb svc wifi/data disable) antes de ejecutar este flow.
+# El relaunch sin clearState hace el flow tolerante a reinicios del runner.
+appId: ${APP_ID}
+tags: [e2e, sprint-12, RFG-87]
+---
+- launchApp:
+    clearState: false
+- assertVisible:
+    id: dashboard-screen
+    timeout: 30000
+- tapOn: Más
+- assertVisible:
+    id: account-section
+    timeout: 15000
+- tapOn: Usuarios
+- assertVisible:
+    id: offline-state
+    timeout: 30000
+- tapOn: Reintentar
+- assertVisible:
+    id: offline-state
+    timeout: 15000

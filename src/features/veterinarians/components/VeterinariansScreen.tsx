@@ -2,9 +2,11 @@ import { router, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, TextInput, View, type ListRenderItem } from 'react-native';
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
+import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { FilterChip } from '@/components/patterns';
 import { AppButton, AppText } from '@/components/primitives';
+import { isNetworkError } from '@/core/network';
 import { colors, radii, sizes, spacing } from '@/theme';
 
 import { useVeterinarians } from '../hooks/useVeterinarians';
@@ -51,6 +53,17 @@ export function VeterinariansScreen({ canWrite }: { canWrite: boolean }) {
   }
 
   if (veterinariansQuery.isError && veterinariansQuery.data === undefined) {
+    if (isNetworkError(veterinariansQuery.error)) {
+      return (
+        <OfflineState
+          actionLabel={offlineCopy.actionLabel}
+          message={offlineCopy.message}
+          onAction={() => void veterinariansQuery.refetch()}
+          testID={OFFLINE_STATE_TEST_ID}
+          title={offlineCopy.title}
+        />
+      );
+    }
     return (
       <ErrorState
         actionLabel="Reintentar"

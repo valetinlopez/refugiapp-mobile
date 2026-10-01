@@ -1,7 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 
 import { AppCard, AppText } from '@/components/primitives';
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
+import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
+import { isNetworkError } from '@/core/network';
 import { spacing } from '@/theme';
 
 import { useAnimalHistory } from '../hooks/useAnimalHistory';
@@ -19,6 +21,17 @@ export function AnimalHistory({ animalId }: AnimalHistoryProps) {
   }
 
   if (eventsQuery.isError) {
+    if (isNetworkError(eventsQuery.error)) {
+      return (
+        <OfflineState
+          actionLabel={offlineCopy.actionLabel}
+          message={offlineCopy.message}
+          onAction={() => void eventsQuery.refetch()}
+          testID={OFFLINE_STATE_TEST_ID}
+          title={offlineCopy.title}
+        />
+      );
+    }
     return (
       <ErrorState
         actionLabel="Reintentar"

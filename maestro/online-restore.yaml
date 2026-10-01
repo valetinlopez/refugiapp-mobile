@@ -1,0 +1,19 @@
+# RFG-87: al recuperar conectividad, el reintento manual carga la lista y la
+# sesión sigue válida sin volver a login (los tokens sobrevivieron al offline).
+# CI rehabilita la red (adb svc wifi/data enable + wait-for-device) antes de
+# este flow. Se asume continuidad con offline.yaml (pantalla Usuarios visible).
+appId: ${APP_ID}
+tags: [e2e, sprint-12, RFG-87]
+---
+- assertVisible:
+    id: offline-state
+    timeout: 15000
+- tapOn: Reintentar
+- assertVisible:
+    id: users-list
+    timeout: 30000
+- launchApp:
+    clearState: false
+- assertVisible:
+    id: dashboard-screen
+    timeout: 30000

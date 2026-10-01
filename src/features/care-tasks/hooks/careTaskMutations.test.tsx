@@ -2,6 +2,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react-native';
 import type { PropsWithChildren } from 'react';
 
+import { ApiError } from '@/core/api';
+import { MutationRetryQueue } from '@/core/network';
+
 import { careTasksApi } from '../api/careTasksApi';
 import type { CareTask } from '../types';
 
@@ -81,4 +84,39 @@ describe('care task mutations', () => {
     expect(invalidate).toHaveBeenCalledWith({ queryKey: careTaskKeys.all });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: dashboardQueryKey });
   });
+
+  it.each([
+    ['completing', useCompleteCareTask, 'care-task-complete'],
+    ['cancelling', useCancelCareTask, 'care-task-cancel'],
+  ] as const)(
+    'enqueues %s for retry when offline instead of losing it',
+    async (_, hook, prefix) => {
+      const queue = new MutationRetryQueue();
+      jest.spyOn(careTasksApi, 'complete').mockRejectedValue(networkError());
+      jest.spyOn(careTasksApi, 'cancel').mockRejectedValue(networkError());
+      const { result } = await renderHook(() => hook(queue), { wrapper });
+
+      result.current.mutate(TASK_ID);
+      await waitFor(() => expect(queue.pendingCount).toBe(1));
+
+      expect(queue.pendingKeys).toEqual([`${prefix}:${TASK_ID}`]);
+    }
+  );
+
+  it('does not enqueue offline failures without a retry queue', async () => {
+    jest.spyOn(careTasksApi, 'complete').mockRejectedValue(networkError());
+    const { result } = await renderHook(() => useCompleteCareTask(), { wrapper });
+
+    result.current.mutate(TASK_ID);
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
 });
+
+function networkError(): ApiError {
+  return new ApiError({
+    code: 'NETWORK_ERROR',
+    message: 'No pudimos conectar con el servicio. Revisá tu conexión.',
+    requestId: 'request-id',
+    status: 0,
+  });
+}
