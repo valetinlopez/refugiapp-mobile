@@ -1,7 +1,9 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
+import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { AppBadge, AppCard, AppText } from '@/components/primitives';
+import { isNetworkError } from '@/core/network';
 import { colors, spacing } from '@/theme';
 
 import { useAuditLog } from '../hooks/useAuditLogs';
@@ -22,7 +24,18 @@ export function AuditLogDetail({ id }: { id: string }) {
       />
     );
   if (query.isPending) return <LoadingState label="Cargando detalle de auditoría" />;
-  if (query.isError)
+  if (query.isError) {
+    if (isNetworkError(query.error)) {
+      return (
+        <OfflineState
+          actionLabel={offlineCopy.actionLabel}
+          message={offlineCopy.message}
+          onAction={() => void query.refetch()}
+          testID={OFFLINE_STATE_TEST_ID}
+          title={offlineCopy.title}
+        />
+      );
+    }
     return (
       <ErrorState
         actionLabel="Reintentar"
@@ -31,6 +44,7 @@ export function AuditLogDetail({ id }: { id: string }) {
         title="No se pudo cargar el evento"
       />
     );
+  }
 
   const entry = query.data;
   const metadata = JSON.stringify(sanitizeAuditMetadata(entry.metadata), null, 2);

@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppCard, AppIcon, AppText } from '@/components/primitives';
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
+import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { DateTimeField, FilterChip } from '@/components/patterns';
+import { isNetworkError } from '@/core/network';
 import { sizes, spacing } from '@/theme';
 
 import { useMedicalRecordsByAnimal } from '../hooks/useMedicalRecordsByAnimal';
@@ -116,6 +118,20 @@ export function ClinicalHistory({ animalId, onEditRecord }: ClinicalHistoryProps
   }
 
   if (recordsQuery.isError) {
+    if (isNetworkError(recordsQuery.error)) {
+      return (
+        <>
+          {filtersView}
+          <OfflineState
+            actionLabel={offlineCopy.actionLabel}
+            message={offlineCopy.message}
+            onAction={() => void recordsQuery.refetch()}
+            testID={OFFLINE_STATE_TEST_ID}
+            title={offlineCopy.title}
+          />
+        </>
+      );
+    }
     return (
       <>
         {filtersView}

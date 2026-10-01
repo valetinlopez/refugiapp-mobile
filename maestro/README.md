@@ -21,14 +21,16 @@ maestro test maestro/admin.yaml --env APP_ID=app.refugiapp.mobile.staging
 
 ## Flows
 
-| Flow                   | Rol             | Qué verifica                                    |
-| ---------------------- | --------------- | ----------------------------------------------- |
-| `admin.yaml`           | admin           | dashboard → detalle → completar tarea → clínica |
-| `shelter-manager.yaml` | shelter_manager | operativo sin clínica                           |
-| `veterinarian.yaml`    | veterinarian    | lectura + clínica, sin escritura                |
-| `clinical-denied.yaml` | shelter_manager | ausencia de `clinical-history`                  |
-| `session-expired.yaml` | admin           | logout + sin restauración de sesión             |
-| `session-restore.yaml` | admin           | sesión persistida se restaura tras el relaunch  |
+| Flow                   | Rol             | Qué verifica                                                |
+| ---------------------- | --------------- | ----------------------------------------------------------- |
+| `admin.yaml`           | admin           | dashboard → detalle → completar tarea → clínica             |
+| `shelter-manager.yaml` | shelter_manager | operativo sin clínica                                       |
+| `veterinarian.yaml`    | veterinarian    | lectura + clínica, sin escritura                            |
+| `clinical-denied.yaml` | shelter_manager | ausencia de `clinical-history`                              |
+| `session-expired.yaml` | admin           | logout + sin restauración de sesión                         |
+| `session-restore.yaml` | admin           | sesión persistida se restaura tras el relaunch              |
+| `offline.yaml`         | admin           | sin red: cache visible + `OfflineState` con reintento       |
+| `online-restore.yaml`  | admin           | al volver la red: reintento carga y sesión válida sin login |
 
 La rotación concurrente y el single-flight (RFG-86) se cubren con unit tests del
 cliente HTTP (`src/core/api/client.test.ts`) y con los E2E de rotación del
@@ -43,4 +45,7 @@ emulador solo cuando cambia `maestro/**`, en push a `develop` o con dispatch
 manual. Para forzar el emulador en un PR que no toca `maestro/`, agregar el
 label `e2e`. El job pesado usa cachés de Gradle, AVD y Maestro CLI. CI ejecuta la lista
 explícita de flows (ver `mobile-e2e.yml`), no `maestro test maestro`, para no
-correr `helpers/` como flows standalone.
+correr `helpers/` como flows standalone. Los flows `offline.yaml` y
+`online-restore.yaml` corren con la red cortada y rehabilitada vía
+`adb shell svc wifi/data`; `offline.yaml` exige una sesión admin vigente del
+flow anterior (sin relaunch, para conservar la cache en memoria).

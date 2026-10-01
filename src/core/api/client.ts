@@ -1,6 +1,7 @@
 import { config } from '@/core/config';
 import { tokenStorage, type TokenPair } from '@/core/storage';
 
+import { isNetworkError } from '../network/isNetworkError';
 import { ApiError, createResponseError, normalizeTransportError } from './errors';
 import { createRequestId } from './requestId';
 
@@ -353,11 +354,15 @@ export class HttpClient {
       if (winnerAccessToken !== null) {
         return winnerAccessToken;
       }
-      await this.invalidateSession(error instanceof ApiError ? error.message : undefined);
       if (error instanceof ApiError) {
+        await this.invalidateSession(error.message);
         throw error;
       }
-      throw normalizeTransportError(error, requestId);
+      const transportError = normalizeTransportError(error, requestId);
+      if (!isNetworkError(transportError)) {
+        await this.invalidateSession(undefined);
+      }
+      throw transportError;
     }
   }
 

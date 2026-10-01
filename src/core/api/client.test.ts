@@ -265,4 +265,36 @@ describe('HttpClient', () => {
     expect(tokenStore.clearTokens).toHaveBeenCalledTimes(1);
     expect(invalidated).toHaveBeenCalledWith('Tu sesión venció. Iniciá sesión nuevamente.');
   });
+
+  it('preserves tokens when refresh fails without connectivity', async () => {
+    const tokenStore = createTokenStore({
+      accessToken: 'expired-access',
+      refreshToken: 'valid-refresh',
+    });
+    const invalidated = jest.fn();
+    const client = createHttpClient({
+      baseUrl: 'https://api.test/api/v1',
+      timeoutMs: 1000,
+      tokenStore,
+      transport: async (rawUrl) => {
+        if (new URL(rawUrl).pathname === '/api/v1/auth/refresh') {
+          throw new TypeError('Network request failed');
+        }
+        return {
+          headers: { get: () => null },
+          ok: false,
+          status: 401,
+          text: async () => JSON.stringify({ code: 'UNAUTHORIZED' }),
+        };
+      },
+    });
+    client.setSessionInvalidatedHandler(invalidated);
+
+    const error = await client.get('/animals').catch((thrown: unknown) => thrown);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).code).toBe('NETWORK_ERROR');
+    expect(tokenStore.clearTokens).not.toHaveBeenCalled();
+    expect(invalidated).not.toHaveBeenCalled();
+  });
 });

@@ -3,8 +3,10 @@ import { useCallback } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { EmptyState, ErrorState } from '@/components/feedback';
+import { EmptyState, ErrorState, OfflineState } from '@/components/feedback';
+import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { AppText } from '@/components/primitives';
+import { isNetworkError } from '@/core/network';
 import { AccountMenuButton } from '@/features/auth/components/AccountMenuButton';
 import { useAuthorizedNavigation, useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { colors, spacing } from '@/theme';
@@ -38,6 +40,21 @@ export function DashboardScreen() {
   }
 
   if (overviewQuery.isError) {
+    if (isNetworkError(overviewQuery.error)) {
+      return (
+        <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+          <View style={styles.state}>
+            <OfflineState
+              actionLabel={offlineCopy.actionLabel}
+              message={offlineCopy.message}
+              onAction={() => void overviewQuery.refetch()}
+              testID={OFFLINE_STATE_TEST_ID}
+              title={offlineCopy.title}
+            />
+          </View>
+        </SafeAreaView>
+      );
+    }
     return (
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
         <View style={styles.state}>

@@ -1,8 +1,10 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
+import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { AppButton, AppText } from '@/components/primitives';
+import { isNetworkError, useMutationRetryQueue } from '@/core/network';
 import { spacing } from '@/theme';
 
 import { useCancelCareTask, useCompleteCareTask } from '../hooks/useCareTaskActions';
@@ -19,8 +21,9 @@ export function AnimalCareTasks({
   canWrite: boolean;
 }) {
   const query = useCareTasks({ animalId });
-  const complete = useCompleteCareTask();
-  const cancel = useCancelCareTask();
+  const retryQueue = useMutationRetryQueue();
+  const complete = useCompleteCareTask(retryQueue.queue);
+  const cancel = useCancelCareTask(retryQueue.queue);
   const pendingId = complete.variables ?? cancel.variables;
 
   return (
@@ -37,13 +40,28 @@ export function AnimalCareTasks({
         </AppText>
       )}
       {query.isPending ? <LoadingState label="Cargando tareas" /> : null}
+      {retryQueue.pendingCount > 0 ? (
+        <AppText color="textSecondary" testID="care-tasks-pending">
+          {`Cambios pendientes de envío: ${retryQueue.pendingCount}. Se aplicarán al recuperar conexión.`}
+        </AppText>
+      ) : null}
       {query.isError ? (
-        <ErrorState
-          actionLabel="Reintentar"
-          message="No pudimos cargar las tareas de cuidado del animal."
-          onAction={() => void query.refetch()}
-          title="No se pudieron cargar las tareas"
-        />
+        isNetworkError(query.error) ? (
+          <OfflineState
+            actionLabel={offlineCopy.actionLabel}
+            message={offlineCopy.message}
+            onAction={() => void query.refetch()}
+            testID={OFFLINE_STATE_TEST_ID}
+            title={offlineCopy.title}
+          />
+        ) : (
+          <ErrorState
+            actionLabel="Reintentar"
+            message="No pudimos cargar las tareas de cuidado del animal."
+            onAction={() => void query.refetch()}
+            title="No se pudieron cargar las tareas"
+          />
+        )
       ) : null}
       {!query.isPending && !query.isError && !query.data?.items.length ? (
         <EmptyState message="Este animal todavía no tiene tareas de cuidado." title="Sin tareas" />

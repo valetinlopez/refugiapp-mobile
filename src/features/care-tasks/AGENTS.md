@@ -54,6 +54,7 @@
 - `dueAt` opcional mediante selector nativo compartido; si se informa debe ser futuro, con fallback textual web.
 - Confirmaciones para completar y cancelar tareas pendientes mediante `CareTaskActionDialog`, que envuelve el `ConfirmDialog` compartido del sistema de diseño (danger para cancelar, primary para completar).
 - Invalidación de las queries de tareas y dashboard después de cada mutación.
+- Piloto de reintento offline (RFG-87): `useCompleteCareTask`/`useCancelCareTask` aceptan una `MutationRetryQueue` opcional de `src/core/network`; ante un fallo de red encolan la transición (`care-task-complete:<id>`, `care-task-cancel:<id>`) en lugar de perderla, y `AnimalCareTasks` muestra "Cambios pendientes de envío" con `testID="care-tasks-pending"`. La cola reintenta con backoff al reconectar; solo acepta estas transiciones marcadas `safeToRetry`.
 - Guards visuales de escritura para `admin` y `shelter_manager`.
 - El selector de animal usa el contrato compartido `src/application/animals`: `GET /animals?page=1&limit=100` sin sort en el request (orden alfabético en cliente) y fallback a `GET /animals/:id` cuando llega un `animalId` UUID válido y el listado falla o no lo contiene; el error se traduce por causa y el reintento funciona.
 - Mensaje de solo lectura explicativo para roles sin permisos de escritura en el listado; no se muestran botones que responderían 403.

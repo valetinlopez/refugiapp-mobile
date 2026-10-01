@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import { apiClient, ApiError } from '@/core/api';
+import { isNetworkError } from '@/core/network';
 import { tokenStorage } from '@/core/storage';
 
 import { authApi } from '../api/authApi';
@@ -57,6 +58,12 @@ export function SessionProvider({ children }: PropsWithChildren) {
           dispatch({ type: 'authenticated', user });
         }
       } catch (error) {
+        if (isNetworkError(error)) {
+          if (active) {
+            dispatch({ type: 'unauthenticated' });
+          }
+          return;
+        }
         await tokenStorage.clearTokens();
         queryClient.clear();
         if (active) {
