@@ -12,6 +12,8 @@ Este directorio es el índice de documentación viva del frontend móvil.
 | [`documentation-governance.md`](documentation-governance.md) | Política de mantenimiento documental          | Cambios en el proceso o catálogo documental                           |
 | [`decisions/`](decisions/)                                   | ADRs de decisiones técnicas significativas    | Al tomar o reemplazar una decisión de arquitectura                    |
 | [`../README.md`](../README.md)                               | Instalación, ejecución y orientación inicial  | Cambios operativos o de onboarding                                    |
+| [`release-runbook.md`](release-runbook.md)                   | Builds EAS, seguridad y publicación interna   | Cambios de build, firma, versionado o distribución                    |
+| [`releases/`](releases/)                                     | Notas y evidencia por candidata               | Cada candidata o publicación                                          |
 
 ## Reglas locales
 
