@@ -70,6 +70,24 @@ describe('usersApi', () => {
     expect(result).not.toHaveProperty('password');
   });
 
+  it('sends a partial payload to the update endpoint', async () => {
+    let capturedBody: unknown;
+    let capturedPath = '';
+    const client = createClient({
+      [`PATCH /api/v1/users/${USER_ID}`]: ({ body, url }) => {
+        capturedBody = typeof body === 'string' ? (JSON.parse(body) as unknown) : body;
+        capturedPath = url.pathname;
+        return { body: user() };
+      },
+    });
+
+    const result = await usersApi.update(USER_ID, { firstName: 'Sofía', roles: ['admin'] }, client);
+
+    expect(capturedPath).toBe(`/api/v1/users/${USER_ID}`);
+    expect(capturedBody).toEqual({ firstName: 'Sofía', roles: ['admin'] });
+    expect(result.id).toBe(USER_ID);
+  });
+
   it('uses the activation and deactivation endpoints', async () => {
     const calls: string[] = [];
     const client = createClient({

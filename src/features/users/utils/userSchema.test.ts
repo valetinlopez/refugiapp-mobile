@@ -1,4 +1,4 @@
-import { createUserSchema } from './userSchema';
+import { createUserSchema, updateUserSchema } from './userSchema';
 
 describe('createUserSchema', () => {
   const validInput = {
@@ -22,6 +22,33 @@ describe('createUserSchema', () => {
       ...validInput,
       email: 'invalid',
       password: 'short',
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('updateUserSchema', () => {
+  it('normalizes email and trims names without a password', () => {
+    expect(
+      updateUserSchema.parse({
+        email: ' MANAGER@Refugiapp.Local ',
+        firstName: ' Sofía ',
+        lastName: ' Ramírez ',
+        role: 'shelter_manager',
+      })
+    ).toMatchObject({
+      email: 'manager@refugiapp.local',
+      firstName: 'Sofía',
+      lastName: 'Ramírez',
+    });
+  });
+
+  it('rejects empty names and invalid roles', () => {
+    const result = updateUserSchema.safeParse({
+      email: 'invalid',
+      firstName: '  ',
+      lastName: 'Ramírez',
+      role: 'unknown',
     });
     expect(result.success).toBe(false);
   });

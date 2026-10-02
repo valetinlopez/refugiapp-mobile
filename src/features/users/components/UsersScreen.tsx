@@ -44,9 +44,14 @@ export function UsersScreen() {
     },
     [activateUser, deactivateUser]
   );
+  const editUser = useCallback((user: UserResponse) => {
+    router.push(`/users/${user.id}/edit` as Href);
+  }, []);
   const renderUser = useCallback(
-    ({ item }: { item: UserResponse }) => <UserCard onChangeStatus={selectUser} user={item} />,
-    [selectUser]
+    ({ item }: { item: UserResponse }) => (
+      <UserCard onChangeStatus={selectUser} onEdit={editUser} user={item} />
+    ),
+    [selectUser, editUser]
   );
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

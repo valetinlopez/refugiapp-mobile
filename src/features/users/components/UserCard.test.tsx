@@ -71,4 +71,20 @@ describe('UserCard', () => {
 
     expect(screen.getByRole('button', { name: 'Activar usuario' })).toBeTruthy();
   });
+
+  it('offers an edit action when the callback is provided', async () => {
+    const onEdit = jest.fn();
+    const screen = await render(
+      <UserCard onChangeStatus={jest.fn()} onEdit={onEdit} user={activeUser} />
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Editar Andres Borrego' }));
+    expect(onEdit).toHaveBeenCalledWith(activeUser);
+  });
+
+  it('hides the edit action without the callback', async () => {
+    const screen = await render(<UserCard onChangeStatus={jest.fn()} user={activeUser} />);
+
+    expect(screen.queryByRole('button', { name: 'Editar Andres Borrego' })).toBeNull();
+  });
 });

@@ -1,6 +1,6 @@
 import { apiClient, type HttpClient } from '@/core/api';
 
-import type { CreateUserRequest, PaginatedUsers, UserResponse } from '../types';
+import type { CreateUserRequest, PaginatedUsers, UpdateUserRequest, UserResponse } from '../types';
 
 export const usersApi = {
   async list(page = 1, limit = 20, client: HttpClient = apiClient): Promise<PaginatedUsers> {
@@ -10,6 +10,15 @@ export const usersApi = {
 
   async create(data: CreateUserRequest, client: HttpClient = apiClient): Promise<UserResponse> {
     const response = await client.post<UserResponse>('/users', data);
+    return response.data;
+  },
+
+  async update(
+    id: string,
+    data: UpdateUserRequest,
+    client: HttpClient = apiClient
+  ): Promise<UserResponse> {
+    const response = await client.patch<UserResponse>(`/users/${id}`, data);
     return response.data;
   },
 
