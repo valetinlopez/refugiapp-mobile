@@ -5,6 +5,7 @@ import { FlatList, StyleSheet, TextInput, View, type ListRenderItem } from 'reac
 import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { FilterChip } from '@/components/patterns';
+import { virtualizedListPerformanceProps } from '@/components/performance';
 import { AppButton, AppText } from '@/components/primitives';
 import { isNetworkError } from '@/core/network';
 import { colors, radii, sizes, spacing } from '@/theme';
@@ -31,7 +32,10 @@ export function VeterinariansScreen({ canWrite }: { canWrite: boolean }) {
   );
   const veterinariansQuery = useVeterinarians(filters);
 
-  const veterinarians = veterinariansQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const veterinarians = useMemo(
+    () => veterinariansQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    [veterinariansQuery.data]
+  );
 
   const handlePress = useCallback((veterinarian: VeterinarianResponse) => {
     router.push({ pathname: '/veterinarians/[id]', params: { id: veterinarian.id } });
@@ -108,6 +112,7 @@ export function VeterinariansScreen({ canWrite }: { canWrite: boolean }) {
 
   return (
     <FlatList
+      {...virtualizedListPerformanceProps}
       contentContainerStyle={styles.list}
       data={veterinarians}
       keyExtractor={(veterinarian) => veterinarian.id}

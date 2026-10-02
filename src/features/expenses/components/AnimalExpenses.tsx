@@ -1,9 +1,12 @@
 import { router, type Href } from 'expo-router';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
+import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { AppButton, AppCard, AppText } from '@/components/primitives';
+import { optimizeCloudinaryImageUrl } from '@/core/media';
 import { isNetworkError } from '@/core/network';
 import { colors, radii, sizes, spacing } from '@/theme';
 
@@ -68,8 +71,11 @@ export function AnimalExpenses({ animalId, canWrite }: { animalId: string; canWr
   );
 }
 
-function ExpenseCard({ expense }: { expense: Expense }) {
+const ExpenseCard = memo(function ExpenseCard({ expense }: { expense: Expense }) {
   const receipt = useExpenseReceipt(expense.ticketMediaId);
+  const receiptUri = receipt.data
+    ? optimizeCloudinaryImageUrl(receipt.data, { width: 400 })
+    : undefined;
   return (
     <AppCard
       accessibilityLabel={`${getExpenseCategoryLabel(expense.category)}, ${formatAmountCents(expense.amountCents)}, ${expense.description}`}
@@ -84,11 +90,16 @@ function ExpenseCard({ expense }: { expense: Expense }) {
           </AppText>
           <AppText numberOfLines={3}>{expense.description}</AppText>
         </View>
-        {receipt.data ? (
+        {receiptUri ? (
           <Image
             accessibilityLabel="Comprobante del gasto"
-            resizeMode="cover"
-            source={{ uri: receipt.data }}
+            allowDownscaling
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            loading="lazy"
+            priority="low"
+            recyclingKey={expense.id}
+            source={{ uri: receiptUri }}
             style={styles.receipt}
           />
         ) : expense.ticketMediaId ? (
@@ -101,7 +112,7 @@ function ExpenseCard({ expense }: { expense: Expense }) {
       </View>
     </AppCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   list: { gap: spacing.sm },

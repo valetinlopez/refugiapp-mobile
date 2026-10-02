@@ -7,6 +7,10 @@ jest.mock('@/features/auth/hooks/useCapabilities', () => ({ useCapabilities: jes
 jest.mock('@/features/auth/components/AccountHeaderRow', () => ({ AccountHeaderRow: () => null }));
 jest.mock('@/features/audit/components/AuditLogsScreen', () => ({ AuditLogsScreen: () => null }));
 jest.mock('@/components/navigation', () => ({ navigateBack: jest.fn() }));
+jest.mock('react', () => ({
+  ...jest.requireActual<typeof import('react')>('react'),
+  lazy: () => () => null,
+}));
 
 const mockUseCapabilities = useCapabilities as jest.Mock;
 

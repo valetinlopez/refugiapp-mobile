@@ -33,7 +33,9 @@ describe('AppAvatar', () => {
       />
     );
 
-    fireEvent(screen.getByTestId('app-avatar-image'), 'error');
+    fireEvent(screen.getByTestId('app-avatar-image'), 'error', {
+      nativeEvent: { error: 'Image unavailable' },
+    });
 
     await waitFor(() => {
       expect(screen.queryByTestId('app-avatar-image')).toBeNull();

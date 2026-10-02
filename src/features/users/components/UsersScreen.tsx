@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
+import { virtualizedListPerformanceProps } from '@/components/performance';
 import { AppButton, AppText } from '@/components/primitives';
 import { isNetworkError } from '@/core/network';
 import { colors, spacing } from '@/theme';
@@ -19,6 +20,7 @@ import { UserStatusDialog } from './UserStatusDialog';
 export function UsersScreen() {
   const insets = useSafeAreaInsets();
   const usersQuery = useUsers();
+  const { fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = usersQuery;
   const activateUser = useActivateUser();
   const deactivateUser = useDeactivateUser();
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
@@ -42,6 +44,18 @@ export function UsersScreen() {
     },
     [activateUser, deactivateUser]
   );
+  const renderUser = useCallback(
+    ({ item }: { item: UserResponse }) => <UserCard onChangeStatus={selectUser} user={item} />,
+    [selectUser]
+  );
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const handleRefresh = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   function confirmStatusChange(): void {
     if (!selectedUser) return;
@@ -88,6 +102,7 @@ export function UsersScreen() {
         />
       </View>
       <FlatList
+        {...virtualizedListPerformanceProps}
         contentContainerStyle={[styles.list, { paddingBottom: spacing['2xl'] + insets.bottom }]}
         data={users}
         testID="users-list"
@@ -103,21 +118,17 @@ export function UsersScreen() {
             title="Sin usuarios"
           />
         }
-        onEndReached={() => {
-          if (usersQuery.hasNextPage && !usersQuery.isFetchingNextPage) {
-            void usersQuery.fetchNextPage();
-          }
-        }}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={0.4}
         refreshControl={
           <RefreshControl
             colors={[colors.positive]}
-            onRefresh={() => void usersQuery.refetch()}
+            onRefresh={handleRefresh}
             refreshing={usersQuery.isRefetching && !usersQuery.isFetchingNextPage}
             tintColor={colors.positive}
           />
         }
-        renderItem={({ item }) => <UserCard onChangeStatus={selectUser} user={item} />}
+        renderItem={renderUser}
       />
       <UserStatusDialog
         activating={selectedUser?.isActive === false}

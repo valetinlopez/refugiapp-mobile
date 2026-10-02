@@ -1,13 +1,18 @@
 import { useLocalSearchParams, type Href } from 'expo-router';
+import { lazy, Suspense } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { EmptyState } from '@/components/feedback';
+import { EmptyState, LoadingState } from '@/components/feedback';
 import { navigateBack } from '@/components/navigation';
-import { AuditLogDetail } from '@/features/audit/components/AuditLogDetail';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { colors, spacing } from '@/theme';
+
+const AuditLogDetail = lazy(async () => {
+  const module = await import('@/features/audit/components/AuditLogDetail');
+  return { default: module.AuditLogDetail };
+});
 
 export default function AuditDetailRoute() {
   const params = useLocalSearchParams<{ id?: string }>();
@@ -17,7 +22,9 @@ export default function AuditDetailRoute() {
     <SafeAreaView style={styles.safeArea}>
       <AccountHeaderRow accessibilityHint="Volver a auditoría" fallbackHref={'/audit' as Href} />
       {canReadAudit ? (
-        <AuditLogDetail id={id} />
+        <Suspense fallback={<LoadingState label="Cargando detalle de auditoría" />}>
+          <AuditLogDetail id={id} />
+        </Suspense>
       ) : (
         <View style={styles.centered}>
           <EmptyState

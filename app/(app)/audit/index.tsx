@@ -1,12 +1,17 @@
+import { lazy, Suspense } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { EmptyState } from '@/components/feedback';
+import { EmptyState, LoadingState } from '@/components/feedback';
 import { navigateBack } from '@/components/navigation';
-import { AuditLogsScreen } from '@/features/audit/components/AuditLogsScreen';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { colors, spacing } from '@/theme';
+
+const AuditLogsScreen = lazy(async () => {
+  const module = await import('@/features/audit/components/AuditLogsScreen');
+  return { default: module.AuditLogsScreen };
+});
 
 export default function AuditRoute() {
   const { canReadAudit } = useCapabilities();
@@ -14,7 +19,9 @@ export default function AuditRoute() {
     <SafeAreaView style={styles.safeArea}>
       <AccountHeaderRow accessibilityHint="Volver al inicio" fallbackHref="/" />
       {canReadAudit ? (
-        <AuditLogsScreen />
+        <Suspense fallback={<LoadingState label="Cargando módulo de auditoría" />}>
+          <AuditLogsScreen />
+        </Suspense>
       ) : (
         <View style={styles.centered}>
           <EmptyState

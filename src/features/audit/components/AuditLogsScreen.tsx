@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
+import { virtualizedListPerformanceProps } from '@/components/performance';
 import { AppText } from '@/components/primitives';
 import { isNetworkError } from '@/core/network';
 import { colors, spacing } from '@/theme';
@@ -24,6 +25,7 @@ export function AuditLogsScreen() {
   const [filters, setFilters] = useState<AuditFilterValues>({});
   const [filterError, setFilterError] = useState<string | null>(null);
   const query = useAuditLogs(filters);
+  const { fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = query;
   const entries = useMemo(
     () => query.data?.pages.flatMap((page) => page.items) ?? [],
     [query.data]
@@ -42,6 +44,17 @@ export function AuditLogsScreen() {
     setFilterError(null);
     setFilters({});
   }
+
+  const renderEntry = useCallback(
+    ({ item }: { item: (typeof entries)[number] }) => <AuditLogCard entry={item} />,
+    []
+  );
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const handleRefresh = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (query.isPending) return <LoadingState label="Cargando auditoría" />;
   if (query.isError) {
@@ -75,6 +88,7 @@ export function AuditLogsScreen() {
         </AppText>
       </View>
       <FlatList
+        {...virtualizedListPerformanceProps}
         contentContainerStyle={styles.list}
         data={entries}
         keyExtractor={(entry) => entry.id}
@@ -100,19 +114,17 @@ export function AuditLogsScreen() {
         ListFooterComponent={
           query.isFetchingNextPage ? <LoadingState label="Cargando más eventos" /> : null
         }
-        onEndReached={() => {
-          if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
-        }}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={0.4}
         refreshControl={
           <RefreshControl
             colors={[colors.positive]}
-            onRefresh={() => void query.refetch()}
+            onRefresh={handleRefresh}
             refreshing={query.isRefetching && !query.isFetchingNextPage}
             tintColor={colors.positive}
           />
         }
-        renderItem={({ item }) => <AuditLogCard entry={item} />}
+        renderItem={renderEntry}
         testID="audit-list"
       />
     </View>

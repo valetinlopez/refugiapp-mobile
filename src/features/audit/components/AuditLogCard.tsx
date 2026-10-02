@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppBadge, AppCard, AppIcon, AppText } from '@/components/primitives';
@@ -7,7 +8,7 @@ import { spacing } from '@/theme';
 import type { AuditLog } from '../types';
 import { auditActionLabel, formatAuditDate } from '../utils/auditPresentation';
 
-export function AuditLogCard({ entry }: { entry: AuditLog }) {
+export const AuditLogCard = memo(function AuditLogCard({ entry }: { entry: AuditLog }) {
   return (
     <Pressable
       accessibilityLabel={`${auditActionLabel(entry.action)}, ${formatAuditDate(entry.occurredAt)}`}
@@ -27,7 +28,7 @@ export function AuditLogCard({ entry }: { entry: AuditLog }) {
       </AppCard>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: { gap: spacing.sm },

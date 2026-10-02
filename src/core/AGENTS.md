@@ -25,6 +25,10 @@
 - `src/core/validation` centraliza validadores puros transversales sin dominio (p. ej. `isUuid`).
 - Las rutas y `src/application` consumen `isUuid` desde aquí en lugar de duplicar el patrón por feature; los `utils/uuid.ts` de features existentes re-exportan este validador.
 
+## Media
+
+- `src/core/media/optimizeCloudinaryImageUrl` agrega transformaciones `f_auto`, `q_auto`, crop y dimensiones de contexto solo a URLs HTTPS de imágenes Cloudinary. Conserva query/fragment y deja intactos otros hosts o recursos `raw`.
+
 ## Red y reintentos
 
 - `src/core/network` centraliza diagnóstico de conectividad y reintentos de escritura sin dominio.

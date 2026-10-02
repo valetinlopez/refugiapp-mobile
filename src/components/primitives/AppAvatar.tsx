@@ -1,6 +1,14 @@
 import { useState } from 'react';
-import { Image, StyleSheet, View, type ImageSourcePropType, type ViewProps } from 'react-native';
+import { Image, type ImageSource } from 'expo-image';
+import {
+  PixelRatio,
+  StyleSheet,
+  View,
+  type ImageSourcePropType,
+  type ViewProps,
+} from 'react-native';
 
+import { optimizeCloudinaryImageUrl } from '@/core/media';
 import { colors, radii, sizes } from '@/theme';
 
 import { AppText } from './AppText';
@@ -40,6 +48,11 @@ export function AppAvatar({
 
   const imageFailed = uri !== undefined && failedUri === uri;
   const showImage = source !== undefined && !imageFailed;
+  const optimizedUri =
+    uri === undefined
+      ? undefined
+      : optimizeCloudinaryImageUrl(uri, { width: dimension * PixelRatio.get() });
+  const imageSource = (optimizedUri === undefined ? source : { uri: optimizedUri }) as ImageSource;
 
   return (
     <View
@@ -50,9 +63,14 @@ export function AppAvatar({
     >
       {showImage ? (
         <Image
+          allowDownscaling
+          cachePolicy="memory-disk"
+          contentFit="cover"
+          loading="lazy"
           onError={() => setFailedUri(uri)}
-          resizeMode="cover"
-          source={source}
+          priority="low"
+          recyclingKey={optimizedUri ?? uri ?? null}
+          source={imageSource}
           style={styles.image}
           testID="app-avatar-image"
         />

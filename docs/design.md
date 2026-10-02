@@ -130,6 +130,8 @@ Patrón compartido para filtrar listados (animales por estado, tareas por estado
 
 Tamaños: 36, 48 y 72 pt. Los retratos usan recorte circular y borde cálido. Si falta la foto, mostrar hasta dos iniciales; nunca un espacio vacío ni una imagen genérica que pueda confundirse con el animal real. Si la imagen falla al cargar, el avatar vuelve a las iniciales de forma silenciosa (sin botón de reintento) y el fallo se resetea cuando cambia la URL.
 
+Las fotos remotas se sirven con `expo-image`, caché combinada de memoria/disco y carga diferida. Cuando la fuente es Cloudinary, se pide una variante cuadrada según los píxeles físicos del avatar con formato y calidad automáticos; no se descarga el original para una miniatura. Las vistas recicladas cambian `recyclingKey` junto con la URI para no mostrar brevemente la foto de otra fila.
+
 ## 17. Filas de tareas
 
 Orden recomendado: avatar, hora y animal, tarea, responsable opcional y badge. La fila crece cuando el texto aumenta y puede reorganizar metadatos en pantallas estrechas. La etiqueta accesible concatena hora, animal, tarea, estado y responsable. Los divisores pertenecen al listado, no a la fila.
