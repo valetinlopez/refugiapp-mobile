@@ -1,8 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { usersApi } from '../api/usersApi';
-import type { CreateUserRequest, UserResponse } from '../types';
+import type { CreateUserRequest, UpdateUserRequest, UserResponse } from '../types';
 import { userKeys } from './userKeys';
+
+export interface UpdateUserInput {
+  data: UpdateUserRequest;
+  id: string;
+}
 
 async function invalidateUsers(queryClient: ReturnType<typeof useQueryClient>): Promise<void> {
   await queryClient.invalidateQueries({ queryKey: userKeys.lists() });
@@ -12,6 +17,14 @@ export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation<UserResponse, Error, CreateUserRequest>({
     mutationFn: (input) => usersApi.create(input),
+    onSuccess: () => invalidateUsers(queryClient),
+  });
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+  return useMutation<UserResponse, Error, UpdateUserInput>({
+    mutationFn: ({ id, data }) => usersApi.update(id, data),
     onSuccess: () => invalidateUsers(queryClient),
   });
 }

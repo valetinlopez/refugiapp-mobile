@@ -9,9 +9,11 @@ import { roleLabel } from '../utils/userPresentation';
 
 export const UserCard = memo(function UserCard({
   onChangeStatus,
+  onEdit,
   user,
 }: {
   onChangeStatus(user: UserResponse): void;
+  onEdit?(user: UserResponse): void;
   user: UserResponse;
 }) {
   const fullName = `${user.firstName} ${user.lastName}`;
@@ -57,6 +59,14 @@ export const UserCard = memo(function UserCard({
         ))}
       </View>
       <View style={styles.actions}>
+        {onEdit ? (
+          <AppButton
+            accessibilityLabel={`Editar ${fullName}`}
+            label="Editar"
+            onPress={() => onEdit(user)}
+            variant="ghost"
+          />
+        ) : null}
         <AppButton
           label={user.isActive ? 'Desactivar usuario' : 'Activar usuario'}
           onPress={() => onChangeStatus(user)}

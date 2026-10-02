@@ -296,6 +296,74 @@
         }
       }
     },
+    "/users/{id}": {
+      "patch": {
+        "operationId": "UsersController_updateUser",
+        "summary": "Update a user profile and roles (admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "User id (UUID).",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateUserDto" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "409": {
+            "description": "Email already registered or last admin protection.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "429": {
+            "description": "The request rate limit was exceeded.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          }
+        }
+      }
+    },
     "/users/me": {
       "get": {
         "operationId": "getCurrentUser",
@@ -2104,6 +2172,21 @@
           "password": { "type": "string", "format": "password", "minLength": 12 },
           "firstName": { "type": "string" },
           "lastName": { "type": "string" },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["admin", "shelter_manager", "veterinarian"]
+            }
+          }
+        }
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "lastName": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "email": { "type": "string", "format": "email" },
           "roles": {
             "type": "array",
             "items": {

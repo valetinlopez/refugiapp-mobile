@@ -288,6 +288,12 @@ export interface components {
       lastName: string;
       roles?: ('admin' | 'shelter_manager' | 'veterinarian')[];
     };
+    UpdateUserDto: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      roles?: ('admin' | 'shelter_manager' | 'veterinarian')[];
+    };
     PaginatedMediaAssetsResponseDto: {
       items: components['schemas']['MediaAssetResponseDto'][];
       page: number;

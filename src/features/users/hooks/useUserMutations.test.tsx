@@ -5,7 +5,12 @@ import type { PropsWithChildren } from 'react';
 import { usersApi } from '../api/usersApi';
 import type { CreateUserRequest, UserResponse } from '../types';
 import { userKeys } from './userKeys';
-import { useActivateUser, useCreateUser, useDeactivateUser } from './useUserMutations';
+import {
+  useActivateUser,
+  useCreateUser,
+  useDeactivateUser,
+  useUpdateUser,
+} from './useUserMutations';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111';
 const createInput: CreateUserRequest = {
@@ -43,6 +48,18 @@ describe('user mutations', () => {
     queryClient.clear();
     queryClient.unmount();
     jest.restoreAllMocks();
+  });
+
+  it('invalidates the users list after update succeeds', async () => {
+    jest.spyOn(usersApi, 'update').mockResolvedValue(createdUser);
+    const invalidate = jest.spyOn(queryClient, 'invalidateQueries');
+    const { result } = await renderHook(() => useUpdateUser(), { wrapper });
+
+    result.current.mutate({ id: USER_ID, data: { firstName: 'Sofía' } });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(usersApi.update).toHaveBeenCalledWith(USER_ID, { firstName: 'Sofía' });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: userKeys.lists() });
   });
 
   it.each([
