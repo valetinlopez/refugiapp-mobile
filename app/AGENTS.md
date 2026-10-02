@@ -19,8 +19,9 @@
 
 ## Estructura actual
 
-- `(auth)`: login público; no existe registro público en el backend.
+- `(auth)`: login público, recuperación (`forgot-password`) y confirmación (`reset-password`) de contraseña; no existe registro público en el backend. `reset-password` captura el token del deep link una única vez, lo elimina de la URL/historial y lo conserva solo en memoria.
 - `(app)`: área autenticada.
+- `(app)/account/change-password`: cambio de contraseña autenticado desde "Más > Cuenta" (`AccountHeaderRow` con `fallbackHref='/more'`); el éxito limpia la sesión local y vuelve al login con aviso.
 - `(app)/(tabs)`: destinos principales: `index` (Inicio, compone el dashboard de la feature `src/features/dashboard`), `explore` (Animales), `care-tasks` (Tareas) y `more` (Más, compone `AccountScreen` de la feature auth con la sección "Gestión" de `ManagementSection`; la jerarquía es Gestión > Cuenta > Salida, con "Veterinarios" para todos los roles, "Usuarios" solo `canManageUsers` y "Ver auditoría" solo `canReadAudit`). La ruta legacy `inbox` es un redirect oculto (`href: null`) hacia `care-tasks`.
 - `(app)/expenses/new`: alta de gasto con comprobante para `admin` y `shelter_manager`.
 - `(app)/users`: listado paginado y alta de usuarios internos, visible solo para `admin`; activacion y desactivacion se confirman desde el listado.

@@ -41,6 +41,8 @@ EAS usa el ambiente `preview`, mientras la aplicación recibe `EXPO_PUBLIC_ENV=s
 
    Si una variable ya existe, usar `eas env:update`. Las variables `EXPO_PUBLIC_*` son visibles dentro del binario; nunca deben contener passwords, tokens, claves privadas ni credenciales de servicios.
 
+   Para la recuperación de contraseña, el backend de staging debe publicar `PASSWORD_RESET_URL=refugiappmobile-staging://reset-password` (el scheme coincide con el de la variante; ver `app.config.ts`). Sin ese valor, el email no abre la app y el flujo no puede verificarse en dispositivo.
+
 4. Verificar la URL desde una red externa al equipo de desarrollo:
 
    ```bash

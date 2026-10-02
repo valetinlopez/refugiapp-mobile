@@ -11,6 +11,10 @@
 - `POST /auth/login`: autenticación pública con email y password.
 - `POST /auth/refresh`: rota la sesión usando refresh token.
 - `POST /auth/logout`: revoca la sesión actual de forma idempotente.
+- `POST /auth/change-password`: cambia la contraseña del usuario autenticado (Bearer) con `currentPassword` y `newPassword` (mínimo 12 caracteres); responde `204` y revoca todos los refresh tokens activos.
+- `POST /auth/password-recovery/request`: solicitud pública de recuperación por email; responde siempre `202` con el mismo mensaje genérico para cuentas existentes, inexistentes o inactivas.
+- `POST /auth/password-recovery/confirm`: pública, consume el token opaco de un solo uso con `newPassword` (mínimo 12); responde `204` y revoca todos los refresh tokens activos.
+- Códigos de recuperación: `PASSWORD_RESET_TOKEN_EXPIRED`, `PASSWORD_RESET_TOKEN_ALREADY_USED` e `INVALID_PASSWORD_RESET_TOKEN` (400); `INVALID_CURRENT_PASSWORD` (401); rate limit `429`.
 - Los roles válidos son `admin`, `shelter_manager` y `veterinarian`.
 - El payload JWT distingue `tokenType=access|refresh`; el refresh incluye `jti`.
 
@@ -23,14 +27,18 @@ Verificar OpenAPI antes de modificar payloads. La arquitectura actual del backen
 - Ante refresh revocado, vencido o inválido, limpiar tokens y cache sensible antes de volver a login.
 - Evitar múltiples refresh concurrentes.
 - La contraseña existe solo durante la interacción y el request; no persistirla.
+- El token de recuperación es opaco, de un solo uso y sensible: capturarlo una única vez desde los params del deep link, eliminarlo de la URL/historial/estado de navegación y conservarlo solo en memoria hasta confirmar o abandonar el flujo. Nunca persistirlo en SecureStore, AsyncStorage, TanStack Query, analytics, breadcrumbs, logs, errores o crash reports.
+- El token de recuperación no debe aparecer en query keys, nombres de variables logueables ni mensajes visibles.
+- No revelar si el email pertenece a una cuenta: el contenido y la navegación posteriores al `202` son idénticos para todos los casos.
+- Un `INVALID_CURRENT_PASSWORD` no cierra la sesión local; solo el cambio exitoso o la recuperación confirmada limpian tokens y cache (el backend ya revocó los refresh tokens).
 
 ## Estructura objetivo
 
-- `api/`: login, refresh y logout.
+- `api/`: login, refresh, logout, cambio de contraseña y recuperación (request/confirm).
 - `session/`: context, reducer, bootstrap, acciones de sesión y `useSignOut`.
-- `components/`: formulario, feedback y pantalla de cuenta (`AccountScreen`, `AccountMenuButton`, `AccountHeaderRow`, `AccountSignOutSheet`).
+- `components/`: formulario, feedback y pantalla de cuenta (`AccountScreen`, `AccountMenuButton`, `AccountHeaderRow`, `AccountSignOutSheet`); formularios de contraseña (`RequestPasswordResetForm`, `ResetPasswordForm`, `ChangePasswordForm` y el campo compartido `PasswordField`).
 - `types/`: modelos de vista y aliases derivados de OpenAPI.
-- `utils/`: presentación de roles en español (`roleLabels`); los valores de dominio permanecen en inglés.
+- `utils/`: presentación de roles en español (`roleLabels`), validación pura de contraseñas (`passwordValidation`) y traducción de errores (`passwordErrorMessages`); los valores de dominio permanecen en inglés.
 
 Las rutas de `app/(auth)` se limitan a composición y navegación. La pantalla de cuenta es la superficie donde auth expone identidad y cierre de sesión; se compone desde el tab `more` con un slot `children` opcional para contenido de gestión.
 
@@ -65,10 +73,16 @@ Las rutas de `app/(auth)` se limitan a composición y navegación. La pantalla d
 - Pantalla de cuenta con identidad (correo y roles presentados en español con `roleLabels`) y acción "Cerrar sesión".
 - `AccountSignOutSheet`: confirmación nativa antes de salir (modal con scrim y tokens del sistema), estado de carga que bloquea el cierre y error seguro en español sin exponer tokens ni payloads.
 - `useSignOut` en `session/`: envuelve `SessionProvider.signOut()`, evita doble tap, expone `isSigningOut` y `errorMessage` seguro; el cierre local (Secure Store + cache de TanStack Query) siempre se ejecuta, incluso offline o con refresh inválido, porque `signOut` del provider es best-effort y el cierre local está en su `finally`.
+- `endSession` en `SessionProvider`: cierre local de sesión (Secure Store + cache) con `notice` opcional; se usa tras un cambio de contraseña o recuperación exitosos para volver al login con aviso de éxito sin llamar a logout del backend (ya revocó los refresh tokens).
+- Cambio de contraseña autenticado: ruta `app/(app)/account/change-password` con `AccountHeaderRow` y `fallbackHref='/more'`, entrada "Cambiar contraseña" en `AccountScreen` (visible para los tres roles, acción sobre la propia cuenta) y formulario `ChangePasswordForm` (actual + nueva + confirmación, mínimo 12). `INVALID_CURRENT_PASSWORD` muestra error específico sin cerrar la sesión; el éxito limpia tokens y cache y redirige al login con aviso.
+- Recuperación pública: link "Olvidé mi contraseña" en el login, ruta `app/(auth)/forgot-password` que tras el `202` muestra siempre la misma confirmación genérica (indistinguible para cuentas existentes, inexistentes o inactivas), y ruta `app/(auth)/reset-password` que captura el token del deep link una única vez, lo elimina de la URL/historial y lo conserva solo en memoria hasta confirmar o abandonar. Tokens vencidos, reutilizados o inválidos muestran estados diferenciados con acción para solicitar un enlace nuevo; tras confirmar, vuelve al login con aviso de éxito y no reenvía la mutación al reabrir o retroceder.
+- Validación local de contraseñas en `utils/passwordValidation`: email normalizado, mínimo 12 caracteres y coincidencia de confirmación, antes de enviar.
+- Traducción de errores de contraseña en `utils/passwordErrorMessages`: `INVALID_CURRENT_PASSWORD`, `PASSWORD_RESET_TOKEN_EXPIRED`, `PASSWORD_RESET_TOKEN_ALREADY_USED`, `INVALID_PASSWORD_RESET_TOKEN`, validación `400`, rate limit `429` y fallback seguro en `toApiErrorMessage`; `isPasswordResetTokenError` permite distinguir estados de token en la UI.
 
 ### Deuda conocida
 
 - No existe self-registration público porque el backend no publica ese contrato.
+- E2E de recuperación completa (deep link por scheme de staging → captura y saneamiento → nueva contraseña → login) y de cambio autenticado quedan como verificación manual en dispositivo hasta que staging configure `PASSWORD_RESET_URL` con el deep link del scheme y disponga de un sink/buzón de notificaciones verificable; unit/component tests cubren la lógica mientras tanto.
 - La cache de TanStack Query vive solo en memoria: reabrir la app sin red muestra login (con tokens preservados), no datos. Persistir la cache en frío exigiría guardar datos clínicos en disco sin cifrar; queda como deuda explícita hasta evaluar storage cifrado.
 - El backend no publica `POST /auth/logout` (ver `docs/frontend-login.md` del backend): el cierre de sesión móvil es local (Secure Store + cache) y el refresh token expira por TTL. Por eso hoy "cerrar sesión en un dispositivo no cierra la sesión en otro": cada login crea una familia de refresh tokens independiente y no hay revocación server-side. Cuando el backend implemente logout, deberá revocar solo el token/familia presentada y este AGENTS.md se actualizará.
 - E2E en dispositivo para login, logout, expiración, restauración y offline cubierto con Maestro (`maestro/helpers/login.yaml`, `helpers/logout.yaml`, `session-expired.yaml`, `session-restore.yaml`, `offline.yaml`, `online-restore.yaml` más suites por rol; selectores `login-form`, `login-email`, `login-password`, `login-submit`, `account-logout`, `confirm-dialog`, `dashboard-screen`, `offline-state`, `users-list`). La rotación concurrente y el single-flight se cubren con unit tests del cliente HTTP (`src/core/api/client.test.ts`) y con los E2E de rotación del backend (Testcontainers), porque staging no expone TTL corto ni inyección de tokens vencidos.
