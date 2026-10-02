@@ -42,11 +42,11 @@ cp .env.example .env.production
 
 La app soporta tres ambientes configurables: `development`, `staging` y `production`. Cada ambiente define su propia URL de API, nombre visible, scheme de deep-linking y bundle identifier.
 
-| Ambiente    | Script                      | API URL                                    | Bundle identifier              | Scheme                    | Nombre visible      |
-| ----------- | --------------------------- | ------------------------------------------ | ------------------------------ | ------------------------- | ------------------- |
-| development | `npm run start:development` | `http://localhost:3000/api/v1` (ver nota)  | `app.refugiapp.mobile.dev`     | `refugiappmobile-dev`     | Refugiapp (Dev)     |
-| staging     | `npm run start:staging`     | `https://staging-api.refugiapp.app/api/v1` | `app.refugiapp.mobile.staging` | `refugiappmobile-staging` | Refugiapp (Staging) |
-| production  | `npm run start:production`  | `https://api.refugiapp.app/api/v1`         | `app.refugiapp.mobile`         | `refugiappmobile`         | Refugiapp           |
+| Ambiente    | Script                      | API URL                                   | Bundle identifier              | Scheme                    | Nombre visible      |
+| ----------- | --------------------------- | ----------------------------------------- | ------------------------------ | ------------------------- | ------------------- |
+| development | `npm run start:development` | `http://localhost:3000/api/v1` (ver nota) | `app.refugiapp.mobile.dev`     | `refugiappmobile-dev`     | Refugiapp (Dev)     |
+| staging     | `npm run start:staging`     | Variable EAS `preview` / `.env.staging`   | `app.refugiapp.mobile.staging` | `refugiappmobile-staging` | Refugiapp (Staging) |
+| production  | `npm run start:production`  | `https://api.refugiapp.app/api/v1`        | `app.refugiapp.mobile`         | `refugiappmobile`         | Refugiapp           |
 
 > **Nota sobre development y la URL local:** en `development`, si no se define `EXPO_PUBLIC_API_URL`, la URL se resuelve automaticamente en `src/core/config/env.ts`:
 >
@@ -76,6 +76,8 @@ Los valores se cargan con `dotenv-cli` al arrancar y se inyectan en el bundle me
 \* En `development` puede omitirse (usa el fallback local). En `staging` y `production` es obligatoria.
 
 Las variables se validan al arranque con **zod** en `src/core/config/env.ts`. Un valor invalido detiene la app con un error claro (fail-fast).
+
+Las variables `EXPO_PUBLIC_*` se incluyen en texto plano en el bundle cliente: contienen configuración pública, nunca secretos, tokens ni credenciales. Para builds internos, `EXPO_PUBLIC_ENV` y `EXPO_PUBLIC_API_URL` se administran en el ambiente EAS `preview`; la URL no se fija en el repositorio para evitar publicar un host incorrecto.
 
 ## Arranque
 
@@ -181,6 +183,9 @@ Notas:
 | `npm run ios`               | Arranca en iOS simulator (development)                   |
 | `npm run web`               | Arranca en navegador (development)                       |
 | `npm run api:generate`      | Regenera tipos de auth desde el snapshot OpenAPI         |
+| `npm run release:export`    | Exporta bundles nativos/web para verificar una release   |
+| `npm run release:scan`      | Busca patrones de secretos en `dist/release`             |
+| `npm run release:verify`    | Exporta y escanea el bundle cliente                      |
 | `npm run typecheck`         | `tsc --noEmit` (TypeScript estricto)                     |
 | `npm run lint`              | ESLint con `eslint-config-expo`, sin warnings permitidos |
 | `npm run lint:fix`          | Corrige problemas de lint automaticamente                |
@@ -190,6 +195,29 @@ Notas:
 | `npm run e2e`               | Maestro: todas las suites por rol (staging con seeds)    |
 | `npm run e2e:admin`         | Maestro: flow de `admin`                                 |
 | `npm run e2e:roles`         | Maestro: `admin` + `shelter_manager` + `veterinarian`    |
+
+## Builds internos y publicación
+
+`eas.json` define el perfil `staging` para distribución interna: genera un APK instalable en Android y un build ad hoc para dispositivos iOS registrados. El perfil usa el ambiente EAS `preview`, la variante `staging` y numeración nativa automática remota; `app.json` mantiene la versión visible `1.0.0` y los números nativos iniciales.
+
+La guía operativa completa —alta del proyecto, variables, builds, instalación, versionado, release notes y checklists— está en [`docs/release-runbook.md`](docs/release-runbook.md). Resumen:
+
+```bash
+npx eas-cli@latest login
+npx eas-cli@latest init                         # solo si el proyecto aún no está vinculado
+npx eas-cli@latest env:list --environment preview
+npx eas-cli@latest build --platform android --profile staging
+npx eas-cli@latest device:create                # registrar iPhone/iPad antes del build ad hoc
+npx eas-cli@latest build --platform ios --profile staging
+```
+
+Antes de compilar, el ambiente `preview` debe contener `EXPO_PUBLIC_ENV=staging` y una `EXPO_PUBLIC_API_URL` HTTPS real que termine en `/api/v1`. No usar valores de ejemplo. Ejecutar la verificación local con las mismas variables:
+
+```bash
+npx eas-cli@latest env:exec --environment preview "npm run release:verify"
+```
+
+El checklist de seguridad exige confirmar SecureStore para tokens, ausencia de secretos en el bundle y el estado documentado de certificate pinning. Los builds solo se consideran listos después de instalar y completar el smoke test de la guía en ambos sistemas.
 
 ## Estructura del proyecto
 

@@ -33,6 +33,7 @@ Los detalles visuales viven en `docs/design.md`. Los contratos del servidor y pe
 | Imágenes remotas    | Expo Image                               | Caché memoria/disco y media Cloudinary optimizada (ver ADR-0012)           |
 | Testing             | Jest + React Native Testing Library      | Unit y component tests                                                     |
 | Calidad             | ESLint + Prettier + TypeScript           | Gates locales obligatorios                                                 |
+| Distribución        | EAS Build                                | Builds internos de staging y versionado nativo remoto (ver ADR-0013)       |
 
 ## 3. Principios arquitectónicos
 
@@ -386,6 +387,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Tests unitarios y de componentes.
 - E2E por rol con Maestro (ver ADR-0011): `maestro/` cubre `login → dashboard → detalle de animal → completar tarea` para `admin`, `shelter_manager` y `veterinarian`, alta de animal y registro médico para roles con permiso, negativa clínica de `shelter_manager` (`clinical-denied`), logout más expiración básica (`session-expired`), restauración de sesión tras relaunch (`session-restore`) y offline con recuperación (`offline` + `online-restore`, con corte de red vía adb). Selectores duales `accessibilityLabel` en español más `testID` en inglés (`login-form`, `dashboard-screen`, `animals-list`, `task-list`, `clinical-history`, `confirm-dialog`, `account-logout`, `offline-state`, `users-list`); credenciales solo por entorno y sin binarios en E2E. Scripts `npm run e2e*` y workflow `mobile-e2e.yml` en CI.
 - CI móvil con generación de tipos, formato, lint, typecheck y tests RNTL.
+- Distribución interna declarativa con EAS: perfil `staging` sobre ambiente `preview`, APK Android, ad hoc iOS, identidad separada de producción, versión nativa remota con autoincremento y escaneo del bundle previo a la entrega (ver ADR-0013 y `docs/release-runbook.md`).
 - ESLint, Prettier, typecheck y export web verificados.
 - Jerarquía de documentación y reglas locales por frontera.
 - Compartición en desarrollo con túnel: scripts `start:tunnel` (solo Metro por ngrok), `start:lan` y `start:share` (`scripts/start-dev.mjs` resuelve `EXPO_PUBLIC_API_URL` con prioridad shell > `.env.local` > IP LAN autodetectada e inyecta el resultado; `node scripts/start-dev.mjs --print-api-url` muestra la URL sin arrancar Metro), con `@expo/ngrok` como devDependency. El túnel de Metro no publica la API: cada dispositivo debe alcanzarla por IP LAN o mediante un túnel propio del backend (cloudflared/ngrok), y ese valor sigue validándose en `src/core/config/env.ts`. En Expo Go + `start:share` (bundle por `https`) la API también debe ser `https`: una API `http` LAN se bloquea y el cliente la reporta como `NETWORK_ERROR`.
@@ -402,6 +404,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - `npm run typecheck` no exige `.expo/types`: verificado que compila sin el directorio generado por Expo Router. Si en el futuro el código depende de tipos de ruta generados, agregar el typegen al Mobile CI en ese momento.
 - Configurar en GitHub la protección de `develop`/`master` para exigir el check `Mobile CI / lint, typecheck and tests` antes del merge.
 - Validar el sistema visual y el selector de fecha nativo en dispositivos iOS y Android reales.
+- Ejecutar y registrar los primeros builds EAS de staging en Android/iOS cuando exista una sesión autorizada, el proyecto Expo esté vinculado y la URL real de staging esté configurada; completar luego la evidencia de `docs/releases/1.0.0-staging.md`.
 
 Los pendientes no se consideran implementados hasta que exista código, contrato y tests cuando corresponda.
 

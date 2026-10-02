@@ -18,6 +18,7 @@ Los ADRs registran decisiones técnicas relevantes, su contexto y sus consecuenc
 | [ADR-0010](0010-veterinarian-user-create-user.md)       | Alta conjunta Veterinario-Usuario con `createUser` | Aceptado |
 | [ADR-0011](0011-maestro-e2e-per-role.md)                | E2E móvil por rol con Maestro                      | Aceptado |
 | [ADR-0012](0012-list-and-image-performance.md)          | Virtualización, imágenes y carga diferida          | Aceptado |
+| [ADR-0013](0013-eas-internal-distribution.md)           | Distribución interna EAS y seguridad de release    | Aceptado |
 
 ## Cómo agregar una decisión
 
