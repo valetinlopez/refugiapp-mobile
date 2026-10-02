@@ -17,6 +17,7 @@ import type { LoginRequest, User } from '../types';
 import { initialSessionState, sessionReducer, type SessionState } from './sessionReducer';
 
 type SessionContextValue = SessionState & {
+  endSession(notice?: string | null): Promise<void>;
   signIn(credentials: LoginRequest): Promise<User>;
   signOut(): Promise<void>;
 };
@@ -27,11 +28,14 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient();
   const [state, dispatch] = useReducer(sessionReducer, initialSessionState);
 
-  const clearLocalSession = useCallback(async () => {
-    await tokenStorage.clearTokens();
-    queryClient.clear();
-    dispatch({ type: 'unauthenticated' });
-  }, [queryClient]);
+  const endSession = useCallback(
+    async (notice?: string | null): Promise<void> => {
+      await tokenStorage.clearTokens();
+      queryClient.clear();
+      dispatch({ type: 'unauthenticated', notice: notice ?? null });
+    },
+    [queryClient]
+  );
 
   useEffect(() => {
     return apiClient.setSessionInvalidatedHandler((message) => {
@@ -104,14 +108,15 @@ export function SessionProvider({ children }: PropsWithChildren) {
     } catch {
       // Logout is best-effort; local credentials are always removed below.
     } finally {
-      await clearLocalSession();
+      await endSession();
     }
-  }, [clearLocalSession]);
+  }, [endSession]);
 
   return (
     <SessionContext
       value={{
         ...state,
+        endSession,
         signIn,
         signOut,
       }}

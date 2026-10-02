@@ -125,9 +125,10 @@ Reglas:
 
 ```text
 app/
-  (auth)/                  # Rutas públicas de autenticación
+  (auth)/                  # Rutas públicas de autenticación (login, forgot-password, reset-password)
   (app)/
     (tabs)/                # Área autenticada con navegación inferior
+    account/               # Cambio de contraseña autenticado
   _layout.tsx              # Providers y stack raíz
   design-system.tsx        # Catálogo interno
 src/
@@ -241,7 +242,7 @@ Los access y refresh tokens se almacenan juntos con Expo Secure Store en Android
 
 `src/application/authorization` refleja la matriz `ROLE_CAPABILITIES` del backend y es la única fuente de capacidades visuales. `useCapabilities` conecta esa matriz con la sesión y `useAuthorizedNavigation` filtra destinos que declaran `requiredCapability`. Las rutas y features no comparan nombres de rol directamente; reciben o consultan capacidades. Las cuatro pestañas principales actuales son comunes a todos los roles y permanecen visibles.
 
-El contrato actual del backend implementa login, refresh, logout y `GET /users/me`. No se expone registro público mientras el backend no publique ese endpoint.
+El contrato actual del backend implementa login, refresh, logout, cambio de contraseña autenticado, solicitud de recuperación y confirmación de recuperación, además de `GET /users/me`. No se expone registro público mientras el backend no publique ese endpoint.
 
 El flujo implementado de sesión es:
 
@@ -253,6 +254,12 @@ inicio
   -> área autenticada o login
   -> ante logout o refresh inválido, limpiar tokens y cache sensible
 ```
+
+Cambio y recuperación de contraseña:
+
+- Cambio autenticado desde "Más > Cuenta > Cambiar contraseña" (`POST /auth/change-password`): valida contraseña actual, nueva (≥ 12) y confirmación local. `INVALID_CURRENT_PASSWORD` muestra error sin cerrar la sesión; el éxito limpia tokens y cache (el backend revocó los refresh tokens) y redirige al login con aviso mediante `endSession`.
+- Recuperación desde el login: `app/(auth)/forgot-password` solicita por email y muestra siempre la misma confirmación genérica tras el `202` (indistinguible para cuentas existentes, inexistentes o inactivas).
+- `app/(auth)/reset-password` recibe el deep link `scheme://reset-password?token=...`, captura el token una única vez, lo elimina de la URL/historial/navegación y lo conserva solo en memoria. Tokens vencidos, reutilizados o inválidos muestran estados diferenciados con acción para solicitar un enlace nuevo; la confirmación exitosa vuelve al login con aviso. El token nunca se persiste ni se expone en query keys, logs o mensajes.
 
 ## 10. Dominios y permisos relevantes
 
@@ -350,6 +357,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Header de retorno persistente (`AppHeaderBack` en `src/components/navigation`) con `navigateBack` como fuente única de `canGoBack ? back : replace(fallback contextual)`, integrado en detalle, alta y edición de animales, eventos generales, registros médicos, tareas y gastos; elimina la lógica `goBack` duplicada por pantalla y hace predecible la navegación ante deep links sin historial.
 - Acceso de cuenta y cierre de sesión desde toda el área autenticada: tab "Más" (`app/(app)/(tabs)/more.tsx` con `AccountScreen`) con identidad por rol, sección "Gestión" y salida con confirmación; `AccountMenuButton` (44 × 44, label accesible "Abrir menú de cuenta") en Inicio y en la fila de retorno de las pantallas stack (`AccountHeaderRow` = `AppHeaderBack` + botón, en `src/features/auth/components`). El cierre usa `SessionProvider.signOut()` (POST `/auth/logout` best-effort) y `useSignOut` (`src/features/auth/session`), con `AccountSignOutSheet` como confirmación nativa con carga y error seguro: siempre se limpia Secure Store y la cache de TanStack Query, incluso offline o con refresh inválido, y `Stack.Protected` redirige a login sin dejar rutas `(app)` accesibles.
 - Tab "Más" (`more.tsx`) compone `AccountScreen` con un slot de contenido (`children`) que la feature `veterinarians` llena con `ManagementSection`. La pantalla mantiene una jerarquía explícita `Gestión > Cuenta > Salida`: la sección "Gestión" agrupa entradas de administración como cards `outlined` unificadas (icono + título + descripción, diferenciadas por icono y texto, nunca por color aislado) —"Veterinarios" para los tres roles, "Usuarios" solo con `canManageUsers` y "Ver auditoría" solo con `canReadAudit`— y la sección "Cuenta" agrupa identidad y cierre de sesión. La ruta legacy `/account` dejó de existir; los atajos de cuenta navegan a `/more`.
+- Cambio y recuperación segura de contraseña (RFG-121): snapshot OpenAPI móvil ampliado con `ChangePasswordDto`, `RequestPasswordResetDto`, `PasswordResetRequestedDto` y `ConfirmPasswordResetDto`; operaciones tipadas en `authApi` (`changePassword`, `requestPasswordReset`, `confirmPasswordReset`). Cambio autenticado en `app/(app)/account/change-password.tsx` (entrada en `AccountScreen`, `AccountHeaderRow` con `fallbackHref='/more'`): actual + nueva (≥ 12) + confirmación local, `INVALID_CURRENT_PASSWORD` sin cerrar sesión y éxito con limpieza de Secure Store/cache vía `endSession` que redirige al login con aviso. Recuperación pública desde el login (`app/(auth)/forgot-password.tsx`) con confirmación genérica idéntica tras el `202` y `app/(auth)/reset-password.tsx` que captura el token del deep link una única vez, lo elimina de URL/historial y lo conserva solo en memoria; tokens vencidos/reutilizados/inválidos muestran estados diferenciados con acción para solicitar un enlace nuevo. Validación pura en `src/features/auth/utils/passwordValidation` y traducción de códigos en `passwordErrorMessages` (`INVALID_CURRENT_PASSWORD`, `PASSWORD_RESET_TOKEN_EXPIRED`, `PASSWORD_RESET_TOKEN_ALREADY_USED`, `INVALID_PASSWORD_RESET_TOKEN`, 400, 429 y fallback seguro); `jest.config.js` agrega `standard-navigation` al transform de expo-router para tests.
 - Gestión de veterinarios: feature `src/features/veterinarians` con contrato derivado de OpenAPI (`CreateVeterinarianDto`, `CreateVeterinarianUserDto`, `UpdateVeterinarianDto`, `VeterinarianResponseDto`), listado paginado con búsqueda por nombre y filtro por estado (`GET /veterinarians`), detalle (`GET /veterinarians/:id`), alta (`POST /veterinarians`) que soporta creación y vinculación atómica de usuario con rol `veterinarian` mediante `createUser` (email + contraseña ≥ 12; sin UUID manual, ver ADR-0010), edición con PATCH diferencial que envía `null` para limpiar `email`/`phone`/`notes` (`PATCH /veterinarians/:id`) y desactivación lógica con `ConfirmDialog` (`POST /veterinarians/:id/deactivate`) que conserva el historial clínico. Escritura para `admin`/`shelter_manager` (`canManageVets`); lectura para los tres roles. El detalle y el listado presentan el vínculo desde `user.email` y rol (nunca UUID). La reactivación queda deshabilitada con hint accesible porque el backend no expone `activate`. Errores traducidos por código (`LICENSE_NUMBER_ALREADY_EXISTS`, `EMAIL_ALREADY_EXISTS`, `USER_ALREADY_LINKED_TO_VETERINARIAN`, `VET_USER_PAYLOAD_CONFLICT`, `VET_CREATE_USER_EMAIL_REQUIRED`), 403/404 por estado y fallback genérico en `toApiErrorMessage`. Las mutations invalidan `veterinarianKeys.all` por prefijo, refrescando también las opciones activas del formulario clínico (`['veterinarians', 'options']`). Rutas `app/(app)/veterinarians/index.tsx`, `new.tsx`, `[id].tsx` y `[id]/edit.tsx`.
 - Gestión de usuarios para `admin`: acceso desde el dashboard, rutas `app/(app)/users/index.tsx` y `app/(app)/users/new.tsx`, listado paginado mediante `GET /users` que incluye cuentas activas e inactivas en orden determinista, alta con email normalizado, nombre, apellido, password inicial y rol, confirmación para activar o desactivar, traducción segura de 403/404/409 e invalidación de la lista tras cada mutación.
 - TanStack Query conectado a NetInfo y AppState.

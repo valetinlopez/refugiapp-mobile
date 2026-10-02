@@ -79,6 +79,18 @@ Las variables se validan al arranque con **zod** en `src/core/config/env.ts`. Un
 
 Las variables `EXPO_PUBLIC_*` se incluyen en texto plano en el bundle cliente: contienen configuración pública, nunca secretos, tokens ni credenciales. Para builds internos, `EXPO_PUBLIC_ENV` y `EXPO_PUBLIC_API_URL` se administran en el ambiente EAS `preview`; la URL no se fija en el repositorio para evitar publicar un host incorrecto.
 
+### Recuperación de contraseña (deep link)
+
+El email de recuperación lo genera el backend con un `PASSWORD_RESET_URL` configurado por ambiente. Ese valor debe ser el **scheme de la app** seguido de `reset-password` (la app agrega el parámetro `token` al abrirlo):
+
+| Ambiente    | `PASSWORD_RESET_URL`                       |
+| ----------- | ------------------------------------------ |
+| development | `refugiappmobile-dev://reset-password`     |
+| staging     | `refugiappmobile-staging://reset-password` |
+| production  | `refugiappmobile://reset-password`         |
+
+La ruta `reset-password` captura el token del deep link una única vez, lo elimina de la URL/historial y lo conserva solo en memoria hasta confirmar o abandonar el flujo; nunca se persiste ni se registra. La verificación manual de este flujo exige un sink/buzón de notificaciones en staging y que el backend publique `PASSWORD_RESET_URL` con el scheme correspondiente.
+
 ## Arranque
 
 ```bash

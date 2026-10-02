@@ -48,4 +48,62 @@ describe('authApi', () => {
       { auth: false, retry: 0 }
     );
   });
+
+  it('changes the authenticated user password without retrying', async () => {
+    const post = jest.spyOn(apiClient, 'post').mockResolvedValue({
+      data: undefined,
+      headers: { get: () => null },
+      requestId: 'request-id',
+      status: 204,
+    });
+
+    await authApi.changePassword({
+      currentPassword: 'old-password',
+      newPassword: 'new-password',
+    });
+
+    expect(post).toHaveBeenCalledWith(
+      '/auth/change-password',
+      { currentPassword: 'old-password', newPassword: 'new-password' },
+      { retry: 0 }
+    );
+  });
+
+  it('requests password recovery with a public request and returns the generic message', async () => {
+    const post = jest.spyOn(apiClient, 'post').mockResolvedValue({
+      data: { message: 'If an active account exists, recovery instructions will be sent.' },
+      headers: { get: () => null },
+      requestId: 'request-id',
+      status: 202,
+    });
+
+    await expect(authApi.requestPasswordReset({ email: 'user@refugiapp.local' })).resolves.toEqual({
+      message: 'If an active account exists, recovery instructions will be sent.',
+    });
+    expect(post).toHaveBeenCalledWith(
+      '/auth/password-recovery/request',
+      { email: 'user@refugiapp.local' },
+      { auth: false, retry: 0 }
+    );
+  });
+
+  it('confirms password recovery with the single-use token and the new password', async () => {
+    const post = jest.spyOn(apiClient, 'post').mockResolvedValue({
+      data: undefined,
+      headers: { get: () => null },
+      requestId: 'request-id',
+      status: 204,
+    });
+
+    await authApi.confirmPasswordReset({
+      token: 'raw-single-use-token',
+      newPassword: 'new-password',
+    });
+
+    expect(post).toHaveBeenCalledWith(
+      '/auth/password-recovery/confirm',
+      { token: 'raw-single-use-token', newPassword: 'new-password' },
+      { auth: false, retry: 0 }
+    );
+  });
 });

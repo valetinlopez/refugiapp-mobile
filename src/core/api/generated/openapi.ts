@@ -354,5 +354,19 @@ export interface components {
       path: string;
       requestId?: string;
     };
+    ChangePasswordDto: {
+      currentPassword: string;
+      newPassword: string;
+    };
+    RequestPasswordResetDto: {
+      email: string;
+    };
+    PasswordResetRequestedDto: {
+      message: string;
+    };
+    ConfirmPasswordResetDto: {
+      token: string;
+      newPassword: string;
+    };
   };
 }

@@ -1,3 +1,4 @@
+import { router, type Href } from 'expo-router';
 import { useCallback, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -79,6 +80,13 @@ export function AccountScreen({
             </View>
           </AppCard>
 
+          <AppButton
+            icon="account"
+            label="Cambiar contraseña"
+            onPress={() => router.push('/account/change-password' as Href)}
+            testID="account-change-password"
+            variant="secondary"
+          />
           <AppButton
             icon="logout"
             label="Cerrar sesión"

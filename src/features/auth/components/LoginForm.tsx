@@ -1,3 +1,4 @@
+import { router, type Href } from 'expo-router';
 import { useRef, useState } from 'react';
 import { StyleSheet, TextInput, View, type TextInput as TextInputType } from 'react-native';
 
@@ -87,6 +88,13 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
         loading={isSubmitting}
         onPress={() => void handleSubmit()}
         testID="login-submit"
+      />
+      <AppButton
+        accessibilityHint="Abrir recuperación de contraseña"
+        label="Olvidé mi contraseña"
+        onPress={() => router.push('/forgot-password' as Href)}
+        testID="login-forgot-password"
+        variant="ghost"
       />
     </View>
   );
