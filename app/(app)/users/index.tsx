@@ -1,12 +1,17 @@
+import { lazy, Suspense } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { EmptyState } from '@/components/feedback';
+import { EmptyState, LoadingState } from '@/components/feedback';
 import { navigateBack } from '@/components/navigation';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
-import { UsersScreen } from '@/features/users/components/UsersScreen';
 import { colors, spacing } from '@/theme';
+
+const UsersScreen = lazy(async () => {
+  const module = await import('@/features/users/components/UsersScreen');
+  return { default: module.UsersScreen };
+});
 
 export default function UsersRoute() {
   const { canManageUsers } = useCapabilities();
@@ -15,7 +20,9 @@ export default function UsersRoute() {
     <SafeAreaView style={styles.safeArea}>
       <AccountHeaderRow accessibilityHint="Volver al inicio" fallbackHref="/" />
       {canManageUsers ? (
-        <UsersScreen />
+        <Suspense fallback={<LoadingState label="Cargando módulo de usuarios" />}>
+          <UsersScreen />
+        </Suspense>
       ) : (
         <View style={styles.centered}>
           <EmptyState

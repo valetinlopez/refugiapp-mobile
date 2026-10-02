@@ -1,16 +1,21 @@
 import { router, type Href } from 'expo-router';
+import { lazy, Suspense } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { EmptyState } from '@/components/feedback';
+import { EmptyState, LoadingState } from '@/components/feedback';
 import { navigateBack } from '@/components/navigation';
 import { AppText } from '@/components/primitives';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
-import { UserForm } from '@/features/users/components/UserForm';
 import { useCreateUser } from '@/features/users/hooks/useUserMutations';
 import { toUserErrorMessage } from '@/features/users/utils/userPresentation';
 import { colors, spacing } from '@/theme';
+
+const UserForm = lazy(async () => {
+  const module = await import('@/features/users/components/UserForm');
+  return { default: module.UserForm };
+});
 
 export default function NewUserRoute() {
   const { canManageUsers } = useCapabilities();
@@ -41,22 +46,24 @@ export default function NewUserRoute() {
         <AppText color="textSecondary">
           La contraseña inicial se envía de forma segura y no vuelve a mostrarse.
         </AppText>
-        <UserForm
-          errorMessage={createUser.error ? toUserErrorMessage(createUser.error) : null}
-          isSubmitting={createUser.isPending}
-          onSubmit={(values) =>
-            createUser.mutate(
-              {
-                email: values.email,
-                firstName: values.firstName,
-                lastName: values.lastName,
-                password: values.password,
-                roles: [values.role],
-              },
-              { onSuccess: () => router.replace(usersHref) }
-            )
-          }
-        />
+        <Suspense fallback={<LoadingState label="Cargando formulario de usuario" />}>
+          <UserForm
+            errorMessage={createUser.error ? toUserErrorMessage(createUser.error) : null}
+            isSubmitting={createUser.isPending}
+            onSubmit={(values) =>
+              createUser.mutate(
+                {
+                  email: values.email,
+                  firstName: values.firstName,
+                  lastName: values.lastName,
+                  password: values.password,
+                  roles: [values.role],
+                },
+                { onSuccess: () => router.replace(usersHref) }
+              )
+            }
+          />
+        </Suspense>
       </ScrollView>
     </SafeAreaView>
   );

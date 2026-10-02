@@ -9,3 +9,5 @@ export {
 } from './fileValidation';
 export type { MediaFile, MediaFileValidationError } from './fileValidation';
 export { UploadCancelledError } from './fileValidation';
+export { optimizeCloudinaryImageUrl } from './cloudinaryImage';
+export type { CloudinaryImageOptions } from './cloudinaryImage';

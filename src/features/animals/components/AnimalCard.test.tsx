@@ -49,6 +49,18 @@ describe('AnimalCard', () => {
     expect(onPress).toHaveBeenCalledWith(createAnimal());
   });
 
+  it('does not render the item again when its stable list props do not change', async () => {
+    const animal = createAnimal();
+    const onPress = jest.fn();
+    const screen = await render(<AnimalCard animal={animal} onPress={onPress} />);
+
+    expect(mockUseAnimalPhoto).toHaveBeenCalledTimes(1);
+
+    await screen.rerender(<AnimalCard animal={animal} onPress={onPress} />);
+
+    expect(mockUseAnimalPhoto).toHaveBeenCalledTimes(1);
+  });
+
   it('shows the status badge with a textual label', async () => {
     const screen = await render(<AnimalCard animal={createAnimal()} onPress={() => undefined} />);
 

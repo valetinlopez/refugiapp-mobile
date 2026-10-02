@@ -30,6 +30,7 @@ Los detalles visuales viven en `docs/design.md`. Los contratos del servidor y pe
 | Formularios         | React Hook Form + Zod                    | Validación en español con esquemas puros testeables                        |
 | Selector de fecha   | `@react-native-community/datetimepicker` | Patrón compartido para animales, tareas y registros médicos (ver ADR-0004) |
 | Selección de media  | Expo ImagePicker + DocumentPicker        | Cámara, galería e importación de PDF (ver ADR-0005)                        |
+| Imágenes remotas    | Expo Image                               | Caché memoria/disco y media Cloudinary optimizada (ver ADR-0012)           |
 | Testing             | Jest + React Native Testing Library      | Unit y component tests                                                     |
 | Calidad             | ESLint + Prettier + TypeScript           | Gates locales obligatorios                                                 |
 
@@ -176,6 +177,7 @@ Expo Router es la fuente de verdad de navegación:
 - `Stack.Protected` expone `(auth)` solo sin sesión y `(app)` solo con una sesión validada.
 - Las pantallas stack del área autenticada usan `headerShown: false` y componen `AppHeaderBack` como retorno persistente con un `fallbackHref` contextual; `navigateBack` centraliza `canGoBack ? back : replace`.
 - El splash permanece visible hasta resolver fuentes y restauración de sesión, evitando mostrar una ruta incorrecta durante el bootstrap.
+- Las pantallas pesadas exclusivas de administración (`users`) y auditoría cargan sus componentes principales con `React.lazy` y un fallback accesible. No se activa `asyncRoutes` global en Expo Router SDK 57 porque no ofrece code-splitting native de producción; el límite queda documentado en ADR-0012.
 
 ## 7. Integración con la API
 
@@ -214,6 +216,7 @@ La infraestructura debe normalizar errores técnicos a una forma segura. Las fea
 
 - TanStack Query es responsable de cache, deduplicación, reintentos controlados e invalidaciones de datos remotos.
 - Las queries reintentan una vez; las mutations no se reintentan automáticamente.
+- Los listados operativos extensos usan `FlatList` con ventana y lotes acotados, keys UUID estables, callbacks estables y filas memoizadas; no renderizan colecciones paginadas con `map` dentro de un `ScrollView`.
 - `NetInfo` alimenta `onlineManager` y `AppState` alimenta `focusManager`, habilitando refetch al reconectar o volver al foreground.
 - Sin red, las pantallas distinguen fallo de transporte (`OfflineState` con reintento, vía `isNetworkError`) de error del servidor (`ErrorState`); la cache en memoria sigue visible durante la sesión.
 - Los reintentos de escritura viven en `src/core/network` (`MutationRetryQueue`: FIFO acotada, backoff exponencial con jitter, dedupe por clave, solo mutaciones `safeToRetry`; sin timers, el reintento lo dispara la reconexión o un reintento manual).

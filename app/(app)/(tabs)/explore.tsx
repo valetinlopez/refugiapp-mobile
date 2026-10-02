@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { virtualizedListPerformanceProps } from '@/components/performance';
 import { FilterChip } from '@/components/patterns';
 import { AppButton, AppText } from '@/components/primitives';
 import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
@@ -47,7 +48,10 @@ export default function AnimalsScreen() {
   );
   const animalsQuery = useAnimals(filters);
 
-  const animals = animalsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const animals = useMemo(
+    () => animalsQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    [animalsQuery.data]
+  );
 
   const handleAnimalPress = useCallback((animal: Animal) => {
     router.push({ pathname: '/animals/[id]', params: { id: animal.id } });
@@ -141,6 +145,7 @@ export default function AnimalsScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <FlatList
+        {...virtualizedListPerformanceProps}
         contentContainerStyle={styles.list}
         data={animals}
         keyExtractor={(animal) => animal.id}

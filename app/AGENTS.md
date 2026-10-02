@@ -15,6 +15,7 @@
 - Las pantallas stack del área autenticada exponen el acceso de cuenta componiendo `AccountHeaderRow` (fila de retorno `AppHeaderBack` + botón de cuenta) de la feature auth, en lugar de `AppHeaderBack` directo. La ruta de cuenta vive en el tab `more`; los atajos navegan con `router.push('/more')`.
 - Usar route groups para organización sin convertirlos en segmentos públicos.
 - Declarar providers globales solo en el layout raíz; providers de una feature deben vivir lo más cerca posible de su subárbol.
+- Las pantallas pesadas exclusivas de administración y auditoría cargan el componente de feature con `React.lazy` + `Suspense`; el fallback usa `LoadingState` con una etiqueta accesible y el import dinámico queda detrás del guard visual de capacidad.
 
 ## Estructura actual
 

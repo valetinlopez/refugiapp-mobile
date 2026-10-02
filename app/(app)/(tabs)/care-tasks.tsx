@@ -4,6 +4,7 @@ import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
+import { virtualizedListPerformanceProps } from '@/components/performance';
 import { FilterChip } from '@/components/patterns';
 import { AppButton, AppText } from '@/components/primitives';
 import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
@@ -156,6 +157,7 @@ export default function CareTasksScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <FlatList
+        {...virtualizedListPerformanceProps}
         contentContainerStyle={styles.list}
         data={tasksQuery.data.items}
         keyExtractor={(task) => task.id}
