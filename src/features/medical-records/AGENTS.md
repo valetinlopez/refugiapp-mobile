@@ -19,6 +19,7 @@
 - `POST /media/upload` con `ownerType=medical_record` + `ownerId`: adjunto clínico vinculado directo (para edición).
 - `GET /media?ownerType=medical_record&ownerId=:id`: listado de adjuntos de un registro.
 - `DELETE /media/:id`: baja de un adjunto.
+- `GET /medical-records/:id/changes`: historial de cambios paginado con `page`, `limit`, `changeType` (`update | soft_delete | restore`), `changedByUserId` (UUID), `from` y `to`; orden determinista `changedAt DESC, id DESC` sin reordenar en cliente. Cada ítem expone `changeType`, `changedFields`, `previousValues` (valores anteriores por campo) y `changedAt`. El contrato serializa `changedByUserId` como `object | null` aunque en runtime sea `string | null`; el mapper lo normaliza. `from > to` responde 400 con `INVALID_DATE_RANGE`. El historial permanece legible para registros soft-deleted.
 - `GET /veterinarians`: opciones de veterinario (solo activos para el selector). En create/edit el form no se bloquea por esta query: si falla o vuelve vacía se muestra un estado recuperable con reintento y se permite guardar sin veterinario.
 - `recordType` válido: `consultation | vaccination | deworming | surgery | lab_result | treatment | other`.
 - Ventana de `occurredAt`: `intakeDate <= occurredAt <= now + 60 s`. El límite inferior se calcula como inicio de día local del `intakeDate`; el límite superior del picker usa la misma tolerancia de skew de reloj.
@@ -33,22 +34,24 @@
 
 ## Estructura
 
-- `api/`: `medicalRecordsApi`, `clinicalAttachmentsApi` (upload/lista/borrado) y `veterinarianOptionsApi`.
-- `components/`: `MedicalRecordForm` (modos create/edit), `ClinicalAttachmentPicker` y `ClinicalHistory`.
-- `hooks/`: keys, queries, mutations e invalidaciones de la evolución clínica.
-- `utils/`: esquemas Zod, mapper de diff PATCH, presentación y errores.
+- `api/`: `medicalRecordsApi`, `medicalRecordChangesApi` (historial de cambios), `clinicalAttachmentsApi` (upload/lista/borrado) y `veterinarianOptionsApi`.
+- `components/`: `MedicalRecordForm` (modos create/edit), `ClinicalAttachmentPicker`, `ClinicalHistory`, `MedicalRecordChangeCard` y `MedicalRecordChangesScreen`.
+- `hooks/`: keys, queries, mutations e invalidaciones de la evolución clínica; `useMedicalRecordChanges` con paginación infinita.
+- `utils/`: esquemas Zod, mapper de diff PATCH, presentación (incluida `medicalRecordChangePresentation` para labels, valores y filtros del historial) y errores.
 - `types.ts`: modelos de vista y aliases del contrato generado.
 
 ## Seguridad y privacidad
 
 - Nunca registrar payloads clínicos, tokens ni datos personales del veterinario en logs o errores visibles.
+- Los valores anteriores del historial (`previousValues`) se formatean de forma defensiva: nulos, textos largos y estructuras no rompen el layout ni se filtran en errores.
 - La cache de registros clínicos se limpia junto con el resto de TanStack Query al cerrar sesión.
 
 ## Testing
 
 - Unit tests para validación y diff PATCH (omit vs null, trim a null).
 - Unit tests para la ventana de `occurredAt`: inicio de día local, offsets de zona horaria y tolerancia futura.
-- Component tests RNTL para crear, editar, adjuntos, estados de veterinarios y error 403.
+- Unit tests del historial: paginación (`getNextPageParam` sin duplicados ni saltos), orden del servidor preservado, formateo seguro de valores (nulos, extensos, estructurados), labels de campos, filtros y rango inválido.
+- Component tests RNTL para crear, editar, adjuntos, estados de veterinarios, error 403, historial (carga, vacío, error, reintento, filtros) y accesibilidad.
 - Hook tests para invalidación de la evolución clínica tras mutación.
 
 ## Estado
@@ -69,10 +72,12 @@
 - El listado renderiza el orden del servidor (`occurredAt DESC, id DESC`) sin reordenar en cliente.
 - Invalidación de `medicalRecordKeys.listByAnimal(animalId)` tras crear o editar.
 - Guards visuales para `admin` y `veterinarian`: un deep link `tab=clinical` para `shelter_manager` muestra acceso restringido sin montar `ClinicalHistory` ni ejecutar la query clínica.
+- Historial de cambios de un registro médico (RFG-124, contrato RFG-96): ruta `app/(app)/animals/[id]/medical-records/[recordId]/changes.tsx` accesible desde el botón "Ver historial" de cada tarjeta en `ClinicalHistory`, restringida por `canReadClinicalRecords` (un deep link para `shelter_manager` muestra acceso restringido sin montar la pantalla ni ejecutar la query). La pantalla consume `GET /medical-records/:id/changes` con `useInfiniteQuery` (páginas de 20, orden determinista del servidor, fin de paginación, pull-to-refresh y estados loading/empty/error/offline con reintento). Filtros completos: tipo de operación (chips), actor por UUID (`isUuid` valida; un valor no UUID se descarta) y rango de fechas con `DateTimeField` (rango incompleto o `from > to` no dispara query y muestra mensaje en español). Cada tarjeta presenta operación, fecha/hora, actor (UUID o "Usuario del sistema") y las diferencias campo por campo con `previousValues` formateado de forma segura.
 - Los datos clínicos solo viven en la cache en memoria de TanStack Query (sin persistencia a disco); se limpian al cerrar sesión.
 
 ### Pendiente o deuda conocida
 
 - `occurredAt` se captura con `@react-native-community/datetimepicker`; falta validar el selector en dispositivos iOS/Android reales.
 - La evolución clínica se presenta con una página de 20 ítems; no hay paginación UI visible.
+- El historial de cambios expone `changedByUserId` (UUID), no el nombre del actor; se presenta el identificador disponible hasta que el backend lo amplíe.
 - E2E de creación clínica y negativa por rol cubierto con Maestro (`maestro/admin.yaml`, `veterinarian.yaml`, `clinical-denied.yaml`; selector `clinical-history`; `shelter_manager` nunca monta la query clínica).

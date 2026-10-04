@@ -21,9 +21,10 @@ import { MEDICAL_RECORD_TYPE_VALUES } from '../utils/medicalRecordSchema';
 export interface ClinicalHistoryProps {
   animalId: string;
   onEditRecord?(recordId: string): void;
+  onViewChanges?(recordId: string): void;
 }
 
-export function ClinicalHistory({ animalId, onEditRecord }: ClinicalHistoryProps) {
+export function ClinicalHistory({ animalId, onEditRecord, onViewChanges }: ClinicalHistoryProps) {
   const [recordType, setRecordType] = useState<MedicalRecordType | undefined>();
   const [range, setRange] = useState<ClinicalRangeMode>('all');
   const [from, setFrom] = useState('');
@@ -194,6 +195,18 @@ export function ClinicalHistory({ animalId, onEditRecord }: ClinicalHistoryProps
             <TextSection label="Tratamiento" value={record.treatment} />
           ) : null}
           {record.notes !== null ? <TextSection label="Notas" value={record.notes} /> : null}
+          {onViewChanges ? (
+            <Pressable
+              accessibilityLabel={`Ver historial de cambios de ${record.title}`}
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => onViewChanges(record.id)}
+              style={styles.history}
+            >
+              <AppIcon color="textSecondary" name="clock" size={sizes.iconSm} />
+              <AppText variant="button">Ver historial</AppText>
+            </Pressable>
+          ) : null}
         </AppCard>
       ))}
     </View>
@@ -228,6 +241,13 @@ const styles = StyleSheet.create({
   },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   filters: { gap: spacing.xs },
+  history: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
+    minHeight: sizes.touchTarget,
+    minWidth: sizes.touchTarget,
+  },
   list: { gap: spacing.sm },
   rangeField: { gap: spacing.xs },
   rangeFields: { gap: spacing.xs, marginTop: spacing.xs },

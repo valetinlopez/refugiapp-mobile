@@ -220,6 +220,21 @@ export interface components {
       limit: number;
       total: number;
     };
+    MedicalRecordChangeResponseDto: {
+      id: string;
+      medicalRecordId: string;
+      changedByUserId?: string | null;
+      changeType: 'update' | 'soft_delete' | 'restore';
+      changedFields: string[];
+      previousValues: Record<string, unknown>;
+      changedAt: string;
+    };
+    PaginatedMedicalRecordChangesResponseDto: {
+      items: components['schemas']['MedicalRecordChangeResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
     CreateVeterinarianUserDto: {
       email?: string;
       password: string;

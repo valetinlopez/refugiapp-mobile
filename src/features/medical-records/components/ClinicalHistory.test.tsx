@@ -198,4 +198,17 @@ describe('ClinicalHistory', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Editar Vacuna antirrábica' }));
     expect(onEditRecord).toHaveBeenCalledWith('0e2a3b4c-5d6e-4f80-9a10-b11c12d13e14');
   });
+
+  it('invokes the history callback with the record id', async () => {
+    const onViewChanges = jest.fn();
+    mockUseMedicalRecordsByAnimal.mockReturnValue(createQueryResult());
+    const screen = await render(
+      <ClinicalHistory animalId={ANIMAL_ID} onViewChanges={onViewChanges} />
+    );
+
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Ver historial de cambios de Vacuna antirrábica' })
+    );
+    expect(onViewChanges).toHaveBeenCalledWith('0e2a3b4c-5d6e-4f80-9a10-b11c12d13e14');
+  });
 });
