@@ -261,6 +261,12 @@ function AnimalDetailContent({
                 params: { id: animal.id, recordId },
               })
             }
+            onViewChanges={(recordId) =>
+              router.push({
+                pathname: '/animals/[id]/medical-records/[recordId]/changes',
+                params: { id: animal.id, recordId },
+              })
+            }
           />
         </View>
       ) : null}

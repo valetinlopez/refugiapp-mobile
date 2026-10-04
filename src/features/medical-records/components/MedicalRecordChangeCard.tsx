@@ -1,0 +1,94 @@
+import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import { AppBadge, AppCard, AppDivider, AppText } from '@/components/primitives';
+import { spacing } from '@/theme';
+
+import type { MedicalRecordChange } from '../types';
+import {
+  changeFieldsSummary,
+  formatChangeDate,
+  formatChangeValue,
+  getChangeFieldLabel,
+  getChangeTypeLabel,
+  getChangeTypeTone,
+} from '../utils/medicalRecordChangePresentation';
+
+export const MedicalRecordChangeCard = memo(function MedicalRecordChangeCard({
+  change,
+}: {
+  change: MedicalRecordChange;
+}) {
+  const actorLabel = change.changedByUserId ?? 'Usuario del sistema';
+  const badgeLabel = getChangeTypeLabel(change.changeType);
+  const summary = changeFieldsSummary(change);
+
+  return (
+    <AppCard
+      accessibilityLabel={`${badgeLabel}. ${summary}. ${formatChangeDate(change.changedAt)}`}
+      style={styles.card}
+      testID="medical-record-change-card"
+      variant="outlined"
+    >
+      <View style={styles.heading}>
+        <AppBadge
+          icon={change.changeType === 'soft_delete' ? 'close' : 'refresh'}
+          label={badgeLabel}
+          tone={getChangeTypeTone(change.changeType)}
+        />
+        <AppText color="textSecondary" style={styles.meta} variant="label">
+          {formatChangeDate(change.changedAt)}
+        </AppText>
+      </View>
+      <View style={styles.actorRow}>
+        <AppText color="textSecondary" variant="label">
+          Quién
+        </AppText>
+        <AppText style={styles.actorValue}>{actorLabel}</AppText>
+      </View>
+      <AppText color="textSecondary" style={styles.summary} variant="label">
+        {summary}
+      </AppText>
+      {change.changedFields.length > 0 ? (
+        <>
+          <AppDivider />
+          <View style={styles.fields}>
+            {change.changedFields.map((field) => (
+              <View key={field} style={styles.fieldRow}>
+                <AppText color="textSecondary" style={styles.fieldLabel} variant="label">
+                  {getChangeFieldLabel(field)}
+                </AppText>
+                <AppText style={styles.fieldValue}>
+                  {formatChangeValue(change.previousValues[field])}
+                </AppText>
+              </View>
+            ))}
+          </View>
+        </>
+      ) : null}
+    </AppCard>
+  );
+});
+
+const styles = StyleSheet.create({
+  actorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  actorValue: { flexShrink: 1 },
+  card: { gap: spacing.sm },
+  fieldLabel: { flexShrink: 0 },
+  fieldRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'space-between',
+  },
+  fieldValue: { flexShrink: 1, textAlign: 'right' },
+  fields: { gap: spacing.xs },
+  heading: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+    justifyContent: 'space-between',
+  },
+  meta: { flexShrink: 1, textAlign: 'right' },
+  summary: { flexShrink: 1 },
+});

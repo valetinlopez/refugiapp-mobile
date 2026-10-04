@@ -1563,6 +1563,82 @@
         }
       }
     },
+    "/medical-records/{id}/changes": {
+      "get": {
+        "operationId": "listMedicalRecordChanges",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 }
+          },
+          {
+            "name": "changeType",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["update", "soft_delete", "restore"] }
+          },
+          {
+            "name": "changedByUserId",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated change history for the medical record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedMedicalRecordChangesResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested medical record was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/animals/{animalId}/medical-records": {
       "get": {
         "operationId": "listAnimalMedicalRecords",
@@ -2098,6 +2174,46 @@
           "items": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/MedicalRecordResponseDto" }
+          },
+          "page": { "type": "number" },
+          "limit": { "type": "number" },
+          "total": { "type": "number" }
+        }
+      },
+      "MedicalRecordChangeResponseDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "medicalRecordId",
+          "changeType",
+          "changedFields",
+          "previousValues",
+          "changedAt"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "medicalRecordId": { "type": "string", "format": "uuid" },
+          "changedByUserId": { "type": "string", "format": "uuid", "nullable": true },
+          "changeType": { "type": "string", "enum": ["update", "soft_delete", "restore"] },
+          "changedFields": {
+            "type": "array",
+            "description": "Names of the fields that changed, derived from previousValues.",
+            "items": { "type": "string" }
+          },
+          "previousValues": {
+            "type": "object",
+            "description": "Previous values of the changed fields. For update, only the fields that changed. For soft_delete, a snapshot of all clinical fields. For restore, the deletedAt that was cleared."
+          },
+          "changedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedMedicalRecordChangesResponseDto": {
+        "type": "object",
+        "required": ["items", "page", "limit", "total"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MedicalRecordChangeResponseDto" }
           },
           "page": { "type": "number" },
           "limit": { "type": "number" },

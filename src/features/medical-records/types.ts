@@ -17,6 +17,10 @@ export type PaginatedVeterinariansResponse =
   components['schemas']['PaginatedVeterinariansResponseDto'];
 export type PaginatedMediaAssetsResponse = components['schemas']['PaginatedMediaAssetsResponseDto'];
 export type MediaAsset = components['schemas']['MediaAssetResponseDto'];
+export type MedicalRecordChangeResponse = components['schemas']['MedicalRecordChangeResponseDto'];
+export type PaginatedMedicalRecordChangesResponse =
+  components['schemas']['PaginatedMedicalRecordChangesResponseDto'];
+export type MedicalRecordChangeType = MedicalRecordChangeResponse['changeType'];
 
 export type MedicalRecordType = CreateMedicalRecordRequest['recordType'];
 
@@ -43,6 +47,30 @@ export interface PaginatedMedicalRecords {
 
 export interface MedicalRecordFilters {
   recordType?: MedicalRecordType;
+  from?: string;
+  to?: string;
+}
+
+export interface MedicalRecordChange {
+  id: string;
+  medicalRecordId: string;
+  changedByUserId: string | null;
+  changeType: MedicalRecordChangeType;
+  changedFields: string[];
+  previousValues: Record<string, unknown>;
+  changedAt: string;
+}
+
+export interface PaginatedMedicalRecordChanges {
+  items: MedicalRecordChange[];
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export interface MedicalRecordChangeFilters {
+  changeType?: MedicalRecordChangeType;
+  changedByUserId?: string;
   from?: string;
   to?: string;
 }
@@ -98,4 +126,22 @@ export function toClinicalAttachment(dto: MediaAsset): ClinicalAttachment {
     secureUrl: dto.secureUrl,
     name: publicId !== '' ? publicId : dto.id,
   };
+}
+
+export function toMedicalRecordChange(dto: MedicalRecordChangeResponse): MedicalRecordChange {
+  return {
+    id: dto.id,
+    medicalRecordId: dto.medicalRecordId,
+    changedByUserId: dto.changedByUserId ?? null,
+    changeType: dto.changeType,
+    changedFields: dto.changedFields,
+    previousValues: dto.previousValues,
+    changedAt: dto.changedAt,
+  };
+}
+
+export function toPaginatedMedicalRecordChanges(
+  dto: PaginatedMedicalRecordChangesResponse
+): PaginatedMedicalRecordChanges {
+  return { ...dto, items: dto.items.map(toMedicalRecordChange) };
 }
