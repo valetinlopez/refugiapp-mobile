@@ -6,6 +6,15 @@ export function veterinarianFullName(veterinarian: VeterinarianResponse): string
   return `${veterinarian.firstName} ${veterinarian.lastName}`.trim();
 }
 
+export function toVeterinarianSearchFilter(search: string): {
+  name?: string;
+  licenseNumber?: string;
+} {
+  const term = search.trim();
+  if (term === '') return {};
+  return /\d/.test(term) ? { licenseNumber: term } : { name: term };
+}
+
 export function toVeterinarianErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.code === 'LICENSE_NUMBER_ALREADY_EXISTS') {
@@ -22,6 +31,9 @@ export function toVeterinarianErrorMessage(error: unknown): string {
     }
     if (error.code === 'VET_CREATE_USER_EMAIL_REQUIRED') {
       return 'Falta el email para crear el acceso. Completá el email del veterinario o del usuario.';
+    }
+    if (error.code === 'VETERINARIAN_ALREADY_ACTIVE') {
+      return 'Este veterinario ya está activo.';
     }
     if (error.status === 403) {
       return 'Tu rol no tiene permiso para gestionar veterinarios.';

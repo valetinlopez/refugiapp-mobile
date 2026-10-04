@@ -41,6 +41,6 @@ El backend incorporó la opción A del ticket RFG-119 en la misma rama: `POST /v
 
 ## Criterios de revisión
 
-- Si el backend expone `POST /veterinarians/:id/activate` (reactivación), habilitar el botón y revisar el copy de detalle.
+- El backend expuso la reactivación como `POST /veterinarians/:id/reactivate` (RFG-93) y el móvil la habilitó (RFG-123): el detalle de un veterinario inactivo muestra el botón con confirmación y revisa el copy de la consecuencia.
 - Si el contrato futuro permite vincular un usuario existente para `shelter_manager` (un `GET /users` no exclusivo de `admin`), evaluar un selector de usuarios como complemento de `createUser`.
 - Si el backend cambia el payload de `createUser` (p. ej. requiere `firstName`/`lastName` explícitos), actualizar el esquema Zod y el mapper en el mismo cambio que el snapshot.

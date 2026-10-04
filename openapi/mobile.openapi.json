@@ -1221,6 +1221,60 @@
         }
       }
     },
+    "/veterinarians/{id}/reactivate": {
+      "post": {
+        "operationId": "reactivateVeterinarian",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Veterinarian reactivated successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VeterinarianResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "409": {
+            "description": "Veterinarian is already active.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          },
+          "429": {
+            "description": "The request rate limit was exceeded.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseDto" } }
+            }
+          }
+        }
+      }
+    },
     "/media": {
       "get": {
         "operationId": "listMediaByOwner",

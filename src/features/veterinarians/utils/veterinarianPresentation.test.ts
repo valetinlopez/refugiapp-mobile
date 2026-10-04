@@ -1,6 +1,10 @@
 import { ApiError } from '@/core/api';
 
-import { toVeterinarianErrorMessage, veterinarianFullName } from './veterinarianPresentation';
+import {
+  toVeterinarianErrorMessage,
+  toVeterinarianSearchFilter,
+  veterinarianFullName,
+} from './veterinarianPresentation';
 import type { VeterinarianResponse } from '../types';
 
 const VETERINARIAN: VeterinarianResponse = {
@@ -52,6 +56,12 @@ describe('toVeterinarianErrorMessage', () => {
     );
   });
 
+  it('translates a veterinarian that is already active', () => {
+    expect(toVeterinarianErrorMessage(apiError(409, 'VETERINARIAN_ALREADY_ACTIVE'))).toBe(
+      'Este veterinario ya está activo.'
+    );
+  });
+
   it('translates a 403 response', () => {
     expect(toVeterinarianErrorMessage(apiError(403))).toBe(
       'Tu rol no tiene permiso para gestionar veterinarios.'
@@ -75,5 +85,22 @@ describe('toVeterinarianErrorMessage', () => {
     const message = toVeterinarianErrorMessage(new Error('Bearer secret-token'));
 
     expect(message).not.toContain('secret-token');
+  });
+});
+
+describe('toVeterinarianSearchFilter', () => {
+  it('returns an empty filter for blank input', () => {
+    expect(toVeterinarianSearchFilter('')).toEqual({});
+    expect(toVeterinarianSearchFilter('   ')).toEqual({});
+  });
+
+  it('filters by name when the term has no digits', () => {
+    expect(toVeterinarianSearchFilter('Sofía')).toEqual({ name: 'Sofía' });
+    expect(toVeterinarianSearchFilter('  Romero  ')).toEqual({ name: 'Romero' });
+  });
+
+  it('filters by license number when the term contains digits', () => {
+    expect(toVeterinarianSearchFilter('VET-001')).toEqual({ licenseNumber: 'VET-001' });
+    expect(toVeterinarianSearchFilter('MN 12345')).toEqual({ licenseNumber: 'MN 12345' });
   });
 });

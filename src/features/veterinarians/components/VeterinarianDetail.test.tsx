@@ -34,16 +34,22 @@ function renderDetail(props: Partial<React.ComponentProps<typeof VeterinarianDet
   return render(
     <VeterinarianDetail
       canWrite
+      confirmReactivateVisible={false}
       confirmVisible={false}
       deactivateError={null}
       onBack={jest.fn()}
       onCancelDeactivate={jest.fn()}
+      onCancelReactivate={jest.fn()}
       onConfirmDeactivate={jest.fn()}
+      onConfirmReactivate={jest.fn()}
       onEdit={jest.fn()}
       onRequestDeactivate={jest.fn()}
+      onRequestReactivate={jest.fn()}
       onRetry={jest.fn()}
       query={detailQuery()}
+      reactivateError={null}
       submittingDeactivate={false}
+      submittingReactivate={false}
       {...props}
     />
   );
@@ -139,14 +145,67 @@ describe('VeterinarianDetail', () => {
     ).toBeTruthy();
   });
 
-  it('shows a disabled reactivation button with a hint for inactive veterinarians', async () => {
+  it('offers a reactivation action for inactive veterinarians with write permission', async () => {
     const inactive = { ...VET, isActive: false };
-    const screen = await renderDetail({ query: detailQuery({ data: inactive }) });
+    const onRequestReactivate = jest.fn();
+    const screen = await renderDetail({
+      onRequestReactivate,
+      query: detailQuery({ data: inactive }),
+    });
 
-    const reactivate = screen.getByRole('button', { name: 'Reactivar' });
-    expect(reactivate.props.accessibilityState.disabled).toBe(true);
-    expect(reactivate.props.accessibilityHint).toContain('pendiente');
-    expect(screen.getByText(/La reactivación estará disponible/)).toBeTruthy();
+    const reactivate = screen.getByRole('button', { name: 'Reactivar veterinario' });
+    expect(reactivate.props.accessibilityState.disabled).toBeFalsy();
+    expect(reactivate.props.accessibilityHint).toContain('reactivación');
+
+    await fireEvent.press(reactivate);
+    expect(onRequestReactivate).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not offer deactivate or reactivate actions without write permission', async () => {
+    const inactive = { ...VET, isActive: false };
+    const screen = await renderDetail({ canWrite: false, query: detailQuery({ data: inactive }) });
+
+    expect(screen.queryByRole('button', { name: 'Reactivar veterinario' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Desactivar veterinario' })).toBeNull();
+    expect(
+      screen.getByText(/Tu rol permite consultar veterinarios, pero no editarlos/)
+    ).toBeTruthy();
+  });
+
+  it('confirms before reactivating', async () => {
+    const onConfirmReactivate = jest.fn();
+    const onCancelReactivate = jest.fn();
+    const screen = await renderDetail({
+      confirmReactivateVisible: true,
+      onCancelReactivate,
+      onConfirmReactivate,
+    });
+
+    expect(screen.getByText('Reactivar veterinario')).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar reactivación' }));
+    await waitFor(() => expect(onConfirmReactivate).toHaveBeenCalledTimes(1));
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(onCancelReactivate).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the reactivate dialog visible while submitting', async () => {
+    const screen = await renderDetail({
+      confirmReactivateVisible: true,
+      submittingReactivate: true,
+    });
+
+    expect(screen.getByText('Reactivar veterinario')).toBeTruthy();
+  });
+
+  it('translates a reactivation conflict error inside the dialog', async () => {
+    const screen = await renderDetail({
+      confirmReactivateVisible: true,
+      reactivateError: 'Este veterinario ya está activo.',
+    });
+
+    expect(screen.getByText('Este veterinario ya está activo.')).toBeTruthy();
   });
 
   it('translates a deactivation error inside the dialog', async () => {
