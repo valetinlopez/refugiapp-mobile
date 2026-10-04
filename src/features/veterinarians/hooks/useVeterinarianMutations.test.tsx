@@ -8,6 +8,7 @@ import { veterinarianKeys } from './veterinarianKeys';
 import {
   useCreateVeterinarian,
   useDeactivateVeterinarian,
+  useReactivateVeterinarian,
   useUpdateVeterinarian,
 } from './useVeterinarianMutations';
 
@@ -56,6 +57,7 @@ describe('veterinarian mutations', () => {
     ['create', useCreateVeterinarian, createInput],
     ['update', useUpdateVeterinarian, { id: VET_ID, input: { phone: '+54 11 5555 0202' } }],
     ['deactivate', useDeactivateVeterinarian, VET_ID],
+    ['reactivate', useReactivateVeterinarian, VET_ID],
   ] as const)(
     'invalidates the veterinarians prefix after %s succeeds',
     async (method, useMutation, input) => {

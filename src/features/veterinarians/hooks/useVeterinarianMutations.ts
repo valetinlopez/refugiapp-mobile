@@ -34,3 +34,11 @@ export function useDeactivateVeterinarian() {
     onSuccess: () => invalidateVeterinarians(queryClient),
   });
 }
+
+export function useReactivateVeterinarian() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => veterinariansApi.reactivate(id),
+    onSuccess: () => invalidateVeterinarians(queryClient),
+  });
+}

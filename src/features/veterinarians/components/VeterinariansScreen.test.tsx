@@ -99,6 +99,18 @@ describe('VeterinariansScreen', () => {
     );
   });
 
+  it('filters by license number when the search term contains digits', async () => {
+    const screen = await render(<VeterinariansScreen canWrite />);
+
+    await fireEvent.changeText(screen.getByLabelText('Buscar veterinario'), 'VET-001');
+    await waitFor(() =>
+      expect(mockUseVeterinarians).toHaveBeenLastCalledWith({
+        isActive: true,
+        licenseNumber: 'VET-001',
+      })
+    );
+  });
+
   it('loads the next page when the list reaches the end', async () => {
     const fetchNextPage = jest.fn();
     mockUseVeterinarians.mockReturnValue(listQuery({ fetchNextPage, hasNextPage: true }));

@@ -9,6 +9,7 @@ import { spacing } from '@/theme';
 import type { VeterinarianResponse } from '../types';
 import { toVeterinarianErrorMessage } from '../utils/veterinarianPresentation';
 import { DeactivateVeterinarianDialog } from './DeactivateVeterinarianDialog';
+import { ReactivateVeterinarianDialog } from './ReactivateVeterinarianDialog';
 
 export interface VeterinarianDetailQuery {
   data: VeterinarianResponse | undefined;
@@ -20,30 +21,42 @@ export interface VeterinarianDetailQuery {
 
 interface VeterinarianDetailProps {
   canWrite: boolean;
+  confirmReactivateVisible: boolean;
   confirmVisible: boolean;
   deactivateError: string | null;
   onBack(): void;
   onCancelDeactivate(): void;
+  onCancelReactivate(): void;
   onConfirmDeactivate(): void;
+  onConfirmReactivate(): void;
   onEdit(): void;
-  onRetry(): void;
   onRequestDeactivate(): void;
+  onRequestReactivate(): void;
+  onRetry(): void;
   query: VeterinarianDetailQuery;
+  reactivateError: string | null;
   submittingDeactivate: boolean;
+  submittingReactivate: boolean;
 }
 
 export function VeterinarianDetail({
   canWrite,
+  confirmReactivateVisible,
   confirmVisible,
   deactivateError,
   onBack,
   onCancelDeactivate,
+  onCancelReactivate,
   onConfirmDeactivate,
+  onConfirmReactivate,
   onEdit,
-  onRetry,
   onRequestDeactivate,
+  onRequestReactivate,
+  onRetry,
   query,
+  reactivateError,
   submittingDeactivate,
+  submittingReactivate,
 }: VeterinarianDetailProps) {
   if (query.isPending) {
     return <LoadingState label="Cargando veterinario" />;
@@ -122,22 +135,18 @@ export function VeterinarianDetail({
               variant="danger"
             />
           ) : (
-            <View style={styles.reactivate}>
-              <AppButton
-                accessibilityHint="La reactivación está pendiente de soporte del backend."
-                disabled
-                label="Reactivar"
-                variant="secondary"
-              />
-              <AppText color="textSecondary" variant="caption">
-                La reactivación estará disponible cuando el backend la soporte.
-              </AppText>
-            </View>
+            <AppButton
+              accessibilityHint="Confirma la reactivación para que el veterinario vuelva a estar disponible."
+              accessibilityLabel="Reactivar veterinario"
+              label="Reactivar"
+              onPress={onRequestReactivate}
+              variant="secondary"
+            />
           )}
         </View>
       ) : (
         <AppText color="textSecondary">
-          Tu rol permite consultar veterinarios, pero no editarlos ni desactivarlos.
+          Tu rol permite consultar veterinarios, pero no editarlos ni cambiar su estado.
         </AppText>
       )}
 
@@ -148,6 +157,14 @@ export function VeterinarianDetail({
         onConfirm={onConfirmDeactivate}
         submitting={submittingDeactivate}
         visible={confirmVisible}
+      />
+      <ReactivateVeterinarianDialog
+        errorMessage={reactivateError}
+        name={name}
+        onCancel={onCancelReactivate}
+        onConfirm={onConfirmReactivate}
+        submitting={submittingReactivate}
+        visible={confirmReactivateVisible}
       />
     </View>
   );
@@ -184,5 +201,4 @@ const styles = StyleSheet.create({
   field: { gap: spacing.xxs },
   header: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
   heading: { flex: 1, gap: spacing.xxs },
-  reactivate: { gap: spacing.xs },
 });

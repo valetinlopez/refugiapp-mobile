@@ -15,7 +15,7 @@
 - `GET /veterinarians/:id`: detalle para los tres roles.
 - `PATCH /veterinarians/:id`: edición parcial para `admin` y `shelter_manager`; omitir un campo lo conserva, `null` limpia `email`, `phone` y `notes`. La edición no modifica el vínculo de usuario.
 - `POST /veterinarians/:id/deactivate`: desactivación lógica (conserva el historial clínico vinculado) para `admin` y `shelter_manager`.
-- No existe `activate`: la reactivación queda pendiente del backend y la UI solo expone un botón deshabilitado con explicación.
+- `POST /veterinarians/:id/reactivate`: reactivación para `admin` y `shelter_manager`; conserva historial e identidad (no crea un registro nuevo). Un veterinario ya activo responde `409 VETERINARIAN_ALREADY_ACTIVE`; inexistente, `404 RESOURCE_NOT_FOUND`.
 - `VeterinarianResponseDto` incluye `user` (`UserResponseDto` sin `passwordHash`) o `null`; el detalle y el listado presentan `user.email` y rol, nunca el UUID crudo.
 - Códigos de conflicto del backend: `LICENSE_NUMBER_ALREADY_EXISTS` (409), `EMAIL_ALREADY_EXISTS` (409), `USER_ALREADY_LINKED_TO_VETERINARIAN` (409), `VET_USER_PAYLOAD_CONFLICT` (400) y `VET_CREATE_USER_EMAIL_REQUIRED` (400); traducir a mensajes accionables sin exponer detalles internos.
 - Los tipos de red derivan de `openapi/mobile.openapi.json`.
@@ -34,12 +34,12 @@
 - Al crear usuario, debe existir al menos un email (del usuario o del perfil del veterinario); la validación local lo exige y el backend responde `400 VET_CREATE_USER_EMAIL_REQUIRED` si falta.
 - La contraseña inicial solo vive en memoria del formulario; nunca se registra, persiste ni se muestra.
 - La desactivación no borra: conserva la vinculación histórica desde `medical_records`.
-- Reactivación: pendiente de backend; el botón queda deshabilitado con hint accesible, nunca se invoca un endpoint inexistente.
+- La reactivación conserva el historial y el vínculo de usuario; no crea un registro nuevo.
 
 ## Estructura
 
 - `api/`: `veterinariansApi` (listado, detalle, alta, edición y desactivación).
-- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianDetail`, `VeterinarianForm`, `DeactivateVeterinarianDialog` y la sección de gestión de la pestaña "Más" (`ManagementSection`, `ManagementCard`).
+- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianDetail`, `VeterinarianForm`, `DeactivateVeterinarianDialog`, `ReactivateVeterinarianDialog` y la sección de gestión de la pestaña "Más" (`ManagementSection`, `ManagementCard`).
 - `VeterinarianForm` recibe `mode` (`create` | `edit`): solo en `create` expone el toggle "Crear usuario de acceso" con email y contraseña del usuario; en `edit` no ofrece vínculo.
 - `ManagementSection` compone la sección "Gestión" del tab "Más" y enlaza rutas de administración por capacidades: veterinarios (todos los roles), usuarios (`canManageUsers`) y auditoría (`canReadAudit`). No ejecuta red ni importa internals de otras features; la ruta le inyecta las capacidades.
 - `hooks/`: keys, listado infinito, detalle y mutations.
@@ -48,10 +48,10 @@
 
 ## Estrategia de escritura
 
-- Sin optimistic updates: `useCreateVeterinarian`, `useUpdateVeterinarian` y `useDeactivateVeterinarian` invalidan `veterinarianKeys.all` (prefijo) tras éxito, lo que también refresca las opciones de veterinario activas del formulario clínico (`['veterinarians', 'options']`, prefijo compartido por valor, sin imports cruzados).
+- Sin optimistic updates: `useCreateVeterinarian`, `useUpdateVeterinarian`, `useDeactivateVeterinarian` y `useReactivateVeterinarian` invalidan `veterinarianKeys.all` (prefijo) tras éxito, lo que también refresca las opciones de veterinario activas del formulario clínico (`['veterinarians', 'options']`, prefijo compartido por valor, sin imports cruzados).
 - El alta envía `createUser` solo cuando el toggle está activo; omite `userId` siempre.
 - La edición usa PATCH diferencial: omite campos intactos y envía `null` para limpiar `email`, `phone` y `notes`; no toca `userId` ni `createUser`.
-- La desactivación se confirma con `ConfirmDialog` del sistema de diseño (via `DeactivateVeterinarianDialog`); ninguna acción destructiva se ejecuta sin confirmación.
+- La desactivación se confirma con `ConfirmDialog` del sistema de diseño (via `DeactivateVeterinarianDialog`) y la reactivación con `ReactivateVeterinarianDialog`; ninguna acción con consecuencia se ejecuta sin confirmación.
 
 ## UI y accesibilidad
 
@@ -59,14 +59,15 @@
 - El toggle de creación de usuario usa `Switch` de RN con `accessibilityLabel`/`accessibilityHint`; el label del campo de contraseña indica el mínimo de 12 caracteres.
 - Área táctil mínima de 44 × 44 y labels accesibles en botones.
 - El detalle muestra `user.email` y rol legible; nunca un UUID.
-- La reactivación deshabilitada comunica la causa con `accessibilityHint` y texto visible.
+- El botón de reactivación usa `accessibilityLabel`/`accessibilityHint` y el diálogo expone la consecuencia antes de ejecutar.
+- La búsqueda del listado distingue nombre de matrícula: `toVeterinarianSearchFilter` envía `licenseNumber` cuando el término contiene dígitos y `name` en caso contrario (el backend combina ambos filtros en AND).
 
 ## Testing
 
 - Unit tests de validación (requeridos, límites, email opcional, contraseña mínima 12, email presente al crear usuario).
 - Unit tests de mappers create/edit (PATCH diferencial: omit vs null; `createUser` presente solo con toggle activo; sin `userId`).
 - Unit tests de traducción de errores (409 matrícula, 409 email, 409 usuario vinculado, 400 `VET_*`, 403, 404, fallback seguro).
-- Component tests RNTL: listado, detalle con/sin `user`, alta con y sin creación de usuario, edición sin sección de usuario, desactivación con confirmación, permisos por rol y reactivación deshabilitada.
+- Component tests RNTL: listado, detalle con/sin `user`, alta con y sin creación de usuario, edición sin sección de usuario, desactivación con confirmación, reactivación con confirmación, permisos por rol, búsqueda por nombre/matrícula y errores de conflicto.
 - Hook tests de invalidación tras cada mutación.
 
 ## Estado
@@ -79,11 +80,10 @@
 - Traducción de `EMAIL_ALREADY_EXISTS`, `VET_USER_PAYLOAD_CONFLICT` y `VET_CREATE_USER_EMAIL_REQUIRED`.
 - Detalle y listado presentan el vínculo desde `user.email` y rol (ADR-0010).
 - Guard visual por capacidad `canManageVets` para escritura; lectura para los tres roles.
-- Reactivación deshabilitada con hint accesible y visible (pendiente de backend).
+- Reactivación habilitada con `POST /veterinarians/:id/reactivate`: botón en el detalle de un veterinario inactivo, confirmación con `ReactivateVeterinarianDialog`, traducción de `VETERINARIAN_ALREADY_ACTIVE` e invalidación de listado, detalle y opciones del formulario clínico tras éxito.
+- Búsqueda del listado por nombre o matrícula (el API ya lo soportaba; ahora la UI expone el filtro).
 
 ### Pendiente o deuda conocida
 
-- Reactivación: requiere endpoint `POST /veterinarians/:id/activate` del backend para habilitar el botón.
-- El listado de gestión no expone búsqueda por `licenseNumber` en UI; el API sí lo soporta.
 - `ManagementSection` coordina destinos de tres dominios (veterinarios, usuarios, auditoría) dentro de la feature `veterinarians`. Si la sección "Gestión" agrega más entradas o un rol distinto necesita otra coordinación, extraerla a una frontera de `src/application` o a un patrón compartido de `src/components`, no ampliar su responsabilidad aquí.
 - Vincular un usuario existente (selector de `GET /users`) queda fuera de alcance: el endpoint es exclusivo de `admin` y rompería para `shelter_manager` (ver ADR-0010).

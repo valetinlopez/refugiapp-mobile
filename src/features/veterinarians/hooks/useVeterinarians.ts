@@ -7,6 +7,7 @@ const PAGE_SIZE = 20;
 
 export interface VeterinarianListFilters {
   isActive?: boolean;
+  licenseNumber?: string;
   name?: string;
 }
 

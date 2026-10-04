@@ -118,4 +118,20 @@ describe('veterinariansApi', () => {
 
     expect(calls).toEqual([`/api/v1/veterinarians/${VET_ID}/deactivate`]);
   });
+
+  it('uses the reactivate endpoint and returns the veterinarian', async () => {
+    let capturedPath: string | undefined;
+    const client = createClient({
+      [`POST /api/v1/veterinarians/${VET_ID}/reactivate`]: ({ url }) => {
+        capturedPath = url.pathname;
+        return { status: 200, body: veterinarian() };
+      },
+    });
+
+    const result = await veterinariansApi.reactivate(VET_ID, client);
+
+    expect(capturedPath).toBe(`/api/v1/veterinarians/${VET_ID}/reactivate`);
+    expect(result.id).toBe(VET_ID);
+    expect(result.isActive).toBe(true);
+  });
 });

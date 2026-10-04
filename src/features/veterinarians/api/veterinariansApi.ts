@@ -57,4 +57,9 @@ export const veterinariansApi = {
   async deactivate(id: string, client: HttpClient = apiClient): Promise<void> {
     await client.post<void>(`/veterinarians/${id}/deactivate`);
   },
+
+  async reactivate(id: string, client: HttpClient = apiClient): Promise<VeterinarianResponse> {
+    const response = await client.post<VeterinarianResponse>(`/veterinarians/${id}/reactivate`);
+    return response.data;
+  },
 };

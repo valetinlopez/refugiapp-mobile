@@ -12,7 +12,10 @@ import { colors, radii, sizes, spacing } from '@/theme';
 
 import { useVeterinarians } from '../hooks/useVeterinarians';
 import type { VeterinarianResponse } from '../types';
-import { toVeterinarianErrorMessage } from '../utils/veterinarianPresentation';
+import {
+  toVeterinarianErrorMessage,
+  toVeterinarianSearchFilter,
+} from '../utils/veterinarianPresentation';
 import { VeterinarianCard } from './VeterinarianCard';
 
 const SEARCH_DEBOUNCE_MS = 400;
@@ -25,7 +28,7 @@ export function VeterinariansScreen({ canWrite }: { canWrite: boolean }) {
 
   const filters = useMemo(
     () => ({
-      ...(search.trim() !== '' ? { name: search.trim() } : {}),
+      ...toVeterinarianSearchFilter(search),
       isActive: statusFilter === 'active',
     }),
     [search, statusFilter]
@@ -101,7 +104,7 @@ export function VeterinariansScreen({ canWrite }: { canWrite: boolean }) {
         autoCapitalize="none"
         autoCorrect={false}
         onChangeText={setSearchInput}
-        placeholder="Buscar por nombre"
+        placeholder="Buscar por nombre o matrícula"
         placeholderTextColor={colors.textSecondary}
         style={styles.search}
         value={searchInput}
