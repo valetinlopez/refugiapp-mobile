@@ -50,6 +50,7 @@ describe('AuditLogCard', () => {
   it('opens the selected audit detail', async () => {
     const screen = await render(<AuditLogCard entry={entry()} />);
 
+    expect(screen.getByTestId('audit-card')).toBeTruthy();
     fireEvent.press(screen.getByRole('button'));
 
     expect(mockPush).toHaveBeenCalledWith({

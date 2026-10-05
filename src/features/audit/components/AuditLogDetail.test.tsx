@@ -38,6 +38,7 @@ describe('AuditLogDetail', () => {
 
     const screen = await render(<AuditLogDetail id="11111111-1111-4111-8111-111111111111" />);
 
+    expect(screen.getByTestId('audit-detail')).toBeTruthy();
     expect(screen.getAllByText('Inicio de sesión fallido').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Sesión').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('María López')).toBeTruthy();

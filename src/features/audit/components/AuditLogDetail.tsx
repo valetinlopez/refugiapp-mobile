@@ -56,7 +56,7 @@ export function AuditLogDetail({ id }: { id: string }) {
   const entry = query.data;
   const metadata = JSON.stringify(sanitizeAuditMetadata(entry.metadata), null, 2);
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={styles.content} testID="audit-detail">
       <AppText variant="heading1">Detalle de auditoría</AppText>
       <AppBadge label={auditActionLabel(entry.action)} tone={auditActionTone(entry.action)} />
       <AppCard style={styles.card} variant="outlined">

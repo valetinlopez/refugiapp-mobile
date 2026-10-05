@@ -203,4 +203,17 @@ describe('AuditLogsScreen', () => {
 
     expect(screen.getAllByLabelText(/^Usuario creado, /).length).toBe(2);
   });
+
+  it('exposes deterministic selectors for the E2E flow (RFG-132)', async () => {
+    mockUseAuditLogs.mockReturnValue(createQueryResult({ hasNextPage: false }));
+    const screen = await render(<AuditLogsScreen />);
+
+    expect(screen.getByTestId('audit-filter-action-user.create')).toBeTruthy();
+    expect(screen.getByTestId('audit-filter-action-access.denied')).toBeTruthy();
+    expect(screen.getByTestId('audit-filter-resource-user')).toBeTruthy();
+    expect(screen.getByTestId('audit-filter-actor')).toBeTruthy();
+    expect(screen.getByTestId('audit-filter-apply')).toBeTruthy();
+    expect(screen.getByTestId('audit-filter-clear')).toBeTruthy();
+    expect(screen.getByTestId('audit-end-of-list')).toBeTruthy();
+  });
 });

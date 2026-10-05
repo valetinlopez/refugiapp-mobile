@@ -1,0 +1,58 @@
+# RFG-132: historial médico → historial de cambios → paginación → actor + diff campo por campo.
+# Requiere staging con seeds (ver maestro/README.md): 1 animal con 1 registro médico
+# (consultation) con más de 20 cambios en `medical_record_changes` (2+ páginas de 20). El
+# cambio más reciente debe ser un `update` que modifica `diagnosis`, autorizado por el
+# usuario E2E admin cuyo `displayName` es "E2E Admin".
+appId: ${APP_ID}
+tags: [e2e, sprint-13, RFG-132]
+---
+- runFlow:
+    file: helpers/login.yaml
+    env:
+      EMAIL: ${E2E_ADMIN_EMAIL}
+      PASSWORD: ${E2E_ADMIN_PASSWORD}
+- assertVisible:
+    id: dashboard-screen
+    timeout: 20000
+- tapOn:
+    id: dashboard-animal-row
+- assertVisible:
+    id: animals-list
+    timeout: 15000
+- tapOn:
+    id: animal-card
+- assertVisible: Resumen del animal
+- tapOn: Evolución clínica
+- assertVisible:
+    id: clinical-history
+    timeout: 15000
+# Abrir el historial de cambios del primer registro clínico.
+- tapOn:
+    id: clinical-record-history-button
+- assertVisible:
+    id: medical-record-changes-list
+    timeout: 15000
+# RFG-129/RFG-131: el primer cambio del seed es un `update` de `diagnosis` por el
+# usuario E2E Admin. Verifica actor con nombre, badge de operación y etiqueta de campo
+# en español, y que ningún código crudo (columna del backend) llegue a la UI.
+- assertVisible: Historial de cambios
+- scrollUntilVisible:
+    element:
+      text: E2E Admin
+    direction: DOWN
+    timeout: 15000
+- assertVisible: Actualización
+- scrollUntilVisible:
+    element:
+      text: Diagnóstico
+    direction: DOWN
+    timeout: 15000
+- assertNotVisible: diagnosis
+# Paginación: el seed garantiza más de 20 cambios; llegar al footer ("No hay más
+# cambios") prueba que se cargaron las páginas siguientes sin duplicados ni saltos.
+- scrollUntilVisible:
+    element:
+      id: history-end-of-list
+    direction: DOWN
+    timeout: 30000
+- runFlow: helpers/logout.yaml

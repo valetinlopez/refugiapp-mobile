@@ -21,16 +21,31 @@ maestro test maestro/admin.yaml --env APP_ID=app.refugiapp.mobile.staging
 
 ## Flows
 
-| Flow                   | Rol             | Qué verifica                                                |
-| ---------------------- | --------------- | ----------------------------------------------------------- |
-| `admin.yaml`           | admin           | dashboard → detalle → completar tarea → clínica             |
-| `shelter-manager.yaml` | shelter_manager | operativo sin clínica                                       |
-| `veterinarian.yaml`    | veterinarian    | lectura + clínica, sin escritura                            |
-| `clinical-denied.yaml` | shelter_manager | ausencia de `clinical-history`                              |
-| `session-expired.yaml` | admin           | logout + sin restauración de sesión                         |
-| `session-restore.yaml` | admin           | sesión persistida se restaura tras el relaunch              |
-| `offline.yaml`         | admin           | sin red: cache visible + `OfflineState` con reintento       |
-| `online-restore.yaml`  | admin           | al volver la red: reintento carga y sesión válida sin login |
+| Flow                   | Rol             | Qué verifica                                                   |
+| ---------------------- | --------------- | -------------------------------------------------------------- |
+| `admin.yaml`           | admin           | dashboard → detalle → completar tarea → clínica                |
+| `shelter-manager.yaml` | shelter_manager | operativo sin clínica                                          |
+| `veterinarian.yaml`    | veterinarian    | lectura + clínica, sin escritura                               |
+| `clinical-denied.yaml` | shelter_manager | ausencia de `clinical-history`                                 |
+| `session-expired.yaml` | admin           | logout + sin restauración de sesión                            |
+| `session-restore.yaml` | admin           | sesión persistida se restaura tras el relaunch                 |
+| `offline.yaml`         | admin           | sin red: cache visible + `OfflineState` con reintento          |
+| `online-restore.yaml`  | admin           | al volver la red: reintento carga y sesión válida sin login    |
+| `medical-history.yaml` | admin           | registro → historial → paginación → actor + diff campo a campo |
+| `audit.yaml`           | admin           | lista → detalle → filtro por acción → resultados legibles      |
+
+### Seeds para RFG-132 (historial médico y auditoría)
+
+Ambos flows requieren datos deterministas en staging:
+
+- **`medical-history.yaml`**: un animal con un registro médico (`consultation`) que tenga
+  **más de 20 cambios** en `medical_record_changes` (fuerza 2+ páginas de 20). El cambio
+  **más reciente** debe ser un `update` que modifica `diagnosis`, autorizado por el usuario
+  E2E admin cuyo `displayName` es `E2E Admin`. Así el primer cambio de la lista presenta el
+  badge `Actualización`, el actor `E2E Admin` y el diff del campo `Diagnóstico` en español.
+- **`audit.yaml`**: al menos un evento `user.create` con `actor` enriquecido (nombre + email,
+  RFG-128) para poder filtrar por la acción "Usuario creado" y abrir un detalle con actor
+  por nombre.
 
 La rotación concurrente y el single-flight (RFG-86) se cubren con unit tests del
 cliente HTTP (`src/core/api/client.test.ts`) y con los E2E de rotación del

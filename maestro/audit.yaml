@@ -1,0 +1,45 @@
+# RFG-132: auditoría admin → lista → detalle → filtro por acción → resultados legibles.
+# Requiere staging con seeds (ver maestro/README.md): logs de auditoría con actor
+# enriquecido (RFG-128) y al menos un evento `user.create`.
+appId: ${APP_ID}
+tags: [e2e, sprint-13, RFG-132]
+---
+- runFlow:
+    file: helpers/login.yaml
+    env:
+      EMAIL: ${E2E_ADMIN_EMAIL}
+      PASSWORD: ${E2E_ADMIN_PASSWORD}
+- assertVisible:
+    id: dashboard-screen
+    timeout: 20000
+- tapOn: Más
+- assertVisible: Gestión
+- tapOn: Ver auditoría
+- assertVisible:
+    id: audit-list
+    timeout: 15000
+# Detalle: actor por nombre (email solo en detalle, RFG-129) y sin códigos crudos.
+- tapOn:
+    id: audit-card
+- assertVisible:
+    id: audit-detail
+- assertVisible: Detalle de auditoría
+- assertVisible:
+    text: 'Actor: .*'
+- back
+- assertVisible:
+    id: audit-list
+    timeout: 15000
+# Filtro por acción "Usuario creado" (user.create) y verificación de resultados legibles.
+- tapOn:
+    id: audit-filter-action-user.create
+- tapOn:
+    id: audit-filter-apply
+- assertVisible:
+    id: audit-list
+    timeout: 15000
+- assertVisible:
+    id: audit-card
+- assertVisible: Usuario creado
+- assertNotVisible: user.create
+- runFlow: helpers/logout.yaml
