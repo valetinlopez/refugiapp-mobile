@@ -1,4 +1,10 @@
-import { formatDateMedium, formatDateShort, formatDateTime, parseDateOnly } from './dateFormat';
+import {
+  formatDateMedium,
+  formatDateShort,
+  formatDateTime,
+  formatRelativeDateTime,
+  parseDateOnly,
+} from './dateFormat';
 
 describe('parseDateOnly', () => {
   it('parses YYYY-MM-DD as a local date at noon to avoid timezone shifts', () => {
@@ -57,5 +63,29 @@ describe('formatDateTime', () => {
   it('returns an empty string for invalid input', () => {
     expect(formatDateTime('')).toBe('');
     expect(formatDateTime('nope')).toBe('');
+  });
+});
+
+describe('formatRelativeDateTime', () => {
+  const now = new Date('2026-10-04T15:00:00.000Z');
+
+  it('returns empty for invalid or future input', () => {
+    expect(formatRelativeDateTime('nope', now)).toBe('');
+    expect(formatRelativeDateTime('2026-10-04T16:00:00.000Z', now)).toBe('');
+  });
+
+  it('labels recent events as now', () => {
+    expect(formatRelativeDateTime('2026-10-04T14:59:30.000Z', now)).toBe('ahora');
+  });
+
+  it('formats minutes, hours and days', () => {
+    expect(formatRelativeDateTime('2026-10-04T14:30:00.000Z', now)).toBe('hace 30 min');
+    expect(formatRelativeDateTime('2026-10-04T10:00:00.000Z', now)).toBe('hace 5 h');
+    expect(formatRelativeDateTime('2026-10-03T15:00:00.000Z', now)).toBe('ayer');
+    expect(formatRelativeDateTime('2026-10-01T15:00:00.000Z', now)).toBe('hace 3 d');
+  });
+
+  it('returns empty beyond the relative window so callers fall back to absolute', () => {
+    expect(formatRelativeDateTime('2026-09-20T15:00:00.000Z', now)).toBe('');
   });
 });

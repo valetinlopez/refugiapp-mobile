@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { ActorRow, resolveActorLabel } from '@/components/patterns';
 import { AppBadge, AppCard, AppDivider, AppText } from '@/components/primitives';
 import { spacing } from '@/theme';
 
@@ -14,18 +15,24 @@ import {
   getChangeTypeTone,
 } from '../utils/medicalRecordChangePresentation';
 
+const SYSTEM_ACTOR_LABEL = 'Usuario del sistema';
+
 export const MedicalRecordChangeCard = memo(function MedicalRecordChangeCard({
   change,
 }: {
   change: MedicalRecordChange;
 }) {
-  const actorLabel = change.changedByUserId ?? 'Usuario del sistema';
+  const actorLabel = resolveActorLabel(
+    change.changedBy?.displayName,
+    change.changedByFallbackId,
+    SYSTEM_ACTOR_LABEL
+  );
   const badgeLabel = getChangeTypeLabel(change.changeType);
   const summary = changeFieldsSummary(change);
 
   return (
     <AppCard
-      accessibilityLabel={`${badgeLabel}. ${summary}. ${formatChangeDate(change.changedAt)}`}
+      accessibilityLabel={`${badgeLabel}. ${actorLabel}. ${summary}. ${formatChangeDate(change.changedAt)}`}
       style={styles.card}
       testID="medical-record-change-card"
       variant="outlined"
@@ -36,16 +43,13 @@ export const MedicalRecordChangeCard = memo(function MedicalRecordChangeCard({
           label={badgeLabel}
           tone={getChangeTypeTone(change.changeType)}
         />
-        <AppText color="textSecondary" style={styles.meta} variant="label">
-          {formatChangeDate(change.changedAt)}
-        </AppText>
       </View>
-      <View style={styles.actorRow}>
-        <AppText color="textSecondary" variant="label">
-          Quién
-        </AppText>
-        <AppText style={styles.actorValue}>{actorLabel}</AppText>
-      </View>
+      <ActorRow
+        accessibilityLabel={`Actor: ${actorLabel}`}
+        initials={change.changedBy?.initials ?? '?'}
+        name={actorLabel}
+        occurredAt={change.changedAt}
+      />
       <AppText color="textSecondary" style={styles.summary} variant="label">
         {summary}
       </AppText>
@@ -71,8 +75,6 @@ export const MedicalRecordChangeCard = memo(function MedicalRecordChangeCard({
 });
 
 const styles = StyleSheet.create({
-  actorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  actorValue: { flexShrink: 1 },
   card: { gap: spacing.sm },
   fieldLabel: { flexShrink: 0 },
   fieldRow: {
@@ -89,6 +91,5 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     justifyContent: 'space-between',
   },
-  meta: { flexShrink: 1, textAlign: 'right' },
   summary: { flexShrink: 1 },
 });

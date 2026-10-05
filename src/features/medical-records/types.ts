@@ -1,3 +1,4 @@
+import { formatActorName, getActorInitials } from '@/components/patterns';
 import type { components } from '@/core/api/generated/openapi';
 
 export type CreateMedicalRecordRequest = Omit<
@@ -59,6 +60,14 @@ export interface MedicalRecordChange {
   changedFields: string[];
   previousValues: Record<string, unknown>;
   changedAt: string;
+  changedBy: MedicalRecordChangedByView | null;
+  changedByFallbackId: string | null;
+}
+
+export interface MedicalRecordChangedByView {
+  id: string;
+  displayName: string;
+  initials: string;
 }
 
 export interface PaginatedMedicalRecordChanges {
@@ -129,6 +138,7 @@ export function toClinicalAttachment(dto: MediaAsset): ClinicalAttachment {
 }
 
 export function toMedicalRecordChange(dto: MedicalRecordChangeResponse): MedicalRecordChange {
+  const changedBy = dto.changedBy ?? null;
   return {
     id: dto.id,
     medicalRecordId: dto.medicalRecordId,
@@ -137,6 +147,15 @@ export function toMedicalRecordChange(dto: MedicalRecordChangeResponse): Medical
     changedFields: dto.changedFields,
     previousValues: dto.previousValues,
     changedAt: dto.changedAt,
+    changedBy:
+      changedBy === null
+        ? null
+        : {
+            id: changedBy.id,
+            displayName: formatActorName(changedBy.firstName, changedBy.lastName),
+            initials: getActorInitials(changedBy.firstName, changedBy.lastName),
+          },
+    changedByFallbackId: typeof dto.changedByUserId === 'string' ? dto.changedByUserId : null,
   };
 }
 

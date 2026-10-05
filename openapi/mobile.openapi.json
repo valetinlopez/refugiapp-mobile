@@ -2180,6 +2180,15 @@
           "total": { "type": "number" }
         }
       },
+      "ChangeActorDto": {
+        "type": "object",
+        "required": ["id", "firstName", "lastName"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" }
+        }
+      },
       "MedicalRecordChangeResponseDto": {
         "type": "object",
         "required": [
@@ -2194,6 +2203,11 @@
           "id": { "type": "string", "format": "uuid" },
           "medicalRecordId": { "type": "string", "format": "uuid" },
           "changedByUserId": { "type": "string", "format": "uuid", "nullable": true },
+          "changedBy": {
+            "nullable": true,
+            "description": "Human-readable actor of the change. Null for system events or when the actor user was deleted. Email is intentionally omitted to protect colleague contact data.",
+            "allOf": [{ "$ref": "#/components/schemas/ChangeActorDto" }]
+          },
           "changeType": { "type": "string", "enum": ["update", "soft_delete", "restore"] },
           "changedFields": {
             "type": "array",
@@ -2416,12 +2430,27 @@
           }
         }
       },
+      "AuditActorDto": {
+        "type": "object",
+        "required": ["id", "firstName", "lastName", "email"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string", "format": "email" }
+        }
+      },
       "AuditLogResponseDto": {
         "type": "object",
         "required": ["id", "action", "resourceType", "metadata", "occurredAt", "createdAt"],
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "actorUserId": { "type": "string", "format": "uuid", "nullable": true },
+          "actor": {
+            "nullable": true,
+            "description": "Human-readable actor of the event. Null for system events or when the actor user was deleted.",
+            "allOf": [{ "$ref": "#/components/schemas/AuditActorDto" }]
+          },
           "action": {
             "type": "string",
             "enum": [

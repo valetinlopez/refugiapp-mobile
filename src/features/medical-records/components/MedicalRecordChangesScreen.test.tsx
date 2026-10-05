@@ -41,15 +41,19 @@ const mockUseMedicalRecordChanges = useMedicalRecordChanges as jest.Mock;
 
 const RECORD_ID = '11111111-1111-4111-8111-111111111111';
 
+const ACTOR_UUID = '33333333-3333-4333-8333-333333333333';
+
 function makeChange(overrides: Record<string, unknown> = {}) {
   return {
     id: '22222222-2222-4222-8222-222222222222',
     medicalRecordId: RECORD_ID,
-    changedByUserId: '33333333-3333-4333-8333-333333333333',
+    changedByUserId: ACTOR_UUID,
     changeType: 'update',
     changedFields: ['title', 'diagnosis'],
     previousValues: { title: 'Vacuna anterior', diagnosis: 'Prev' },
     changedAt: '2026-09-29T12:00:00.000Z',
+    changedBy: null,
+    changedByFallbackId: ACTOR_UUID,
     ...overrides,
   };
 }
@@ -114,9 +118,55 @@ describe('MedicalRecordChangesScreen', () => {
     const screen = await render(<MedicalRecordChangesScreen recordId={RECORD_ID} />);
 
     expect(screen.getAllByText('Actualización').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('33333333-3333-4333-8333-333333333333')).toBeTruthy();
+    expect(screen.getByText(ACTOR_UUID)).toBeTruthy();
     expect(screen.getByText('Título')).toBeTruthy();
     expect(screen.getByText('Vacuna anterior')).toBeTruthy();
+  });
+
+  it('shows the changed-by display name when available', async () => {
+    mockUseMedicalRecordChanges.mockReturnValue(
+      createQueryResult({
+        data: {
+          pages: [
+            {
+              items: [
+                makeChange({
+                  changedBy: { id: ACTOR_UUID, displayName: 'Dr. Ana Ruiz', initials: 'AR' },
+                  changedByFallbackId: ACTOR_UUID,
+                }),
+              ],
+              page: 1,
+              limit: 20,
+              total: 1,
+            },
+          ],
+        },
+      })
+    );
+    const screen = await render(<MedicalRecordChangesScreen recordId={RECORD_ID} />);
+
+    expect(screen.getByText('Dr. Ana Ruiz')).toBeTruthy();
+    expect(screen.queryByText(ACTOR_UUID)).toBeNull();
+  });
+
+  it('renders the system label when actor and fallback are both null', async () => {
+    mockUseMedicalRecordChanges.mockReturnValue(
+      createQueryResult({
+        data: {
+          pages: [
+            {
+              items: [makeChange({ changedBy: null, changedByFallbackId: null })],
+              page: 1,
+              limit: 20,
+              total: 1,
+            },
+          ],
+        },
+      })
+    );
+    const screen = await render(<MedicalRecordChangesScreen recordId={RECORD_ID} />);
+
+    expect(screen.getAllByText('Usuario del sistema').length).toBeGreaterThanOrEqual(1);
   });
 
   it('applies a change type filter', async () => {

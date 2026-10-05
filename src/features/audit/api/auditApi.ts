@@ -1,6 +1,13 @@
 import { apiClient, type HttpClient } from '@/core/api';
 
-import type { AuditFilters, AuditLog, PaginatedAuditLogs } from '../types';
+import type {
+  AuditFilters,
+  AuditLogResponse,
+  AuditLogView,
+  PaginatedAuditLogsResponse,
+  PaginatedAuditLogsView,
+} from '../types';
+import { toAuditLogView, toPaginatedAuditLogsView } from '../types';
 
 export const auditApi = {
   async list(
@@ -8,15 +15,15 @@ export const auditApi = {
     limit = 20,
     filters: AuditFilters = {},
     client: HttpClient = apiClient
-  ): Promise<PaginatedAuditLogs> {
-    const response = await client.get<PaginatedAuditLogs>('/audit-logs', {
+  ): Promise<PaginatedAuditLogsView> {
+    const response = await client.get<PaginatedAuditLogsResponse>('/audit-logs', {
       params: { page, limit, ...filters },
     });
-    return response.data;
+    return toPaginatedAuditLogsView(response.data);
   },
 
-  async detail(id: string, client: HttpClient = apiClient): Promise<AuditLog> {
-    const response = await client.get<AuditLog>(`/audit-logs/${id}`);
-    return response.data;
+  async detail(id: string, client: HttpClient = apiClient): Promise<AuditLogView> {
+    const response = await client.get<AuditLogResponse>(`/audit-logs/${id}`);
+    return toAuditLogView(response.data);
   },
 };

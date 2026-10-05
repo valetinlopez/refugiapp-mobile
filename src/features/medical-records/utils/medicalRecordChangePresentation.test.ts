@@ -86,6 +86,8 @@ describe('changeFieldsSummary', () => {
     changedFields: ['title', 'diagnosis'],
     previousValues: { title: 'Antes', diagnosis: 'Prev' },
     changedAt: '2026-09-01T10:00:00.000Z',
+    changedBy: null,
+    changedByFallbackId: 'user-1',
   };
 
   it('summarizes a few fields', () => {
