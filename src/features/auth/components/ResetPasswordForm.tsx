@@ -6,6 +6,7 @@ import { colors, spacing } from '@/theme';
 
 import { validateNewPassword } from '../utils/passwordValidation';
 import { PasswordField } from './PasswordField';
+import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 
 interface ResetPasswordFormProps {
   errorMessage?: string | null;
@@ -49,8 +50,10 @@ export function ResetPasswordForm({ errorMessage, onSubmit }: ResetPasswordFormP
         placeholderTextColor={colors.textSecondary}
         returnKeyType="next"
         testID="reset-password-new"
+        textContentType="newPassword"
         value={newPassword}
       />
+      <PasswordStrengthMeter password={newPassword} />
       <PasswordField
         autoComplete="new-password"
         editable={!isSubmitting}
@@ -62,6 +65,7 @@ export function ResetPasswordForm({ errorMessage, onSubmit }: ResetPasswordFormP
         ref={confirmationRef}
         returnKeyType="done"
         testID="reset-password-confirmation"
+        textContentType="newPassword"
         value={confirmation}
       />
       {visibleError ? (

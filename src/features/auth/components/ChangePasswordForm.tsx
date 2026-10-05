@@ -6,6 +6,7 @@ import { colors, spacing } from '@/theme';
 
 import { validateNewPassword } from '../utils/passwordValidation';
 import { PasswordField } from './PasswordField';
+import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 
 export interface ChangePasswordValues {
   currentPassword: string;
@@ -61,6 +62,7 @@ export function ChangePasswordForm({ errorMessage, onSubmit }: ChangePasswordFor
         placeholderTextColor={colors.textSecondary}
         returnKeyType="next"
         testID="change-password-current"
+        textContentType="password"
         value={currentPassword}
       />
       <PasswordField
@@ -74,8 +76,10 @@ export function ChangePasswordForm({ errorMessage, onSubmit }: ChangePasswordFor
         ref={newPasswordRef}
         returnKeyType="next"
         testID="change-password-new"
+        textContentType="newPassword"
         value={newPassword}
       />
+      <PasswordStrengthMeter password={newPassword} />
       <PasswordField
         autoComplete="new-password"
         editable={!isSubmitting}
@@ -87,6 +91,7 @@ export function ChangePasswordForm({ errorMessage, onSubmit }: ChangePasswordFor
         ref={confirmationRef}
         returnKeyType="done"
         testID="change-password-confirmation"
+        textContentType="newPassword"
         value={confirmation}
       />
       {visibleError ? (

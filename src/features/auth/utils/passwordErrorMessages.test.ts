@@ -31,7 +31,7 @@ describe('toChangePasswordErrorMessage', () => {
       'Revisá los datos ingresados e intentá de nuevo.'
     );
     expect(toChangePasswordErrorMessage(apiError(429))).toBe(
-      'Se realizaron demasiados intentos. Esperá un momento e intentá de nuevo.'
+      'Llegaste al límite de intentos (5 por minuto). Esperá 60 segundos e intentá de nuevo.'
     );
   });
 
@@ -56,7 +56,7 @@ describe('toRequestPasswordResetErrorMessage', () => {
       'Revisá los datos ingresados e intentá de nuevo.'
     );
     expect(toRequestPasswordResetErrorMessage(apiError(429))).toBe(
-      'Se realizaron demasiados intentos. Esperá un momento e intentá de nuevo.'
+      'Llegaste al límite de intentos (5 por minuto). Esperá 60 segundos e intentá de nuevo.'
     );
   });
 
@@ -99,7 +99,7 @@ describe('toConfirmPasswordResetErrorMessage', () => {
       'Revisá los datos ingresados e intentá de nuevo.'
     );
     expect(toConfirmPasswordResetErrorMessage(apiError(429))).toBe(
-      'Se realizaron demasiados intentos. Esperá un momento e intentá de nuevo.'
+      'Llegaste al límite de intentos (5 por minuto). Esperá 60 segundos e intentá de nuevo.'
     );
   });
 

@@ -61,4 +61,19 @@ describe('ResetPasswordForm', () => {
       'El enlace de recuperación venció. Solicitá uno nuevo.'
     );
   });
+
+  it('hints password managers and shows the strength meter while typing', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined);
+    const screen = await render(<ResetPasswordForm onSubmit={onSubmit} />);
+
+    expect(screen.getByLabelText('Contraseña nueva').props.textContentType).toBe('newPassword');
+    expect(screen.getByLabelText('Confirmar contraseña nueva').props.textContentType).toBe(
+      'newPassword'
+    );
+    expect(screen.queryByTestId('password-strength-meter')).toBeNull();
+
+    await fireEvent.changeText(screen.getByLabelText('Contraseña nueva'), 'a'.repeat(12));
+
+    expect(screen.getByTestId('password-strength-meter')).toBeTruthy();
+  });
 });

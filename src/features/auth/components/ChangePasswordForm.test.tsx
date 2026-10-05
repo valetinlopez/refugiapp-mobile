@@ -91,4 +91,19 @@ describe('ChangePasswordForm', () => {
     expect(screen.getByLabelText('Contraseña nueva').props.returnKeyType).toBe('next');
     expect(screen.getByLabelText('Confirmar contraseña nueva').props.returnKeyType).toBe('done');
   });
+
+  it('hints password managers and shows the strength meter for the new password', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined);
+    const screen = await render(<ChangePasswordForm onSubmit={onSubmit} />);
+
+    expect(screen.getByLabelText('Contraseña actual').props.textContentType).toBe('password');
+    expect(screen.getByLabelText('Contraseña nueva').props.textContentType).toBe('newPassword');
+    expect(screen.getByLabelText('Confirmar contraseña nueva').props.textContentType).toBe(
+      'newPassword'
+    );
+
+    await fireEvent.changeText(screen.getByLabelText('Contraseña nueva'), 'a'.repeat(16));
+
+    expect(screen.getByTestId('password-strength-meter')).toBeTruthy();
+  });
 });
