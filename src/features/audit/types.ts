@@ -5,9 +5,12 @@ export type AuditLogResponse = components['schemas']['AuditLogResponseDto'];
 export type PaginatedAuditLogsResponse = components['schemas']['PaginatedAuditLogsResponseDto'];
 export type AuditActor = components['schemas']['AuditActorDto'];
 export type AuditAction = AuditLogResponse['action'];
+export type AuditResourceType = AuditLogResponse['resourceType'];
 
 export interface AuditFilters {
   action?: AuditAction;
+  resourceType?: AuditResourceType;
+  actorUserId?: string;
   from?: string;
   to?: string;
 }
@@ -22,7 +25,7 @@ export interface AuditActorView {
 export interface AuditLogView {
   id: string;
   action: AuditAction;
-  resourceType: string;
+  resourceType: AuditResourceType;
   resourceId: string | null;
   occurredAt: string;
   metadata: Record<string, unknown>;

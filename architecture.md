@@ -272,7 +272,7 @@ La matriz completa vive en la arquitectura del backend. Para el frontend:
 - Los tres roles consultan tareas; solo `admin` y `shelter_manager` pueden crearlas, editarlas, completarlas o cancelarlas.
 - `shelter_manager` no recibe actividad clínica reciente en dashboard.
 - Solo `admin` consulta auditoría y administra usuarios.
-- Auditoría consume `GET /audit-logs` y `GET /audit-logs/:id`, ofrece filtros por acción y fechas, y vuelve a sanitizar metadata antes de presentarla. Presenta el actor por nombre (`actor`, con email solo en detalle), con fallback a UUID (`actorUserId`) durante rollout y "Sistema" cuando ambos son `null` (RFG-129).
+- Auditoría consume `GET /audit-logs` y `GET /audit-logs/:id`, ofrece filtros por acción, tipo de recurso, actor (UUID) y rango de fechas, y vuelve a sanitizar metadata antes de presentarla. Presenta el actor por nombre (`actor`, con email solo en detalle), con fallback a UUID (`actorUserId`) durante rollout y "Sistema" cuando ambos son `null` (RFG-129). Las acciones (28) y tipos de recurso (7) se presentan con diccionarios en español rioplatense; ningún código crudo llega a la UI (RFG-131).
 - Los tres roles consultan gastos; solo `admin` y `shelter_manager` pueden registrarlos o eliminarlos.
 - Los tres roles consultan veterinarios; solo `admin` y `shelter_manager` (`canManageVets`) los crean, editan o desactivan. El usuario auto-creado mediante `createUser` recibe siempre el rol `veterinarian` (regla del backend).
 

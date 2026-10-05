@@ -130,7 +130,13 @@ export function MedicalRecordChangesScreen({ recordId }: MedicalRecordChangesScr
           />
         }
         ListFooterComponent={
-          query.isFetchingNextPage ? <LoadingState label="Cargando más cambios" /> : null
+          query.isFetchingNextPage ? (
+            <LoadingState label="Cargando más cambios" />
+          ) : !hasNextPage && entries.length > 0 ? (
+            <AppText color="textSecondary" style={styles.endOfList}>
+              No hay más cambios
+            </AppText>
+          ) : null
         }
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.4}
@@ -191,13 +197,13 @@ function ChangeFilters({
         ))}
       </View>
       <View style={styles.field}>
-        <AppText variant="label">Usuario que realizó el cambio</AppText>
+        <AppText variant="label">Usuario que realizó el cambio (UUID)</AppText>
         <FilterActorInput
-          accessibilityLabel="Usuario que realizó el cambio"
+          accessibilityLabel="Usuario que realizó el cambio (UUID)"
           autoCapitalize="none"
           autoCorrect={false}
           onChangeText={onActor}
-          placeholder="UUID del usuario"
+          placeholder="Ej.: 123e4567-…"
           value={actor}
         />
       </View>
@@ -251,6 +257,7 @@ const styles = StyleSheet.create({
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   container: { backgroundColor: colors.background, flex: 1, gap: spacing.md, padding: spacing.lg },
   dates: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  endOfList: { paddingVertical: spacing.sm, textAlign: 'center' },
   field: { flex: 1, gap: spacing.xs, minWidth: 220 },
   filters: {
     borderBottomColor: colors.border,

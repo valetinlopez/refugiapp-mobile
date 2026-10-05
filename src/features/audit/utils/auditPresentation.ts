@@ -5,8 +5,9 @@ import {
   toLocalDateTimeIso,
 } from '@/components/patterns';
 import { ApiError } from '@/core/api';
+import { isUuid } from '@/core/validation';
 
-import type { AuditAction, AuditFilters } from '../types';
+import type { AuditAction, AuditFilters, AuditResourceType } from '../types';
 
 export const AUDIT_ACTIONS: readonly AuditAction[] = [
   'user.create',
@@ -27,7 +28,16 @@ export const AUDIT_ACTIONS: readonly AuditAction[] = [
   'auth.login_failure',
   'auth.refresh_success',
   'auth.refresh_failure',
+  'auth.password_change',
+  'auth.password_reset_requested',
+  'auth.password_reset_completed',
+  'auth.password_reset_failed',
   'access.denied',
+  'push.device_register',
+  'push.device_remove',
+  'push.preferences_update',
+  'push.dispatch_completed',
+  'push.token_invalid',
 ];
 
 const ACTION_LABELS: Record<AuditAction, string> = {
@@ -49,13 +59,55 @@ const ACTION_LABELS: Record<AuditAction, string> = {
   'auth.login_failure': 'Inicio de sesión fallido',
   'auth.refresh_success': 'Sesión renovada',
   'auth.refresh_failure': 'Renovación fallida',
+  'auth.password_change': 'Contraseña cambiada',
+  'auth.password_reset_requested': 'Recuperación de contraseña solicitada',
+  'auth.password_reset_completed': 'Recuperación de contraseña completada',
+  'auth.password_reset_failed': 'Recuperación de contraseña fallida',
   'access.denied': 'Acceso denegado',
+  'push.device_register': 'Dispositivo registrado para notificaciones',
+  'push.device_remove': 'Dispositivo eliminado de notificaciones',
+  'push.preferences_update': 'Preferencias de notificación actualizadas',
+  'push.dispatch_completed': 'Notificación enviada',
+  'push.token_invalid': 'Token de notificación inválido',
+};
+
+export const AUDIT_RESOURCE_TYPES: readonly AuditResourceType[] = [
+  'user',
+  'medical_record',
+  'expense',
+  'care_task',
+  'auth_session',
+  'authorization',
+  'notification',
+];
+
+const RESOURCE_TYPE_LABELS: Record<AuditResourceType, string> = {
+  user: 'Usuario',
+  medical_record: 'Registro clínico',
+  expense: 'Gasto',
+  care_task: 'Tarea',
+  auth_session: 'Sesión',
+  authorization: 'Autorización',
+  notification: 'Notificación',
 };
 
 const SENSITIVE_KEY = /(password|token|secret|authorization|credential|api.?key)/i;
 
 export function auditActionLabel(action: AuditAction): string {
   return ACTION_LABELS[action];
+}
+
+export function auditResourceTypeLabel(resourceType: AuditResourceType): string {
+  return RESOURCE_TYPE_LABELS[resourceType];
+}
+
+export function auditActionTone(action: AuditAction): 'info' | 'danger' {
+  return action === 'access.denied' ||
+    action === 'auth.login_failure' ||
+    action === 'auth.refresh_failure' ||
+    action === 'auth.password_reset_failed'
+    ? 'danger'
+    : 'info';
 }
 
 export function formatAuditDate(value: string): string {
@@ -79,8 +131,20 @@ export function sanitizeAuditMetadata(value: unknown): unknown {
   );
 }
 
-export function buildAuditFilters(action: AuditAction | undefined, from: string, to: string) {
-  const filters: AuditFilters = action ? { action } : {};
+export function buildAuditFilters(
+  action: AuditAction | undefined,
+  resourceType: AuditResourceType | undefined,
+  actorUserId: string,
+  from: string,
+  to: string
+) {
+  const filters: AuditFilters = {
+    ...(action ? { action } : {}),
+    ...(resourceType ? { resourceType } : {}),
+  };
+  if (actorUserId.trim() !== '' && isUuid(actorUserId.trim())) {
+    filters.actorUserId = actorUserId.trim();
+  }
   if (!from || !to || parseDateOnly(from).getTime() > parseDateOnly(to).getTime()) return filters;
   const fromDate = parseDateOnly(from);
   const toDate = parseDateOnly(to);
