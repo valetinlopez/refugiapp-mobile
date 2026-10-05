@@ -220,10 +220,16 @@ export interface components {
       limit: number;
       total: number;
     };
+    ChangeActorDto: {
+      id: string;
+      firstName: string;
+      lastName: string;
+    };
     MedicalRecordChangeResponseDto: {
       id: string;
       medicalRecordId: string;
       changedByUserId?: string | null;
+      changedBy?: components['schemas']['ChangeActorDto'] | null;
       changeType: 'update' | 'soft_delete' | 'restore';
       changedFields: string[];
       previousValues: Record<string, unknown>;
@@ -330,9 +336,16 @@ export interface components {
       totals: components['schemas']['DashboardTotalsDto'];
       recentAnimals: components['schemas']['DashboardAnimalDto'][];
     };
+    AuditActorDto: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
     AuditLogResponseDto: {
       id: string;
       actorUserId?: string | null;
+      actor?: components['schemas']['AuditActorDto'] | null;
       action:
         | 'user.create'
         | 'user.deactivate'

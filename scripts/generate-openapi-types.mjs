@@ -19,6 +19,9 @@ function schemaToType(schema) {
   if (schema.oneOf) {
     return withNullable(schema, schema.oneOf.map(schemaToType).join(' | '));
   }
+  if (schema.allOf) {
+    return withNullable(schema, schema.allOf.map(schemaToType).join(' & '));
+  }
   if (schema.enum) {
     return withNullable(schema, schema.enum.map((value) => JSON.stringify(value)).join(' | '));
   }

@@ -1,4 +1,9 @@
-import { auditRangeError, buildAuditFilters, sanitizeAuditMetadata } from './auditPresentation';
+import {
+  auditRangeError,
+  buildAuditFilters,
+  formatAuditDateBoth,
+  sanitizeAuditMetadata,
+} from './auditPresentation';
 
 describe('auditPresentation', () => {
   it('removes sensitive metadata recursively', () => {
@@ -26,5 +31,12 @@ describe('auditPresentation', () => {
     expect(auditRangeError('2026-09-02', '2026-09-01')).toBe(
       'La fecha desde no puede ser posterior a la fecha hasta.'
     );
+  });
+
+  it('combines relative and absolute audit dates', () => {
+    expect(formatAuditDateBoth('2026-10-04T14:00:00.000Z')).toContain('hace');
+    expect(formatAuditDateBoth('2026-10-04T14:00:00.000Z')).toContain('·');
+    expect(formatAuditDateBoth('2026-01-01T10:00:00.000Z')).not.toContain('hace');
+    expect(formatAuditDateBoth('nope')).toBe('Fecha no disponible');
   });
 });

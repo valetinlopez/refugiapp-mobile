@@ -1,4 +1,9 @@
-import { formatDateTime, parseDateOnly, toLocalDateTimeIso } from '@/components/patterns';
+import {
+  formatDateTime,
+  formatRelativeDateTime,
+  parseDateOnly,
+  toLocalDateTimeIso,
+} from '@/components/patterns';
 import { ApiError } from '@/core/api';
 
 import type { AuditAction, AuditFilters } from '../types';
@@ -55,6 +60,13 @@ export function auditActionLabel(action: AuditAction): string {
 
 export function formatAuditDate(value: string): string {
   return formatDateTime(value) || 'Fecha no disponible';
+}
+
+export function formatAuditDateBoth(value: string): string {
+  const absolute = formatDateTime(value);
+  if (!absolute) return 'Fecha no disponible';
+  const relative = formatRelativeDateTime(value);
+  return relative ? `${relative} · ${absolute}` : absolute;
 }
 
 export function sanitizeAuditMetadata(value: unknown): unknown {

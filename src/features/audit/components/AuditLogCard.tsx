@@ -2,16 +2,24 @@ import { router } from 'expo-router';
 import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { ActorRow, resolveActorLabel } from '@/components/patterns';
 import { AppBadge, AppCard, AppIcon, AppText } from '@/components/primitives';
 import { spacing } from '@/theme';
 
-import type { AuditLog } from '../types';
+import type { AuditLogView } from '../types';
 import { auditActionLabel, formatAuditDate } from '../utils/auditPresentation';
 
-export const AuditLogCard = memo(function AuditLogCard({ entry }: { entry: AuditLog }) {
+const SYSTEM_ACTOR_LABEL = 'Sistema';
+
+export const AuditLogCard = memo(function AuditLogCard({ entry }: { entry: AuditLogView }) {
+  const actorLabel = resolveActorLabel(
+    entry.actor?.displayName,
+    entry.actorFallbackId,
+    SYSTEM_ACTOR_LABEL
+  );
   return (
     <Pressable
-      accessibilityLabel={`${auditActionLabel(entry.action)}, ${formatAuditDate(entry.occurredAt)}`}
+      accessibilityLabel={`${auditActionLabel(entry.action)}, ${actorLabel}, ${formatAuditDate(entry.occurredAt)}`}
       accessibilityRole="button"
       onPress={() => router.push({ pathname: '/audit/[id]', params: { id: entry.id } })}
     >
@@ -24,7 +32,12 @@ export const AuditLogCard = memo(function AuditLogCard({ entry }: { entry: Audit
           <AppIcon name="chevronRight" />
         </View>
         <AppText color="textSecondary">{entry.resourceType}</AppText>
-        <AppText variant="label">{formatAuditDate(entry.occurredAt)}</AppText>
+        <ActorRow
+          accessibilityLabel={`Actor: ${actorLabel}`}
+          initials={entry.actor?.initials ?? '?'}
+          name={actorLabel}
+          occurredAt={entry.occurredAt}
+        />
       </AppCard>
     </Pressable>
   );

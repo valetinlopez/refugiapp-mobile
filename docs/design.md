@@ -132,6 +132,15 @@ Tamaños: 36, 48 y 72 pt. Los retratos usan recorte circular y borde cálido. Si
 
 Las fotos remotas se sirven con `expo-image`, caché combinada de memoria/disco y carga diferida. Cuando la fuente es Cloudinary, se pide una variante cuadrada según los píxeles físicos del avatar con formato y calidad automáticos; no se descarga el original para una miniatura. Las vistas recicladas cambian `recyclingKey` junto con la URI para no mostrar brevemente la foto de otra fila.
 
+### Filas de actor (`ActorRow`)
+
+Patrón de identidad reutilizable por Auditoría e Historial clínico: `AppAvatar` con iniciales (hasta dos), nombre de la persona, línea opcional de detalle (`caption`, p. ej. email) y fecha relativa + absoluta (`hace 2 h · 04/10/2026 14:30`). La fecha relativa se usa en la ventana de los últimos 7 días; fuera de ella se muestra solo la absoluta.
+
+- La fila no conoce DTOs ni dominios: recibe `name`, `initials`, `caption` y `occurredAt`. La feature resuelve el label con `resolveActorLabel` (nombre → UUID durante rollout → "Sistema" / "Usuario del sistema").
+- El avatar usa `flexShrink: 0`; la columna de texto `flex: 1` + `minWidth: 0` para que nombre y fecha envuelvan antes de colisionar en pantallas estrechas y con fuente ampliada.
+- El estado de identidad nunca depende solo del color: el nombre se muestra siempre como texto y el contenedor expone `accessibilityRole="summary"` con `accessibilityLabel` que incluye nombre y fecha.
+- El email del actor (solo auditoría, admin) se muestra únicamente en el detalle, como `caption`; nunca en listas ni en el historial clínico.
+
 ## 17. Filas de tareas
 
 Orden recomendado: avatar, hora y animal, tarea, responsable opcional y badge. La fila crece cuando el texto aumenta y puede reorganizar metadatos en pantallas estrechas. La etiqueta accesible concatena hora, animal, tarea, estado y responsable. Los divisores pertenecen al listado, no a la fila.
