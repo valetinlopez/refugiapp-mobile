@@ -84,7 +84,7 @@ Los radios disponibles son 6, 10, 16, 24, 32, 36 y píldora. `lg` (24) es el est
 
 ## 10. Iconografía
 
-`AppIcon` centraliza símbolos de `expo-symbols`, con SF Symbols en iOS y Material Symbols en Android/web. Se usan iconos simples, sólidos o de trazo consistente. Un icono decorativo se oculta a tecnologías de asistencia; uno interactivo requiere `accessibilityLabel` en el control que lo contiene. No se mezclan emojis con iconos de producto. El set incluye `account` (identidad/cuenta) y `logout` (salida), mapeados a SF Symbols y Material Symbols para los controles de cuenta.
+`AppIcon` centraliza símbolos de `expo-symbols`, con SF Symbols en iOS y Material Symbols en Android/web. Se usan iconos simples, sólidos o de trazo consistente. Un icono decorativo se oculta a tecnologías de asistencia; uno interactivo requiere `accessibilityLabel` en el control que lo contiene. No se mezclan emojis con iconos de producto. El set incluye `account` (identidad/cuenta), `logout` (salida), `eye`/`eyeOff` (toggle mostrar/ocultar contraseña) y `refresh`, mapeados a SF Symbols y Material Symbols.
 
 ## 11. Fotografía animal
 
@@ -99,6 +99,12 @@ Un recorte transparente puede usarse una vez en una cabecera editorial. Debe con
 `primary` usa lima y se limita a una acción principal por contexto. `secondary` usa superficie elevada; `danger` confirma una consecuencia destructiva; `ghost` reduce peso visual. Todos tienen altura mínima de 48 pt, etiqueta visible, estado presionado, deshabilitado y ocupado. Un spinner sustituye temporalmente el contenido pero conserva la etiqueta accesible. Los botones solo de icono deben medir al menos 44 × 44 y tener nombre accesible.
 
 Las acciones rápidas de una pantalla (botonera de acceso, por ejemplo en Inicio) se agrupan como una columna full-width con `gap` por tokens: ancho y alineación uniformes, una acción por fila y targets táctiles consistentes, sin depender de la longitud de cada etiqueta.
+
+### Contraseñas: visibilidad y fortaleza
+
+`PasswordField` (auth) combina el input de contraseña con un toggle de visibilidad: botón solo-icono de 44 × 44 (`sizes.touchTarget`) con `hitSlop` de 8, icono `eye`/`eyeOff`, label accesible dinámico ("Mostrar contraseña"/"Ocultar contraseña") y padding derecho en el input para no solapar el texto. El `secureTextEntry` se alterna con el estado local; el estado nunca comunica solo por color.
+
+`PasswordStrengthMeter` (auth) guía la fortaleza de la contraseña nueva en reset y change: tres segmentos en píldora (rellenos según longitud) más una etiqueta de texto (Débil/Media/Fuerte). El nivel se deriva solo de la longitud (Débil < 12, Media 12–15, Fuerte ≥ 16), el color acompaña pero nunca es la única señal, y el contenedor expone `accessibilityLabel` ("Fortaleza de la contraseña: …") con `accessibilityLiveRegion="polite"`. La coincidencia de la confirmación sigue siendo validación de formulario, no parte del medidor.
 
 ## 14. Tarjetas y superficies
 

@@ -1,8 +1,14 @@
-import type { ComponentProps, Ref } from 'react';
-import { StyleSheet, TextInput, View, type TextInput as TextInputType } from 'react-native';
+import { useState, type ComponentProps, type Ref } from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  type TextInput as TextInputType,
+} from 'react-native';
 
-import { AppText } from '@/components/primitives';
-import { colors, fontFamilies, radii, spacing } from '@/theme';
+import { AppIcon, AppText } from '@/components/primitives';
+import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
 type PasswordFieldProps = ComponentProps<typeof TextInput> & {
   label: string;
@@ -10,17 +16,31 @@ type PasswordFieldProps = ComponentProps<typeof TextInput> & {
 };
 
 export function PasswordField({ label, ref, style, ...props }: PasswordFieldProps) {
+  const [visible, setVisible] = useState(false);
+
   return (
     <View style={styles.field}>
       <AppText variant="label">{label}</AppText>
-      <TextInput
-        accessibilityLabel={label}
-        autoCapitalize="none"
-        ref={ref}
-        secureTextEntry
-        style={[styles.input, style]}
-        {...props}
-      />
+      <View style={styles.inputWrapper}>
+        <TextInput
+          accessibilityLabel={label}
+          autoCapitalize="none"
+          ref={ref}
+          secureTextEntry={!visible}
+          style={[styles.input, style]}
+          {...props}
+        />
+        <Pressable
+          accessibilityLabel={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          accessibilityRole="button"
+          hitSlop={sizes.hitSlop}
+          onPress={() => setVisible((current) => !current)}
+          style={styles.toggle}
+          testID={`${label.replace(/\s+/g, '-').toLowerCase()}-visibility-toggle`}
+        >
+          <AppIcon color="textSecondary" name={visible ? 'eyeOff' : 'eye'} size={sizes.iconMd} />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -39,6 +59,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 48,
     paddingHorizontal: spacing.md,
+    paddingRight: sizes.touchTarget + spacing.xs,
     paddingVertical: spacing.sm,
+  },
+  inputWrapper: {
+    justifyContent: 'center',
+  },
+  toggle: {
+    alignItems: 'center',
+    height: sizes.touchTarget,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: spacing.xs,
+    width: sizes.touchTarget,
   },
 });

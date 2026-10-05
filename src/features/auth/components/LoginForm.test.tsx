@@ -40,4 +40,12 @@ describe('LoginForm', () => {
     expect(screen.getByLabelText('Correo electrónico').props.returnKeyType).toBe('next');
     expect(screen.getByLabelText('Contraseña').props.returnKeyType).toBe('done');
   });
+
+  it('hints password managers with autofill and text content types', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined);
+    const screen = await render(<LoginForm onSubmit={onSubmit} />);
+
+    expect(screen.getByLabelText('Contraseña').props.autoComplete).toBe('current-password');
+    expect(screen.getByLabelText('Contraseña').props.textContentType).toBe('password');
+  });
 });

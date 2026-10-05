@@ -13,6 +13,8 @@ export type AppIconName =
   | 'clock'
   | 'close'
   | 'error'
+  | 'eye'
+  | 'eyeOff'
   | 'heart'
   | 'home'
   | 'info'
@@ -34,6 +36,8 @@ const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   clock: { ios: 'clock.fill', android: 'schedule', web: 'schedule' },
   close: { ios: 'xmark', android: 'close', web: 'close' },
   error: { ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' },
+  eye: { ios: 'eye', android: 'visibility', web: 'visibility' },
+  eyeOff: { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' },
   heart: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
   home: { ios: 'house.fill', android: 'home', web: 'home' },
   info: { ios: 'info.circle.fill', android: 'info', web: 'info' },

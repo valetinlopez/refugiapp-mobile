@@ -75,6 +75,7 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
           secureTextEntry
           style={styles.input}
           testID="login-password"
+          textContentType="password"
           value={password}
         />
       </View>

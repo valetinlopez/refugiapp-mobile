@@ -1,7 +1,7 @@
 import { ApiError, toApiErrorMessage } from '@/core/api';
 
 const RATE_LIMIT_MESSAGE =
-  'Se realizaron demasiados intentos. Esperá un momento e intentá de nuevo.';
+  'Llegaste al límite de intentos (5 por minuto). Esperá 60 segundos e intentá de nuevo.';
 const INVALID_DATA_MESSAGE = 'Revisá los datos ingresados e intentá de nuevo.';
 
 export function isPasswordResetTokenError(error: unknown): boolean {

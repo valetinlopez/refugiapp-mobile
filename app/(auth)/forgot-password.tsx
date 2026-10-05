@@ -7,7 +7,9 @@ import { AppHeaderBack } from '@/components/navigation';
 import { AppButton, AppText } from '@/components/primitives';
 import { RequestPasswordResetForm } from '@/features/auth/components/RequestPasswordResetForm';
 import { authApi } from '@/features/auth/api/authApi';
+import { useResendCooldown } from '@/features/auth/hooks/useResendCooldown';
 import { toRequestPasswordResetErrorMessage } from '@/features/auth/utils/passwordErrorMessages';
+import { PASSWORD_RESET_LINK_TTL_MINUTES } from '@/features/auth/utils/passwordValidation';
 import { colors, spacing } from '@/theme';
 
 const GENERIC_RECOVERY_MESSAGE =
@@ -15,9 +17,36 @@ const GENERIC_RECOVERY_MESSAGE =
 
 export default function ForgotPasswordScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
+  const [sentEmail, setSentEmail] = useState<string | null>(null);
+  const [resendErrorMessage, setResendErrorMessage] = useState<string | null>(null);
+  const { remaining, start } = useResendCooldown();
 
-  if (sent) {
+  async function handleSubmit(email: string): Promise<void> {
+    setErrorMessage(null);
+    setResendErrorMessage(null);
+    try {
+      await authApi.requestPasswordReset({ email });
+      setSentEmail(email);
+      start();
+    } catch (error) {
+      setErrorMessage(toRequestPasswordResetErrorMessage(error));
+    }
+  }
+
+  async function handleResend(): Promise<void> {
+    if (sentEmail === null || remaining > 0) {
+      return;
+    }
+    setResendErrorMessage(null);
+    try {
+      await authApi.requestPasswordReset({ email: sentEmail });
+      start();
+    } catch (error) {
+      setResendErrorMessage(toRequestPasswordResetErrorMessage(error));
+    }
+  }
+
+  if (sentEmail !== null) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
@@ -25,6 +54,27 @@ export default function ForgotPasswordScreen() {
           <AppText color="textSecondary" testID="forgot-password-confirmation">
             {GENERIC_RECOVERY_MESSAGE}
           </AppText>
+          <AppText color="textSecondary" testID="forgot-password-hints">
+            Si no lo ves, revisá la carpeta de spam o correo no deseado. El enlace vence en{' '}
+            {PASSWORD_RESET_LINK_TTL_MINUTES} minutos.
+          </AppText>
+          {resendErrorMessage ? (
+            <AppText
+              accessibilityLiveRegion="polite"
+              color="danger"
+              role="alert"
+              testID="forgot-password-resend-error"
+            >
+              {resendErrorMessage}
+            </AppText>
+          ) : null}
+          <AppButton
+            disabled={remaining > 0}
+            label={remaining > 0 ? `Reenviar en ${remaining}s` : 'Reenviar correo'}
+            onPress={() => void handleResend()}
+            testID="forgot-password-resend"
+            variant="secondary"
+          />
           <AppButton
             label="Volver al inicio de sesión"
             onPress={() => router.replace('/login')}
@@ -43,18 +93,7 @@ export default function ForgotPasswordScreen() {
         <AppText color="textSecondary">
           Ingresá el correo de tu cuenta y te enviamos un enlace para restablecer la contraseña.
         </AppText>
-        <RequestPasswordResetForm
-          errorMessage={errorMessage}
-          onSubmit={async (email) => {
-            setErrorMessage(null);
-            try {
-              await authApi.requestPasswordReset({ email });
-              setSent(true);
-            } catch (error) {
-              setErrorMessage(toRequestPasswordResetErrorMessage(error));
-            }
-          }}
-        />
+        <RequestPasswordResetForm errorMessage={errorMessage} onSubmit={handleSubmit} />
       </View>
     </SafeAreaView>
   );

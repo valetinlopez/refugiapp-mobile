@@ -43,7 +43,17 @@ EAS usa el ambiente `preview`, mientras la aplicación recibe `EXPO_PUBLIC_ENV=s
 
    Para la recuperación de contraseña, el backend de staging debe publicar `PASSWORD_RESET_URL=refugiappmobile-staging://reset-password` (el scheme coincide con el de la variante; ver `app.config.ts`). Sin ese valor, el email no abre la app y el flujo no puede verificarse en dispositivo.
 
-4. Verificar la URL desde una red externa al equipo de desarrollo:
+### Verificación del flujo de recuperación (RFG-130)
+
+Con `PASSWORD_RESET_URL` publicado y un sink/buzón de notificaciones verificable en staging:
+
+1. Desde el login elegir "Olvidé mi contraseña", enviar con un email de staging y confirmar la guía de spam y el TTL ("vence en 30 minutos").
+2. Verificar que el reenvío queda deshabilitado con cuenta regresiva de 60 s y que reenviar tras el cooldown no produce `429` visible.
+3. Abrir el enlace del buzón (el token nunca se loguea ni se persiste), capturar el token del deep link y confirmar la nueva contraseña; volver al login y autenticar con la nueva.
+4. Probar tokens vencido/reutilizado/inválido y confirmar que cada uno muestra su estado diferenciado con acción para pedir un enlace nuevo.
+5. Verificar indistinguibilidad del `202` y del reenvío para emails existentes e inexistentes.
+
+6. Verificar la URL desde una red externa al equipo de desarrollo:
 
    ```bash
    curl -I https://HOST-REAL/api/v1/health
