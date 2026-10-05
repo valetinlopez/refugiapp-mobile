@@ -31,6 +31,7 @@ Los detalles visuales viven en `docs/design.md`. Los contratos del servidor y pe
 | Selector de fecha   | `@react-native-community/datetimepicker` | Patrón compartido para animales, tareas y registros médicos (ver ADR-0004) |
 | Selección de media  | Expo ImagePicker + DocumentPicker        | Cámara, galería e importación de PDF (ver ADR-0005)                        |
 | Imágenes remotas    | Expo Image                               | Caché memoria/disco y media Cloudinary optimizada (ver ADR-0012)           |
+| Push notifications  | Expo Notifications                       | Permisos, token Expo, preferencias y navegación por tap (ver ADR-0014)     |
 | Testing             | Jest + React Native Testing Library      | Unit y component tests                                                     |
 | Calidad             | ESLint + Prettier + TypeScript           | Gates locales obligatorios                                                 |
 | Distribución        | EAS Build                                | Builds internos de staging y versionado nativo remoto (ver ADR-0013)       |
@@ -156,6 +157,7 @@ src/
     medical-records/         # Registros clínicos y evolución clínica
     veterinarians/           # Listado, detalle, alta, edición y desactivación de veterinarios
     users/                   # Gestión de usuarios internos para admin
+    notifications/           # Permisos, registro de dispositivo, preferencias y navegación push
   theme/
   types/
 docs/
@@ -197,7 +199,7 @@ Las features exponen funciones HTTP en su carpeta `api`. Los componentes y rutas
 
 ### 7.3 Contratos
 
-El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, usuarios, alta y gestión de animales, dashboard, eventos generales, tareas de cuidado, registros médicos (incluido el historial de cambios y el actor enriquecido `actor`/`changedBy` de RFG-128), veterinarios y media consumidos actualmente. `npm run api:generate` produce `src/core/api/generated/openapi.ts` (el generador resuelve `allOf` de un elemento); el CI verifica que el resultado esté versionado y actualizado. El flujo es:
+El snapshot `openapi/mobile.openapi.json` refleja los endpoints de auth, perfil, usuarios, alta y gestión de animales, dashboard, eventos generales, tareas de cuidado, registros médicos (incluido el historial de cambios y el actor enriquecido `actor`/`changedBy` de RFG-128), veterinarios, media y notificaciones push consumidos actualmente. Se genera de forma reproducible con `node scripts/sync-mobile-openapi.mjs` desde el OpenAPI del backend (selecciona los paths consumidos, resuelve el cierre transitivo de schemas y normaliza el artefacto de Swagger que emite `string | null` como `type: object`). `npm run api:generate` produce `src/core/api/generated/openapi.ts` (el generador resuelve `allOf` de un elemento); el CI verifica que el resultado esté versionado y actualizado. El flujo es:
 
 ```text
 openapi.json del backend
@@ -361,6 +363,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - Pulido UX de "Olvidé mi contraseña" (RFG-130): toggle mostrar/ocultar en `PasswordField` (`src/features/auth/components`, área 44 × 44, labels accesibles y `testID` por campo) aplicado a login, reset y change; `textContentType` (`password`/`newPassword`) junto al `autoComplete` para gestores de contraseñas; medidor de fortaleza `PasswordStrengthMeter` (segmentos + label Débil/Media/Fuerte por longitud, texto y color, `accessibilityLiveRegion`) en reset y change; confirmación de solicitud con guía de spam y TTL ("vence en 30 minutos", `PASSWORD_RESET_LINK_TTL_MINUTES`, espejo del default del backend); reenvío con cooldown de 60 s (`useResendCooldown` en `src/features/auth/hooks`) que deshabilita el botón con cuenta regresiva para no chocar con el rate limit LOGIN (5/min); `429` con espera explícita. Se mantienen el `202` genérico idéntico (anti-enumeración), el token solo en memoria y los estados diferenciados de tokens vencidos/reutilizados/inválidos.
 - Gestión de veterinarios: feature `src/features/veterinarians` con contrato derivado de OpenAPI (`CreateVeterinarianDto`, `CreateVeterinarianUserDto`, `UpdateVeterinarianDto`, `VeterinarianResponseDto`), listado paginado con búsqueda por nombre o matrícula y filtro por estado (`GET /veterinarians`), detalle (`GET /veterinarians/:id`), alta (`POST /veterinarians`) que soporta creación y vinculación atómica de usuario con rol `veterinarian` mediante `createUser` (email + contraseña ≥ 12; sin UUID manual, ver ADR-0010), edición con PATCH diferencial que envía `null` para limpiar `email`/`phone`/`notes` (`PATCH /veterinarians/:id`), desactivación lógica (`POST /veterinarians/:id/deactivate`) y reactivación (`POST /veterinarians/:id/reactivate`, RFG-123) con confirmación `ReactivateVeterinarianDialog`, ambas conservando el historial clínico. Escritura para `admin`/`shelter_manager` (`canManageVets`); lectura para los tres roles. El detalle y el listado presentan el vínculo desde `user.email` y rol (nunca UUID). Errores traducidos por código (`LICENSE_NUMBER_ALREADY_EXISTS`, `EMAIL_ALREADY_EXISTS`, `USER_ALREADY_LINKED_TO_VETERINARIAN`, `VET_USER_PAYLOAD_CONFLICT`, `VET_CREATE_USER_EMAIL_REQUIRED`, `VETERINARIAN_ALREADY_ACTIVE`), 403/404 por estado y fallback genérico en `toApiErrorMessage`. Las mutations invalidan `veterinarianKeys.all` por prefijo, refrescando también las opciones activas del formulario clínico (`['veterinarians', 'options']`). Rutas `app/(app)/veterinarians/index.tsx`, `new.tsx`, `[id].tsx` y `[id]/edit.tsx`.
 - Gestión de usuarios para `admin`: acceso desde el dashboard, rutas `app/(app)/users/index.tsx`, `app/(app)/users/new.tsx` y `app/(app)/users/[id]/edit.tsx`, listado paginado mediante `GET /users` que incluye cuentas activas e inactivas en orden determinista, alta con email normalizado, nombre, apellido, password inicial y rol, edición con `PATCH /users/:id` diferencial (sin `GET` detalle: resolución por cache del listado con `useUser`), confirmación para activar o desactivar y para cambios de rol, traducción segura de `EMAIL_ALREADY_EXISTS`, `LAST_ADMIN_FORBIDDEN`, `EMPTY_UPDATE_PAYLOAD`/`INVALID_PAYLOAD`, 403/404 e invalidación de la lista tras cada mutación.
+- Notificaciones push (RFG-126, movil): feature `src/features/notifications` con permiso contextual (`granted`/`denied`/`blocked`/`unavailable`), registro y rotacion del token Expo ligado a la sesion (`usePushRegistration`, idempotente por hash y con dedupe en memoria), baja del dispositivo en el logout mediante `registerSignOutHandler` de la sesion (best-effort, antes de limpiar tokens), preferencias editables en la seccion "Notificaciones" del tab "Mas" (vencidas, proximas, antelacion 5..1440 y horas silenciosas) y navegacion segura al tocar una notificacion (`data.careTaskId` validado como UUID, cold start y app en ejecucion) hacia `app/(app)/care-tasks/[id]/index.tsx`. La seccion "Notificaciones" tiene un unico encabezado (lo aporta `NotificationsSection`; `NotificationPermissionCard` y `NotificationPreferencesSection` no repiten titulo) y las preferencias distinguen carga, error de servidor (`ErrorState`), fallo de transporte (`OfflineState` via `isNetworkError`) y datos cargados: un fallo nunca deja el spinner infinito. El adaptador `PushProvider` aisla `expo-notifications` y degrada a "no disponible" sin `EAS projectId`, permiso, dispositivo fisico o web. Expo Go (SDK 53+) no admite push real; en ese entorno el registro degrada a "no disponible" pero las preferencias siguen consultandose y guardandose porque son HTTP. Ver ADR-0014.
 - TanStack Query conectado a NetInfo y AppState.
 - Adapter HTTP falso inyectable para desarrollo y tests.
 - Tipos de auth, animals y media generados desde el snapshot OpenAPI.
@@ -424,6 +427,8 @@ Los pendientes no se consideran implementados hasta que exista código, contrato
 
 ```bash
 npm ci
+node scripts/sync-mobile-openapi.mjs   # solo al ampliar el snapshot desde ../refugiapp/docs/openapi.json
+npm run api:generate
 npm run typecheck
 npm run lint
 npm run format:check

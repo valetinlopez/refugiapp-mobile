@@ -18,13 +18,9 @@ describe('toAnimalView', () => {
     expect(
       toAnimalView(
         createResponse({
-          // The generator types nullable backend objects as Record; cast the real runtime values.
-          breed: 'mixed' as unknown as Record<string, unknown>,
+          breed: 'mixed',
           birthDate: '2025-06-01',
-          profilePhotoMediaId: '7fa85f64-5717-4562-b3fc-2c963f66afa6' as unknown as Record<
-            string,
-            unknown
-          >,
+          profilePhotoMediaId: '7fa85f64-5717-4562-b3fc-2c963f66afa6',
         })
       )
     ).toEqual({
@@ -60,10 +56,7 @@ describe('toAnimalView', () => {
         createResponse({
           intakeDate: '2026-01-10T00:00:00.000Z',
           birthDate: '2025-06-01T00:00:00.000Z',
-          profilePhotoMediaId: '7fa85f64-5717-4562-b3fc-2c963f66afa6' as unknown as Record<
-            string,
-            unknown
-          >,
+          profilePhotoMediaId: '7fa85f64-5717-4562-b3fc-2c963f66afa6',
         })
       )
     ).toEqual({

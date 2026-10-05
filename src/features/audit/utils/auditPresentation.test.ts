@@ -89,8 +89,9 @@ describe('auditPresentation', () => {
   });
 
   it('combines relative and absolute audit dates', () => {
-    expect(formatAuditDateBoth('2026-10-04T14:00:00.000Z')).toContain('hace');
-    expect(formatAuditDateBoth('2026-10-04T14:00:00.000Z')).toContain('·');
+    const recent = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    expect(formatAuditDateBoth(recent)).toContain('hace');
+    expect(formatAuditDateBoth(recent)).toContain('·');
     expect(formatAuditDateBoth('2026-01-01T10:00:00.000Z')).not.toContain('hace');
     expect(formatAuditDateBoth('nope')).toBe('Fecha no disponible');
   });
