@@ -1,53 +1,102 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { DateTimeField, FilterChip } from '@/components/patterns';
 import { AppButton, AppText } from '@/components/primitives';
-import { colors, spacing } from '@/theme';
+import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
-import type { AuditAction } from '../types';
-import { AUDIT_ACTIONS, auditActionLabel } from '../utils/auditPresentation';
+import type { AuditAction, AuditResourceType } from '../types';
+import {
+  AUDIT_ACTIONS,
+  AUDIT_RESOURCE_TYPES,
+  auditActionLabel,
+  auditResourceTypeLabel,
+} from '../utils/auditPresentation';
 
 interface Props {
   action: AuditAction | undefined;
+  actor: string;
   error: string | null;
   from: string;
   onAction(value?: AuditAction): void;
+  onActor(value: string): void;
   onApply(): void;
   onClear(): void;
   onFrom(value: string): void;
+  onResourceType(value?: AuditResourceType): void;
   onTo(value: string): void;
+  resourceType: AuditResourceType | undefined;
   to: string;
 }
 
 export function AuditFilters({
   action,
+  actor,
   error,
   from,
   onAction,
+  onActor,
   onApply,
   onClear,
   onFrom,
+  onResourceType,
   onTo,
+  resourceType,
   to,
 }: Props) {
   return (
     <View style={styles.container}>
       <AppText variant="heading3">Filtros</AppText>
-      <ScrollView
-        contentContainerStyle={styles.chips}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      >
-        <FilterChip label="Todas" onPress={() => onAction(undefined)} selected={!action} />
-        {AUDIT_ACTIONS.map((value) => (
+      <View style={styles.chipSection}>
+        <AppText variant="label">Acción</AppText>
+        <ScrollView
+          contentContainerStyle={styles.chips}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          <FilterChip label="Todas" onPress={() => onAction(undefined)} selected={!action} />
+          {AUDIT_ACTIONS.map((value) => (
+            <FilterChip
+              key={value}
+              label={auditActionLabel(value)}
+              onPress={() => onAction(value)}
+              selected={action === value}
+            />
+          ))}
+        </ScrollView>
+      </View>
+      <View style={styles.chipSection}>
+        <AppText variant="label">Recurso</AppText>
+        <ScrollView
+          contentContainerStyle={styles.chips}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
           <FilterChip
-            key={value}
-            label={auditActionLabel(value)}
-            onPress={() => onAction(value)}
-            selected={action === value}
+            label="Todos"
+            onPress={() => onResourceType(undefined)}
+            selected={!resourceType}
           />
-        ))}
-      </ScrollView>
+          {AUDIT_RESOURCE_TYPES.map((value) => (
+            <FilterChip
+              key={value}
+              label={auditResourceTypeLabel(value)}
+              onPress={() => onResourceType(value)}
+              selected={resourceType === value}
+            />
+          ))}
+        </ScrollView>
+      </View>
+      <View style={styles.field}>
+        <AppText variant="label">Actor (UUID)</AppText>
+        <ActorInput
+          accessibilityLabel="Actor (UUID)"
+          autoCapitalize="none"
+          autoCorrect={false}
+          onChangeText={onActor}
+          placeholder="Ej.: 123e4567-…"
+          value={actor}
+        />
+      </View>
       <View style={styles.dates}>
         <View style={styles.field}>
           <AppText variant="label">Desde</AppText>
@@ -83,8 +132,19 @@ export function AuditFilters({
   );
 }
 
+function ActorInput({ style, ...props }: TextInputProps) {
+  return (
+    <TextInput
+      placeholderTextColor={colors.textSecondary}
+      style={[styles.input, style]}
+      {...props}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chipSection: { gap: spacing.xs },
   chips: { gap: spacing.xs },
   container: {
     borderBottomColor: colors.border,
@@ -94,4 +154,16 @@ const styles = StyleSheet.create({
   },
   dates: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   field: { flex: 1, gap: spacing.xs, minWidth: 220 },
+  input: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    color: colors.textPrimary,
+    fontFamily: fontFamilies.body,
+    fontSize: 16,
+    minHeight: sizes.buttonHeight,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
 });

@@ -7,7 +7,12 @@ import { AppBadge, AppCard, AppIcon, AppText } from '@/components/primitives';
 import { spacing } from '@/theme';
 
 import type { AuditLogView } from '../types';
-import { auditActionLabel, formatAuditDate } from '../utils/auditPresentation';
+import {
+  auditActionLabel,
+  auditActionTone,
+  auditResourceTypeLabel,
+  formatAuditDate,
+} from '../utils/auditPresentation';
 
 const SYSTEM_ACTOR_LABEL = 'Sistema';
 
@@ -19,19 +24,16 @@ export const AuditLogCard = memo(function AuditLogCard({ entry }: { entry: Audit
   );
   return (
     <Pressable
-      accessibilityLabel={`${auditActionLabel(entry.action)}, ${actorLabel}, ${formatAuditDate(entry.occurredAt)}`}
+      accessibilityLabel={`${auditActionLabel(entry.action)}, ${auditResourceTypeLabel(entry.resourceType)}, ${actorLabel}, ${formatAuditDate(entry.occurredAt)}`}
       accessibilityRole="button"
       onPress={() => router.push({ pathname: '/audit/[id]', params: { id: entry.id } })}
     >
       <AppCard style={styles.card} variant="outlined">
         <View style={styles.heading}>
-          <AppBadge
-            label={auditActionLabel(entry.action)}
-            tone={entry.action === 'access.denied' ? 'danger' : 'info'}
-          />
+          <AppBadge label={auditActionLabel(entry.action)} tone={auditActionTone(entry.action)} />
           <AppIcon name="chevronRight" />
         </View>
-        <AppText color="textSecondary">{entry.resourceType}</AppText>
+        <AppText color="textSecondary">{auditResourceTypeLabel(entry.resourceType)}</AppText>
         <ActorRow
           accessibilityLabel={`Actor: ${actorLabel}`}
           initials={entry.actor?.initials ?? '?'}

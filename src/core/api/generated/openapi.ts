@@ -365,9 +365,24 @@ export interface components {
         | 'auth.login_failure'
         | 'auth.refresh_success'
         | 'auth.refresh_failure'
-        | 'access.denied';
+        | 'auth.password_change'
+        | 'auth.password_reset_requested'
+        | 'auth.password_reset_completed'
+        | 'auth.password_reset_failed'
+        | 'access.denied'
+        | 'push.device_register'
+        | 'push.device_remove'
+        | 'push.preferences_update'
+        | 'push.dispatch_completed'
+        | 'push.token_invalid';
       resourceType:
-        'user' | 'medical_record' | 'expense' | 'care_task' | 'auth_session' | 'authorization';
+        | 'user'
+        | 'medical_record'
+        | 'expense'
+        | 'care_task'
+        | 'auth_session'
+        | 'authorization'
+        | 'notification';
       resourceId?: string | null;
       metadata: Record<string, unknown>;
       occurredAt: string;

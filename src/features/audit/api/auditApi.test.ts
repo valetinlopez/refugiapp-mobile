@@ -43,12 +43,26 @@ describe('auditApi', () => {
         return { body: { items: [dto()], page: 2, limit: 20, total: 21 } };
       },
     });
-    await auditApi.list(2, 20, { action: 'access.denied', from: '2026-09-01T00:00:00Z' }, http);
+    await auditApi.list(
+      2,
+      20,
+      {
+        action: 'access.denied',
+        resourceType: 'authorization',
+        actorUserId: '44444444-4444-4444-8444-444444444444',
+        from: '2026-09-01T00:00:00Z',
+        to: '2026-09-02T23:59:00Z',
+      },
+      http
+    );
     expect(query).toEqual({
       page: '2',
       limit: '20',
       action: 'access.denied',
+      resourceType: 'authorization',
+      actorUserId: '44444444-4444-4444-8444-444444444444',
       from: '2026-09-01T00:00:00Z',
+      to: '2026-09-02T23:59:00Z',
     });
   });
 

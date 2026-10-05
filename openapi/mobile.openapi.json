@@ -1719,6 +1719,175 @@
         }
       }
     },
+    "/audit-logs": {
+      "get": {
+        "operationId": "listAuditLogs",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "user.create",
+                "user.deactivate",
+                "user.activate",
+                "user.role_assign",
+                "medical_record.create",
+                "medical_record.update",
+                "medical_record.soft_delete",
+                "medical_record.restore",
+                "expense.create",
+                "expense.soft_delete",
+                "care_task.create",
+                "care_task.update",
+                "care_task.complete",
+                "care_task.cancel",
+                "auth.login_success",
+                "auth.login_failure",
+                "auth.refresh_success",
+                "auth.refresh_failure",
+                "auth.password_change",
+                "auth.password_reset_requested",
+                "auth.password_reset_completed",
+                "auth.password_reset_failed",
+                "access.denied",
+                "push.device_register",
+                "push.device_remove",
+                "push.preferences_update",
+                "push.dispatch_completed",
+                "push.token_invalid"
+              ]
+            }
+          },
+          {
+            "name": "resourceType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "user",
+                "medical_record",
+                "expense",
+                "care_task",
+                "auth_session",
+                "authorization",
+                "notification"
+              ]
+            }
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated audit log entries",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedAuditLogsResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit-logs/{id}": {
+      "get": {
+        "operationId": "getAuditLog",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit log entry detail",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuditLogResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required or credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated user does not have permission.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested audit log entry was not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/dashboard/overview": {
       "get": {
         "operationId": "getDashboardOverview",
@@ -2472,7 +2641,16 @@
               "auth.login_failure",
               "auth.refresh_success",
               "auth.refresh_failure",
-              "access.denied"
+              "auth.password_change",
+              "auth.password_reset_requested",
+              "auth.password_reset_completed",
+              "auth.password_reset_failed",
+              "access.denied",
+              "push.device_register",
+              "push.device_remove",
+              "push.preferences_update",
+              "push.dispatch_completed",
+              "push.token_invalid"
             ]
           },
           "resourceType": {
@@ -2483,7 +2661,8 @@
               "expense",
               "care_task",
               "auth_session",
-              "authorization"
+              "authorization",
+              "notification"
             ]
           },
           "resourceId": { "type": "string", "format": "uuid", "nullable": true },

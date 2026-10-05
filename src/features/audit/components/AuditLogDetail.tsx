@@ -12,6 +12,8 @@ import { useAuditLog } from '../hooks/useAuditLogs';
 import type { AuditLogView } from '../types';
 import {
   auditActionLabel,
+  auditActionTone,
+  auditResourceTypeLabel,
   formatAuditDateBoth,
   sanitizeAuditMetadata,
   toAuditErrorMessage,
@@ -56,14 +58,11 @@ export function AuditLogDetail({ id }: { id: string }) {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <AppText variant="heading1">Detalle de auditoría</AppText>
-      <AppBadge
-        label={auditActionLabel(entry.action)}
-        tone={entry.action === 'access.denied' ? 'danger' : 'info'}
-      />
+      <AppBadge label={auditActionLabel(entry.action)} tone={auditActionTone(entry.action)} />
       <AppCard style={styles.card} variant="outlined">
         <Detail label="Actor" value={<ActorDetail entry={entry} />} />
-        <Detail label="Acción" value={entry.action} />
-        <Detail label="Recurso" value={entry.resourceType} />
+        <Detail label="Acción" value={auditActionLabel(entry.action)} />
+        <Detail label="Recurso" value={auditResourceTypeLabel(entry.resourceType)} />
         <Detail label="ID del recurso" value={entry.resourceId ?? 'Sin identificador'} />
         <Detail label="Fecha" value={formatAuditDateBoth(entry.occurredAt)} />
       </AppCard>

@@ -9,7 +9,7 @@ import { isNetworkError } from '@/core/network';
 import { colors, spacing } from '@/theme';
 
 import { useAuditLogs } from '../hooks/useAuditLogs';
-import type { AuditAction, AuditFilters as AuditFilterValues } from '../types';
+import type { AuditAction, AuditFilters as AuditFilterValues, AuditResourceType } from '../types';
 import {
   auditRangeError,
   buildAuditFilters,
@@ -20,6 +20,8 @@ import { AuditLogCard } from './AuditLogCard';
 
 export function AuditLogsScreen() {
   const [action, setAction] = useState<AuditAction>();
+  const [resourceType, setResourceType] = useState<AuditResourceType>();
+  const [actor, setActor] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [filters, setFilters] = useState<AuditFilterValues>({});
@@ -34,11 +36,13 @@ export function AuditLogsScreen() {
   function applyFilters(): void {
     const error = auditRangeError(from, to);
     setFilterError(error);
-    if (!error) setFilters(buildAuditFilters(action, from, to));
+    if (!error) setFilters(buildAuditFilters(action, resourceType, actor, from, to));
   }
 
   function clearFilters(): void {
     setAction(undefined);
+    setResourceType(undefined);
+    setActor('');
     setFrom('');
     setTo('');
     setFilterError(null);
@@ -95,13 +99,17 @@ export function AuditLogsScreen() {
         ListHeaderComponent={
           <AuditFilters
             action={action}
+            actor={actor}
             error={filterError}
             from={from}
             onAction={setAction}
+            onActor={setActor}
             onApply={applyFilters}
             onClear={clearFilters}
             onFrom={setFrom}
+            onResourceType={setResourceType}
             onTo={setTo}
+            resourceType={resourceType}
             to={to}
           />
         }
@@ -112,7 +120,13 @@ export function AuditLogsScreen() {
           />
         }
         ListFooterComponent={
-          query.isFetchingNextPage ? <LoadingState label="Cargando más eventos" /> : null
+          query.isFetchingNextPage ? (
+            <LoadingState label="Cargando más eventos" />
+          ) : !hasNextPage && entries.length > 0 ? (
+            <AppText color="textSecondary" style={styles.endOfList}>
+              No hay más eventos
+            </AppText>
+          ) : null
         }
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.4}
@@ -133,6 +147,7 @@ export function AuditLogsScreen() {
 
 const styles = StyleSheet.create({
   container: { backgroundColor: colors.background, flex: 1, gap: spacing.md, padding: spacing.lg },
+  endOfList: { paddingVertical: spacing.sm, textAlign: 'center' },
   heading: { gap: spacing.xxs },
   list: { gap: spacing.sm, paddingBottom: spacing['2xl'] },
 });

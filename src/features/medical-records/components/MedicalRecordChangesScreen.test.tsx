@@ -184,7 +184,7 @@ describe('MedicalRecordChangesScreen', () => {
     mockUseMedicalRecordChanges.mockReturnValue(createQueryResult());
     const screen = await render(<MedicalRecordChangesScreen recordId={RECORD_ID} />);
 
-    const actorInput = screen.getByLabelText('Usuario que realizó el cambio');
+    const actorInput = screen.getByLabelText('Usuario que realizó el cambio (UUID)');
     await fireEvent.changeText(actorInput, '33333333-3333-4333-8333-333333333333');
     await fireEvent.press(screen.getByRole('button', { name: 'Fecha desde' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Fecha hasta' }));
@@ -214,5 +214,12 @@ describe('MedicalRecordChangesScreen', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Limpiar' }));
 
     expect(mockUseMedicalRecordChanges).toHaveBeenLastCalledWith(RECORD_ID, {});
+  });
+
+  it('renders an end-of-list hint once pagination is exhausted', async () => {
+    mockUseMedicalRecordChanges.mockReturnValue(createQueryResult({ hasNextPage: false }));
+    const screen = await render(<MedicalRecordChangesScreen recordId={RECORD_ID} />);
+
+    expect(screen.getByText('No hay más cambios')).toBeTruthy();
   });
 });

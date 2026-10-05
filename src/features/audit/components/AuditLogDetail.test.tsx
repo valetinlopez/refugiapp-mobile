@@ -38,11 +38,14 @@ describe('AuditLogDetail', () => {
 
     const screen = await render(<AuditLogDetail id="11111111-1111-4111-8111-111111111111" />);
 
-    expect(screen.getByText('Inicio de sesión fallido')).toBeTruthy();
+    expect(screen.getAllByText('Inicio de sesión fallido').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Sesión').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('María López')).toBeTruthy();
     expect(screen.getByText('maria@refugiapp.local')).toBeTruthy();
     expect(screen.queryByText(/never-show/)).toBeNull();
     expect(screen.queryByText(/hidden/)).toBeNull();
+    expect(screen.queryByText('auth.login_failure')).toBeNull();
+    expect(screen.queryByText('auth_session')).toBeNull();
   });
 
   it('shows the fallback UUID during rollout when actor is absent', async () => {
