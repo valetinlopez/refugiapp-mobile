@@ -82,3 +82,4 @@
 - `occurredAt` se captura con `@react-native-community/datetimepicker`; falta validar el selector en dispositivos iOS/Android reales.
 - La evolución clínica se presenta con una página de 20 ítems; no hay paginación UI visible.
 - E2E de creación clínica y negativa por rol cubierto con Maestro (`maestro/admin.yaml`, `veterinarian.yaml`, `clinical-denied.yaml`; selector `clinical-history`; `shelter_manager` nunca monta la query clínica).
+- E2E del flujo de historial de cambios cubierto con Maestro (RFG-132, `maestro/medical-history.yaml`): registro → historial → paginación → actor por nombre y diff campo a campo con etiquetas en español. Selectores `clinical-record-history-button`, `history-filter-*` y `history-end-of-list`; `FilterChip` acepta `testID`.

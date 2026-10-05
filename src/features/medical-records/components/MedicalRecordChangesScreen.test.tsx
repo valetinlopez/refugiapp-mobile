@@ -222,4 +222,17 @@ describe('MedicalRecordChangesScreen', () => {
 
     expect(screen.getByText('No hay más cambios')).toBeTruthy();
   });
+
+  it('exposes deterministic selectors for the E2E flow (RFG-132)', async () => {
+    mockUseMedicalRecordChanges.mockReturnValue(createQueryResult({ hasNextPage: false }));
+    const screen = await render(<MedicalRecordChangesScreen recordId={RECORD_ID} />);
+
+    expect(screen.getByTestId('history-filter-type-all')).toBeTruthy();
+    expect(screen.getByTestId('history-filter-type-update')).toBeTruthy();
+    expect(screen.getByTestId('history-filter-type-soft_delete')).toBeTruthy();
+    expect(screen.getByTestId('history-filter-actor')).toBeTruthy();
+    expect(screen.getByTestId('history-filter-apply')).toBeTruthy();
+    expect(screen.getByTestId('history-filter-clear')).toBeTruthy();
+    expect(screen.getByTestId('history-end-of-list')).toBeTruthy();
+  });
 });

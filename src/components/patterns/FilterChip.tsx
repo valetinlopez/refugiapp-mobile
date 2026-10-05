@@ -9,6 +9,7 @@ export interface FilterChipProps {
   label: string;
   onPress(): void;
   selected: boolean;
+  testID?: string;
 }
 
 export function FilterChip({
@@ -17,6 +18,7 @@ export function FilterChip({
   label,
   onPress,
   selected,
+  testID,
 }: FilterChipProps) {
   return (
     <Pressable
@@ -27,6 +29,7 @@ export function FilterChip({
       hitSlop={sizes.hitSlop}
       onPress={onPress}
       style={[styles.chip, selected && styles.chipSelected]}
+      testID={testID}
     >
       <AppText color={selected ? 'textInverse' : 'textPrimary'} variant="label">
         {label}

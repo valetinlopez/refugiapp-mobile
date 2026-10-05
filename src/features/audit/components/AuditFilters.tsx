@@ -53,13 +53,19 @@ export function AuditFilters({
           horizontal
           showsHorizontalScrollIndicator={false}
         >
-          <FilterChip label="Todas" onPress={() => onAction(undefined)} selected={!action} />
+          <FilterChip
+            label="Todas"
+            onPress={() => onAction(undefined)}
+            selected={!action}
+            testID="audit-filter-action-all"
+          />
           {AUDIT_ACTIONS.map((value) => (
             <FilterChip
               key={value}
               label={auditActionLabel(value)}
               onPress={() => onAction(value)}
               selected={action === value}
+              testID={`audit-filter-action-${value}`}
             />
           ))}
         </ScrollView>
@@ -75,6 +81,7 @@ export function AuditFilters({
             label="Todos"
             onPress={() => onResourceType(undefined)}
             selected={!resourceType}
+            testID="audit-filter-resource-all"
           />
           {AUDIT_RESOURCE_TYPES.map((value) => (
             <FilterChip
@@ -82,6 +89,7 @@ export function AuditFilters({
               label={auditResourceTypeLabel(value)}
               onPress={() => onResourceType(value)}
               selected={resourceType === value}
+              testID={`audit-filter-resource-${value}`}
             />
           ))}
         </ScrollView>
@@ -94,6 +102,7 @@ export function AuditFilters({
           autoCorrect={false}
           onChangeText={onActor}
           placeholder="Ej.: 123e4567-…"
+          testID="audit-filter-actor"
           value={actor}
         />
       </View>
@@ -125,8 +134,13 @@ export function AuditFilters({
         </AppText>
       ) : null}
       <View style={styles.actions}>
-        <AppButton label="Limpiar" onPress={onClear} variant="ghost" />
-        <AppButton icon="refresh" label="Aplicar filtros" onPress={onApply} />
+        <AppButton label="Limpiar" onPress={onClear} testID="audit-filter-clear" variant="ghost" />
+        <AppButton
+          icon="refresh"
+          label="Aplicar filtros"
+          onPress={onApply}
+          testID="audit-filter-apply"
+        />
       </View>
     </View>
   );

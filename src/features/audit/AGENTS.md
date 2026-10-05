@@ -38,3 +38,4 @@
 - Listado paginado, filtros por acción, tipo de recurso, actor (UUID) y rango de fechas, detalle y acceso exclusivo para administradores. Fin de paginación explícito ("No hay más eventos").
 - Presentación del actor por nombre (`actor`) con fallback a UUID (`actorUserId`) durante rollout y "Sistema" cuando ambos son `null`; email solo en detalle. Fecha relativa + absoluta en listas y detalle (RFG-129).
 - Diccionarios en español de acción y recurso; sin códigos crudos visibles en UI (RFG-131).
+- E2E del flujo de auditoría cubierto con Maestro (RFG-132, `maestro/audit.yaml`): lista → detalle con actor por nombre → filtro por acción → resultados legibles sin códigos crudos. Selectores `audit-card`, `audit-detail`, `audit-filter-*` y `audit-end-of-list`; `FilterChip` acepta `testID`.

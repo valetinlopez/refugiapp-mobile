@@ -123,7 +123,7 @@ export function AuditLogsScreen() {
           query.isFetchingNextPage ? (
             <LoadingState label="Cargando más eventos" />
           ) : !hasNextPage && entries.length > 0 ? (
-            <AppText color="textSecondary" style={styles.endOfList}>
+            <AppText color="textSecondary" style={styles.endOfList} testID="audit-end-of-list">
               No hay más eventos
             </AppText>
           ) : null

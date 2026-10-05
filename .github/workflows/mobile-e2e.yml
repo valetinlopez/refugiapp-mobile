@@ -50,7 +50,7 @@ jobs:
 
       - name: Validate Maestro flows present
         run: |
-          for f in maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/session-restore.yaml maestro/offline.yaml maestro/online-restore.yaml maestro/helpers/login.yaml maestro/helpers/logout.yaml; do
+          for f in maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/session-restore.yaml maestro/offline.yaml maestro/online-restore.yaml maestro/medical-history.yaml maestro/audit.yaml maestro/helpers/login.yaml maestro/helpers/logout.yaml; do
             [ -f "$f" ] || { echo "missing $f"; exit 1; }
           done
           echo 'maestro flows present'
@@ -162,7 +162,7 @@ jobs:
             APK="android/app/build/outputs/apk/debug/app-debug.apk"
             [ -f "$APK" ] || { echo "missing $APK"; exit 1; }
             adb install -r "$APK"
-            "$MAESTRO" test maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/session-restore.yaml --env APP_ID="$APP_ID" --format junit --output maestro-report.xml
+            "$MAESTRO" test maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml maestro/clinical-denied.yaml maestro/session-expired.yaml maestro/session-restore.yaml maestro/medical-history.yaml maestro/audit.yaml --env APP_ID="$APP_ID" --format junit --output maestro-report.xml
             adb shell svc wifi disable
             adb shell svc data disable || true
             "$MAESTRO" test maestro/offline.yaml --env APP_ID="$APP_ID" --format junit --output maestro-offline-report.xml

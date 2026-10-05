@@ -133,7 +133,7 @@ export function MedicalRecordChangesScreen({ recordId }: MedicalRecordChangesScr
           query.isFetchingNextPage ? (
             <LoadingState label="Cargando más cambios" />
           ) : !hasNextPage && entries.length > 0 ? (
-            <AppText color="textSecondary" style={styles.endOfList}>
+            <AppText color="textSecondary" style={styles.endOfList} testID="history-end-of-list">
               No hay más cambios
             </AppText>
           ) : null
@@ -186,13 +186,19 @@ function ChangeFilters({
     <View style={styles.filters}>
       <AppText variant="heading3">Filtros</AppText>
       <View style={styles.chipRow}>
-        <FilterChip label="Todas" onPress={() => onChangeType(undefined)} selected={!changeType} />
+        <FilterChip
+          label="Todas"
+          onPress={() => onChangeType(undefined)}
+          selected={!changeType}
+          testID="history-filter-type-all"
+        />
         {MEDICAL_RECORD_CHANGE_TYPES.map((value) => (
           <FilterChip
             key={value}
             label={getChangeTypeLabel(value)}
             onPress={() => onChangeType(value)}
             selected={changeType === value}
+            testID={`history-filter-type-${value}`}
           />
         ))}
       </View>
@@ -204,6 +210,7 @@ function ChangeFilters({
           autoCorrect={false}
           onChangeText={onActor}
           placeholder="Ej.: 123e4567-…"
+          testID="history-filter-actor"
           value={actor}
         />
       </View>
@@ -235,8 +242,18 @@ function ChangeFilters({
         </AppText>
       ) : null}
       <View style={styles.actions}>
-        <AppButton label="Limpiar" onPress={onClear} variant="ghost" />
-        <AppButton icon="refresh" label="Aplicar filtros" onPress={onApply} />
+        <AppButton
+          label="Limpiar"
+          onPress={onClear}
+          testID="history-filter-clear"
+          variant="ghost"
+        />
+        <AppButton
+          icon="refresh"
+          label="Aplicar filtros"
+          onPress={onApply}
+          testID="history-filter-apply"
+        />
       </View>
     </View>
   );

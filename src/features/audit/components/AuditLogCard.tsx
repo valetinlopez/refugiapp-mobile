@@ -27,6 +27,7 @@ export const AuditLogCard = memo(function AuditLogCard({ entry }: { entry: Audit
       accessibilityLabel={`${auditActionLabel(entry.action)}, ${auditResourceTypeLabel(entry.resourceType)}, ${actorLabel}, ${formatAuditDate(entry.occurredAt)}`}
       accessibilityRole="button"
       onPress={() => router.push({ pathname: '/audit/[id]', params: { id: entry.id } })}
+      testID="audit-card"
     >
       <AppCard style={styles.card} variant="outlined">
         <View style={styles.heading}>

@@ -79,6 +79,8 @@
     "test:watch": "jest --watch",
     "e2e": "maestro test maestro --env APP_ID=app.refugiapp.mobile.staging",
     "e2e:admin": "maestro test maestro/admin.yaml --env APP_ID=app.refugiapp.mobile.staging",
+    "e2e:history": "maestro test maestro/medical-history.yaml --env APP_ID=app.refugiapp.mobile.staging",
+    "e2e:audit": "maestro test maestro/audit.yaml --env APP_ID=app.refugiapp.mobile.staging",
     "e2e:roles": "maestro test maestro/admin.yaml maestro/shelter-manager.yaml maestro/veterinarian.yaml --env APP_ID=app.refugiapp.mobile.staging"
   },
   "private": true

@@ -42,4 +42,17 @@ describe('FilterChip', () => {
 
     expect(screen.getByRole('button', { name: 'Todas' }).props.hitSlop).toEqual(8);
   });
+
+  it('forwards a testID to the pressable for deterministic E2E selectors', async () => {
+    const screen = await render(
+      <FilterChip
+        label="Pendientes"
+        onPress={() => undefined}
+        selected
+        testID="chip-status-pending"
+      />
+    );
+
+    expect(screen.getByTestId('chip-status-pending')).toBeTruthy();
+  });
 });

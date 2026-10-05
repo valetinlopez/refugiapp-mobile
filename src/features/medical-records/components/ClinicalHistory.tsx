@@ -202,6 +202,7 @@ export function ClinicalHistory({ animalId, onEditRecord, onViewChanges }: Clini
               hitSlop={8}
               onPress={() => onViewChanges(record.id)}
               style={styles.history}
+              testID="clinical-record-history-button"
             >
               <AppIcon color="textSecondary" name="clock" size={sizes.iconSm} />
               <AppText variant="button">Ver historial</AppText>

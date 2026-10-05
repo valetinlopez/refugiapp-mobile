@@ -206,6 +206,7 @@ describe('ClinicalHistory', () => {
       <ClinicalHistory animalId={ANIMAL_ID} onViewChanges={onViewChanges} />
     );
 
+    expect(screen.getByTestId('clinical-record-history-button')).toBeTruthy();
     await fireEvent.press(
       screen.getByRole('button', { name: 'Ver historial de cambios de Vacuna antirrábica' })
     );
