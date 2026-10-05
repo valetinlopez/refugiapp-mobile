@@ -44,7 +44,7 @@
 ## Testing
 
 - Probar comportamiento, accesibilidad y estados; evitar snapshots como única verificación.
-- `DateTimeField` centraliza selección, serialización ISO local y fallback web.
+- `DateTimeField` centraliza selección, serialización ISO local y fallback web. Usa los listeners no deprecados del picker (`onValueChange` para confirmar y `onDismiss` para cerrar sin valor); `mode` admite `date`, `datetime` y `time`.
 - Cubrir callbacks, disabled/loading, selección y precedencia semántica cuando aplique.
 
 ## Documentación

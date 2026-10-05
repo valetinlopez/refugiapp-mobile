@@ -6,12 +6,23 @@ import { MedicalRecordForm } from './MedicalRecordForm';
 jest.mock('@react-native-community/datetimepicker', () => {
   const React = jest.requireActual<typeof import('react')>('react');
   const { Pressable, Text } = jest.requireActual<typeof import('react-native')>('react-native');
-  const MockPicker = ({ onChange }: { onChange: (event: { type: string }, date?: Date) => void }) =>
+  const MockPicker = ({
+    onValueChange,
+  }: {
+    onValueChange(
+      event: { nativeEvent: { timestamp: number; utcOffset: number } },
+      date: Date
+    ): void;
+  }) =>
     React.createElement(
       Pressable,
       {
         accessibilityLabel: 'picker',
-        onPress: () => onChange({ type: 'set' }, new Date('2026-09-22T14:30:00-03:00')),
+        onPress: () =>
+          onValueChange(
+            { nativeEvent: { timestamp: 0, utcOffset: 0 } },
+            new Date('2026-09-22T14:30:00-03:00')
+          ),
       },
       React.createElement(Text, null, 'picker')
     );

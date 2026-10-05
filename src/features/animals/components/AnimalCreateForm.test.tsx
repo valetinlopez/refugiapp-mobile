@@ -9,12 +9,20 @@ let mockPickedDate = new Date(2026, 0, 10, 12);
 jest.mock('@react-native-community/datetimepicker', () => {
   const React = jest.requireActual<typeof import('react')>('react');
   const { Pressable, Text } = jest.requireActual<typeof import('react-native')>('react-native');
-  const MockPicker = ({ onChange }: { onChange(event: { type: string }, date?: Date): void }) =>
+  const MockPicker = ({
+    onValueChange,
+  }: {
+    onValueChange(
+      event: { nativeEvent: { timestamp: number; utcOffset: number } },
+      date: Date
+    ): void;
+  }) =>
     React.createElement(
       Pressable,
       {
         accessibilityLabel: 'selector de fecha',
-        onPress: () => onChange({ type: 'set' }, mockPickedDate),
+        onPress: () =>
+          onValueChange({ nativeEvent: { timestamp: 0, utcOffset: 0 } }, mockPickedDate),
       },
       React.createElement(Text, null, 'selector')
     );

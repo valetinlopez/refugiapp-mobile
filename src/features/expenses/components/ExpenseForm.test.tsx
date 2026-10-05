@@ -7,12 +7,20 @@ import { ExpenseForm } from './ExpenseForm';
 jest.mock('@react-native-community/datetimepicker', () => {
   const React = jest.requireActual<typeof import('react')>('react');
   const { Pressable, Text } = jest.requireActual<typeof import('react-native')>('react-native');
-  const MockPicker = ({ onChange }: { onChange(event: { type: string }, date?: Date): void }) =>
+  const MockPicker = ({
+    onValueChange,
+  }: {
+    onValueChange(
+      event: { nativeEvent: { timestamp: number; utcOffset: number } },
+      date: Date
+    ): void;
+  }) =>
     React.createElement(
       Pressable,
       {
         accessibilityLabel: 'selector de fecha',
-        onPress: () => onChange({ type: 'set' }, new Date(2026, 8, 23, 12)),
+        onPress: () =>
+          onValueChange({ nativeEvent: { timestamp: 0, utcOffset: 0 } }, new Date(2026, 8, 23, 12)),
       },
       React.createElement(Text, null, 'selector')
     );

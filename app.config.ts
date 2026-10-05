@@ -54,11 +54,24 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       package: app.packageName,
       predictiveBackGestureEnabled: false,
     },
-    plugins: [...(config.plugins ?? []), '@react-native-community/datetimepicker'],
+    plugins: [
+      ...(config.plugins ?? []),
+      '@react-native-community/datetimepicker',
+      [
+        'expo-notifications',
+        {
+          color: '#B9DB62',
+          defaultChannel: 'care-tasks',
+        },
+      ],
+    ],
     extra: {
       ...config.extra,
       environment: variant,
       apiUrl: process.env.EXPO_PUBLIC_API_URL ?? '',
+      ...(process.env.EXPO_PUBLIC_EAS_PROJECT_ID
+        ? { eas: { projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID } }
+        : {}),
     },
   };
 };

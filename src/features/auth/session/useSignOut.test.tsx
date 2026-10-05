@@ -11,9 +11,14 @@ import { useSignOut } from './useSignOut';
 
 function createUser(roles: UserRole[]): User {
   return {
-    email: 'member@refugiapp.local',
     id: '52f45f39-c7b5-4a1a-aa37-ed0fdf203c91',
+    email: 'member@refugiapp.local',
+    firstName: 'Member',
+    lastName: 'Refugiapp',
     roles,
+    isActive: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
   };
 }
 

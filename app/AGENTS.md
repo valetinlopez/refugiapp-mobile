@@ -15,6 +15,7 @@
 - Las pantallas stack del área autenticada exponen el acceso de cuenta componiendo `AccountHeaderRow` (fila de retorno `AppHeaderBack` + botón de cuenta) de la feature auth, en lugar de `AppHeaderBack` directo. La ruta de cuenta vive en el tab `more`; los atajos navegan con `router.push('/more')`.
 - Usar route groups para organización sin convertirlos en segmentos públicos.
 - Declarar providers globales solo en el layout raíz; providers de una feature deben vivir lo más cerca posible de su subárbol.
+- El layout `(app)` compone `NotificationsWiring` para coordinar `auth` y `notifications` (registro del dispositivo según la sesión, observador de navegación push y baja del dispositivo en `registerSignOutHandler`), sin que esas features se importen entre sí.
 - Las pantallas pesadas exclusivas de administración y auditoría cargan el componente de feature con `React.lazy` + `Suspense`; el fallback usa `LoadingState` con una etiqueta accesible y el import dinámico queda detrás del guard visual de capacidad.
 
 ## Estructura actual
@@ -23,6 +24,7 @@
 - `(app)`: área autenticada.
 - `(app)/account/change-password`: cambio de contraseña autenticado desde "Más > Cuenta" (`AccountHeaderRow` con `fallbackHref='/more'`); el éxito limpia la sesión local y vuelve al login con aviso.
 - `(app)/(tabs)`: destinos principales: `index` (Inicio, compone el dashboard de la feature `src/features/dashboard`), `explore` (Animales), `care-tasks` (Tareas) y `more` (Más, compone `AccountScreen` de la feature auth con la sección "Gestión" de `ManagementSection`; la jerarquía es Gestión > Cuenta > Salida, con "Veterinarios" para todos los roles, "Usuarios" solo `canManageUsers` y "Ver auditoría" solo `canReadAudit`). La ruta legacy `inbox` es un redirect oculto (`href: null`) hacia `care-tasks`.
+- `(app)/care-tasks/[id]`: detalle de tarea (lectura para los tres roles, con acciones de escritura según capacidad), destino seguro de la navegación por notificación push.
 - `(app)/expenses/new`: alta de gasto con comprobante para `admin` y `shelter_manager`.
 - `(app)/users`: listado paginado, alta y edicion (`[id]/edit`) de usuarios internos, visible solo para `admin`; activacion y desactivacion se confirman desde el listado y el cambio de rol se confirma desde la edicion.
 - `(app)/veterinarians`: listado, alta, detalle y edición de veterinarios; lectura para los tres roles y escritura para `admin`/`shelter_manager` (`canManageVets`). La desactivación se confirma desde el detalle.

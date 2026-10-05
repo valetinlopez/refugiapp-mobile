@@ -1,6 +1,6 @@
 import type { components } from '@/core/api/generated/openapi';
 
-export type UserRole = components['schemas']['AuthenticatedUser']['roles'][number];
+export type UserRole = components['schemas']['UserResponseDto']['roles'][number];
 
 export const CAPABILITIES = [
   'canEditAnimal',

@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useReducer,
+  useRef,
 } from 'react';
 
 import { apiClient, ApiError } from '@/core/api';
@@ -16,8 +17,11 @@ import { authApi } from '../api/authApi';
 import type { LoginRequest, User } from '../types';
 import { initialSessionState, sessionReducer, type SessionState } from './sessionReducer';
 
+type SessionCleanupHandler = () => Promise<void>;
+
 type SessionContextValue = SessionState & {
   endSession(notice?: string | null): Promise<void>;
+  registerSignOutHandler(handler: SessionCleanupHandler): () => void;
   signIn(credentials: LoginRequest): Promise<User>;
   signOut(): Promise<void>;
 };
@@ -27,9 +31,26 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 export function SessionProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient();
   const [state, dispatch] = useReducer(sessionReducer, initialSessionState);
+  const signOutHandlers = useRef(new Set<SessionCleanupHandler>());
+
+  const registerSignOutHandler = useCallback((handler: SessionCleanupHandler): (() => void) => {
+    signOutHandlers.current.add(handler);
+    return () => {
+      signOutHandlers.current.delete(handler);
+    };
+  }, []);
 
   const endSession = useCallback(
     async (notice?: string | null): Promise<void> => {
+      // Best-effort session cleanup (e.g. device unregistration) must run before
+      // tokens are cleared so handlers can still authenticate their requests.
+      for (const handler of signOutHandlers.current) {
+        try {
+          await handler();
+        } catch {
+          // A failing cleanup never blocks the local sign-out.
+        }
+      }
       await tokenStorage.clearTokens();
       queryClient.clear();
       dispatch({ type: 'unauthenticated', notice: notice ?? null });
@@ -117,6 +138,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       value={{
         ...state,
         endSession,
+        registerSignOutHandler,
         signIn,
         signOut,
       }}

@@ -67,13 +67,16 @@ La app soporta tres ambientes configurables: `development`, `staging` y `product
 
 Los valores se cargan con `dotenv-cli` al arrancar y se inyectan en el bundle mediante el prefijo `EXPO_PUBLIC_` (Metro). `app.config.ts` lee `EXPO_PUBLIC_ENV` para derivar el bundle identifier, scheme y nombre de cada ambiente.
 
-| Variable                     | Obligatoria | Descripcion                                                                  |
-| ---------------------------- | ----------- | ---------------------------------------------------------------------------- |
-| `EXPO_PUBLIC_ENV`            | Si          | `development` \| `staging` \| `production`. Default: `development`           |
-| `EXPO_PUBLIC_API_URL`        | Si*         | URL base de la API. Debe terminar en `/api/v1`; https en staging/production. |
-| `EXPO_PUBLIC_API_TIMEOUT_MS` | No          | Timeout del cliente HTTP en milisegundos. Default: `10000`.                  |
+| Variable                     | Obligatoria | Descripcion                                                                   |
+| ---------------------------- | ----------- | ----------------------------------------------------------------------------- |
+| `EXPO_PUBLIC_ENV`            | Si          | `development` \| `staging` \| `production`. Default: `development`            |
+| `EXPO_PUBLIC_API_URL`        | Si*         | URL base de la API. Debe terminar en `/api/v1`; https en staging/production.  |
+| `EXPO_PUBLIC_API_TIMEOUT_MS` | No          | Timeout del cliente HTTP en milisegundos. Default: `10000`.                   |
+| `EXPO_PUBLIC_EAS_PROJECT_ID` | No**        | EAS project id requerido por `expo-notifications` para el token Expo de push. |
 
 \* En `development` puede omitirse (usa el fallback local). En `staging` y `production` es obligatoria.
+
+\*\* Sin `EXPO_PUBLIC_EAS_PROJECT_ID` la app degrada a "notificaciones no disponibles"; el resto de la app sigue funcionando. Se obtiene con `eas init` o desde el dashboard de Expo y se inyecta en `app.config.ts` (`extra.eas.projectId`).
 
 Las variables se validan al arranque con **zod** en `src/core/config/env.ts`. Un valor invalido detiene la app con un error claro (fail-fast).
 
@@ -90,6 +93,15 @@ El email de recuperación lo genera el backend con un `PASSWORD_RESET_URL` confi
 | production  | `refugiappmobile://reset-password`         |
 
 La ruta `reset-password` captura el token del deep link una única vez, lo elimina de la URL/historial y lo conserva solo en memoria hasta confirmar o abandonar el flujo; nunca se persiste ni se registra. La verificación manual de este flujo exige un sink/buzón de notificaciones en staging y que el backend publique `PASSWORD_RESET_URL` con el scheme correspondiente.
+
+### Notificaciones push
+
+La feature `notifications` (RFG-126) usa `expo-notifications` y el contrato backend de RFG-127. Requiere un build de desarrollo o interno (no Expo Go en Android desde SDK 53) y un dispositivo físico para validar; el simulador no recibe push.
+
+- Configurar `EXPO_PUBLIC_EAS_PROJECT_ID` en el ambiente correspondiente. Sin él la app muestra "notificaciones no disponibles" y no registra el dispositivo.
+- La sección "Notificaciones" del tab "Más" permite activar el permiso y editar preferencias (tareas vencidas, próximas, antelación de 5 a 1440 minutos y horas silenciosas).
+- El token Expo se registra al iniciar sesión y se da de baja en el cierre de sesión (best-effort); nunca se registra en logs ni se persiste en claro.
+- Tocar una notificación con `data.careTaskId` válido abre el detalle de la tarea (`app/(app)/care-tasks/[id]`).
 
 ## Arranque
 
