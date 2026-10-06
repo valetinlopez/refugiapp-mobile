@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 
 import { AppIcon, AppText } from '@/components/primitives';
-import { radii, sizes, spacing } from '@/theme';
+import { opacity, radii, sizes, spacing } from '@/theme';
 
 export type AppHeaderBackProps = Omit<PressableProps, 'children' | 'onPress' | 'style'> & {
   accessibilityHint?: string;
@@ -63,6 +63,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   pressed: {
-    opacity: 0.72,
+    opacity: opacity.pressedSubtle,
   },
 });

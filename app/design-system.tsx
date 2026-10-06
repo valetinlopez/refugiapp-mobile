@@ -1,4 +1,5 @@
 import { useMemo, useState, type PropsWithChildren } from 'react';
+import Head from 'expo-router/head';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,7 +9,19 @@ import {
   BottomNavigation,
   type BottomNavigationItem,
 } from '@/components/navigation';
-import { TaskRow } from '@/components/patterns';
+import {
+  AttachmentList,
+  DecorativeBackground,
+  EntityCard,
+  MetadataRow,
+  ScreenHeader,
+  SectionHeader,
+  SegmentedControl,
+  TaskRow,
+  formatDateMedium,
+  type AttachmentItem,
+  type SegmentedControlOption,
+} from '@/components/patterns';
 import {
   AppAvatar,
   AppBadge,
@@ -17,8 +30,34 @@ import {
   AppDivider,
   AppIcon,
   AppText,
+  FAB,
 } from '@/components/primitives';
 import { colors, radii, sizes, spacing, typography } from '@/theme';
+
+type CatalogSegment = 'all' | 'completed' | 'pending';
+
+const segmentOptions: readonly SegmentedControlOption<CatalogSegment>[] = [
+  { id: 'all', label: 'Todas' },
+  { icon: 'clock', id: 'pending', label: 'Pendientes' },
+  { icon: 'check', id: 'completed', label: 'Completadas' },
+];
+
+const sampleAttachments: readonly AttachmentItem[] = [
+  { id: 'ready', name: 'radiografia-torax.jpg', sizeLabel: '1,2 MB', status: 'ready' },
+  {
+    id: 'uploading',
+    name: 'informe-laboratorio.pdf',
+    progress: 0.45,
+    sizeLabel: '840 KB',
+    status: 'uploading',
+  },
+  {
+    errorMessage: 'No pudimos subir el archivo.',
+    id: 'error',
+    name: 'receta-digital.pdf',
+    status: 'error',
+  },
+];
 
 const navigationItems: readonly BottomNavigationItem[] = [
   { icon: 'home', id: 'home', label: 'Inicio' },
@@ -44,8 +83,8 @@ const spacingEntries = Object.entries(spacing).filter(([name]) => name !== 'none
 
 function Section({ children, title }: PropsWithChildren<{ title: string }>) {
   return (
-    <View accessibilityRole="summary" style={styles.section}>
-      <AppText variant="heading2">{title}</AppText>
+    <View style={styles.section}>
+      <SectionHeader title={title} />
       {children}
     </View>
   );
@@ -53,10 +92,19 @@ function Section({ children, title }: PropsWithChildren<{ title: string }>) {
 
 export default function DesignSystemScreen() {
   const [activeNavigationItem, setActiveNavigationItem] = useState('home');
+  const [activeSegment, setActiveSegment] = useState<CatalogSegment>('all');
+  const [attachments, setAttachments] = useState<readonly AttachmentItem[]>(sampleAttachments);
   const now = useMemo(() => new Date('2026-09-20T12:00:00-03:00'), []);
 
   return (
     <SafeAreaView edges={['top', 'right', 'left']} style={styles.safeArea}>
+      <Head>
+        <title>Refugiapp — Sistema de diseño</title>
+        <meta
+          content="Catálogo interno de la identidad visual y los componentes compartidos de Refugiapp Mobile."
+          name="description"
+        />
+      </Head>
       <ScrollView
         contentContainerStyle={styles.content}
         contentInsetAdjustmentBehavior="automatic"
@@ -267,6 +315,100 @@ export default function DesignSystemScreen() {
             />
           </View>
         </Section>
+
+        <Section title="Fondo decorativo">
+          <AppText color="textSecondary" variant="caption">
+            Capa absoluta sobre la que se compone el contenido. Oculta a tecnologías asistivas y sin
+            texto incrustado.
+          </AppText>
+          <View style={styles.backgroundGrid}>
+            <View style={styles.backgroundPreview}>
+              <DecorativeBackground testID="ds-background-hero" variant="hero" />
+            </View>
+            <View style={styles.backgroundPreview}>
+              <DecorativeBackground variant="texture" />
+            </View>
+          </View>
+        </Section>
+
+        <Section title="Encabezado de pantalla">
+          <ScreenHeader
+            actions={<AppButton icon="add" label="Nueva tarea" />}
+            subtitle="Resumen operativo del refugio"
+            title="Cuidados"
+          />
+        </Section>
+
+        <Section title="Encabezado de sección">
+          <SectionHeader
+            action={
+              <AppText color="positive" variant="label">
+                Ver todo
+              </AppText>
+            }
+            subtitle="Eventos recientes del animal"
+            title="Historial"
+          />
+        </Section>
+
+        <Section title="Control segmentado">
+          <SegmentedControl
+            accessibilityLabel="Filtrar tareas por estado"
+            onChange={(value) => setActiveSegment(value)}
+            options={segmentOptions}
+            value={activeSegment}
+          />
+        </Section>
+
+        <Section title="Acción flotante">
+          <View style={styles.fabPreview}>
+            <AppText color="textSecondary" variant="caption">
+              Respeta el inset inferior y expone label accesible obligatorio.
+            </AppText>
+            <FAB
+              accessibilityLabel="Nueva tarea"
+              bottomOffset={spacing.md}
+              onPress={() => undefined}
+            />
+          </View>
+        </Section>
+
+        <Section title="Tarjeta de entidad">
+          <View style={styles.stack}>
+            <EntityCard
+              avatar={{ accessibilityLabel: 'Foto de Luna', initials: 'LU' }}
+              badge={{ icon: 'medical', label: 'En tratamiento', tone: 'info' }}
+              meta="Perra · Mestiza"
+              onPress={() => undefined}
+              title="Luna"
+            />
+            <EntityCard
+              badge={{ icon: 'clock', label: 'Pendiente' }}
+              meta="Vence mañana 09:30"
+              title="Control veterinario"
+            />
+          </View>
+        </Section>
+
+        <Section title="Metadatos">
+          <AppCard style={styles.stack}>
+            <MetadataRow label="Ingreso" value={formatDateMedium('2026-09-20')} />
+            <AppDivider />
+            <MetadataRow label="Especie" value="Perro" />
+            <AppDivider />
+            <MetadataRow label="Estado" value="En tratamiento" />
+          </AppCard>
+        </Section>
+
+        <Section title="Adjuntos">
+          <AttachmentList
+            attachments={attachments}
+            onRemove={(id) =>
+              setAttachments((current) => current.filter((attachment) => attachment.id !== id))
+            }
+            onRetry={() => undefined}
+          />
+        </Section>
       </ScrollView>
     </SafeAreaView>
   );
@@ -279,10 +421,34 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.md,
   },
+  backgroundGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  backgroundPreview: {
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    flexBasis: '45%',
+    flexGrow: 1,
+    height: 180,
+    minWidth: 160,
+    overflow: 'hidden',
+    position: 'relative',
+  },
   badgeWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
+  },
+  fabPreview: {
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    height: 160,
+    padding: spacing.md,
+    position: 'relative',
   },
   buttonStack: {
     gap: spacing.sm,

@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     borderRadius: radii.lg,
     gap: spacing.md,
-    maxWidth: 480,
+    maxWidth: sizes.dialogMaxWidth,
     padding: spacing.lg,
     width: '100%',
   },

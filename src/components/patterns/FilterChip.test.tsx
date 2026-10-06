@@ -55,4 +55,26 @@ describe('FilterChip', () => {
 
     expect(screen.getByTestId('chip-status-pending')).toBeTruthy();
   });
+
+  it('exposes radio semantics (checked) inside a segmented group', async () => {
+    const screen = await render(
+      <FilterChip accessibilityRole="radio" label="Pendientes" onPress={() => undefined} selected />
+    );
+
+    const radio = screen.getByRole('radio', { name: 'Pendientes' });
+    expect(radio.props.accessibilityState).toMatchObject({ checked: true });
+  });
+
+  it('blocks interaction and announces the disabled state', async () => {
+    const onPress = jest.fn();
+    const screen = await render(
+      <FilterChip disabled label="Pendientes" onPress={onPress} selected={false} />
+    );
+
+    const chip = screen.getByRole('button', { name: 'Pendientes' });
+    expect(chip.props.accessibilityState).toMatchObject({ disabled: true });
+
+    await fireEvent.press(chip);
+    expect(onPress).not.toHaveBeenCalled();
+  });
 });

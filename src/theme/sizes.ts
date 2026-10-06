@@ -12,4 +12,6 @@ export const sizes = {
   divider: 1,
   contentMaxWidth: 760,
   bottomNavigationHeight: 72,
+  fab: 56,
+  dialogMaxWidth: 480,
 } as const;

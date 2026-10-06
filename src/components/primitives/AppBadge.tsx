@@ -7,10 +7,10 @@ import { AppIcon, type AppIconName } from './AppIcon';
 import { AppText } from './AppText';
 
 export type AppBadgeProps = ViewProps & {
-  icon?: AppIconName;
+  icon?: AppIconName | undefined;
   label: string;
-  labelNumberOfLines?: number;
-  tone?: BadgeTone;
+  labelNumberOfLines?: number | undefined;
+  tone?: BadgeTone | undefined;
 };
 
 const toneStyles: Record<BadgeTone, ViewStyle> = {

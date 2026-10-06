@@ -15,8 +15,9 @@
 
 ## Tokens
 
-- Usar exclusivamente `src/theme` para color, tipografía, espaciado, radios, tamaños y sombras.
+- Usar exclusivamente `src/theme` para color, tipografía, espaciado, radios, tamaños, opacidades y sombras.
 - No introducir hexadecimales ni medidas arbitrarias en componentes.
+- Los estados presionados usan `opacity.pressed`/`opacity.pressedSubtle` y los overlays decorativos `opacity.overlay`; `sizes.fab` y `sizes.dialogMaxWidth` cubren la acción flotante y el ancho máximo del diálogo.
 - Si falta un token generalizable, agregarlo en `src/theme` y actualizar `docs/design.md`.
 
 ## Accesibilidad
@@ -37,6 +38,13 @@
 - `navigation`: piezas de navegación, sin conocer rutas concretas. Incluye `AppHeaderBack` y `navigateBack` (retorno persistente con fallback contextual `canGoBack ? back : replace`) y `BottomNavigation`. Las pantallas deciden el `fallbackHref`; el componente nunca codifica rutas.
 - `patterns`: composición reutilizable sin acceso a datos remotos.
 - `ActorRow` (patterns): fila de identidad con `AppAvatar` (iniciales) + nombre + línea opcional de detalle (caption) + fecha relativa · absoluta. No conoce DTOs ni dominios: recibe `name`, `initials`, `caption` y `occurredAt`. Las features resuelven el label (nombre / fallback / sistema) con `resolveActorLabel` de `actorPresentation`.
+- `DecorativeBackground` (patterns, D03): capa absoluta de fondo editorial que compone los assets de D02 vía `DecorativeImage`. Oculta a AT, sin texto ni controles; overlay opcional para contraste. Variantes `hero`/`texture`/`none`.
+- `ScreenHeader` / `SectionHeader` (patterns, D03): encabezados de pantalla y de sección con `accessibilityRole="header"`, subtítulo y acción opcionales; la fila envuelve para no recortar acciones con fuente ampliada.
+- `SegmentedControl` (patterns, D03): grupo de selección única (`radiogroup`) sobre `FilterChip` con semántica `radio`/`checked`, scroll horizontal, `disabled`/`icon` por opción y target de 44 pt.
+- `EntityCard` (patterns, D03): fila canónica de entidades (avatar opcional + texto `flex: 1`/`minWidth: 0` + badge `flexShrink: 0` + chevron). Título a 2 líneas con `accessibilityLabel` completo; con `onPress` es un único botón accesible.
+- `MetadataRow` (patterns, D03): fila etiqueta-valor con etiqueta no encogible y valor que envuelve alineado al final. Las fechas llegan formateadas (`dateFormat`); nunca se inyecta ISO crudo.
+- `AttachmentList` / `AttachmentRow` (patterns, D03): lista de adjuntos con estados `ready`/`uploading`/`error`, progreso accesible, reintento y borrado; el borrado exige `ConfirmDialog` (lo posee la lista) y la lista vacía usa `EmptyState`.
+- `FAB` (primitives, D03): acción flotante de 56 pt (`sizes.fab`) con label accesible obligatorio, `hitSlop` estándar y respeto del inset inferior; `loading`/`disabled` bloquean la interacción.
 - `DecorativeImage` (patterns): wrapper de `expo-image` para media decorativa. Oculta a AT por defecto (`accessible={false}` + `accessibilityElementsHidden` + `importantForAccessibility="no-hide-descendants"` + `alt=""`); un `accessibilityLabel` lo vuelve informativo. Fija `allowDownscaling`, `cachePolicy="memory-disk"` y prioridad baja, reserva `aspectRatio` para evitar layout shift y cae al `fallbackSource` (PNG) ante error de decodificación, resetando el estado al cambiar la fuente. No comunica estado.
 - `brandAssets` (patterns): registro de los assets de marca (D02/RFG-135) con `resolveBrandSource(name)` — la UI no conoce nombres de archivo. Hojas vectoriales originales; hero fotográfico de stock licenciado (Pngtree) con atribución. Fuentes y procedencia en `docs/brand-assets.md`; regenerar con `npm run assets:brand`.
 - `performance`: configuración transversal de render por lotes y ventana para `FlatList`; cada listado conserva keys de dominio estables y un `renderItem` memoizado.
