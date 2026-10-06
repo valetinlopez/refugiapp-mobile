@@ -7,5 +7,6 @@ coverage/
 dist/
 web-build/
 package-lock.json
-docs/design-references/
+docs/design-references/*.jpeg
+docs/design-references/*.png
 opencode.json
