@@ -6,6 +6,7 @@
 - Registra eventos generales no clínicos y mantiene la cache del historial coherente.
 - No contiene diagnósticos, tratamientos ni vacunas ocurridas; pertenecen a `medical-records`.
 - No gestiona tareas futuras; pertenecen a `care-tasks`.
+- No gestiona adoptantes ni postulaciones; la ruta de detalle compone la feature `adoptions`, que coordina la aprobación confirmada con la invalidación de la ficha del animal.
 
 ## Contrato del backend
 
@@ -98,6 +99,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Foto de perfil en el listado: `AnimalCardAvatar` consulta `useAnimalPhoto(profilePhotoMediaId)` por tarjeta con caché compartida por `animalKeys.media` (query deduplicada por `mediaId` y `staleTime` de 5 min), sin fetch cuando `profilePhotoMediaId` es `null`, y fallback a iniciales ante error de red o fallo de imagen (`AppAvatar`). `AppAvatar` solicita a Cloudinary una variante ajustada a píxeles físicos y usa caché memoria/disco de `expo-image`. La invalidación de `animalKeys.all` al crear o editar la ficha mantiene la foto coherente sin optimistic updates; el reemplazo de foto genera un `mediaId` nuevo que entra como query nueva.
 - Lectura del historial general (`GET /animals/:animalId/events`) mediante `useAnimalHistory` y presentación en `AnimalHistory` dentro del detalle, con invalidación coherente al crear eventos.
 - Detalle `app/(app)/animals/[id].tsx` como centro funcional con pestañas Resumen, Historial, Tareas, Gastos y Evolución clínica. Conserva la pestaña activa localmente; la clínica solo aparece para `admin`/`veterinarian` y un deep link no autorizado muestra acceso restringido sin ejecutar la query clínica.
+- El detalle también compone la pestaña Adopción para los tres roles desde `src/features/adoptions`; la aprobación confirmada invalida `animalKeys.all` para reflejar el estado `adopted` sin actualización optimista.
 - Edición `app/(app)/animals/[id]/edit.tsx` con guard visual por rol y formulario compartido `AnimalProfileForm` (modos create/edit).
 - Formulario con React Hook Form + Zod, mensajes en español y validación cruzada `birthDate <= intakeDate`.
 - PATCH diferencial en edición (`toUpdateAnimalRequest` + `hasPatchChanges`): omite campos intactos, envía `null` para limpiar `breed`/`birthDate` y no-op cuando no hay cambios.

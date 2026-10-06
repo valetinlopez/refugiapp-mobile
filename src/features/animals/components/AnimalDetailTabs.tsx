@@ -3,13 +3,15 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { FilterChip } from '@/components/patterns';
 import { spacing } from '@/theme';
 
-export type AnimalDetailTab = 'summary' | 'history' | 'tasks' | 'expenses' | 'clinical';
+export type AnimalDetailTab =
+  'summary' | 'history' | 'tasks' | 'expenses' | 'adoptions' | 'clinical';
 
 const TABS: { id: AnimalDetailTab; label: string }[] = [
   { id: 'summary', label: 'Resumen' },
   { id: 'history', label: 'Historial' },
   { id: 'tasks', label: 'Tareas' },
   { id: 'expenses', label: 'Gastos' },
+  { id: 'adoptions', label: 'Adopción' },
   { id: 'clinical', label: 'Evolución clínica' },
 ];
 

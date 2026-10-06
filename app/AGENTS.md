@@ -25,6 +25,8 @@
 - `(app)/account/change-password`: cambio de contraseña autenticado desde "Más > Cuenta" (`AccountHeaderRow` con `fallbackHref='/more'`); el éxito limpia la sesión local y vuelve al login con aviso.
 - `(app)/(tabs)`: destinos principales: `index` (Inicio, compone el dashboard de la feature `src/features/dashboard`), `explore` (Animales), `care-tasks` (Tareas) y `more` (Más, compone `AccountScreen` de la feature auth con la sección "Gestión" de `ManagementSection`; la jerarquía es Gestión > Cuenta > Salida, con "Veterinarios" para todos los roles, "Usuarios" solo `canManageUsers` y "Ver auditoría" solo `canReadAudit`). La ruta legacy `inbox` es un redirect oculto (`href: null`) hacia `care-tasks`.
 - `(app)/care-tasks/[id]`: detalle de tarea (lectura para los tres roles, con acciones de escritura según capacidad), destino seguro de la navegación por notificación push.
+- `(app)/animals/[id]`: incorpora la sección Adopción para los tres roles; `admin` y `shelter_manager` pueden gestionar postulaciones y aprobar, mientras `veterinarian` solo consulta el historial sin datos personales.
+- `(app)/animals/[id]/adoptions/new`: formulario protegido para registrar adoptante y postulación, con retorno a la sección Adopción.
 - `(app)/expenses/new`: alta de gasto con comprobante para `admin` y `shelter_manager`.
 - `(app)/users`: listado paginado, alta y edicion (`[id]/edit`) de usuarios internos, visible solo para `admin`; activacion y desactivacion se confirman desde el listado y el cambio de rol se confirma desde la edicion.
 - `(app)/veterinarians`: listado, alta, detalle y edición de veterinarios; lectura para los tres roles y escritura para `admin`/`shelter_manager` (`canManageVets`). La desactivación se confirma desde el detalle.

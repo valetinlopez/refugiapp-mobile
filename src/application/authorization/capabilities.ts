@@ -8,6 +8,7 @@ export const CAPABILITIES = [
   'canManageUsers',
   'canManageExpenses',
   'canManageVets',
+  'canManageAdoptions',
   'canReadAudit',
 ] as const;
 
@@ -21,6 +22,7 @@ export const ROLE_CAPABILITIES: Readonly<Record<UserRole, RoleCapabilities>> = {
     canManageUsers: true,
     canManageExpenses: true,
     canManageVets: true,
+    canManageAdoptions: true,
     canReadAudit: true,
   },
   shelter_manager: {
@@ -29,6 +31,7 @@ export const ROLE_CAPABILITIES: Readonly<Record<UserRole, RoleCapabilities>> = {
     canManageUsers: false,
     canManageExpenses: true,
     canManageVets: true,
+    canManageAdoptions: true,
     canReadAudit: false,
   },
   veterinarian: {
@@ -37,6 +40,7 @@ export const ROLE_CAPABILITIES: Readonly<Record<UserRole, RoleCapabilities>> = {
     canManageUsers: false,
     canManageExpenses: false,
     canManageVets: false,
+    canManageAdoptions: false,
     canReadAudit: false,
   },
 };
@@ -72,6 +76,10 @@ export function canManageExpenses(roles: readonly UserRole[]): boolean {
 
 export function canManageVets(roles: readonly UserRole[]): boolean {
   return capabilitiesForRoles(roles).canManageVets;
+}
+
+export function canManageAdoptions(roles: readonly UserRole[]): boolean {
+  return capabilitiesForRoles(roles).canManageAdoptions;
 }
 
 export function canReadAudit(roles: readonly UserRole[]): boolean {

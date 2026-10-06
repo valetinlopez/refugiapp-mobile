@@ -17,6 +17,7 @@
 - La ausencia de rol o una capacidad no reconocida deniega acceso por defecto.
 - Esta matriz controla presentación y navegación; el backend sigue siendo la autoridad final.
 - Cualquier cambio debe contrastarse con `../refugiapp/src/common/authorization/role-capabilities.ts`.
+- `canManageAdoptions` habilita datos de adoptantes, postulaciones y aprobación para `admin` y `shelter_manager`; el historial público al rol autenticado se controla por separado desde la feature.
 
 ## Testing
 

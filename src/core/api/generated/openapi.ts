@@ -109,7 +109,10 @@ export interface components {
         | 'push.device_remove'
         | 'push.preferences_update'
         | 'push.dispatch_completed'
-        | 'push.token_invalid';
+        | 'push.token_invalid'
+        | 'adopter.create'
+        | 'adoption_application.create'
+        | 'adoption.complete';
       resourceType:
         | 'user'
         | 'medical_record'
@@ -117,7 +120,10 @@ export interface components {
         | 'care_task'
         | 'auth_session'
         | 'authorization'
-        | 'notification';
+        | 'notification'
+        | 'adopter'
+        | 'adoption_application'
+        | 'adoption';
       resourceId?: string | null;
       metadata: Record<string, unknown>;
       occurredAt: string;
@@ -126,6 +132,64 @@ export interface components {
     };
     PaginatedAuditLogsResponseDto: {
       items: components['schemas']['AuditLogResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
+    CreateAdopterDto: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      address?: string | null;
+    };
+    AdopterResponseDto: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      address?: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+    CreateAdoptionApplicationDto: {
+      adopterId: string;
+      submittedAt?: string;
+    };
+    AdoptionApplicationResponseDto: {
+      id: string;
+      animalId: string;
+      adopterId: string;
+      status: 'pending' | 'approved' | 'rejected';
+      submittedAt: string;
+      createdByUserId?: string | null;
+      decidedAt?: string | null;
+      decidedByUserId?: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+    PaginatedAdoptionApplicationsResponseDto: {
+      items: components['schemas']['AdoptionApplicationResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
+    ApproveAdoptionDto: {
+      adoptedAt?: string;
+    };
+    AdoptionResponseDto: {
+      id: string;
+      animalId: string;
+      adopterId: string;
+      applicationId: string;
+      adoptedAt: string;
+      responsibleUserId?: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+    PaginatedAdoptionsResponseDto: {
+      items: components['schemas']['AdoptionResponseDto'][];
       page: number;
       limit: number;
       total: number;

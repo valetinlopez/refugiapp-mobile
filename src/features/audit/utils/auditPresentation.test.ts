@@ -24,7 +24,7 @@ describe('auditPresentation', () => {
   });
 
   it('maps every supported action to a Spanish label', () => {
-    expect(AUDIT_ACTIONS.length).toBe(28);
+    expect(AUDIT_ACTIONS.length).toBe(31);
     for (const action of AUDIT_ACTIONS) {
       expect(auditActionLabel(action).trim()).not.toBe('');
       expect(auditActionLabel(action)).not.toContain('.');
@@ -32,6 +32,7 @@ describe('auditPresentation', () => {
     expect(auditActionLabel('user.create')).toBe('Usuario creado');
     expect(auditActionLabel('auth.password_change')).toBe('Contraseña cambiada');
     expect(auditActionLabel('push.token_invalid')).toBe('Token de notificación inválido');
+    expect(auditActionLabel('adoption.complete')).toBe('Adopción completada');
   });
 
   it('maps every supported resource type to a Spanish label', () => {
@@ -43,6 +44,9 @@ describe('auditPresentation', () => {
       'auth_session',
       'authorization',
       'notification',
+      'adopter',
+      'adoption_application',
+      'adoption',
     ]);
     for (const resourceType of AUDIT_RESOURCE_TYPES) {
       expect(auditResourceTypeLabel(resourceType).trim()).not.toBe('');
