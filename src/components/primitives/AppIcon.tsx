@@ -5,6 +5,7 @@ import { colors, sizes, type ColorToken } from '@/theme';
 
 export type AppIconName =
   | 'account'
+  | 'add'
   | 'alert'
   | 'calendar'
   | 'check'
@@ -12,6 +13,7 @@ export type AppIconName =
   | 'chevronRight'
   | 'clock'
   | 'close'
+  | 'document'
   | 'error'
   | 'eye'
   | 'eyeOff'
@@ -28,6 +30,7 @@ export type AppIconName =
 
 const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   account: { ios: 'person.crop.circle.fill', android: 'account_circle', web: 'account_circle' },
+  add: { ios: 'plus', android: 'add', web: 'add' },
   alert: { ios: 'exclamationmark.circle.fill', android: 'error', web: 'error' },
   calendar: { ios: 'calendar', android: 'calendar_month', web: 'calendar_month' },
   check: { ios: 'checkmark.circle.fill', android: 'check_circle', web: 'check_circle' },
@@ -35,6 +38,7 @@ const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   chevronRight: { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' },
   clock: { ios: 'clock.fill', android: 'schedule', web: 'schedule' },
   close: { ios: 'xmark', android: 'close', web: 'close' },
+  document: { ios: 'doc.fill', android: 'description', web: 'description' },
   error: { ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' },
   eye: { ios: 'eye', android: 'visibility', web: 'visibility' },
   eyeOff: { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' },

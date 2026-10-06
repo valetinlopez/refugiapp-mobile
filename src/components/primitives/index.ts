@@ -7,6 +7,8 @@ export type { AppButtonProps, AppButtonVariant } from './AppButton';
 export { AppCard } from './AppCard';
 export type { AppCardProps, AppCardVariant } from './AppCard';
 export { AppDivider } from './AppDivider';
+export { FAB } from './FAB';
+export type { FABProps } from './FAB';
 export { AppIcon } from './AppIcon';
 export type { AppIconName, AppIconProps } from './AppIcon';
 export { AppText } from './AppText';

@@ -138,6 +138,12 @@ Cuando un grupo de badges envuelve (por ejemplo en la tarjeta de métricas del p
 
 Patrón compartido para filtrar listados (animales por estado, tareas por estado). Píldora con label, área táctil mínima de 44 pt, borde en `border`; estado seleccionado con fondo `positive` y texto inverso. Cada chip expone `accessibilityState.selected` para que el estado no dependa solo del color. Los chips se agrupan en un `ScrollView` horizontal para evitar desbordes.
 
+`FilterChip` admite `accessibilityRole="radio"` (expone `checked` en lugar de `selected`), `disabled` (fondo `disabledSurface` y texto `disabledText`) y un `icon` opcional. `SegmentedControl` (§35) lo consume con semántica de grupo de opciones.
+
+### Controles segmentados (`SegmentedControl`)
+
+Grupo de selección única formado por chips (§15) que cambia de vista o filtra listados densos. El contenedor es un `radiogroup` y cada opción un `radio` con `checked`, por lo que la selección nunca depende solo del color. Las opciones se desplazan en horizontal (`ScrollView`) para no recortarse en pantallas estrechas ni con fuente ampliada; cada opción conserva área táctil mínima de 44 pt y admite `disabled` e `icon`. La feature provee las opciones y el valor; el componente no conoce el dominio.
+
 ## 16. Avatares
 
 Tamaños: 36, 48 y 72 pt. Los retratos usan recorte circular y borde cálido. Si falta la foto, mostrar hasta dos iniciales; nunca un espacio vacío ni una imagen genérica que pueda confundirse con el animal real. Si la imagen falla al cargar, el avatar vuelve a las iniciales de forma silenciosa (sin botón de reintento) y el fallo se resetea cuando cambia la URL.
@@ -315,6 +321,19 @@ Los assets originales de marca (hero de perro rescatado, marca vegetal y textura
 - **Rendimiento:** el wrapper fija `allowDownscaling`, `cachePolicy="memory-disk"` y prioridad baja; reserva `aspectRatio` para evitar layout shift; ante fallo de decodificación cae al PNG fallback y se resetea al cambiar la fuente.
 - **Densidades:** el import por _base name_ delega la selección de densidad a Metro/React Native; para el hero en login, `RFG-137` puede subir `priority` a `high`.
 - La textura se consume como capa `cover` (expo-image SDK 57 no repite tiles); el tile sigue afinado para patrones nativos futuros.
+
+## 35. Patrones compartidos D03
+
+La fundación visual de D03 (RFG-136) agrega patrones reutilizables en `src/components`, todos construidos exclusivamente con tokens de `src/theme`, con safe areas, áreas táctiles de 44 × 44, escalado de fuente (máximo 1,8) y estados derivados de texto + icono además de color. No incorporan acceso a red ni conocen DTOs.
+
+- **Fondo decorativo (`DecorativeBackground`)**: capa absoluta de pantalla que compone los assets de marca de D02 mediante `DecorativeImage`. Oculta a tecnologías asistivas, sin texto ni controles incrustados; un overlay opcional oscurece la fotografía para sostener el contraste del contenido. Variantes `hero`, `texture` y `none`.
+- **Encabezados (`ScreenHeader` y `SectionHeader`)**: título de pantalla y de sección con jerarquía semántica (`accessibilityRole="header"`), subtítulo y acción opcional. La fila envuelve (`flexWrap`), de modo que una fuente ampliada nunca recorta la acción.
+- **Acción flotante (`FAB`)**: acción principal contextual, 56 pt (`sizes.fab`), píldora `positive`, `hitSlop` de 8 y label accesible obligatorio. Respeta el inset inferior (`useSafeAreaInsets`); una pantalla con navegación inferior pasa un `bottomOffset` mayor. El estado presionado es `opacity` (`opacity.pressed`), compatible con reduce motion; `loading`/`disabled` se anuncian y bloquean la interacción.
+- **Tarjeta de entidad (`EntityCard`)**: fila canónica para animales, tareas, gastos, veterinarios y auditoría. Avatar opcional, columna de texto `flex: 1` + `minWidth: 0`, badge de estado (`flexShrink: 0`, `maxWidth` relativo ≈ 45 %) y chevron cuando es navegable. El título se trunca a dos líneas; el `accessibilityLabel` conserva el texto completo. Con `onPress` toda la tarjeta es un botón accesible.
+- **Metadatos (`MetadataRow`)**: fila etiqueta-valor para detalles de entidad. La etiqueta no se encoge y el valor envuelve alineado al final; las fechas llegan formateadas en `es-AR` y el dinero desde centavos, nunca como ISO crudo.
+- **Adjuntos (`AttachmentList` y `AttachmentRow`)**: lista de archivos con miniatura o glifo, nombre, tamaño y estados `ready`/`uploading`/`error`. La subida expone barra de progreso accesible y porcentaje textual; el error muestra mensaje seguro y acción de reintento; el reintento y la eliminación conservan área táctil de 44 pt. El borrado exige confirmación mediante `ConfirmDialog` (la lista lo posee) y una lista vacía explica la ausencia sin inventar acciones.
+
+Tokens agregados por D03: `sizes.fab` (56), `sizes.dialogMaxWidth` (480) y `opacity.pressed`/`opacity.pressedSubtle`/`opacity.overlay`. Reemplazan valores antes dispersos en `AppButton`, `AppHeaderBack`, `BottomNavigation` y `ConfirmDialog`, manteniendo el criterio de no introducir medidas arbitrarias en componentes compartidos.
 
 ## Referencias técnicas
 

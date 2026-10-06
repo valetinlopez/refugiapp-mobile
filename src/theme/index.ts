@@ -1,5 +1,7 @@
 export { colors } from './colors';
 export type { ColorToken } from './colors';
+export { opacity } from './opacity';
+export type { OpacityToken } from './opacity';
 export { radii } from './radii';
 export { shadows } from './shadows';
 export { sizes } from './sizes';

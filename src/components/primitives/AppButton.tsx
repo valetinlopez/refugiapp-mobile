@@ -8,7 +8,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { colors, radii, sizes, spacing } from '@/theme';
+import { colors, opacity, radii, sizes, spacing } from '@/theme';
 
 import { AppIcon, type AppIconName } from './AppIcon';
 import { AppText } from './AppText';
@@ -100,6 +100,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   pressed: {
-    opacity: 0.84,
+    opacity: opacity.pressed,
   },
 });

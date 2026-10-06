@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
 
 import { AppIcon, AppText, type AppIconName } from '@/components/primitives';
-import { colors, radii, sizes, spacing } from '@/theme';
+import { colors, opacity, radii, sizes, spacing } from '@/theme';
 
 export type BottomNavigationItem = {
   accessibilityLabel?: string;
@@ -71,6 +71,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxs,
   },
   pressed: {
-    opacity: 0.72,
+    opacity: opacity.pressedSubtle,
   },
 });
