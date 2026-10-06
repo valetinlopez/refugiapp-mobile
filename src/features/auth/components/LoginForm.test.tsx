@@ -45,7 +45,20 @@ describe('LoginForm', () => {
     const onSubmit = jest.fn().mockResolvedValue(undefined);
     const screen = await render(<LoginForm onSubmit={onSubmit} />);
 
+    expect(screen.getByLabelText('Correo electrónico').props.autoComplete).toBe('email');
+    expect(screen.getByLabelText('Correo electrónico').props.textContentType).toBe('emailAddress');
     expect(screen.getByLabelText('Contraseña').props.autoComplete).toBe('current-password');
     expect(screen.getByLabelText('Contraseña').props.textContentType).toBe('password');
+  });
+
+  it('reveals the password from the shared field toggle', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined);
+    const screen = await render(<LoginForm onSubmit={onSubmit} />);
+
+    expect(screen.getByLabelText('Contraseña').props.secureTextEntry).toBe(true);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Mostrar contraseña' }));
+
+    expect(screen.getByLabelText('Contraseña').props.secureTextEntry).toBe(false);
   });
 });
