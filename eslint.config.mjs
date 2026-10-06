@@ -14,6 +14,14 @@ export default defineConfig([
       'jsx-a11y/mouse-events-have-key-events': 'off',
       // El foco inicial en modales se gestiona por plataforma; se audita manual.
       'jsx-a11y/no-autofocus': 'off',
+      // Metro resuelve assets por base name (@1x/@2x/@3x) sin archivo literal;
+      // la regla de imports no debe marcar esos requires.
+      'import/no-unresolved': [
+        'error',
+        {
+          ignore: ['\\.(webp|png|jpe?g|gif|ttf|otf)$'],
+        },
+      ],
     },
   },
   {

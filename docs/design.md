@@ -92,7 +92,7 @@ Priorizar retratos naturales, con ojos visibles, luz suave y fondo poco distract
 
 ## 12. Imágenes transparentes y recortes
 
-Un recorte transparente puede usarse una vez en una cabecera editorial. Debe conservar pelo, orejas y contorno, disponer de una imagen alternativa y no tapar texto al aumentar fuente. Si el recorte no es robusto en pantallas pequeñas, se sustituye por una fotografía rectangular con `cover`. Nunca incrustar texto, badges ni botones dentro del bitmap.
+Un recorte transparente puede usarse una vez en una cabecera editorial. Debe conservar pelo, orejas y contorno, disponer de una imagen alternativa y no tapar texto al aumentar fuente. Si el recorte no es robusto en pantallas pequeñas, se sustituye por una fotografía rectangular con `cover`. Nunca incrustar texto, badges ni botones dentro del bitmap. El hero original (D02, `brandAssets.heroRescuedDog`) cumple estas reglas y se consume con `DecorativeImage` (§34), oculto a tecnologías asistivas; debe probarse en 320×568 y con fuente ampliada, reemplazándose por una fotografía `cover` si no es robusto.
 
 ## 13. Botones y acciones
 
@@ -252,7 +252,7 @@ La primera versión no necesita `react-native-svg`: radios nativos resuelven tar
 
 ## 29. Aspectos conceptuales del mockup
 
-Son conceptuales: el perro recortado sobre la cabecera, las frases manuscritas, las hojas de fondo, la tarjeta ondulada, los conteos y nombres, el indicador de notificación y todos los ejemplos de agenda. No representan datos reales, requisitos de endpoint ni una obligación de layout. La pantalla de catálogo usa contenido ficticio explícito para validar componentes.
+Son conceptuales: el perro recortado sobre la cabecera, las frases manuscritas, las hojas de fondo, la tarjeta ondulada, los conteos y nombres, el indicador de notificación y todos los ejemplos de agenda. No representan datos reales, requisitos de endpoint ni una obligación de layout. La pantalla de catálogo usa contenido ficticio explícito para validar componentes. El perro recortado y las hojas de fondo se materializan con los assets originales de D02 (`assets/images/brand`, ver `docs/brand-assets.md`), siempre decorativos y ocultos a tecnologías asistivas.
 
 ## 30. Uso correcto e incorrecto
 
@@ -304,6 +304,17 @@ El acceso de cuenta es transversal al área autenticada y reutiliza el lenguaje 
 - **Acciones:** `Cancelar`/`Volver` (`ghost`, deshabilitado durante la operación) y confirmación (`primary` o `danger`, con `danger` por defecto) con estado de carga que bloquea ambas acciones mientras se ejecuta (`confirming`).
 - **Regla:** toda acción destructiva exige confirmación explícita; nunca se ejecuta de forma inmediata. El borrado de un adjunto clínico ya subido (`DELETE /media/:id`) confirma antes de encolarse al guardado. La limpieza huérfana automática posterior a un fallo (foto de perfil, comprobante, adjuntos) permanece silenciosa porque no la inicia el usuario.
 - **Tono del producto:** los mensajes de confirmación y de error usan voseo rioplatense ("¿Querés...?", "Revisá...", "Intentá...") de forma consistente en toda la app.
+
+## 34. Assets de marca y decorativos (D02)
+
+Los assets originales de marca (hero de perro rescatado, marca vegetal y textura de hojas) se registran en `src/components/patterns/brandAssets.ts` (`resolveBrandSource`) y se consumen con el patrón `DecorativeImage`:
+
+- **Procedencia:** maestros vectoriales propios en `docs/brand-assets/sources/`; binarios WebP `@Nx` + PNG fallback generados con `scripts/generate-brand-assets.mjs` (ver `docs/brand-assets.md` y ADR-0015).
+- **Decorativos por defecto:** ocultos a tecnologías asistivas (`accessible={false}`, `accessibilityElementsHidden`, `importantForAccessibility="no-hide-descendants"`, `alt=""`). Solo un `accessibilityLabel` los convierte en informativos.
+- **Sin estado ni texto:** ningún asset comunica estado, ni contiene texto, badges ni botones incrustados.
+- **Rendimiento:** el wrapper fija `allowDownscaling`, `cachePolicy="memory-disk"` y prioridad baja; reserva `aspectRatio` para evitar layout shift; ante fallo de decodificación cae al PNG fallback y se resetea al cambiar la fuente.
+- **Densidades:** el import por _base name_ delega la selección de densidad a Metro/React Native; para el hero en login, `RFG-137` puede subir `priority` a `high`.
+- La textura se consume como capa `cover` (expo-image SDK 57 no repite tiles); el tile sigue afinado para patrones nativos futuros.
 
 ## Referencias técnicas
 

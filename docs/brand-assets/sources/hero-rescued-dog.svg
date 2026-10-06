@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Ilustración de perro rescatado">
+  <!-- Ground shadow that grounds the figure on any earthy surface -->
+  <ellipse cx="305" cy="452" rx="182" ry="20" fill="#4A332A" opacity="0.5" />
+
+  <!-- Tail -->
+  <path
+    d="M 120 340 C 96 348 84 366 88 386 C 92 406 112 418 132 412 C 148 407 158 392 152 376 C 146 360 130 352 120 340 Z"
+    fill="#EBDDC4"
+  />
+
+  <!-- Floppy ear (behind the head) -->
+  <ellipse cx="348" cy="156" rx="30" ry="50" transform="rotate(14 348 156)" fill="#DBA96E" />
+  <ellipse cx="350" cy="158" rx="16" ry="30" transform="rotate(14 350 158)" fill="#C98E55" />
+
+  <!-- Body and receding haunch -->
+  <rect x="268" y="252" width="136" height="196" rx="68" fill="#F2E7D4" />
+  <rect x="348" y="316" width="98" height="132" rx="49" fill="#F2E7D4" />
+  <ellipse cx="376" cy="430" rx="42" ry="16" fill="#F2E7D4" />
+
+  <!-- Front legs -->
+  <rect x="236" y="340" width="42" height="110" rx="21" fill="#F2E7D4" />
+  <rect x="290" y="340" width="42" height="110" rx="21" fill="#F2E7D4" />
+
+  <!-- Chest and neck bridge -->
+  <rect x="252" y="250" width="60" height="92" rx="28" fill="#F2E7D4" />
+
+  <!-- Head and snout facing left -->
+  <circle cx="304" cy="198" r="62" fill="#EBDDC4" />
+  <rect x="170" y="176" width="130" height="50" rx="25" fill="#F0E5D1" />
+
+  <!-- Muzzle shading -->
+  <ellipse cx="204" cy="214" rx="30" ry="11" fill="#E2CFB2" />
+
+  <!-- Nose, mouth and eye -->
+  <circle cx="186" cy="200" r="14" fill="#3B2B21" />
+  <path d="M 198 216 Q 214 230 236 222" stroke="#3B2B21" stroke-width="7" stroke-linecap="round" fill="none" />
+  <circle cx="284" cy="186" r="9" fill="#3B2B21" />
+
+  <!-- Rescue collar -->
+  <path d="M 250 242 Q 300 278 356 240" stroke="#B9DB62" stroke-width="20" stroke-linecap="round" fill="none" />
+  <!-- Bandana tail -->
+  <path d="M 284 258 L 300 314 L 322 266 Z" fill="#B9DB62" />
+  <!-- Identification tag -->
+  <circle cx="268" cy="268" r="15" fill="#D96C5F" />
+  <circle cx="268" cy="268" r="4" fill="#3B2B21" opacity="0.6" />
+</svg>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80" role="img" aria-label="Marca vegetal de Refugiapp">
+  <!-- Leaf blade -->
+  <path
+    d="M 40 68 C 26 64 20 50 24 38 C 27 29 34 23 40 14 C 47 23 54 32 56 44 C 57 54 50 64 40 68 Z"
+    fill="#B9DB62"
+  />
+  <!-- Midrib -->
+  <path d="M 39 62 C 38 48 38 34 40 20" stroke="#8FAE4F" stroke-width="2" stroke-linecap="round" fill="none" />
+  <!-- Lateral veins -->
+  <path d="M 39 50 C 33 47 29 43 26 36" stroke="#8FAE4F" stroke-width="1.6" stroke-linecap="round" fill="none" />
+  <path d="M 40 42 C 47 39 51 34 53 28" stroke="#8FAE4F" stroke-width="1.6" stroke-linecap="round" fill="none" />
+  <!-- Stem -->
+  <path d="M 40 66 C 40 71 40 73 40 76" stroke="#8FAE4F" stroke-width="2.4" stroke-linecap="round" fill="none" />
+</svg>
