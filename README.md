@@ -207,6 +207,7 @@ Notas:
 | `npm run ios`               | Arranca en iOS simulator (development)                   |
 | `npm run web`               | Arranca en navegador (development)                       |
 | `npm run api:generate`      | Regenera tipos de auth desde el snapshot OpenAPI         |
+| `npm run assets:brand`      | Regenera los WebP/PNG de marca desde los SVG maestros    |
 | `npm run release:export`    | Exporta bundles nativos/web para verificar una release   |
 | `npm run release:scan`      | Busca patrones de secretos en `dist/release`             |
 | `npm run release:verify`    | Exporta y escanea el bundle cliente                      |

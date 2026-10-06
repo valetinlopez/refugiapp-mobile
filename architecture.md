@@ -16,25 +16,26 @@ Los detalles visuales viven en `docs/design.md`. Los contratos del servidor y pe
 
 ## 2. Contexto tecnológico
 
-| Área                | Tecnología                               | Decisión                                                                   |
-| ------------------- | ---------------------------------------- | -------------------------------------------------------------------------- |
-| Runtime             | Node.js 22.13+                           | Mínimo requerido por Expo SDK 57                                           |
-| Framework           | Expo SDK 57                              | Runtime y tooling móvil                                                    |
-| UI                  | React Native 0.86 + React 19.2           | Base multiplataforma                                                       |
-| Lenguaje            | TypeScript estricto                      | `strict`, `noUncheckedIndexedAccess` y `exactOptionalPropertyTypes`        |
-| Navegación          | Expo Router                              | Rutas basadas en archivos                                                  |
-| Red                 | Fetch                                    | Cliente HTTP tipado, normalización y refresh single-flight                 |
-| Estado servidor     | TanStack Query                           | Provider global conectado a red y AppState de React Native                 |
-| Persistencia segura | Expo Secure Store                        | Tokens JWT y datos secretos pequeños                                       |
-| Diseño              | Tokens propios + Expo Symbols            | Sistema compartido documentado en `docs/design.md`                         |
-| Formularios         | React Hook Form + Zod                    | Validación en español con esquemas puros testeables                        |
-| Selector de fecha   | `@react-native-community/datetimepicker` | Patrón compartido para animales, tareas y registros médicos (ver ADR-0004) |
-| Selección de media  | Expo ImagePicker + DocumentPicker        | Cámara, galería e importación de PDF (ver ADR-0005)                        |
-| Imágenes remotas    | Expo Image                               | Caché memoria/disco y media Cloudinary optimizada (ver ADR-0012)           |
-| Push notifications  | Expo Notifications                       | Permisos, token Expo, preferencias y navegación por tap (ver ADR-0014)     |
-| Testing             | Jest + React Native Testing Library      | Unit y component tests                                                     |
-| Calidad             | ESLint + Prettier + TypeScript           | Gates locales obligatorios                                                 |
-| Distribución        | EAS Build                                | Builds internos de staging y versionado nativo remoto (ver ADR-0013)       |
+| Área                | Tecnología                               | Decisión                                                                                                                      |
+| ------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Runtime             | Node.js 22.13+                           | Mínimo requerido por Expo SDK 57                                                                                              |
+| Framework           | Expo SDK 57                              | Runtime y tooling móvil                                                                                                       |
+| UI                  | React Native 0.86 + React 19.2           | Base multiplataforma                                                                                                          |
+| Lenguaje            | TypeScript estricto                      | `strict`, `noUncheckedIndexedAccess` y `exactOptionalPropertyTypes`                                                           |
+| Navegación          | Expo Router                              | Rutas basadas en archivos                                                                                                     |
+| Red                 | Fetch                                    | Cliente HTTP tipado, normalización y refresh single-flight                                                                    |
+| Estado servidor     | TanStack Query                           | Provider global conectado a red y AppState de React Native                                                                    |
+| Persistencia segura | Expo Secure Store                        | Tokens JWT y datos secretos pequeños                                                                                          |
+| Diseño              | Tokens propios + Expo Symbols            | Sistema compartido documentado en `docs/design.md`                                                                            |
+| Formularios         | React Hook Form + Zod                    | Validación en español con esquemas puros testeables                                                                           |
+| Selector de fecha   | `@react-native-community/datetimepicker` | Patrón compartido para animales, tareas y registros médicos (ver ADR-0004)                                                    |
+| Selección de media  | Expo ImagePicker + DocumentPicker        | Cámara, galería e importación de PDF (ver ADR-0005)                                                                           |
+| Imágenes remotas    | Expo Image                               | Caché memoria/disco y media Cloudinary optimizada (ver ADR-0012)                                                              |
+| Assets de marca     | SVG + sharp (dev) + WebP/PNG             | Hojas vectoriales propias; hero de stock licenciado (Pngtree); densidades `@Nx` resueltas por Metro (ver ADR-0015 y ADR-0016) |
+| Push notifications  | Expo Notifications                       | Permisos, token Expo, preferencias y navegación por tap (ver ADR-0014)                                                        |
+| Testing             | Jest + React Native Testing Library      | Unit y component tests                                                                                                        |
+| Calidad             | ESLint + Prettier + TypeScript           | Gates locales obligatorios                                                                                                    |
+| Distribución        | EAS Build                                | Builds internos de staging y versionado nativo remoto (ver ADR-0013)                                                          |
 
 ## 3. Principios arquitectónicos
 
@@ -305,7 +306,7 @@ Los componentes compartidos se dividen en:
 - `primitives`: bloques atómicos.
 - `feedback`: carga, vacío, error y offline.
 - `navigation`: navegación reutilizable.
-- `patterns`: composiciones sin acceso a red.
+- `patterns`: composiciones sin acceso a red. Incluye `DecorativeImage` (media decorativa oculta a AT, con `aspectRatio`, `allowDownscaling`, caché memoria/disco y fallback PNG) y `brandAssets` (`resolveBrandSource`, registro de los assets de marca originales de D02).
 
 No se incorpora `react-native-svg` mientras las formas nativas y `expo-symbols` resuelvan el caso.
 
@@ -408,6 +409,7 @@ La matriz de actualización está en `docs/documentation-governance.md`.
 - ESLint, Prettier, typecheck y export web verificados.
 - Jerarquía de documentación y reglas locales por frontera.
 - Compartición en desarrollo con túnel: scripts `start:tunnel` (solo Metro por ngrok), `start:lan` y `start:share` (`scripts/start-dev.mjs` resuelve `EXPO_PUBLIC_API_URL` con prioridad shell > `.env.local` > IP LAN autodetectada e inyecta el resultado; `node scripts/start-dev.mjs --print-api-url` muestra la URL sin arrancar Metro), con `@expo/ngrok` como devDependency. El túnel de Metro no publica la API: cada dispositivo debe alcanzarla por IP LAN o mediante un túnel propio del backend (cloudflared/ngrok), y ese valor sigue validándose en `src/core/config/env.ts`. En Expo Go + `start:share` (bundle por `https`) la API también debe ser `https`: una API `http` LAN se bloquea y el cliente la reporta como `NETWORK_ERROR`.
+- Assets de marca (D02/RFG-135): hero de perro rescatado (fotografía de stock licenciada Pngtree, con atribución), marca vegetal y textura de hojas (ilustraciones vectoriales propias) en `assets/images/brand/` (WebP + PNG fallback), maestros en `docs/brand-assets/sources/`, procedencia en `docs/brand-assets.md` y pipeline reproducible con `npm run assets:brand`. Se consumen vía `brandAssets`/`resolveBrandSource` y `DecorativeImage` (decorativos ocultos a AT, `aspectRatio`, `allowDownscaling`, caché memoria/disco y fallback ante error; ver ADR-0015 y ADR-0016). La densidad la resuelve Metro por _base name_ en runtime; sin endpoints, permisos ni estados nuevos.
 
 ## 17. Pendientes y deuda conocida
 

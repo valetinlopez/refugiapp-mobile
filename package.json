@@ -53,6 +53,7 @@
     "jest-expo": "~57.0.5",
     "prettier": "^3.9.6",
     "react-test-renderer": "^19.2.3",
+    "sharp": "^0.34.5",
     "test-renderer": "^1.2.0",
     "typescript": "~6.0.3"
   },
@@ -69,6 +70,7 @@
     "web": "dotenv -e .env.development -- expo start --web",
     "api:sync": "node scripts/sync-mobile-openapi.mjs",
     "api:generate": "node scripts/generate-openapi-types.mjs && prettier --write src/core/api/generated/openapi.ts",
+    "assets:brand": "node scripts/generate-brand-assets.mjs",
     "release:export": "expo export --platform all --output-dir dist/release",
     "release:scan": "node scripts/scan-client-bundle.mjs dist/release",
     "release:verify": "npm run release:export && npm run release:scan",

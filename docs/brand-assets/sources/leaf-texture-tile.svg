@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Textura decorativa de hojas">
+  <defs>
+    <!-- Simple leaf lens used as the repeating unit -->
+    <g id="leaf">
+      <path
+        d="M 0 10 C -7 5 -7 -6 0 -13 C 7 -6 7 5 0 10 Z"
+        fill="#B9DB62"
+      />
+      <path
+        d="M 0 7 L 0 -10"
+        stroke="#A9C555"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        fill="none"
+      />
+    </g>
+  </defs>
+
+  <!-- Uniform 4x4 grid so the tile repeats seamlessly; every unit is fully
+       contained inside the tile, so no leaf crosses an edge. The whole layer
+       is kept subtle because it is purely decorative. -->
+  <g opacity="0.14">
+    <use href="#leaf" transform="translate(30 30) rotate(20)" />
+    <use href="#leaf" transform="translate(90 30) rotate(200) scale(1.2)" />
+    <use href="#leaf" transform="translate(150 30) rotate(35) scale(0.8)" />
+    <use href="#leaf" transform="translate(210 30) rotate(220)" />
+
+    <use href="#leaf" transform="translate(30 90) rotate(160) scale(1.1)" />
+    <use href="#leaf" transform="translate(90 90) rotate(40) scale(0.9)" />
+    <use href="#leaf" transform="translate(150 90) rotate(210) scale(1.15)" />
+    <use href="#leaf" transform="translate(210 90) rotate(15)" />
+
+    <use href="#leaf" transform="translate(30 150) rotate(25) scale(0.95)" />
+    <use href="#leaf" transform="translate(90 150) rotate(190) scale(1.05)" />
+    <use href="#leaf" transform="translate(150 150) rotate(55) scale(1.1)" />
+    <use href="#leaf" transform="translate(210 150) rotate(230) scale(0.85)" />
+
+    <use href="#leaf" transform="translate(30 210) rotate(145) scale(1.2)" />
+    <use href="#leaf" transform="translate(90 210) rotate(10) scale(0.9)" />
+    <use href="#leaf" transform="translate(150 210) rotate(200) scale(1)" />
+    <use href="#leaf" transform="translate(210 210) rotate(40) scale(1.1)" />
+  </g>
+</svg>

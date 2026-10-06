@@ -89,14 +89,15 @@ Estas rutas existen hoy pero no tienen referencia visual en esta carpeta y queda
 
 ## 4. Reglas de assets para D02/D03 (descubribilidad y accesibilidad)
 
-Estas reglas alimentan la creación de assets originales (RFG-135) y el sistema visual (RFG-136). No se crean assets en la tarea D01.
+Estas reglas alimentan la creación de assets originales (RFG-135) y el sistema visual (RFG-136). **Implementadas en D02 (RFG-135):** los binarios viven en `assets/images/brand/`, los maestros en `docs/brand-assets/sources/`, la procedencia y licencias en `docs/brand-assets.md` y el wrapper `DecorativeImage` en `src/components/patterns`. Nota de revisión visual: el hero quedó como fotografía de stock licenciada Pngtree con atribución (ADR-0016, relaja el criterio "original" solo para el hero); las hojas siguen siendo ilustraciones vectoriales propias.
 
-- Nombres `kebab-case` en inglés, sin espacios, acentos ni caracteres no ASCII; numéricos solo como orden de recorrido.
+- Nombres `kebab-case` en inglés, sin espacios, acentos ni caracteres no ASCII; numerados solo como orden de recorrido.
 - Los elementos decorativos (hero, textura de hojas, marca vegetal) son ornamentales y no comunican estado ni contienen texto funcional.
-- Los decorativos se ocultan a tecnologías asistivas (`accessibilityElementsHidden` / `importantForAccessibility="no-hide-descendants"`, o equivalente) y se consumen con `expo-image` siguiendo la política del sistema visual (`docs/design.md` §12 y §16).
+- Los decorativos se ocultan a tecnologías asistivas (`DecorativeImage` aplica `accessibilityElementsHidden` / `importantForAccessibility="no-hide-descendants"` y `alt=""`) y se consumen con `expo-image` siguiendo la política del sistema visual (`docs/design.md` §12, §16 y §34).
 - Las imágenes que informan identidad (fotografías de animales y personas) llevan texto alternativo descriptivo; las decorativas, `alt=""`.
 - No se incrusta texto, badges ni botones dentro de un bitmap.
-- Toda variante se documenta con procedencia, licencia o autoría, tal como exige RFG-135.
+- Toda variante se documenta con procedencia, licencia o autoría, tal como exige RFG-135 (`docs/brand-assets.md` §2).
+- Densidades: se versionan `@1x/@2x/@3x` en WebP y un único PNG fallback a máxima densidad; la selección de densidad se delega al pipeline de Metro/React Native.
 
 ## 5. Trazabilidad
 
