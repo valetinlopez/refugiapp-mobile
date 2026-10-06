@@ -12,7 +12,7 @@
 - `GET /audit-logs/:id`: detalle por UUID.
 - `AuditLogResponseDto` expone `actor: { id, firstName, lastName, email } | null` (humano legible; `null` para eventos de sistema o actor eliminado) además de `actorUserId` (aditivo). Los tipos de red derivan de `openapi/mobile.openapi.json`.
 - El modelo de vista normaliza: `actor` a `AuditActorView { id, displayName, initials, email }`, `actorUserId` a `actorFallbackId` para fallback durante rollout, y `resourceId` a `string | null`.
-- Enums versionados (28 `action`, 7 `resourceType`) con diccionarios en español rioplatense (`auditActionLabel`, `auditResourceTypeLabel`) y tono semántico de badge (`auditActionTone`: `danger` para acceso denegado y fallos de sesión/recuperación). Ningún código crudo (`user.create`, `auth_session`) se presenta en la UI.
+- Enums versionados (31 `action`, 10 `resourceType`) con diccionarios en español rioplatense (`auditActionLabel`, `auditResourceTypeLabel`), incluidas las acciones y recursos de adoptantes, postulaciones y adopciones, y tono semántico de badge (`auditActionTone`: `danger` para acceso denegado y fallos de sesión/recuperación). Ningún código crudo (`user.create`, `auth_session`) se presenta en la UI.
 - El filtro de actor es un input UUID validado con `isUuid`; un valor inválido se descarta sin bloquear la aplicación (misma semántica que el historial médico).
 
 ## Permisos

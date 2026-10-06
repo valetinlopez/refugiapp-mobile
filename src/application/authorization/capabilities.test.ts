@@ -3,6 +3,7 @@ import {
   ROLE_CAPABILITIES,
   canEditAnimal,
   canManageExpenses,
+  canManageAdoptions,
   canManageUsers,
   canManageVets,
   canReadAudit,
@@ -20,6 +21,7 @@ const EXPECTED_MATRIX: Record<UserRole, Record<Capability, boolean>> = {
     canManageUsers: true,
     canManageExpenses: true,
     canManageVets: true,
+    canManageAdoptions: true,
     canReadAudit: true,
   },
   shelter_manager: {
@@ -28,6 +30,7 @@ const EXPECTED_MATRIX: Record<UserRole, Record<Capability, boolean>> = {
     canManageUsers: false,
     canManageExpenses: true,
     canManageVets: true,
+    canManageAdoptions: true,
     canReadAudit: false,
   },
   veterinarian: {
@@ -36,6 +39,7 @@ const EXPECTED_MATRIX: Record<UserRole, Record<Capability, boolean>> = {
     canManageUsers: false,
     canManageExpenses: false,
     canManageVets: false,
+    canManageAdoptions: false,
     canReadAudit: false,
   },
 };
@@ -65,6 +69,7 @@ describe('role capabilities registry', () => {
       canManageUsers: false,
       canManageExpenses: true,
       canManageVets: true,
+      canManageAdoptions: true,
       canReadAudit: false,
     });
   });
@@ -81,6 +86,7 @@ describe('role capabilities registry', () => {
     expect(canManageUsers(['admin'])).toBe(true);
     expect(canManageExpenses(['shelter_manager'])).toBe(true);
     expect(canManageVets(['shelter_manager'])).toBe(true);
+    expect(canManageAdoptions(['shelter_manager'])).toBe(true);
     expect(canReadAudit(['admin'])).toBe(true);
 
     expect(canEditAnimal(['veterinarian'])).toBe(false);
@@ -88,6 +94,7 @@ describe('role capabilities registry', () => {
     expect(canManageUsers(['veterinarian'])).toBe(false);
     expect(canManageExpenses(['veterinarian'])).toBe(false);
     expect(canManageVets(['veterinarian'])).toBe(false);
+    expect(canManageAdoptions(['veterinarian'])).toBe(false);
     expect(canReadAudit(['shelter_manager'])).toBe(false);
   });
 });

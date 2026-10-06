@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,9 +14,11 @@ import {
   type AnimalDetailTab,
 } from '@/features/animals/components/AnimalDetailTabs';
 import { AnimalStatusChanger } from '@/features/animals/components/AnimalStatusChanger';
+import { AdoptionProcess } from '@/features/adoptions/components/AdoptionProcess';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
+import { animalKeys } from '@/features/animals/hooks/animalKeys';
 import { useAnimalPhoto } from '@/features/animals/hooks/useAnimalPhoto';
 import { useChangeAnimalStatus } from '@/features/animals/hooks/useChangeAnimalStatus';
 import { toChangeStatusErrorMessage } from '@/features/animals/utils/animalErrorMessages';
@@ -30,6 +33,7 @@ import { colors, spacing } from '@/theme';
 export default function AnimalDetailScreen() {
   const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const capabilities = useCapabilities();
+  const queryClient = useQueryClient();
 
   const animalId = typeof id === 'string' && isUuid(id) ? id : '';
   const fallbackHref: Href = '/explore';
@@ -47,6 +51,7 @@ export default function AnimalDetailScreen() {
         <AnimalDetailContent
           canWrite={capabilities.canEditAnimal}
           canReadClinicalRecords={capabilities.canReadClinicalRecords}
+          canManageAdoptions={capabilities.canManageAdoptions}
           changeStatusError={
             changeStatus.error ? toChangeStatusErrorMessage(changeStatus.error) : null
           }
@@ -54,6 +59,9 @@ export default function AnimalDetailScreen() {
           onBack={() => navigateBack(fallbackHref)}
           onChangeStatus={(status) => changeStatus.mutate({ status })}
           onRetry={() => void animalQuery.refetch()}
+          onAdoptionApproved={() => {
+            void queryClient.invalidateQueries({ queryKey: animalKeys.all });
+          }}
           photoUri={photoQuery.data ?? null}
           query={animalQuery}
           {...(tab === undefined ? {} : { requestedTab: tab })}
@@ -66,9 +74,11 @@ export default function AnimalDetailScreen() {
 interface AnimalDetailContentProps {
   canWrite: boolean;
   canReadClinicalRecords: boolean;
+  canManageAdoptions: boolean;
   changeStatusError: string | null;
   isSubmittingStatus: boolean;
   onBack(): void;
+  onAdoptionApproved(): void;
   onChangeStatus(status: AnimalStatus): void;
   onRetry(): void;
   photoUri: string | null;
@@ -79,9 +89,11 @@ interface AnimalDetailContentProps {
 function AnimalDetailContent({
   canWrite,
   canReadClinicalRecords,
+  canManageAdoptions,
   changeStatusError,
   isSubmittingStatus,
   onBack,
+  onAdoptionApproved,
   onChangeStatus,
   onRetry,
   photoUri,
@@ -236,6 +248,19 @@ function AnimalDetailContent({
         </View>
       ) : null}
 
+      {activeTab === 'adoptions' ? (
+        <View style={styles.historySection}>
+          <AppText variant="heading2">Adopción</AppText>
+          <AdoptionProcess
+            animalId={animal.id}
+            animalName={animal.name}
+            canManage={canManageAdoptions}
+            isAvailableForAdoption={animal.status === 'available_for_adoption'}
+            onAdoptionApproved={onAdoptionApproved}
+          />
+        </View>
+      ) : null}
+
       {activeTab === 'clinical' && canReadClinicalRecords ? (
         <View style={styles.historySection}>
           <View style={styles.clinicalHeader}>
@@ -283,7 +308,7 @@ function AnimalDetailContent({
 }
 
 function isAnimalDetailTab(value: string | undefined): value is AnimalDetailTab {
-  return ['summary', 'history', 'tasks', 'expenses', 'clinical'].includes(value ?? '');
+  return ['summary', 'history', 'tasks', 'expenses', 'adoptions', 'clinical'].includes(value ?? '');
 }
 
 function sexLabel(sex: AnimalSex): string {

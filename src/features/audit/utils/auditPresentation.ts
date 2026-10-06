@@ -38,6 +38,9 @@ export const AUDIT_ACTIONS: readonly AuditAction[] = [
   'push.preferences_update',
   'push.dispatch_completed',
   'push.token_invalid',
+  'adopter.create',
+  'adoption_application.create',
+  'adoption.complete',
 ];
 
 const ACTION_LABELS: Record<AuditAction, string> = {
@@ -69,6 +72,9 @@ const ACTION_LABELS: Record<AuditAction, string> = {
   'push.preferences_update': 'Preferencias de notificación actualizadas',
   'push.dispatch_completed': 'Notificación enviada',
   'push.token_invalid': 'Token de notificación inválido',
+  'adopter.create': 'Adoptante registrado',
+  'adoption_application.create': 'Postulación de adopción creada',
+  'adoption.complete': 'Adopción completada',
 };
 
 export const AUDIT_RESOURCE_TYPES: readonly AuditResourceType[] = [
@@ -79,6 +85,9 @@ export const AUDIT_RESOURCE_TYPES: readonly AuditResourceType[] = [
   'auth_session',
   'authorization',
   'notification',
+  'adopter',
+  'adoption_application',
+  'adoption',
 ];
 
 const RESOURCE_TYPE_LABELS: Record<AuditResourceType, string> = {
@@ -89,6 +98,9 @@ const RESOURCE_TYPE_LABELS: Record<AuditResourceType, string> = {
   auth_session: 'Sesión',
   authorization: 'Autorización',
   notification: 'Notificación',
+  adopter: 'Adoptante',
+  adoption_application: 'Postulación de adopción',
+  adoption: 'Adopción',
 };
 
 const SENSITIVE_KEY = /(password|token|secret|authorization|credential|api.?key)/i;

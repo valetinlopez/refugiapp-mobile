@@ -3,6 +3,7 @@ export {
   ROLE_CAPABILITIES,
   canEditAnimal,
   canManageExpenses,
+  canManageAdoptions,
   canManageUsers,
   canManageVets,
   canReadAudit,

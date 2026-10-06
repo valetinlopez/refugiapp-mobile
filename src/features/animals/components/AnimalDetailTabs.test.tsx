@@ -22,4 +22,11 @@ describe('AnimalDetailTabs', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Tareas' }));
     expect(onChange).toHaveBeenCalledWith('tasks');
   });
+
+  it('shows adoption to every authenticated role', async () => {
+    const screen = await render(
+      <AnimalDetailTabs activeTab="summary" canReadClinicalRecords={false} onChange={jest.fn()} />
+    );
+    expect(screen.getByRole('button', { name: 'Adopción' })).toBeTruthy();
+  });
 });
