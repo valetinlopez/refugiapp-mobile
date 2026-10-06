@@ -335,6 +335,17 @@ La fundación visual de D03 (RFG-136) agrega patrones reutilizables en `src/comp
 
 Tokens agregados por D03: `sizes.fab` (56), `sizes.dialogMaxWidth` (480) y `opacity.pressed`/`opacity.pressedSubtle`/`opacity.overlay`. Reemplazan valores antes dispersos en `AppButton`, `AppHeaderBack`, `BottomNavigation` y `ConfirmDialog`, manteniendo el criterio de no introducir medidas arbitrarias en componentes compartidos.
 
+## 36. Login editorial (D04)
+
+La pantalla de acceso replica la composición editorial de la referencia `01-login.jpeg` sin incrustar la captura como fondo:
+
+- **Hero decorativo:** `DecorativeBackground variant="hero"` a-bleed en el 62 % superior, con `priority="high"` y overlay (`opacity.overlay`) para sostener el contraste del copy. Oculto a tecnologías asistivas; no comunica estado ni contiene texto.
+- **Copy nativo:** marca `Refugiapp` (`display`, `accessibilityRole="header"`, único encabezado principal), claim y descripción en `heading3`/`body`. El texto funcional nunca va dentro de un bitmap.
+- **Tarjeta de acceso:** `AppCard variant="organic"` (superficie elevada, radios orgánicos, sombra `raised`) con el encabezado "Acceso para personal autorizado" (`heading3`, header, icono `account` decorativo) y `LoginForm`.
+- **Teclado y viewport:** `KeyboardAvoidingView` (`padding` en iOS) + `ScrollView` (`keyboardShouldPersistTaps="handled"`, `flexGrow`, `justifyContent: 'space-between'`). En pantallas pequeñas o con fuente al 200 % el contenido desplaza; ninguna altura rígida rodea texto.
+- **Formulario:** reutiliza `PasswordField` (toggle de visibilidad 44 × 44) y expone `autoComplete`/`textContentType` (email `emailAddress`, password `password`) y `returnKeyType next → done`; el error de validación y el aviso de sesión vencida se anuncian con `role="alert"` y `accessibilityLiveRegion`.
+- **Divergencia `ux` aceptada:** no se añaden iconos dentro de los inputs, ya que exigirían una primitiva compartida de campo nueva o duplicar el estilo del campo; se prioriza no crear una abstracción compartida para un único consumidor. El icono `account` decora el encabezado de la tarjeta. `app/(auth)/_layout.tsx` declara `title` por pantalla para el documento web.
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)

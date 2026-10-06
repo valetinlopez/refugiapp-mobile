@@ -5,6 +5,8 @@ import { StyleSheet, TextInput, View, type TextInput as TextInputType } from 're
 import { AppButton, AppText } from '@/components/primitives';
 import { colors, fontFamilies, radii, spacing } from '@/theme';
 
+import { PasswordField } from './PasswordField';
+
 import type { LoginRequest } from '../types';
 
 interface LoginFormProps {
@@ -56,29 +58,24 @@ export function LoginForm({ errorMessage, onSubmit }: LoginFormProps) {
           returnKeyType="next"
           style={styles.input}
           testID="login-email"
+          textContentType="emailAddress"
           value={email}
         />
       </View>
-      <View style={styles.field}>
-        <AppText variant="label">Contraseña</AppText>
-        <TextInput
-          accessibilityLabel="Contraseña"
-          autoCapitalize="none"
-          autoComplete="current-password"
-          editable={!isSubmitting}
-          onChangeText={setPassword}
-          onSubmitEditing={() => void handleSubmit()}
-          placeholder="Tu contraseña"
-          placeholderTextColor={colors.textSecondary}
-          ref={passwordRef}
-          returnKeyType="done"
-          secureTextEntry
-          style={styles.input}
-          testID="login-password"
-          textContentType="password"
-          value={password}
-        />
-      </View>
+      <PasswordField
+        autoComplete="current-password"
+        editable={!isSubmitting}
+        label="Contraseña"
+        onChangeText={setPassword}
+        onSubmitEditing={() => void handleSubmit()}
+        placeholder="Tu contraseña"
+        placeholderTextColor={colors.textSecondary}
+        ref={passwordRef}
+        returnKeyType="done"
+        testID="login-password"
+        textContentType="password"
+        value={password}
+      />
       {visibleError ? (
         <AppText accessibilityLiveRegion="polite" color="danger" role="alert" testID="login-error">
           {visibleError}
