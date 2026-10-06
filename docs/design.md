@@ -20,7 +20,7 @@ Refugiapp es orgánica, protectora, cálida, tranquila, contemporánea y profesi
 
 ## 4. Análisis de la referencia
 
-La referencia [`dashboard-organic-v1.png`](./design-references/dashboard-organic-v1.png) usa una base marrón oscura, superficies un poco más claras, tipografía serif de alto contraste para títulos y sans serif para información operativa. La jerarquía alterna un encabezado emocional, una tarjeta de resumen, tarjetas de animales, una agenda tabular y navegación inferior. Las esquinas son generosas; una tarjeta protagonista emplea una silueta más orgánica. Los acentos lima, naranja, coral, azul y gris separan estados.
+El mockup original que dio origen a este sistema (no versionado) usa una base marrón oscura, superficies un poco más claras, tipografía serif de alto contraste para títulos y sans serif para información operativa. La jerarquía alterna un encabezado emocional, una tarjeta de resumen, tarjetas de animales, una agenda tabular y navegación inferior. Las esquinas son generosas; una tarjeta protagonista emplea una silueta más orgánica. Los acentos lima, naranja, coral, azul y gris separan estados.
 
 Se conserva la combinación editorial/operativa, el ritmo vertical, la navegación de cuatro destinos, los badges con icono y texto y la fotografía animal. No se copia la composición como una imagen, las leyendas manuscritas, el recorte rígido del viewport ni la idea de mostrar todos los módulos a la vez.
 

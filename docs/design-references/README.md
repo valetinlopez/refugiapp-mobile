@@ -1,0 +1,114 @@
+# Referencias visuales — RFG-134 (D01)
+
+Catálogo de las 23 referencias visuales que guían la finalización de la experiencia móvil de Refugiapp (épica `RFG-133`, Sprint 15). Este documento es la única fuente de trazabilidad entre cada referencia, su ruta Expo Router, los roles y estados que representa y las divergencias conocidas con la implementación actual.
+
+La arquitectura y los contratos mandan sobre esta carpeta: las imágenes son inspiración de diseño, no contrato funcional ni fuente de datos. No se inventan endpoints, campos, estados ni permisos a partir de una captura.
+
+## Convención de nombres
+
+Cada archivo usa `NN-kebab-case-en-español-técnico.jpeg` con `NN` como orden de recorrido de la experiencia (auth → cuenta → gestión → animal → cuidados → gastos → clínica → veterinarios → auditoría). Nombres en minúsculas, guiones, sin espacios, acentos ni `ñ`, buscables y estables para referencias cruzadas de código, `design.md` y la ruta `/design-system`.
+
+Los cambios de nombre se hacen con `git mv` para conservar historia y mantienen este catálogo actualizado (equivalencia y matriz).
+
+## 1. Equivalencia de renombrado
+
+| #   | Nombre original                            | Nombre técnico                      |
+| --- | ------------------------------------------ | ----------------------------------- |
+| 01  | `login.jpeg`                               | `01-login.jpeg`                     |
+| 02  | `seccion mas.jpeg`                         | `02-more-section.jpeg`              |
+| 03  | `mi perfil.jpeg`                           | `03-my-profile.jpeg`                |
+| 04  | `crear usuario.jpeg`                       | `04-user-create.jpeg`               |
+| 05  | `detalle animal historial.jpeg`            | `05-animal-detail-history.jpeg`     |
+| 06  | `cambiar estado de detalle animal.jpeg`    | `06-animal-status-change.jpeg`      |
+| 07  | `editar animal.jpeg`                       | `07-animal-edit.jpeg`               |
+| 08  | `agregar evento historial de animal.jpeg`  | `08-animal-event-new.jpeg`          |
+| 09  | `detalle animal subiendo archivos.jpeg`    | `09-animal-files-upload.jpeg`       |
+| 10  | `cuidados.jpeg`                            | `10-care-tasks-overview.jpeg`       |
+| 11  | `nueva tarea.jpeg`                         | `11-care-task-new.jpeg`             |
+| 12  | `detalle de cuidado.jpeg`                  | `12-care-task-detail.jpeg`          |
+| 13  | `gastos.jpeg`                              | `13-expenses-overview.jpeg`         |
+| 14  | `registrar gasto.jpeg`                     | `14-expense-new.jpeg`               |
+| 15  | `detalle de gasto.jpeg`                    | `15-expense-detail.jpeg`            |
+| 16  | `historia clinica pantalla principal.jpeg` | `16-clinical-history-overview.jpeg` |
+| 17  | `nuevo registro clinico.jpeg`              | `17-medical-record-new.jpeg`        |
+| 18  | `histopria clinica registro clinico.jpeg`  | `18-medical-record-detail.jpeg`     |
+| 19  | `veterinarios.jpeg`                        | `19-veterinarians-list.jpeg`        |
+| 20  | `formulario nuevo veterinario.jpeg`        | `20-veterinarian-new.jpeg`          |
+| 21  | `perfil veterinario.jpeg`                  | `21-veterinarian-profile.jpeg`      |
+| 22  | `auditoria.jpeg`                           | `22-audit-list.jpeg`                |
+| 23  | `detalle de auditoria.jpeg`                | `23-audit-detail.jpeg`              |
+
+## 2. Matriz referencia → ruta → rol → estados → divergencias
+
+Una fila por referencia; cada referencia aparece exactamente una vez. Los roles se expresan como capacidades del registro central `src/application/authorization` cuando existe la capability equivalente, o como roles para los permisos que el contrato no modela como capacidad (p. ej. escritura de tareas).
+
+Las divergencias usan tres etiquetas:
+
+- `contrato` — limitación del contrato backend / OpenAPI (no hay feature que la resuelva en el móvil).
+- `ux` — decisión de UX ya aceptada en la épica RFG-133 (cómo se presenta, no qué se consume).
+- `pendiente` — trabajo pendiente (ruta e historia de rediseño referenciadas por su ID).
+
+| #   | Referencia técnica                  | Ruta Expo Router                                                                      | Rol / capacidad                                                                             | Estados relevantes                                                                                        | Divergencias                                                                                                                                      |
+| --- | ----------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 01  | `01-login.jpeg`                     | `app/(auth)/login.tsx`                                                                | público (sin sesión)                                                                        | login, aviso de sesión vencida, loading/error/offline                                                     | `pendiente` rediseño editorial (RFG-137) · `ux` hero decorativo oculto a AT y sin texto en bitmap · `contrato` sin registro público               |
+| 02  | `02-more-section.jpeg`              | `app/(app)/(tabs)/more.tsx`                                                           | los tres roles; usuario: `canManageUsers`; auditoría: `canReadAudit`; veterinarios: lectura | preferencias de notificaciones, carga/vacío/error/offline                                                 | `pendiente` rediseño de la pestaña (RFG-141) y coordinación de gestión (RFG-140) · `ux` jerarquía Gestión > Cuenta > Salida                       |
+| 03  | `03-my-profile.jpeg`                | `app/(app)/profile.tsx` (pendiente)                                                   | los tres roles                                                                              | identidad y cierre de sesión                                                                              | `pendiente` implementar "Mi perfil" (RFG-142); hoy la identidad vive en la sección Cuenta del tab Más · `ux` nunca UUIDs crudos                   |
+| 04  | `04-user-create.jpeg`               | `app/(app)/users/new.tsx`                                                             | `admin` (`canManageUsers`)                                                                  | alta, password inicial ≥ 12, errores por código                                                           | `pendiente` rediseño (RFG-143) · `contrato` alta exclusiva por `POST /users`                                                                      |
+| 05  | `05-animal-detail-history.jpeg`     | `app/(app)/animals/[id].tsx` (pestaña Historial)                                      | los tres roles (lectura)                                                                    | historial de eventos, loading/vacío/error/offline                                                         | `pendiente` rediseño (RFG-146) y paginación UI · `contrato` historial paginado de 20 ítems                                                        |
+| 06  | `06-animal-status-change.jpeg`      | `app/(app)/animals/[id].tsx` + `ConfirmDialog`                                        | `admin`/`shelter_manager` (`canEditAnimal`)                                                 | `admitted`, `under_treatment`, `available_for_adoption`, `adopted`, `deceased`                            | `pendiente` rediseño (RFG-147) · `contrato` estados fijos del backend, matriz local `animalTransitions` · `ux` confirmación destructiva explícita |
+| 07  | `07-animal-edit.jpeg`               | `app/(app)/animals/[id]/edit.tsx`                                                     | `admin`/`shelter_manager` (`canEditAnimal`)                                                 | edición de ficha, `intakeDate`/`birthDate` en `YYYY-MM-DD`, foto de perfil                                | `pendiente` rediseño (RFG-149) · `contrato` PATCH diferencial de la ficha                                                                         |
+| 08  | `08-animal-event-new.jpeg`          | `app/(app)/animals/[id]/events/new.tsx`                                               | `admin`/`shelter_manager` (`canEditAnimal`)                                                 | alta de evento general, fechas con `DateTimeField`                                                        | `pendiente` rediseño (RFG-148)                                                                                                                    |
+| 09  | `09-animal-files-upload.jpeg`       | `app/(app)/animals/[id]/files.tsx` (pendiente)                                        | `admin`/`shelter_manager` según contrato de `DELETE /media/:id`                             | subida con progreso y cancelación, adjuntos                                                               | `pendiente` "Archivos del animal" (RFG-150); hoy no existe gestión de archivos por animal · `ux` progreso textual, no solo color                  |
+| 10  | `10-care-tasks-overview.jpeg`       | `app/(app)/(tabs)/care-tasks.tsx`                                                     | lectura los tres roles; escritura `admin`/`shelter_manager`                                 | `pending`, `completed`, `cancelled`; derivados `overdue`, `upcoming`, `clinical`                          | `pendiente` rediseño (RFG-151) · `contrato` sin campo `type`, no inferir categorías del título                                                    |
+| 11  | `11-care-task-new.jpeg`             | `app/(app)/care-tasks/new.tsx`                                                        | `admin`/`shelter_manager`                                                                   | alta de tarea, `dueAt`, selección de animal                                                               | `pendiente` rediseño (RFG-152) · `contrato` sin `type` ni responsable asignable; el backend registra a `createdByUserId`                          |
+| 12  | `12-care-task-detail.jpeg`          | `app/(app)/care-tasks/[id]/index.tsx`                                                 | lectura los tres roles; acciones `admin`/`shelter_manager`                                  | `pending` → `completed`/`cancelled`, `overdue`, `upcoming`                                                | `pendiente` rediseño (RFG-153) · `ux` completar/cancelar con `ConfirmDialog`                                                                      |
+| 13  | `13-expenses-overview.jpeg`         | `app/(app)/expenses/index.tsx` (pendiente)                                            | lectura los tres roles; escritura `admin`/`shelter_manager` (`canManageExpenses`)           | listado paginado, formato ARS desde `amountCents`, subtotal cargado                                       | `pendiente` listado global (RFG-154) · `ux` no existe total monetario global; se muestra "Subtotal cargado"                                       |
+| 14  | `14-expense-new.jpeg`               | `app/(app)/expenses/new.tsx`                                                          | `admin`/`shelter_manager` (`canManageExpenses`)                                             | alta con comprobante multipart, importe en centavos                                                       | `pendiente` rediseño (RFG-156) · `contrato` sin edición de gastos                                                                                 |
+| 15  | `15-expense-detail.jpeg`            | `app/(app)/expenses/[id].tsx` (pendiente)                                             | los tres roles (lectura)                                                                    | detalle con comprobante, historial de alta                                                                | `pendiente` detalle (RFG-157) · `contrato` requiere ampliar snapshot OpenAPI móvil (RFG-155) para detalle y borrado                               |
+| 16  | `16-clinical-history-overview.jpeg` | `app/(app)/animals/[id].tsx` (pestaña Evolución clínica) y global (pendiente)         | `admin`/`veterinarian` (`canReadClinicalRecords`)                                           | registros por tipo, filtros por tipo y fechas, loading/vacío/error/offline                                | `pendiente` historia clínica global (RFG-158) y paginación UI · `contrato` `shelter_manager` recibe 403                                           |
+| 17  | `17-medical-record-new.jpeg`        | `app/(app)/animals/[id]/medical-records/new.tsx`                                      | `admin`/`veterinarian` (`canReadClinicalRecords`)                                           | formulario clínico, `occurredAt` validado (≥ inicio de día del `intakeDate`, ≤ +60 s), adjuntos multipart | `pendiente` rediseño (RFG-159) · `contrato` veterinario activo obligatorio (`VETERINARIAN_INACTIVE`)                                              |
+| 18  | `18-medical-record-detail.jpeg`     | `app/(app)/animals/[id]/medical-records/[recordId]/changes.tsx` y detalle (pendiente) | `admin`/`veterinarian` (`canReadClinicalRecords`)                                           | detalle del registro, historial de cambios por operación                                                  | `pendiente` detalle dedicado (RFG-160) · `contrato` `/medical-records/:id/changes` paginado                                                       |
+| 19  | `19-veterinarians-list.jpeg`        | `app/(app)/veterinarians/index.tsx`                                                   | lectura los tres roles; gestión `admin`/`shelter_manager` (`canManageVets`)                 | listado paginado, búsqueda por nombre/matrícula, filtro activo/inactivo                                   | `pendiente` rediseño (RFG-161)                                                                                                                    |
+| 20  | `20-veterinarian-new.jpeg`          | `app/(app)/veterinarians/new.tsx`                                                     | `admin`/`shelter_manager` (`canManageVets`)                                                 | alta con vínculo atómico de usuario, password inicial ≥ 12                                                | `pendiente` rediseño (RFG-162) · `contrato` vínculo vía `createUser`, sin selector de usuario existente                                           |
+| 21  | `21-veterinarian-profile.jpeg`      | `app/(app)/veterinarians/[id].tsx`                                                    | lectura los tres roles; gestión `admin`/`shelter_manager` (`canManageVets`)                 | detalle, activación/desactivación confirmada                                                              | `pendiente` rediseño (RFG-163) · `contrato` identidad desde `user.email`, nunca UUID crudo                                                        |
+| 22  | `22-audit-list.jpeg`                | `app/(app)/audit/index.tsx`                                                           | solo `admin` (`canReadAudit`)                                                               | listado paginado, filtros por acción/tipo/actor/fechas, offline/error                                     | `pendiente` rediseño (RFG-165) · `contrato` actor enriquecido en `GET /audit-logs`                                                                |
+| 23  | `23-audit-detail.jpeg`              | `app/(app)/audit/[id].tsx`                                                            | solo `admin` (`canReadAudit`)                                                               | detalle con metadata re-sanitizada, actor con email                                                       | `pendiente` rediseño (RFG-166) · `contrato` `GET /audit-logs/:id`; el email solo en detalle                                                       |
+
+## 3. Pantallas actuales sin referencia (fuera de alcance de RFG-133)
+
+Estas rutas existen hoy pero no tienen referencia visual en esta carpeta y quedan fuera del rediseño:
+
+- `app/(app)/(tabs)/index.tsx` — Inicio / dashboard (`GET /dashboard/overview`).
+- `app/(app)/(tabs)/explore.tsx` — listado de animales (tab Animales).
+- `app/(auth)/forgot-password.tsx` y `app/(auth)/reset-password.tsx` — recuperación de contraseña.
+- `app/(app)/account/change-password.tsx` — cambio de contraseña autenticado.
+- `app/(app)/animals/[id]/adoptions/*` — adopción y postulaciones.
+- `app/(app)/users/index.tsx` y `app/(app)/users/[id]/edit.tsx` — listado y edición de usuarios.
+- `app/(app)/(tabs)/inbox.tsx` — redirect legacy a `care-tasks`.
+- `app/design-system.tsx` — catálogo interno, no funcionalidad de producción.
+
+## 4. Reglas de assets para D02/D03 (descubribilidad y accesibilidad)
+
+Estas reglas alimentan la creación de assets originales (RFG-135) y el sistema visual (RFG-136). No se crean assets en la tarea D01.
+
+- Nombres `kebab-case` en inglés, sin espacios, acentos ni caracteres no ASCII; numéricos solo como orden de recorrido.
+- Los elementos decorativos (hero, textura de hojas, marca vegetal) son ornamentales y no comunican estado ni contienen texto funcional.
+- Los decorativos se ocultan a tecnologías asistivas (`accessibilityElementsHidden` / `importantForAccessibility="no-hide-descendants"`, o equivalente) y se consumen con `expo-image` siguiendo la política del sistema visual (`docs/design.md` §12 y §16).
+- Las imágenes que informan identidad (fotografías de animales y personas) llevan texto alternativo descriptivo; las decorativas, `alt=""`.
+- No se incrusta texto, badges ni botones dentro de un bitmap.
+- Toda variante se documenta con procedencia, licencia o autoría, tal como exige RFG-135.
+
+## 5. Trazabilidad
+
+- ID del plan: D01 (tarea `RFG-134 — Catalogar las 23 referencias visuales`).
+- Épica: `RFG-133 — Finalización visual y UX móvil según referencias 2026`.
+- Sprint: Sprint 15 — Fundación visual.
+- Bloquea: `RFG-135` (D02 assets), `RFG-136` (D03 sistema visual) y `RFG-139` (D06 validación visual).
+
+## 6. Cómo agregar o modificar una referencia
+
+1. Agregar el archivo con `NN-kebab-case-en.jpeg` y numeración continua en el orden de recorrido.
+2. Registrar la fila en la equivalencia (sección 1) y en la matriz (sección 2) en el mismo cambio.
+3. Si la pantalla no tiene ruta prevista, marcarla `pendiente` con su historia RFG; no inventar paths.
+4. Actualizar este documento, `docs/README.md` y, si cambia UI compartida, `docs/design.md`.
+5. Mantener el invariante: total de archivos = filas de equivalencia = filas de matriz (23).
