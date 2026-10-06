@@ -21,6 +21,7 @@ Los ADRs registran decisiones técnicas relevantes, su contexto y sus consecuenc
 | [ADR-0013](0013-eas-internal-distribution.md)           | Distribución interna EAS y seguridad de release     | Aceptado |
 | [ADR-0014](0014-push-notifications-expo.md)             | Notificaciones push con Expo Push Service           | Aceptado |
 | [ADR-0015](0015-brand-assets-marca-original.md)         | Assets de marca originales y pipeline de generación | Aceptado |
+| [ADR-0016](0016-hero-stock-licenciado-pngtree.md)       | Hero de stock licenciado (Pngtree) con atribución   | Aceptado |
 
 ## Cómo agregar una decisión
 

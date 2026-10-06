@@ -89,7 +89,7 @@ Estas rutas existen hoy pero no tienen referencia visual en esta carpeta y queda
 
 ## 4. Reglas de assets para D02/D03 (descubribilidad y accesibilidad)
 
-Estas reglas alimentan la creación de assets originales (RFG-135) y el sistema visual (RFG-136). **Implementadas en D02 (RFG-135):** los binarios viven en `assets/images/brand/`, los maestros vectoriales en `docs/brand-assets/sources/`, la procedencia en `docs/brand-assets.md` y el wrapper `DecorativeImage` en `src/components/patterns`.
+Estas reglas alimentan la creación de assets originales (RFG-135) y el sistema visual (RFG-136). **Implementadas en D02 (RFG-135):** los binarios viven en `assets/images/brand/`, los maestros en `docs/brand-assets/sources/`, la procedencia y licencias en `docs/brand-assets.md` y el wrapper `DecorativeImage` en `src/components/patterns`. Nota de revisión visual: el hero quedó como fotografía de stock licenciada Pngtree con atribución (ADR-0016, relaja el criterio "original" solo para el hero); las hojas siguen siendo ilustraciones vectoriales propias.
 
 - Nombres `kebab-case` en inglés, sin espacios, acentos ni caracteres no ASCII; numerados solo como orden de recorrido.
 - Los elementos decorativos (hero, textura de hojas, marca vegetal) son ornamentales y no comunican estado ni contienen texto funcional.

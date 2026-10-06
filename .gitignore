@@ -71,3 +71,6 @@ Desktop.ini
 .vscode/
 .claude/
 
+# Working folders (not part of the repo contract)
+/imagenes-uso/
+

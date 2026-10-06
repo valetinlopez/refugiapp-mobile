@@ -14,9 +14,11 @@ import leafTextureTileWebp from '../../../assets/images/brand/leaf-texture-tile.
  * The PNG fallback is used only when the primary format cannot be decoded (see
  * `DecorativeImage`).
  *
- * All assets are original, vector-based illustrations (sources in
- * `docs/brand-assets/sources`) and are strictly decorative: no text, no state,
- * no functional information is encoded in the bitmaps.
+ * All assets are strictly decorative: no text, no state, no functional
+ * information is encoded in the bitmaps. The leaf mark and texture are
+ * original vector illustrations; the photographic hero is a licensed Pngtree
+ * raster (free plan with attribution). Masters and provenance live in
+ * `docs/brand-assets/sources` and `docs/brand-assets.md`.
  */
 export type BrandAssetName = 'heroRescuedDog' | 'brandLeafMark' | 'leafTextureTile';
 
