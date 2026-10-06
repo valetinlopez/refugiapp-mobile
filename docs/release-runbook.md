@@ -138,7 +138,7 @@ No se incorpora pinning en esta entrega. React Native usa la validación TLS de 
 1. Confirmar que el launcher muestra **Refugiapp (Staging)** y que puede convivir con producción.
 2. Abrir la app desde cero y comprobar que llega al login sin errores de configuración.
 3. Iniciar sesión con un usuario de staging; nunca usar credenciales de producción.
-4. Confirmar carga de Inicio, Animales y Tareas.
+4. Confirmar carga de Inicio, Animales y Cuidados.
 5. Abrir un animal y verificar resumen, historial e imágenes.
 6. Enviar la app a background, volver y confirmar que la sesión se restaura.
 7. Cerrar sesión, volver a abrir y comprobar que no queda acceso a rutas protegidas.

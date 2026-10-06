@@ -28,6 +28,8 @@ describe('theme contrast (RFG-88, WCAG AA)', () => {
     ['textSecondary sobre surfaceElevated', colors.textSecondary, colors.surfaceElevated],
     ['textSecondary sobre surfaceSubtle', colors.textSecondary, colors.surfaceSubtle],
     ['textSecondary sobre background', colors.textSecondary, colors.background],
+    ['positive sobre surfaceSubtle', colors.positive, colors.surfaceSubtle],
+    ['positive sobre surfaceElevated', colors.positive, colors.surfaceElevated],
     ['textInverse sobre positive', colors.textInverse, colors.positive],
     ['textInverse sobre warning', colors.textInverse, colors.warning],
     ['textInverse sobre danger', colors.textInverse, colors.danger],

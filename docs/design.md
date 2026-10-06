@@ -183,6 +183,8 @@ Muestran icono semántico, valor con Newsreader y etiqueta DM Sans. El número n
 
 Máximo cuatro o cinco destinos estables. Cada elemento combina icono y texto; el activo usa lima, peso visual e `accessibilityState.selected`. Altura base de 72 pt más el inset inferior del dispositivo. La barra queda fija mientras el contenido principal desplaza. El catálogo muestra el componente, pero no reemplaza todavía la navegación funcional de producción.
 
+La navegación inferior de producción (D05/RFG-138) usa `Tabs` de Expo Router con cuatro destinos —Inicio, Animales, Cuidados (ruta `care-tasks`, renombrada solo en su etiqueta visible) y Más— para los tres roles, preservando `Stack.Protected` y la ruta legacy `inbox` oculta. El estado activo no depende solo del color: el icono activo se apoya en una pastilla `surfaceElevated` (`TabBarIcon`) y la etiqueta cambia a `bodyStrong` (`TabBarLabel`), además de `accessibilityState.selected` y el label accesible en español del destino. La barra reserva `sizes.bottomNavigationHeight + inset.bottom` mediante `useSafeAreaInsets`, con `paddingBottom` igual al inset, para no solaparse con la gesture bar ni el home indicator; las etiquetas se truncan a una línea y escalan con la fuente. `TabBarIcon`/`TabBarLabel` viven en `src/components/navigation` y consumen exclusivamente tokens; `BottomNavigation` (catálogo) replica el mismo tratamiento activo.
+
 ## 21. Encabezado de retorno (`AppHeaderBack`)
 
 Patrón persistente de retorno para pantallas stack sin header nativo (`headerShown: false`). Se renderiza fijo en la parte superior, dentro del safe area y antes del contenido desplazable, y acompaña estados de carga, error, vacío y sin permisos.

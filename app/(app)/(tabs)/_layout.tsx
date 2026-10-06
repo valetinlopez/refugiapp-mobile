@@ -1,18 +1,43 @@
 import { Tabs } from 'expo-router';
-import type { ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppIcon, type AppIconName } from '@/components/primitives';
+import { TabBarIcon, TabBarLabel } from '@/components/navigation';
+import { type AppIconName } from '@/components/primitives';
 import { useAuthorizedNavigation } from '@/features/auth/hooks/useCapabilities';
-import { colors, fontFamilies, sizes } from '@/theme';
+import { colors, sizes, spacing } from '@/theme';
 
-const TAB_DESTINATIONS = [
+type TabDestinationName = 'index' | 'explore' | 'care-tasks' | 'more';
+
+const TAB_DESTINATIONS: readonly { name: TabDestinationName }[] = [
   { name: 'index' },
   { name: 'explore' },
   { name: 'care-tasks' },
   { name: 'more' },
-] as const;
+];
+
+const TAB_PRESENTATION: Record<TabDestinationName, { icon: AppIconName; label: string }> = {
+  index: { icon: 'home', label: 'Inicio' },
+  explore: { icon: 'paw', label: 'Animales' },
+  'care-tasks': { icon: 'calendar', label: 'Cuidados' },
+  more: { icon: 'menu', label: 'Más' },
+};
+
+function buildTabOptions(name: TabDestinationName, authorizedTabNames: ReadonlySet<string>) {
+  const { icon, label } = TAB_PRESENTATION[name];
+
+  return {
+    ...(authorizedTabNames.has(name) ? {} : { href: null }),
+    tabBarAccessibilityLabel: label,
+    tabBarIcon: ({ focused }: { focused: boolean }) => <TabBarIcon focused={focused} name={icon} />,
+    tabBarLabel: ({ focused, children }: { focused: boolean; children: string }) => (
+      <TabBarLabel focused={focused}>{children}</TabBarLabel>
+    ),
+    title: label,
+  };
+}
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
   const authorizedTabs = useAuthorizedNavigation(TAB_DESTINATIONS);
   const authorizedTabNames = new Set(authorizedTabs.map(({ name }) => name));
 
@@ -23,50 +48,20 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.positive,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarItemStyle: { minHeight: sizes.touchTarget },
-        tabBarLabelStyle: { fontFamily: fontFamilies.bodyStrong },
         tabBarStyle: {
           backgroundColor: colors.surfaceSubtle,
           borderTopWidth: 0,
+          height: sizes.bottomNavigationHeight + insets.bottom,
+          paddingBottom: insets.bottom,
+          paddingTop: spacing.xs,
         },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          ...(authorizedTabNames.has('index') ? {} : { href: null }),
-          title: 'Inicio',
-          tabBarIcon: ({ color }) => <TabBarIcon color={color} name="home" />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          ...(authorizedTabNames.has('explore') ? {} : { href: null }),
-          title: 'Animales',
-          tabBarIcon: ({ color }) => <TabBarIcon color={color} name="paw" />,
-        }}
-      />
-      <Tabs.Screen
-        name="care-tasks"
-        options={{
-          ...(authorizedTabNames.has('care-tasks') ? {} : { href: null }),
-          title: 'Tareas',
-          tabBarIcon: ({ color }) => <TabBarIcon color={color} name="calendar" />,
-        }}
-      />
-      <Tabs.Screen
-        name="more"
-        options={{
-          ...(authorizedTabNames.has('more') ? {} : { href: null }),
-          title: 'Más',
-          tabBarIcon: ({ color }) => <TabBarIcon color={color} name="menu" />,
-        }}
-      />
+      <Tabs.Screen name="index" options={buildTabOptions('index', authorizedTabNames)} />
+      <Tabs.Screen name="explore" options={buildTabOptions('explore', authorizedTabNames)} />
+      <Tabs.Screen name="care-tasks" options={buildTabOptions('care-tasks', authorizedTabNames)} />
+      <Tabs.Screen name="more" options={buildTabOptions('more', authorizedTabNames)} />
       <Tabs.Screen name="inbox" options={{ href: null }} />
     </Tabs>
   );
-}
-
-function TabBarIcon({ color, name }: { color: ColorValue; name: AppIconName }) {
-  return <AppIcon color={color} name={name} />;
 }

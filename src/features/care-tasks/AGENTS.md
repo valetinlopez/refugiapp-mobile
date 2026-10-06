@@ -49,7 +49,7 @@
 - Listado global con filtro por animal, filtro por estado persistido (`pending`, `completed`, `cancelled`) y recarga manual.
 - Listado embebido en el detalle del animal con completar/cancelar inline, confirmación e invalidación de queries después de la respuesta del backend (sin actualización optimista).
 - El listado embebido ofrece `Nueva tarea` a roles de escritura, abre `/care-tasks/new?animalId=` con el animal precargado y conserva el detalle/pestaña Tareas como fallback contextual.
-- Ruta principal `app/(app)/(tabs)/care-tasks.tsx` (tab "Tareas"); la ruta legacy `/inbox` redirige a `/care-tasks`.
+- Ruta principal `app/(app)/(tabs)/care-tasks.tsx` (tab visible "Cuidados", etiqueta renombrada en el layout; la ruta `care-tasks` no cambia); la ruta legacy `/inbox` redirige a `/care-tasks`.
 - Detalle de tarea `app/(app)/care-tasks/[id]/index.tsx` (lectura para los tres roles, acciones inline según `canEditAnimal` mediante `CareTaskCard`), destino seguro de la navegación por notificación push (RFG-126).
 - Alta y edición mediante formularios validados.
 - `dueAt` opcional mediante selector nativo compartido; si se informa debe ser futuro, con fallback textual web.

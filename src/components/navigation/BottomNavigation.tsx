@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
 
 import { AppIcon, AppText, type AppIconName } from '@/components/primitives';
-import { colors, opacity, radii, sizes, spacing } from '@/theme';
+import { colors, fontFamilies, opacity, radii, sizes, spacing } from '@/theme';
 
 export type BottomNavigationItem = {
   accessibilityLabel?: string;
@@ -39,8 +39,15 @@ export function BottomNavigation({
             onPress={() => onSelect(item.id)}
             style={({ pressed }) => [styles.item, pressed && styles.pressed]}
           >
-            <AppIcon color={color} name={item.icon} size={sizes.iconLg} />
-            <AppText color={color} numberOfLines={1} variant="caption">
+            <View style={[styles.iconContainer, isActive && styles.iconContainerActive]}>
+              <AppIcon color={color} name={item.icon} size={sizes.iconMd} />
+            </View>
+            <AppText
+              color={color}
+              numberOfLines={1}
+              style={isActive ? styles.labelActive : undefined}
+              variant="caption"
+            >
               {item.label}
             </AppText>
           </Pressable>
@@ -69,6 +76,20 @@ const styles = StyleSheet.create({
     minHeight: sizes.touchTarget,
     minWidth: sizes.touchTarget,
     paddingHorizontal: spacing.xxs,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    borderRadius: radii.full,
+    justifyContent: 'center',
+    minHeight: sizes.iconLg,
+    minWidth: sizes.touchTarget,
+    paddingHorizontal: spacing.sm,
+  },
+  iconContainerActive: {
+    backgroundColor: colors.surfaceElevated,
+  },
+  labelActive: {
+    fontFamily: fontFamilies.bodyStrong,
   },
   pressed: {
     opacity: opacity.pressedSubtle,
