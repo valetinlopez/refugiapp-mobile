@@ -77,6 +77,10 @@ describe('UserForm', () => {
 
     expect(screen.getByText(/Mínimo 12 caracteres/)).toBeTruthy();
     expect(screen.queryByText(/8 caracteres/)).toBeNull();
+    expect(screen.getByTestId('create-user-first-name')).toBeTruthy();
+    expect(screen.getByTestId('create-user-last-name')).toBeTruthy();
+    expect(screen.getByTestId('create-user-email')).toBeTruthy();
+    expect(screen.getByTestId('create-user-password')).toBeTruthy();
     expect(
       screen.getByRole('checkbox', { name: 'Encargado de refugio' }).props.accessibilityState
     ).toEqual(expect.objectContaining({ checked: true }));

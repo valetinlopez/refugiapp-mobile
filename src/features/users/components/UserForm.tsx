@@ -109,6 +109,7 @@ function CreateForm({
             key={name}
             label={FIELD_LABELS[name]}
             name={name}
+            testID={`create-user-${name === 'firstName' ? 'first-name' : 'last-name'}`}
           />
         ))}
       </AppCard>
@@ -126,6 +127,7 @@ function CreateForm({
           keyboardType="email-address"
           label={FIELD_LABELS.email}
           name="email"
+          testID="create-user-email"
         />
         <Controller
           control={control}
@@ -138,6 +140,7 @@ function CreateForm({
                 label={FIELD_LABELS.password}
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
+                testID="create-user-password"
                 value={field.value}
               />
               <AppText color="textSecondary" variant="caption">
@@ -189,6 +192,7 @@ function TextFieldController<T extends FieldValues>({
   keyboardType = 'default',
   label,
   name,
+  testID,
 }: {
   autoCapitalize?: TextInputProps['autoCapitalize'];
   autoComplete: TextInputProps['autoComplete'];
@@ -197,6 +201,7 @@ function TextFieldController<T extends FieldValues>({
   keyboardType?: TextInputProps['keyboardType'];
   label: string;
   name: Path<T>;
+  testID?: string;
 }) {
   return (
     <Controller
@@ -213,6 +218,7 @@ function TextFieldController<T extends FieldValues>({
             keyboardType={keyboardType}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
+            testID={testID}
             value={typeof field.value === 'string' ? field.value : ''}
           />
           <FieldError message={fieldState.error?.message} />

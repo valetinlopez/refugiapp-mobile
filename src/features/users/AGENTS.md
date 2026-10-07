@@ -20,6 +20,7 @@
 ## UI y testing
 
 - El alta D06-04 se implementa en `CreateUserScreen`: organiza datos personales, acceso inicial y roles en cards, informa password minima de 12 caracteres y exige `ConfirmDialog` antes de ejecutar `POST /users`. Los errores de red, email duplicado, validacion y permisos deben distinguirse con texto accesible.
+- En web, los inputs del alta usan `testID` con prefijo `create-user-`; `app/+html.tsx` lo consume para neutralizar el fondo celeste de `-webkit-autofill` y aplicar el foco semantico `focus`, sin desactivar autofill.
 - Confirmar la desactivacion antes de ejecutar la mutacion con `ConfirmDialog` compartido (via `UserStatusDialog`), explicando la consecuencia y bloqueando ambas acciones durante `submitting`.
 - Confirmar el cambio de rol en edicion con `ConfirmDialog` (`variant="primary"`), explicando que queda auditado y puede rechazarse si es el ultimo administrador; los cambios solo de perfil se guardan sin confirmacion.
 - La edicion usa `UserForm` en modo `edit` (sin campo de contrasena, precargado desde el usuario) con mapper diferencial `toUpdateUserPayload`: solo envia campos cambiados y bloquea el guardado sin cambios para evitar `EMPTY_UPDATE_PAYLOAD`.
