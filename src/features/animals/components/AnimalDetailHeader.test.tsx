@@ -20,6 +20,9 @@ describe('AnimalDetailHeader', () => {
     expect(screen.getByText('Perra · Mestiza de pelo largo')).toBeTruthy();
     expect(screen.getByText('En tratamiento')).toBeTruthy();
     expect(screen.getByTestId('animal-detail-identity')).toHaveStyle({ minWidth: 128 });
+    expect(screen.getByTestId('animal-detail-layout')).toHaveStyle({
+      justifyContent: 'center',
+    });
     expect(
       screen.getByLabelText(`${animal.name}. Perra · Mestiza de pelo largo. Estado: En tratamiento`)
     ).toHaveProp(

@@ -26,7 +26,7 @@ export function AnimalDetailTabs({
   onChange(tab: AnimalDetailTab): void;
 }) {
   return (
-    <AppCard padded={false} variant="elevated">
+    <AppCard padded={false} style={styles.container} testID="animal-detail-tabs" variant="elevated">
       <ScrollView
         accessibilityLabel="Secciones del animal"
         accessibilityRole="tablist"
@@ -36,6 +36,7 @@ export function AnimalDetailTabs({
       >
         {TABS.filter((tab) => tab.id !== 'clinical' || canReadClinicalRecords).map((tab) => (
           <FilterChip
+            appearance="plain"
             accessibilityHint={`Muestra la sección ${tab.label.toLowerCase()} del animal`}
             accessibilityRole="tab"
             key={tab.id}
@@ -50,6 +51,9 @@ export function AnimalDetailTabs({
 }
 
 const styles = StyleSheet.create({
+  container: {
+    overflow: 'hidden',
+  },
   tabs: {
     gap: spacing.xs,
     padding: spacing.sm,

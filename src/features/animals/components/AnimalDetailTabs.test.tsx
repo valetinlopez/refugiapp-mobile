@@ -39,6 +39,7 @@ describe('AnimalDetailTabs', () => {
       'accessibilityRole',
       'tablist'
     );
+    expect(screen.getByTestId('animal-detail-tabs')).toHaveStyle({ overflow: 'hidden' });
     expect(screen.getByRole('tab', { name: 'Historial' })).toHaveProp('accessibilityState', {
       selected: true,
       disabled: false,

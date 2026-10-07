@@ -21,7 +21,7 @@ export function AnimalDetailHeader({ animal, photoUri }: AnimalDetailHeaderProps
       style={styles.card}
       variant="organic"
     >
-      <View style={styles.layout}>
+      <View style={styles.layout} testID="animal-detail-layout">
         <AppAvatar
           accessibilityLabel={photoUri ? `Foto de ${animal.name}` : `Sin foto de ${animal.name}`}
           initials={animal.name.slice(0, 2)}
@@ -57,5 +57,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.lg,
+    justifyContent: 'center',
   },
 });
