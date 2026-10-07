@@ -355,6 +355,17 @@ La pantalla de acceso replica la composición editorial de la referencia `01-log
 - **Formulario:** reutiliza `PasswordField` (toggle de visibilidad 44 × 44) y expone `autoComplete`/`textContentType` (email `emailAddress`, password `password`) y `returnKeyType next → done`; el error de validación y el aviso de sesión vencida se anuncian con `role="alert"` y `accessibilityLiveRegion`.
 - **Divergencia `ux` aceptada:** no se añaden iconos dentro de los inputs, ya que exigirían una primitiva compartida de campo nueva o duplicar el estilo del campo; se prioriza no crear una abstracción compartida para un único consumidor. El icono `account` decora el encabezado de la tarjeta. `app/(auth)/_layout.tsx` declara `title` por pantalla para el documento web.
 
+## 37. Validación visual de las 23 referencias (D06)
+
+La ruta interna `/design-system` incorpora el arnés de validación de D06 (RFG-139), que prepara la comparación de las 23 referencias con la implementación. No rediseña pantallas ni introduce tokens: cataloga y hace reproducible cada referencia.
+
+- **Casos:** `src/design-system/referenceCases.ts` reproduce la matriz D01 (`docs/design-references/README.md §2`) con id estable `D06-01…D06-23`, archivo de referencia, ruta, rol/capacidad, estados y divergencias. La matriz D01 manda; el arnés la refleja.
+- **Fixtures:** `src/design-system/fixtures.ts` usa UUID, fechas e importes fijos y ancla los estados derivados en `DESIGN_SYSTEM_NOW`; no incluye datos personales reales (solo identidades `*@refugiapp.test`) ni depende de red o servicios externos.
+- **Viewports:** `src/design-system/viewports.ts` fija la matriz `320 × 568`, `390 × 844`, tablet, horizontal aplicable, fuente 200 % y reduce motion; la checklist humana vive en `docs/design-validation/checklist.md`.
+- **Catálogo:** `ReferenceValidationSection` agrupa los casos por dominio (Acceso y cuenta, Animales, Cuidados, Gastos, Clínica, Veterinarios, Auditoría); `ReferenceCaseCard` muestra los metadatos, las divergencias, la checklist de seis viewports y el caso reproducible con `testID` `ds-case-D06-NN` para `RFG-167`.
+- **Accesibilidad:** cada caso es un `summary` accesible con id, referencia, ruta, roles y estados; las divergencias y los viewports se comunican con texto e icono, nunca solo color. Los previews reutilizan los patrones y primitivas existentes.
+- **Fuera de alcance:** el rediseño por referencia (`RFG-140…RFG-166`), la regresión (`RFG-167`) y la certificación del release (`RFG-168`).
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)

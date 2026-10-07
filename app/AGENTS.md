@@ -31,7 +31,7 @@
 - `(app)/users`: listado paginado, alta y edicion (`[id]/edit`) de usuarios internos, visible solo para `admin`; activacion y desactivacion se confirman desde el listado y el cambio de rol se confirma desde la edicion.
 - `(app)/veterinarians`: listado, alta, detalle y edición de veterinarios; lectura para los tres roles y escritura para `admin`/`shelter_manager` (`canManageVets`). La desactivación se confirma desde el detalle.
 - `(app)/audit`: listado paginado y detalle de auditoría, visible solo para `admin` mediante `canReadAudit`.
-- `design-system`: catálogo interno, no funcionalidad de producción.
+- `design-system`: catálogo interno, no funcionalidad de producción. Incluye la sección "Validación de referencias (D06)" que monta `ReferenceValidationSection` de `src/design-system` (23 casos reproducibles, fixtures deterministas y checklist de viewports).
 - El layout raíz protege `(auth)` y `(app)` con `Stack.Protected` según el Session Context.
 
 ## Seguridad
