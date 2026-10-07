@@ -71,8 +71,9 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     divergences: [
       {
         kind: 'pending',
-        note: 'Rediseño de la pestaña (RFG-141) y coordinación de gestión (RFG-140).',
+        note: 'Rediseño de la pestaña pendiente (RFG-141).',
       },
+      { kind: 'implemented', note: 'Coordinación de gestión extraída (RFG-140).' },
       { kind: 'ux', note: 'Jerarquía Gestión > Cuenta > Salida.' },
     ],
     group: 'auth-account',

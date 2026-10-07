@@ -37,3 +37,5 @@ export { AttachmentList } from './AttachmentList';
 export type { AttachmentListProps } from './AttachmentList';
 export { AttachmentRow } from './AttachmentRow';
 export type { AttachmentItem, AttachmentRowProps, AttachmentStatus } from './AttachmentRow';
+export { ManagementSection } from './ManagementSection';
+export type { ManagementItem, ManagementSectionProps } from './ManagementSection';
