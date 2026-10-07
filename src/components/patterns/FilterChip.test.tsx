@@ -65,6 +65,16 @@ describe('FilterChip', () => {
     expect(radio.props.accessibilityState).toMatchObject({ checked: true });
   });
 
+  it('removes the idle outline in its plain appearance', async () => {
+    const screen = await render(
+      <FilterChip appearance="plain" label="Historial" onPress={() => undefined} selected={false} />
+    );
+
+    expect(screen.getByRole('button', { name: 'Historial' })).toHaveStyle({
+      borderColor: '#00000000',
+    });
+  });
+
   it('blocks interaction and announces the disabled state', async () => {
     const onPress = jest.fn();
     const screen = await render(

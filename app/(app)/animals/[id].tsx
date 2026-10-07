@@ -4,11 +4,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppBadge, AppAvatar, AppButton, AppCard, AppText } from '@/components/primitives';
-import { formatDateMedium } from '@/components/patterns';
+import { AppButton, AppCard, AppText } from '@/components/primitives';
+import { DecorativeBackground, formatDateMedium, ScreenHeader } from '@/components/patterns';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { navigateBack } from '@/components/navigation';
 import { AnimalHistory } from '@/features/animals/components/AnimalHistory';
+import { AnimalDetailHeader } from '@/features/animals/components/AnimalDetailHeader';
 import {
   AnimalDetailTabs,
   type AnimalDetailTab,
@@ -22,7 +23,6 @@ import { animalKeys } from '@/features/animals/hooks/animalKeys';
 import { useAnimalPhoto } from '@/features/animals/hooks/useAnimalPhoto';
 import { useChangeAnimalStatus } from '@/features/animals/hooks/useChangeAnimalStatus';
 import { toChangeStatusErrorMessage } from '@/features/animals/utils/animalErrorMessages';
-import { getStatusBadge } from '@/features/animals/utils/animalTransitions';
 import { isUuid } from '@/features/animals/utils/uuid';
 import { AnimalCareTasks } from '@/features/care-tasks/components/AnimalCareTasks';
 import { AnimalExpenses } from '@/features/expenses/components/AnimalExpenses';
@@ -43,6 +43,7 @@ export default function AnimalDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <DecorativeBackground variant="texture" />
       <AccountHeaderRow
         accessibilityHint="Volver a la lista de animales"
         fallbackHref={fallbackHref}
@@ -130,26 +131,11 @@ function AnimalDetailContent({
   }
 
   const animal = query.data;
-  const badge = getStatusBadge(animal.status);
 
   return (
     <View style={styles.detail}>
-      <View style={styles.header}>
-        <AppAvatar
-          accessibilityLabel={`Foto de ${animal.name}`}
-          initials={animal.name.slice(0, 2)}
-          size="lg"
-          source={photoUri ? { uri: photoUri } : undefined}
-        />
-        <View style={styles.heading}>
-          <AppText variant="heading1">{animal.name}</AppText>
-          <AppText color="textSecondary">
-            {animal.species}
-            {animal.breed ? ` · ${animal.breed}` : ''}
-          </AppText>
-          <AppBadge icon={badge.icon} label={badge.label} tone={badge.tone} />
-        </View>
-      </View>
+      <ScreenHeader title="Detalle del animal" />
+      <AnimalDetailHeader animal={animal} photoUri={photoUri} />
 
       <AnimalDetailTabs
         activeTab={activeTab}
@@ -337,18 +323,8 @@ const styles = StyleSheet.create({
   detail: {
     gap: spacing.lg,
   },
-  header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
   historySection: {
     gap: spacing.sm,
-  },
-  heading: {
-    flex: 1,
-    gap: spacing.xxs,
-    minWidth: 0,
   },
   row: {
     alignItems: 'flex-start',

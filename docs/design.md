@@ -138,7 +138,7 @@ Cuando un grupo de badges envuelve (por ejemplo en la tarjeta de métricas del p
 
 Patrón compartido para filtrar listados (animales por estado, tareas por estado). Píldora con label, área táctil mínima de 44 pt, borde en `border`; estado seleccionado con fondo `positive` y texto inverso. Cada chip expone `accessibilityState.selected` para que el estado no dependa solo del color. Los chips se agrupan en un `ScrollView` horizontal para evitar desbordes.
 
-`FilterChip` admite `accessibilityRole="radio"` (expone `checked` en lugar de `selected`), `disabled` (fondo `disabledSurface` y texto `disabledText`) y un `icon` opcional. `SegmentedControl` (§35) lo consume con semántica de grupo de opciones.
+`FilterChip` admite `accessibilityRole="radio"` (expone `checked` en lugar de `selected`) y `accessibilityRole="tab"` (expone `selected` dentro de un `tablist`), además de `disabled` (fondo `disabledSurface` y texto `disabledText`) y un `icon` opcional. Su apariencia `plain` elimina el borde en reposo para barras de pestañas contenidas, manteniendo la pastilla lima seleccionada; `outlined` permanece como default. `SegmentedControl` (§35) lo consume con semántica de grupo de opciones.
 
 ### Controles segmentados (`SegmentedControl`)
 
@@ -146,7 +146,7 @@ Grupo de selección única formado por chips (§15) que cambia de vista o filtra
 
 ## 16. Avatares
 
-Tamaños: 36, 48 y 72 pt. Los retratos usan recorte circular y borde cálido. Si falta la foto, mostrar hasta dos iniciales; nunca un espacio vacío ni una imagen genérica que pueda confundirse con el animal real. Si la imagen falla al cargar, el avatar vuelve a las iniciales de forma silenciosa (sin botón de reintento) y el fallo se resetea cuando cambia la URL.
+Tamaños: 36, 48, 72 y 128 pt (`avatarSm` a `avatarXl`). Los retratos usan recorte circular por defecto; la variante `rounded` se reserva para fotos protagonistas de cabeceras de entidad. Si falta la foto, mostrar hasta dos iniciales; nunca un espacio vacío ni una imagen genérica que pueda confundirse con el animal real. Si la imagen falla al cargar, el avatar vuelve a las iniciales de forma silenciosa (sin botón de reintento) y el fallo se resetea cuando cambia la URL.
 
 Las fotos remotas se sirven con `expo-image`, caché combinada de memoria/disco y carga diferida. Cuando la fuente es Cloudinary, se pide una variante cuadrada según los píxeles físicos del avatar con formato y calidad automáticos; no se descarga el original para una miniatura. Las vistas recicladas cambian `recyclingKey` junto con la URI para no mostrar brevemente la foto de otra fila.
 
@@ -397,6 +397,16 @@ La navegación de Cuenta se valida como una matriz explícita de destinos visibl
 - **Mi perfil:** muestra únicamente las capacidades efectivas derivadas del registro central; nunca expone nombres internos de capabilities.
 - **Defensa en profundidad:** `Stack.Protected` exige sesión para todo `(app)`, cada ruta sensible exige su capability y la API conserva la autorización final. Un deep link no convierte la visibilidad en permiso.
 - **Cobertura:** tests puros validan visibles/bloqueados, tests RNTL cubren la interacción accesible de Más y Mi perfil, y tests de rutas ejercitan listado, alta y edición de usuarios para los tres roles y tras una revocación en sesión.
+
+## 40. Cabecera y pestañas del detalle animal (D12 / RFG-145)
+
+El detalle del animal toma la jerarquía visual de `05-animal-detail-history.jpeg` como base compartida para todas sus secciones, sin inventar el identificador correlativo presente en la referencia porque el contrato actual solo expone UUID.
+
+- **Cabecera de identidad:** una card `organic` reúne foto protagonista de 128 pt, nombre completo sin truncar, especie, raza opcional y badge de estado. La composición envuelve en ancho reducido o con fuente ampliada y centra la foto cuando la identidad pasa a la línea siguiente; sin foto o ante error de carga, `AppAvatar` muestra iniciales y anuncia la ausencia.
+- **Estado accesible:** el badge conserva icono y texto en español y el resumen accesible concatena nombre, especie/raza y estado. El color nunca es la única señal.
+- **Navegación local:** las secciones viven en un `tablist` horizontal sobre una única superficie elevada que recorta su contenido al radio del contenedor. Las opciones sin seleccionar no dibujan cards ni bordes individuales; solo la activa usa una pastilla lima. Cada opción tiene rol `tab`, estado `selected`, label e indicación accesible; el desplazamiento horizontal evita recortes.
+- **Capacidades preservadas:** Resumen, Historial, Cuidados, Gastos y Adopción siguen disponibles. Evolución clínica solo se presenta con `canReadClinicalRecords`; el deep link sin capacidad conserva el estado de acceso restringido y no ejecuta consultas clínicas.
+- **Alcance:** RFG-145 establece la cabecera y navegación comunes. El contenido y la paginación visual del Historial permanecen en RFG-146 y las demás secciones mantienen sus tickets de rediseño específicos.
 
 ## Referencias técnicas
 

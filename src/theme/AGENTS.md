@@ -18,6 +18,7 @@
 - Verificar contraste WCAG AA en combinaciones documentadas.
 - `disabledText` reutiliza `#CCBEB1` sobre `disabledSurface` (ratio 4,64; ver `src/theme/contrast.test.ts`); no aplicar `opacity` sobre texto deshabilitado.
 - `sizes.touchTarget = 44` y `sizes.hitSlop = 8` son el estándar de área táctil.
+- `sizes.avatarXl = 128` reserva una escala protagonista para cabeceras de entidad sin medidas arbitrarias en features.
 - Definir texto inverso explícito para superficies semánticas claras.
 - No eliminar focus, font scaling ni estados de interacción.
 

@@ -42,6 +42,7 @@
 - `ScreenHeader` / `SectionHeader` (patterns, D03): encabezados de pantalla y de sección con `accessibilityRole="header"`, subtítulo y acción opcionales; la fila envuelve para no recortar acciones con fuente ampliada.
 - `PasswordField` (patterns): campo compartido para passwords con toggle accesible mostrar/ocultar de 44 × 44; auth conserva un re-export de compatibilidad y las features deciden autofill, ayuda y validación.
 - `SegmentedControl` (patterns, D03): grupo de selección única (`radiogroup`) sobre `FilterChip` con semántica `radio`/`checked`, scroll horizontal, `disabled`/`icon` por opción y target de 44 pt.
+- `FilterChip` (patterns): `outlined` por defecto para filtros independientes y `plain` para barras contenidas donde solo la opción seleccionada dibuja la pastilla; ambas conservan target de 44 pt y semántica `button`/`radio`/`tab` según el consumidor.
 - `EntityCard` (patterns, D03): fila canónica de entidades (avatar opcional + texto `flex: 1`/`minWidth: 0` + badge `flexShrink: 0` + chevron). Título a 2 líneas con `accessibilityLabel` completo; con `onPress` es un único botón accesible.
 - `MetadataRow` (patterns, D03): fila etiqueta-valor con etiqueta no encogible y valor que envuelve alineado al final. Las fechas llegan formateadas (`dateFormat`); nunca se inyecta ISO crudo.
 - `ManagementSection` (patterns, D07): sección data-driven de destinos de Gestión con cards accesibles. Recibe `items` ya autorizados y un dispatcher `onSelect`; no conoce roles, capacidades, rutas concretas ni features. Usa `SectionHeader`, targets mínimos y feedback de presión mediante tokens.
@@ -51,7 +52,7 @@
 - `brandAssets` (patterns): registro de los assets de marca (D02/RFG-135) con `resolveBrandSource(name)` — la UI no conoce nombres de archivo. Hojas vectoriales originales; hero fotográfico de stock licenciado (Pngtree) con atribución. Fuentes y procedencia en `docs/brand-assets.md`; regenerar con `npm run assets:brand`.
 - `performance`: configuración transversal de render por lotes y ventana para `FlatList`; cada listado conserva keys de dominio estables y un `renderItem` memoizado.
 - `dateFormat` (patterns): formateadores `es-AR` hoisteados para fechas (`formatDateShort`, `formatDateMedium`, `formatDateTime` y `formatRelativeDateTime`); `formatDateMedium` acepta fecha de calendario o ISO `date-time`, y las features y `DateTimeField` delegan en ellos en lugar de crear `Intl.DateTimeFormat` por render.
-- `AppAvatar` usa `expo-image` con caché memoria/disco, carga lazy en web, downscaling y `recyclingKey`; dimensiona las URLs Cloudinary al tamaño físico del avatar. Cae a iniciales de forma silenciosa si la imagen no carga (`onError`) y nunca muestra un avatar roto. El estado de fallo se resetea automáticamente al cambiar la URI.
+- `AppAvatar` usa `expo-image` con caché memoria/disco, carga lazy en web, downscaling y `recyclingKey`; dimensiona las URLs Cloudinary al tamaño físico del avatar. Admite tamaños `sm`/`md`/`lg`/`xl` y forma circular (default) o `rounded` para cabeceras protagonistas. Cae a iniciales de forma silenciosa si la imagen no carga (`onError`) y nunca muestra un avatar roto. El estado de fallo se resetea automáticamente al cambiar la URI.
 
 ## Testing
 

@@ -3,9 +3,11 @@ import { Pressable, StyleSheet } from 'react-native';
 import { AppIcon, AppText, type AppIconName } from '@/components/primitives';
 import { colors, radii, sizes, spacing } from '@/theme';
 
-export type FilterChipRole = 'button' | 'radio';
+export type FilterChipRole = 'button' | 'radio' | 'tab';
+export type FilterChipAppearance = 'outlined' | 'plain';
 
 export interface FilterChipProps {
+  appearance?: FilterChipAppearance | undefined;
   accessibilityHint?: string | undefined;
   accessibilityLabel?: string | undefined;
   /**
@@ -23,6 +25,7 @@ export interface FilterChipProps {
 }
 
 export function FilterChip({
+  appearance = 'outlined',
   accessibilityHint,
   accessibilityLabel,
   accessibilityRole = 'button',
@@ -46,7 +49,12 @@ export function FilterChip({
       disabled={disabled}
       hitSlop={sizes.hitSlop}
       onPress={onPress}
-      style={[styles.chip, selected && styles.chipSelected, disabled && styles.chipDisabled]}
+      style={[
+        styles.chip,
+        appearance === 'plain' && styles.chipPlain,
+        selected && styles.chipSelected,
+        disabled && styles.chipDisabled,
+      ]}
       testID={testID}
     >
       {icon ? <AppIcon color={contentColor} name={icon} size={sizes.iconSm} /> : null}
@@ -73,6 +81,9 @@ const styles = StyleSheet.create({
   chipDisabled: {
     backgroundColor: colors.disabledSurface,
     borderColor: colors.border,
+  },
+  chipPlain: {
+    borderColor: colors.transparent,
   },
   chipSelected: {
     backgroundColor: colors.positive,

@@ -121,7 +121,11 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     audience: 'Los tres roles (lectura)',
     states: ['default', 'loading', 'empty', 'error', 'offline'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-146) y paginación UI.' },
+      {
+        kind: 'implemented',
+        note: 'Cabecera adaptable y pestañas desplazables compartidas (RFG-145).',
+      },
+      { kind: 'pending', note: 'Contenido de Historial (RFG-146) y paginación UI.' },
       { kind: 'contract', note: 'Historial paginado de 20 ítems.' },
     ],
     group: 'animals',
