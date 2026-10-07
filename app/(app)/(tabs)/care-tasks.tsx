@@ -18,7 +18,7 @@ import { useCareTasks } from '@/features/care-tasks/hooks/useCareTasks';
 import type { CareTask, CareTaskStatus } from '@/features/care-tasks/types';
 import { toCareTaskErrorMessage } from '@/features/care-tasks/utils/careTaskErrorMessages';
 import { isUuid } from '@/features/care-tasks/utils/uuid';
-import { colors, spacing } from '@/theme';
+import { colors, sizes, spacing } from '@/theme';
 
 const STATUS_FILTERS: { label: string; value: CareTaskStatus | undefined }[] = [
   { label: 'Todas', value: undefined },
@@ -212,7 +212,13 @@ const styles = StyleSheet.create({
   header: { gap: spacing.sm, marginBottom: spacing.md },
   heading: { flex: 1, gap: spacing.xxs },
   headingRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  list: { backgroundColor: colors.background, flexGrow: 1, gap: spacing.md, padding: spacing.lg },
+  list: {
+    backgroundColor: colors.background,
+    flexGrow: 1,
+    gap: spacing.md,
+    padding: spacing.lg,
+    paddingBottom: sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + spacing.lg,
+  },
   safeArea: { backgroundColor: colors.background, flex: 1 },
   state: { flex: 1, justifyContent: 'center', padding: spacing.lg },
 });

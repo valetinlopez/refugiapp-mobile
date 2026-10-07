@@ -4,7 +4,7 @@
 
 - `src/application` es la frontera de coordinación entre features y dominios cuando existe reutilización real o una frontera técnica clara.
 - No reemplaza a `src/core` (infraestructura transversal) ni a `src/features` (comportamiento de un dominio).
-- Cada subárbol (p. ej. `animals/`) representa un contrato de aplicación compartido por varias features.
+- Cada subárbol (p. ej. `animals/` o `management/`) representa un contrato de aplicación compartido por varias features o una coordinación transversal explícita.
 
 ## Dependencias
 

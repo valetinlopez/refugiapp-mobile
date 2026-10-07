@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Tabs } from 'expo-router';
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 import { colors, sizes } from '@/theme';
 
@@ -80,7 +80,7 @@ export function CurvedTabBar({
   };
 
   return (
-    <View style={[styles.container, { height: totalHeight }]}>
+    <View style={[styles.container, { height: totalHeight }]} testID="curved-tab-bar">
       <View
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
@@ -88,14 +88,6 @@ export function CurvedTabBar({
         style={StyleSheet.absoluteFill}
       >
         <Svg height={totalHeight} width={width}>
-          <Rect
-            fill={colors.background}
-            height={totalHeight}
-            testID="tab-bar-backdrop"
-            width={width}
-            x={0}
-            y={0}
-          />
           <Path d={tabBarCurvePath(width, totalHeight, curve)} fill={colors.surfaceSubtle} />
           <Path
             d={tabBarCurveArchPath(width, curve)}
@@ -125,6 +117,10 @@ const styles = StyleSheet.create({
   },
   container: {
     backgroundColor: colors.transparent,
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
     width: '100%',
   },
   items: {

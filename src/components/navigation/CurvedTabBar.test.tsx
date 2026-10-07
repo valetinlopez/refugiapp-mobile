@@ -1,6 +1,5 @@
 import { fireEvent, render } from '@testing-library/react-native';
-
-import { colors } from '@/theme';
+import { StyleSheet } from 'react-native';
 
 import { CurvedTabBar, type CurvedTabBarProps, type TabPresentationEntry } from './CurvedTabBar';
 
@@ -54,16 +53,17 @@ describe('CurvedTabBar', () => {
     expect(screen.queryByRole('tab', { name: 'Inbox' })).toBeNull();
   });
 
-  it('paints a backdrop matching the screen background behind the arch', async () => {
+  it('overlays the scene and leaves the area above the arch transparent', async () => {
     const { props } = createProps();
     const screen = await render(<CurvedTabBar {...props} />);
 
-    const fill = screen.getByTestId('tab-bar-backdrop', { includeHiddenElements: true }).props
-      .fill as number | { payload: number };
-    const payload = typeof fill === 'number' ? fill : fill.payload;
-    const expected = Number.parseInt(`ff${colors.background.replace('#', '')}`, 16);
-
-    expect(payload).toBe(expected);
+    expect(StyleSheet.flatten(screen.getByTestId('curved-tab-bar').props.style)).toMatchObject({
+      bottom: 0,
+      left: 0,
+      position: 'absolute',
+      right: 0,
+    });
+    expect(screen.queryByTestId('tab-bar-backdrop', { includeHiddenElements: true })).toBeNull();
   });
 
   it('marks the active destination as selected', async () => {

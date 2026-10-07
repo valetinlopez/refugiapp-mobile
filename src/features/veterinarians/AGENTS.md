@@ -39,9 +39,8 @@
 ## Estructura
 
 - `api/`: `veterinariansApi` (listado, detalle, alta, edición y desactivación).
-- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianDetail`, `VeterinarianForm`, `DeactivateVeterinarianDialog`, `ReactivateVeterinarianDialog` y la sección de gestión de la pestaña "Más" (`ManagementSection`, `ManagementCard`).
+- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianDetail`, `VeterinarianForm`, `DeactivateVeterinarianDialog` y `ReactivateVeterinarianDialog`.
 - `VeterinarianForm` recibe `mode` (`create` | `edit`): solo en `create` expone el toggle "Crear usuario de acceso" con email y contraseña del usuario; en `edit` no ofrece vínculo.
-- `ManagementSection` compone la sección "Gestión" del tab "Más" y enlaza rutas de administración por capacidades: veterinarios (todos los roles), usuarios (`canManageUsers`) y auditoría (`canReadAudit`). No ejecuta red ni importa internals de otras features; la ruta le inyecta las capacidades.
 - `hooks/`: keys, listado infinito, detalle y mutations.
 - `types.ts`: aliases derivados del contrato generado.
 - `utils/`: esquema Zod, mappers create/edit (PATCH diferencial + `createUser`) y presentación/errores.
@@ -82,8 +81,8 @@
 - Guard visual por capacidad `canManageVets` para escritura; lectura para los tres roles.
 - Reactivación habilitada con `POST /veterinarians/:id/reactivate`: botón en el detalle de un veterinario inactivo, confirmación con `ReactivateVeterinarianDialog`, traducción de `VETERINARIAN_ALREADY_ACTIVE` e invalidación de listado, detalle y opciones del formulario clínico tras éxito.
 - Búsqueda del listado por nombre o matrícula (el API ya lo soportaba; ahora la UI expone el filtro).
+- La coordinación de la sección "Gestión" se extrajo a `src/application/management` y al patrón compartido `src/components/patterns/ManagementSection` (RFG-140); esta feature solo conserva sus pantallas y reglas de veterinarios.
 
 ### Pendiente o deuda conocida
 
-- `ManagementSection` coordina destinos de tres dominios (veterinarios, usuarios, auditoría) dentro de la feature `veterinarians`. Si la sección "Gestión" agrega más entradas o un rol distinto necesita otra coordinación, extraerla a una frontera de `src/application` o a un patrón compartido de `src/components`, no ampliar su responsabilidad aquí.
 - Vincular un usuario existente (selector de `GET /users`) queda fuera de alcance: el endpoint es exclusivo de `admin` y rompería para `shelter_manager` (ver ADR-0010).

@@ -9,7 +9,7 @@ import { AppText } from '@/components/primitives';
 import { isNetworkError } from '@/core/network';
 import { AccountMenuButton } from '@/features/auth/components/AccountMenuButton';
 import { useAuthorizedNavigation, useCapabilities } from '@/features/auth/hooks/useCapabilities';
-import { colors, spacing } from '@/theme';
+import { colors, sizes, spacing } from '@/theme';
 
 import { useDashboardOverview } from '../hooks/useDashboardOverview';
 import type { DashboardAnimal } from '../types';
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: spacing.lg,
     padding: spacing.lg,
-    paddingBottom: spacing['2xl'],
+    paddingBottom: sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + spacing.lg,
   },
   heading: {
     flex: 1,
