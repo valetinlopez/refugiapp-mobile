@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
@@ -37,6 +37,7 @@ async function renderAccount() {
 
 describe('AccountScreen', () => {
   beforeEach(() => {
+    onlineManager.setOnline(true);
     jest.spyOn(tokenStorage, 'getTokens').mockResolvedValue({
       accessToken: 'stored-access',
       refreshToken: 'stored-refresh',
@@ -49,6 +50,7 @@ describe('AccountScreen', () => {
   });
 
   afterEach(() => {
+    onlineManager.setOnline(true);
     jest.restoreAllMocks();
   });
 
@@ -56,26 +58,48 @@ describe('AccountScreen', () => {
     const screen = await renderAccount();
 
     await waitFor(() => expect(screen.getByText(EMAIL)).toBeTruthy());
-    expect(screen.getByText('Administrador · Veterinario')).toBeTruthy();
+    expect(screen.getByText('Member Refugiapp')).toBeTruthy();
+    expect(screen.getByText('Administrador')).toBeTruthy();
+    expect(screen.getByText('Veterinario')).toBeTruthy();
+    expect(screen.getByText('En línea')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeTruthy();
   });
 
-  it('renders the slot before the Cuenta section heading', async () => {
+  it('renders management and notifications in the redesigned hierarchy', async () => {
     const screen = await render(
       <QueryClientProvider
         client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
       >
         <SessionProvider>
-          <AccountScreen heading="Más">
-            <Text>Gestión</Text>
-          </AccountScreen>
+          <AccountScreen
+            heading="Más"
+            management={<Text>Gestión</Text>}
+            notifications={<Text>Notificaciones</Text>}
+          />
         </SessionProvider>
       </QueryClientProvider>
     );
 
     await waitFor(() => expect(screen.getByText('Gestión')).toBeTruthy());
-    expect(screen.getByText('Cuenta')).toBeTruthy();
-    expect(screen.getByText('Cuenta').props.children).not.toBeNull();
+    expect(screen.getByText('Aplicación')).toBeTruthy();
+    expect(screen.getByText('Notificaciones')).toBeTruthy();
+  });
+
+  it('expands the application information accessibly', async () => {
+    const screen = await renderAccount();
+    await waitFor(() => expect(screen.getByText(EMAIL)).toBeTruthy());
+
+    const about = screen.getByRole('button', { name: 'Acerca de Refugiapp' });
+    expect(about.props.accessibilityState).toEqual({ expanded: false });
+
+    await fireEvent.press(about);
+
+    expect(screen.getByTestId('about-content')).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: 'Acerca de Refugiapp' }).props.accessibilityState
+    ).toEqual({
+      expanded: true,
+    });
   });
 
   it('confirms sign out and closes the local session', async () => {

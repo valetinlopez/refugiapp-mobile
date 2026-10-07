@@ -10,11 +10,25 @@ jest.mock('@/features/auth/hooks/useCapabilities', () => ({ useCapabilities: jes
 jest.mock('@/features/auth/components/AccountScreen', () => {
   const { View } = jest.requireActual('react-native') as typeof import('react-native');
   return {
-    AccountScreen: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
+    AccountScreen: ({
+      management,
+      notifications,
+    }: {
+      management: React.ReactNode;
+      notifications: React.ReactNode;
+    }) => (
+      <View>
+        {management}
+        {notifications}
+      </View>
+    ),
   };
 });
 jest.mock('@/features/notifications/components/NotificationsSection', () => ({
-  NotificationsSection: () => null,
+  NotificationsSection: () => {
+    const { Text } = jest.requireActual('react-native') as typeof import('react-native');
+    return <Text>Notificaciones existentes</Text>;
+  },
 }));
 
 const mockUseCapabilities = useCapabilities as jest.MockedFunction<typeof useCapabilities>;
@@ -36,6 +50,7 @@ describe('MoreTabScreen management navigation', () => {
     expect(screen.getByRole('button', { name: 'Veterinarios' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Usuarios' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Ver auditoría' })).toBeTruthy();
+    expect(screen.getByText('Notificaciones existentes')).toBeTruthy();
 
     fireEvent.press(screen.getByRole('button', { name: 'Ver auditoría' }));
     expect(router.push).toHaveBeenCalledWith('/audit');
