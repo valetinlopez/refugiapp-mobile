@@ -30,6 +30,7 @@
 - `(app)/animals/[id]/adoptions/new`: formulario protegido para registrar adoptante y postulación, con retorno a la sección Adopción.
 - `(app)/expenses/new`: alta de gasto con comprobante para `admin` y `shelter_manager`.
 - `(app)/users`: listado paginado, alta y edicion (`[id]/edit`) de usuarios internos, visible solo para `admin`; `new.tsx` mantiene el guard y compone de forma lazy `CreateUserScreen`, que posee formulario, confirmacion y mutacion. La activacion y desactivacion se confirman desde el listado y el cambio de rol se confirma desde la edicion.
+- D11/RFG-144 prueba la matriz completa de Cuenta/Mas para los tres roles. Los deep links de listado, alta y edicion de usuarios deben conservar un guard local reactivo: al perder `canManageUsers`, desmontan el contenido protegido y muestran “Sin permiso”; ocultar el destino en Mas no sustituye este guard ni la autorizacion del backend.
 - `(app)/veterinarians`: listado, alta, detalle y edición de veterinarios; lectura para los tres roles y escritura para `admin`/`shelter_manager` (`canManageVets`). La desactivación se confirma desde el detalle.
 - `(app)/audit`: listado paginado y detalle de auditoría, visible solo para `admin` mediante `canReadAudit`.
 - `design-system`: catálogo interno, no funcionalidad de producción. Incluye la sección "Validación de referencias (D06)" que monta `ReferenceValidationSection` de `src/design-system` (23 casos reproducibles, fixtures deterministas y checklist de viewports).

@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import { capabilitiesForRoles, type RoleCapabilities } from '@/application/authorization';
 import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
@@ -66,12 +66,33 @@ describe('MoreTabScreen management navigation', () => {
     expect(router.push).toHaveBeenCalledWith('/audit');
   });
 
-  it('removes privileged destinations when the session lacks their capabilities', async () => {
-    setCapabilities(capabilitiesForRoles(['veterinarian']));
+  it.each(['shelter_manager', 'veterinarian'] as const)(
+    'keeps profile and removes privileged destinations for %s',
+    async (role) => {
+      setCapabilities(capabilitiesForRoles([role]));
+      const screen = await render(<MoreTabScreen />);
+
+      expect(screen.getByLabelText('Abrir Mi perfil')).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Veterinarios' })).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Usuarios' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Ver auditoría' })).toBeNull();
+    }
+  );
+
+  it('removes privileged destinations when permissions are lost during the session', async () => {
+    setCapabilities(capabilitiesForRoles(['admin']));
     const screen = await render(<MoreTabScreen />);
 
+    expect(screen.getByRole('button', { name: 'Usuarios' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Ver auditoría' })).toBeTruthy();
+
+    setCapabilities(capabilitiesForRoles(['veterinarian']));
+    screen.rerender(<MoreTabScreen />);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Usuarios' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Ver auditoría' })).toBeNull();
+    });
     expect(screen.getByRole('button', { name: 'Veterinarios' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Usuarios' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Ver auditoría' })).toBeNull();
   });
 });

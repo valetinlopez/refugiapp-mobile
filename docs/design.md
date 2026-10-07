@@ -378,6 +378,26 @@ La pantalla administrativa de alta conserva el contenido funcional de la referen
 - **Errores:** conflicto de email, falta de permisos, payload inválido y falta de red tienen mensajes diferenciados y anunciados. Nunca se muestran detalles internos del backend.
 - **Responsive:** el contenido desplaza, las acciones envuelven y cada botón conserva un ancho útil en viewport angosto o con fuente ampliada.
 
+## 39. Matriz de navegación de Cuenta y Más (D11 / RFG-144)
+
+La navegación de Cuenta se valida como una matriz explícita de destinos visibles y bloqueados. “Oculto” describe la presentación; la ruta y el backend vuelven a comprobar el permiso cuando corresponde.
+
+| Destino / acción             | `admin` | `shelter_manager` | `veterinarian` | Regla                                   |
+| ---------------------------- | ------- | ----------------- | -------------- | --------------------------------------- |
+| Más                          | Visible | Visible           | Visible        | Toda sesión autenticada                 |
+| Mi perfil                    | Visible | Visible           | Visible        | Datos y capacidades de la propia cuenta |
+| Veterinarios                 | Visible | Visible           | Visible        | Lectura común a los tres roles          |
+| Usuarios                     | Visible | Oculto            | Oculto         | Requiere `canManageUsers`               |
+| Ver auditoría                | Visible | Oculto            | Oculto         | Requiere `canReadAudit`                 |
+| `/users/new` por navegación  | Visible | Sin destino       | Sin destino    | El CTA solo existe con `canManageUsers` |
+| `/users/new` por deep link   | Visible | Sin permiso       | Sin permiso    | Guard reactivo en la propia ruta        |
+| `/users` y `/users/:id/edit` | Visible | Sin permiso       | Sin permiso    | Guard reactivo en cada ruta             |
+
+- **Pérdida de permisos:** cuando las capacidades vigentes cambian, Más vuelve a filtrar su registro y elimina Usuarios/Auditoría. Si el usuario estaba en una ruta de gestión, el siguiente render desmonta el módulo y presenta “Sin permiso”.
+- **Mi perfil:** muestra únicamente las capacidades efectivas derivadas del registro central; nunca expone nombres internos de capabilities.
+- **Defensa en profundidad:** `Stack.Protected` exige sesión para todo `(app)`, cada ruta sensible exige su capability y la API conserva la autorización final. Un deep link no convierte la visibilidad en permiso.
+- **Cobertura:** tests puros validan visibles/bloqueados, tests RNTL cubren la interacción accesible de Más y Mi perfil, y tests de rutas ejercitan listado, alta y edición de usuarios para los tres roles y tras una revocación en sesión.
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)
