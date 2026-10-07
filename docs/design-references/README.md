@@ -105,6 +105,7 @@ Estas reglas alimentan la creación de assets originales (RFG-135) y el sistema 
 - Épica: `RFG-133 — Finalización visual y UX móvil según referencias 2026`.
 - Sprint: Sprint 15 — Fundación visual.
 - Bloquea: `RFG-135` (D02 assets), `RFG-136` (D03 sistema visual) y `RFG-139` (D06 validación visual).
+- D06 (`RFG-139`) consume esta matriz: reproduce cada fila en `src/design-system/referenceCases.ts` y en la checklist `docs/design-validation/checklist.md`. La matriz sigue siendo la fuente de verdad; cualquier cambio de ruta, rol, estado o divergencia se hace aquí y se refleja en el arnés y la checklist en el mismo cambio.
 
 ## 6. Cómo agregar o modificar una referencia
 

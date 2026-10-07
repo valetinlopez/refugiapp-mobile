@@ -16,6 +16,7 @@ Este directorio es el índice de documentación viva del frontend móvil.
 | [`release-runbook.md`](release-runbook.md)                   | Builds EAS, seguridad y publicación interna   | Cambios de build, firma, versionado o distribución                    |
 | [`releases/`](releases/)                                     | Notas y evidencia por candidata               | Cada candidata o publicación                                          |
 | [`design-references/`](design-references/README.md)          | Referencias visuales y matriz de trazabilidad | Al versionar, renombrar o catalogar referencias visuales              |
+| [`design-validation/`](design-validation/checklist.md)       | Checklist de validación visual D06            | Al preparar o ejecutar la validación por referencia y viewport        |
 
 ## Reglas locales
 

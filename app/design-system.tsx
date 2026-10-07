@@ -32,6 +32,7 @@ import {
   AppText,
   FAB,
 } from '@/components/primitives';
+import { ReferenceValidationSection } from '@/design-system';
 import { colors, radii, sizes, spacing, typography } from '@/theme';
 
 type CatalogSegment = 'all' | 'completed' | 'pending';
@@ -408,6 +409,10 @@ export default function DesignSystemScreen() {
             }
             onRetry={() => undefined}
           />
+        </Section>
+
+        <Section title="Validación de referencias (D06)">
+          <ReferenceValidationSection />
         </Section>
       </ScrollView>
     </SafeAreaView>
