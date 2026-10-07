@@ -17,6 +17,7 @@ export type AppIconName =
   | 'error'
   | 'eye'
   | 'eyeOff'
+  | 'filter'
   | 'heart'
   | 'home'
   | 'info'
@@ -26,7 +27,8 @@ export type AppIconName =
   | 'money'
   | 'offline'
   | 'paw'
-  | 'refresh';
+  | 'refresh'
+  | 'transport';
 
 const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   account: { ios: 'person.crop.circle.fill', android: 'account_circle', web: 'account_circle' },
@@ -42,6 +44,11 @@ const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   error: { ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' },
   eye: { ios: 'eye', android: 'visibility', web: 'visibility' },
   eyeOff: { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' },
+  filter: {
+    ios: 'line.3.horizontal.decrease',
+    android: 'filter_list',
+    web: 'filter_list',
+  },
   heart: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
   home: { ios: 'house.fill', android: 'home', web: 'home' },
   info: { ios: 'info.circle.fill', android: 'info', web: 'info' },
@@ -56,6 +63,7 @@ const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   offline: { ios: 'wifi.slash', android: 'wifi_off', web: 'wifi_off' },
   paw: { ios: 'pawprint.fill', android: 'pets', web: 'pets' },
   refresh: { ios: 'arrow.clockwise', android: 'refresh', web: 'refresh' },
+  transport: { ios: 'truck.box.fill', android: 'local_shipping', web: 'local_shipping' },
 };
 
 export type AppIconProps = {

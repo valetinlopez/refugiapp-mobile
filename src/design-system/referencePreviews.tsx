@@ -13,6 +13,7 @@ import {
   type SegmentedControlOption,
 } from '@/components/patterns';
 import { AppBadge, AppButton, AppCard, AppDivider, AppText } from '@/components/primitives';
+import { AnimalHistoryTimelineItem } from '@/features/animals/components/AnimalHistoryTimelineItem';
 import { colors, radii, spacing } from '@/theme';
 import type { AnimalStatus, BadgeTone } from '@/types/design-system';
 
@@ -130,14 +131,12 @@ function AnimalHistoryPreview() {
   return (
     <View style={styles.stack}>
       {ANIMAL_EVENT_FIXTURES.map((event, index) => (
-        <View key={event.id}>
-          {index > 0 ? <AppDivider /> : null}
-          <EntityCard
-            badge={{ icon: 'calendar', label: formatDateMedium(event.occurredAt) }}
-            meta={event.detail}
-            title={event.title}
-          />
-        </View>
+        <AnimalHistoryTimelineItem
+          event={event}
+          isFirst={index === 0}
+          isLast={index === ANIMAL_EVENT_FIXTURES.length - 1}
+          key={event.id}
+        />
       ))}
     </View>
   );
