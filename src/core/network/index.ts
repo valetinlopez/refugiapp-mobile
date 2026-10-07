@@ -7,3 +7,4 @@ export type {
 } from './mutationRetryQueue';
 export { useMutationRetryQueue } from './useMutationRetryQueue';
 export type { OfflineMutationQueue } from './useMutationRetryQueue';
+export { useConnectivityStatus } from './useConnectivityStatus';

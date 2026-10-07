@@ -32,6 +32,7 @@
 ## Red y reintentos
 
 - `src/core/network` centraliza diagnóstico de conectividad y reintentos de escritura sin dominio.
+- `useConnectivityStatus` se suscribe a `onlineManager`, que ya recibe NetInfo desde `QueryProvider`; las features lo usan para presentar estado online/offline sin duplicar listeners nativos.
 - `isNetworkError` distingue fallos de transporte (`NETWORK_ERROR`, `REQUEST_TIMEOUT`) de respuestas del servidor; las features lo usan para elegir `OfflineState` en lugar de `ErrorState` y auth para no invalidar la sesión sin red.
 - `MutationRetryQueue` es una cola FIFO acotada, pura y sin timers: backoff exponencial con jitter y tope, intentos máximos, dedupe por clave y rechazo de mutaciones no marcadas `safeToRetry` (un POST sin clave de idempotencia nunca se re-ejecuta). El reintento lo dispara la reconexión (`useMutationRetryQueue`, vía `onlineManager`) o un reintento manual; no hay timers en segundo plano.
 - Un fallo de transporte durante `POST /auth/refresh` conserva los tokens y propaga el error de red; solo un `401` con código del servidor invalida la sesión.

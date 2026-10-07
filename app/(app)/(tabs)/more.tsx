@@ -50,9 +50,11 @@ export default function MoreTabScreen() {
   }, []);
 
   return (
-    <AccountScreen heading="Más" subtitle="Gestión, notificaciones, cuenta y salida segura">
-      <ManagementSection items={managementItems} onSelect={handleManagementSelect} />
-      <NotificationsSection />
-    </AccountScreen>
+    <AccountScreen
+      heading="Más"
+      management={<ManagementSection items={managementItems} onSelect={handleManagementSelect} />}
+      notifications={<NotificationsSection />}
+      subtitle="Tu espacio de trabajo"
+    />
   );
 }

@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppCard, AppIcon, type AppIconName, AppText } from '@/components/primitives';
-import { opacity, radii, sizes, spacing } from '@/theme';
+import { colors, opacity, radii, sizes, spacing } from '@/theme';
 
 import { SectionHeader } from './SectionHeader';
 
@@ -25,43 +25,72 @@ export interface ManagementSectionProps {
 export function ManagementSection({ items, onSelect }: ManagementSectionProps) {
   return (
     <View style={styles.section}>
-      <SectionHeader title="Gestión" />
-      <View style={styles.cards}>
-        {items.map((item) => (
-          <ManagementCard item={item} key={item.id} onSelect={onSelect} />
+      <SectionHeader subtitle="Organizar hoy, más vidas mañana." title="Gestión" />
+      <AppCard padded={false} variant="outlined">
+        {items.map((item, index) => (
+          <ManagementCard
+            isLast={index === items.length - 1}
+            item={item}
+            key={item.id}
+            onSelect={onSelect}
+          />
         ))}
-      </View>
+      </AppCard>
     </View>
   );
 }
 
-function ManagementCard({ item, onSelect }: { item: ManagementItem; onSelect(id: string): void }) {
+function ManagementCard({
+  isLast,
+  item,
+  onSelect,
+}: {
+  isLast: boolean;
+  item: ManagementItem;
+  onSelect(id: string): void;
+}) {
   return (
     <Pressable
       accessibilityHint={item.hint}
       accessibilityLabel={item.label}
       accessibilityRole="button"
       onPress={() => onSelect(item.id)}
-      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.pressable,
+        isLast && styles.lastPressable,
+        pressed && styles.pressed,
+      ]}
     >
-      <AppCard variant="outlined">
-        <View style={styles.content}>
-          <AppIcon color="textSecondary" name={item.icon} size={sizes.iconMd} />
-          <View style={styles.copy}>
-            <AppText variant="heading3">{item.label}</AppText>
-            <AppText color="textSecondary">{item.description}</AppText>
-          </View>
+      <View style={styles.content}>
+        <AppIcon color="positive" name={item.icon} size={sizes.iconMd} />
+        <View style={styles.copy}>
+          <AppText variant="bodyStrong">{item.label}</AppText>
+          <AppText color="textSecondary" variant="caption">
+            {item.description}
+          </AppText>
         </View>
-      </AppCard>
+        <AppIcon color="textSecondary" name="chevronRight" size={sizes.iconSm} />
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  cards: { gap: spacing.sm },
-  content: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
+  content: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
+    minHeight: sizes.touchTarget,
+    padding: spacing.md,
+  },
   copy: { flex: 1, gap: spacing.xxs },
-  pressable: { borderRadius: radii.lg, minHeight: sizes.touchTarget },
+  lastPressable: { borderBottomWidth: 0 },
+  pressable: {
+    borderRadius: radii.lg,
+    borderBottomColor: colors.divider,
+    borderBottomWidth: sizes.divider,
+    minHeight: sizes.touchTarget,
+  },
   pressed: { opacity: opacity.pressed },
   section: { gap: spacing.md },
 });
