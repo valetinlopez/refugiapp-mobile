@@ -46,4 +46,11 @@ input[data-testid='login-password']:-webkit-autofill:focus {
   -webkit-text-fill-color: ${colors.textPrimary} !important;
   caret-color: ${colors.textPrimary};
   border-color: ${colors.border};
+}
+
+input[data-testid='login-email']:focus,
+input[data-testid='login-password']:focus {
+  border-color: ${colors.focus} !important;
+  outline: 2px solid ${colors.focus};
+  outline-offset: 0;
 }`;
