@@ -181,7 +181,11 @@ Muestran icono semántico, valor con Newsreader y etiqueta DM Sans. El número n
 
 ## 20. Navegación inferior
 
-Máximo cuatro o cinco destinos estables. Cada elemento combina icono y texto; el activo usa lima, peso visual e `accessibilityState.selected`. Altura base de 72 pt más el inset inferior del dispositivo. La barra queda fija mientras el contenido principal desplaza. El catálogo muestra el componente, pero no reemplaza todavía la navegación funcional de producción.
+Máximo cuatro o cinco destinos estables. Cada elemento combina icono y texto; el activo usa lima, peso visual e `accessibilityState.selected`. Altura base de 72 pt más el inset inferior del dispositivo. La barra queda fija mientras el contenido principal desplaza.
+
+La navegación inferior de producción (D05/RFG-138) usa `Tabs` de Expo Router con cuatro destinos —Inicio, Animales, Cuidados (ruta `care-tasks`, renombrada solo en su etiqueta visible) y Más— para los tres roles, preservando `Stack.Protected` y la ruta legacy `inbox` oculta. El `tabBar` nativo se reemplaza por `CurvedTabBar` (`src/components/navigation/CurvedTabBar.tsx`), que dibuja un arco decorativo estático en el borde superior con `react-native-svg` (ver ADR-0017) y monta el patrón compartido `BottomNavigation` sobre esa superficie. El arco es ornamental: no comunica estado, no contiene texto, está oculto a tecnologías asistivas (`accessible={false}`) y no captura toques (`pointerEvents="none"`); su altura es `sizes.bottomNavigationCurve` y la geometría vive en la función pura `tabBarCurvePath`/`tabBarCurveArchPath` de `src/components/navigation/tabBarCurve.ts`. Detrás del arco se dibuja un rectángulo `background` que funde las esquinas transparentes con el fondo de las pantallas, de modo que solo se percibe el relieve del arco y no una franja de otro marrón.
+
+El estado activo no depende solo del color: el icono activo se apoya en una pastilla `surfaceElevated` y la etiqueta cambia a `bodyStrong` (`BottomNavigation`), además de `accessibilityState.selected` y el label accesible en español del destino. La barra reserva `sizes.bottomNavigationHeight + inset.bottom` más el arco, con `paddingBottom` igual al inset, para no solaparse con la gesture bar ni el home indicator; las etiquetas se truncan a una línea y escalan con la fuente. Las pantallas del tab y la sección Cuenta usan `SafeAreaView edges={['top','left','right']}`: la barra es la única dueña del inset inferior, evitando el doble margen. `BottomNavigation` (catálogo) muestra el mismo tratamiento activo en su variante independiente.
 
 ## 21. Encabezado de retorno (`AppHeaderBack`)
 
@@ -217,6 +221,7 @@ Tabla verificada (RFG-88, `src/theme/contrast.test.ts` como guard):
 | ------------------------------------------------------------------------------ | --------------------------------- | ---------------------------------------------------------------------------- |
 | `textPrimary` sobre `background`/`surfaceElevated`/`surfaceSubtle`             | 13,61 / 7,61 / 11,56              | Pasa                                                                         |
 | `textSecondary` sobre `surface`/`surfaceElevated`/`surfaceSubtle`/`background` | 5,94 / 4,59 / 6,97 / 8,21         | Pasa                                                                         |
+| `positive` sobre `surfaceSubtle`/`surfaceElevated`                             | 8,07 / 5,31                       | Pasa (destino activo de la barra inferior)                                   |
 | `textInverse` sobre `positive`/`warning`/`danger`/`info`/`neutral`             | 10,86 / 7,74 / 5,08 / 6,48 / 6,79 | Pasa                                                                         |
 | `disabledText` (`#CCBEB1`) sobre `disabledSurface`                             | 4,64                              | Pasa (sin `opacity`; el estilo `disabled` de `AppButton` no reduce opacidad) |
 
@@ -255,6 +260,8 @@ La diferencia de rol modifica acciones y módulos, no la identidad visual. Ocult
 ## 28. Elementos que necesitan SVG
 
 La primera versión no necesita `react-native-svg`: radios nativos resuelven tarjetas y `expo-symbols` resuelve iconografía. Incorporar SVG solo para una textura lineal de hojas, un separador orgánico escalable o una forma de marca que no pueda expresarse con layout. Debe ser decorativo, liviano y no contener texto ni información de estado.
+
+Excepción vigente (ADR-0017/RFG-138): la barra de navegación inferior usa `react-native-svg` **solo** para el arco decorativo de su borde superior (`CurvedTabBar` + `tabBarCurvePath`). Es la única forma de marca que no se expresa con layout nativo; el resto de la interfaz sigue sin SVG y el arco es estático, oculto a tecnologías asistivas y sin estado.
 
 ## 29. Aspectos conceptuales del mockup
 
@@ -334,6 +341,8 @@ La fundación visual de D03 (RFG-136) agrega patrones reutilizables en `src/comp
 - **Adjuntos (`AttachmentList` y `AttachmentRow`)**: lista de archivos con miniatura o glifo, nombre, tamaño y estados `ready`/`uploading`/`error`. La subida expone barra de progreso accesible y porcentaje textual; el error muestra mensaje seguro y acción de reintento; el reintento y la eliminación conservan área táctil de 44 pt. El borrado exige confirmación mediante `ConfirmDialog` (la lista lo posee) y una lista vacía explica la ausencia sin inventar acciones.
 
 Tokens agregados por D03: `sizes.fab` (56), `sizes.dialogMaxWidth` (480) y `opacity.pressed`/`opacity.pressedSubtle`/`opacity.overlay`. Reemplazan valores antes dispersos en `AppButton`, `AppHeaderBack`, `BottomNavigation` y `ConfirmDialog`, manteniendo el criterio de no introducir medidas arbitrarias en componentes compartidos.
+
+D05 (RFG-138) agrega `sizes.bottomNavigationCurve` (14) para la altura del arco decorativo de la barra inferior (ver ADR-0017).
 
 ## 36. Login editorial (D04)
 

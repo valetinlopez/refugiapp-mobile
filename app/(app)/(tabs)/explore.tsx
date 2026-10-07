@@ -119,7 +119,7 @@ export default function AnimalsScreen() {
 
   if (animalsQuery.isPending) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
         <View style={styles.state}>
           <LoadingState label="Cargando animales" />
         </View>
@@ -129,7 +129,7 @@ export default function AnimalsScreen() {
 
   if (animalsQuery.isError && animalsQuery.data === undefined) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
         <View style={styles.state}>
           <ErrorState
             actionLabel="Reintentar"
@@ -143,7 +143,7 @@ export default function AnimalsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <FlatList
         {...virtualizedListPerformanceProps}
         contentContainerStyle={styles.list}
