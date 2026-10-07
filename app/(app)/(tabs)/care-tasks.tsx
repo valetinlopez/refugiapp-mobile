@@ -131,7 +131,7 @@ export default function CareTasksScreen() {
 
   if (tasksQuery.isPending) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
         <View style={styles.state}>
           <LoadingState label="Cargando tareas" />
         </View>
@@ -141,7 +141,7 @@ export default function CareTasksScreen() {
 
   if (tasksQuery.isError) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
         <View style={styles.state}>
           <ErrorState
             actionLabel="Reintentar"
@@ -155,7 +155,7 @@ export default function CareTasksScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <FlatList
         {...virtualizedListPerformanceProps}
         contentContainerStyle={styles.list}

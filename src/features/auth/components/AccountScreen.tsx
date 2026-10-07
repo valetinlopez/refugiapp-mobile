@@ -45,7 +45,7 @@ export function AccountScreen({
 
   if (status === 'restoring' || user === null) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
         <View style={styles.state}>
           <LoadingState label="Cargando cuenta" />
         </View>
@@ -54,7 +54,7 @@ export function AccountScreen({
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.heading}>
           <AppText variant="heading1">{heading}</AppText>

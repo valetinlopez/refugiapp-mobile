@@ -1,7 +1,4 @@
 import { render } from '@testing-library/react-native';
-import type { ReactElement } from 'react';
-
-import { colors, sizes } from '@/theme';
 
 import TabsLayout from '../_layout';
 
@@ -10,7 +7,8 @@ type CapturedScreen = { name: string; options: Record<string, unknown> };
 const mockTabs: {
   screens: CapturedScreen[];
   screenOptions: Record<string, unknown> | undefined;
-} = { screens: [], screenOptions: undefined };
+  tabBar: unknown;
+} = { screens: [], screenOptions: undefined, tabBar: undefined };
 
 const mockAuthorization: { visible: string[] | undefined } = { visible: undefined };
 
@@ -29,11 +27,14 @@ jest.mock('expo-router', () => {
   function Tabs({
     children,
     screenOptions,
+    tabBar,
   }: {
     children?: unknown;
     screenOptions?: Record<string, unknown>;
+    tabBar?: unknown;
   }) {
     mockTabs.screenOptions = screenOptions;
+    mockTabs.tabBar = tabBar;
     const items = Array.isArray(children) ? children : [children];
     for (const item of items) {
       const element = toScreenElement(item);
@@ -70,6 +71,7 @@ describe('TabsLayout', () => {
   beforeEach(() => {
     mockTabs.screens = [];
     mockTabs.screenOptions = undefined;
+    mockTabs.tabBar = undefined;
     mockAuthorization.visible = undefined;
   });
 
@@ -121,37 +123,10 @@ describe('TabsLayout', () => {
     expect(inbox?.options).toEqual({ href: null });
   });
 
-  it('reserves the base height plus the bottom safe-area inset', async () => {
+  it('replaces the native bar with the curved tab bar and hides the header', async () => {
     await render(<TabsLayout />);
 
-    const style = mockTabs.screenOptions?.tabBarStyle as {
-      backgroundColor: string;
-      height: number;
-      paddingBottom: number;
-    };
-    expect(style.height).toBe(sizes.bottomNavigationHeight + 24);
-    expect(style.paddingBottom).toBe(24);
-    expect(style.backgroundColor).toBe(colors.surfaceSubtle);
-  });
-
-  it('renders the shared tab icon and label for the Cuidados destination', async () => {
-    await render(<TabsLayout />);
-
-    const care = mockTabs.screens.find((screen) => screen.name === 'care-tasks');
-    const renderIcon = care?.options.tabBarIcon as (args: { focused: boolean }) => ReactElement;
-    const renderLabel = care?.options.tabBarLabel as (args: {
-      focused: boolean;
-      children: string;
-    }) => ReactElement;
-
-    const screen = await render(
-      <>
-        {renderIcon({ focused: true })}
-        {renderLabel({ focused: true, children: 'Cuidados' })}
-      </>
-    );
-
-    expect(screen.getByTestId('tab-bar-icon-calendar')).toBeTruthy();
-    expect(screen.getByText('Cuidados')).toBeTruthy();
+    expect(typeof mockTabs.tabBar).toBe('function');
+    expect(mockTabs.screenOptions?.headerShown).toBe(false);
   });
 });
