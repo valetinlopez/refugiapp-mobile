@@ -1,6 +1,49 @@
 import { ApiError } from '@/core/api';
 
-import { toUserErrorMessage } from './userPresentation';
+import { toCreateUserErrorMessage, toUserErrorMessage } from './userPresentation';
+
+describe('toCreateUserErrorMessage', () => {
+  it.each([
+    [
+      new ApiError({
+        code: 'EMAIL_ALREADY_EXISTS',
+        message: 'Email exists.',
+        requestId: 'request-id',
+        status: 409,
+      }),
+      'Ya existe un usuario registrado con ese email.',
+    ],
+    [
+      new ApiError({
+        code: 'HTTP_403',
+        message: 'Forbidden.',
+        requestId: 'request-id',
+        status: 403,
+      }),
+      'Tu rol no tiene permiso para crear usuarios.',
+    ],
+    [
+      new ApiError({
+        code: 'INVALID_PAYLOAD',
+        message: 'Invalid.',
+        requestId: 'request-id',
+        status: 400,
+      }),
+      'Revisá el email, la contraseña y los roles seleccionados.',
+    ],
+    [
+      new ApiError({
+        code: 'NETWORK_ERROR',
+        message: 'Network.',
+        requestId: 'request-id',
+        status: 0,
+      }),
+      'Sin conexión. Revisá tu conexión y volvé a intentar.',
+    ],
+  ])('distinguishes create-user failures', (error, expected) => {
+    expect(toCreateUserErrorMessage(error)).toBe(expected);
+  });
+});
 
 describe('toUserErrorMessage', () => {
   it('translates an email conflict into an actionable message', () => {

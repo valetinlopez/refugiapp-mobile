@@ -105,7 +105,10 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     audience: 'admin (canManageUsers)',
     states: ['default', 'error'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-143).' },
+      {
+        kind: 'implemented',
+        note: 'Alta multirrol, password inicial ≥ 12 y confirmación explícita (RFG-143).',
+      },
       { kind: 'contract', note: 'El alta es exclusiva por POST /users.' },
     ],
     group: 'auth-account',

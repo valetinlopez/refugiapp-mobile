@@ -2,11 +2,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
-import { AppButton, AppText } from '@/components/primitives';
+import { PasswordField, SectionHeader } from '@/components/patterns';
+import { AppButton, AppCard, AppIcon, AppText, type AppIconName } from '@/components/primitives';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
-import type { UserResponse } from '../types';
-import { roleLabel } from '../utils/userPresentation';
+import type { ManagedUserRole, UserResponse } from '../types';
+import { roleDescription, roleLabel } from '../utils/userPresentation';
 import {
   createUserSchema,
   managedUserRoles,
@@ -23,6 +24,7 @@ type UserFormProps =
       initialUser?: undefined;
       isSubmitting: boolean;
       mode?: 'create';
+      onCancel(): void;
       onSubmit(values: CreateUserFormValues): void;
     }
   | {
@@ -36,9 +38,15 @@ type UserFormProps =
 const FIELD_LABELS = {
   firstName: 'Nombre',
   lastName: 'Apellido',
-  email: 'Email',
+  email: 'Correo electrónico',
   password: 'Contraseña inicial',
 } as const;
+
+const ROLE_ICONS: Record<ManagedUserRole, AppIconName> = {
+  admin: 'account',
+  shelter_manager: 'paw',
+  veterinarian: 'medical',
+};
 
 export function UserForm(props: UserFormProps) {
   const { errorMessage, isSubmitting, onSubmit } = props;
@@ -60,6 +68,7 @@ export function UserForm(props: UserFormProps) {
     <CreateForm
       errorMessage={errorMessage}
       isSubmitting={isSubmitting}
+      onCancel={(props as Extract<UserFormProps, { initialUser?: undefined }>).onCancel}
       onSubmit={onSubmit as (values: CreateUserFormValues) => void}
     />
   );
@@ -68,10 +77,12 @@ export function UserForm(props: UserFormProps) {
 function CreateForm({
   errorMessage,
   isSubmitting,
+  onCancel,
   onSubmit,
 }: {
   errorMessage?: string | null | undefined;
   isSubmitting: boolean;
+  onCancel(): void;
   onSubmit(values: CreateUserFormValues): void;
 }) {
   const { control, handleSubmit } = useForm<CreateUserFormInput, unknown, CreateUserFormValues>({
@@ -81,55 +92,196 @@ function CreateForm({
       firstName: '',
       lastName: '',
       password: '',
-      role: 'shelter_manager',
+      roles: ['shelter_manager'],
     },
   });
   const submit = handleSubmit(onSubmit);
-  const autoComplete = {
-    email: 'email',
-    firstName: 'given-name',
-    lastName: 'family-name',
-    password: 'new-password',
-  } as const;
 
   return (
     <View style={styles.form}>
-      {(['firstName', 'lastName', 'email', 'password'] as const).map((name) => (
-        <Controller
-          key={name}
+      <AppCard style={styles.card} variant="elevated">
+        <SectionHeader subtitle="Información básica de la persona." title="Datos personales" />
+        {(['firstName', 'lastName'] as const).map((name) => (
+          <TextFieldController
+            autoComplete={name === 'firstName' ? 'given-name' : 'family-name'}
+            control={control}
+            disabled={isSubmitting}
+            key={name}
+            label={FIELD_LABELS[name]}
+            name={name}
+          />
+        ))}
+      </AppCard>
+
+      <AppCard style={styles.card} variant="elevated">
+        <SectionHeader
+          subtitle="Estas credenciales se usarán en el primer ingreso."
+          title="Acceso inicial"
+        />
+        <TextFieldController
+          autoCapitalize="none"
+          autoComplete="email"
           control={control}
-          name={name}
+          disabled={isSubmitting}
+          keyboardType="email-address"
+          label={FIELD_LABELS.email}
+          name="email"
+        />
+        <Controller
+          control={control}
+          name="password"
           render={({ field, fieldState }) => (
             <View style={styles.field}>
-              <AppText variant="label">{FIELD_LABELS[name]}</AppText>
-              <Input
-                accessibilityLabel={FIELD_LABELS[name]}
-                autoCapitalize={name === 'email' ? 'none' : 'sentences'}
-                autoComplete={autoComplete[name]}
+              <PasswordField
+                autoComplete="new-password"
                 editable={!isSubmitting}
-                keyboardType={name === 'email' ? 'email-address' : 'default'}
+                label={FIELD_LABELS.password}
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
-                secureTextEntry={name === 'password'}
                 value={field.value}
               />
-              {fieldState.error ? (
-                <AppText color="danger" role="alert">
-                  {fieldState.error.message}
-                </AppText>
-              ) : null}
+              <AppText color="textSecondary" variant="caption">
+                Mínimo 12 caracteres. No se volverá a mostrar después de crear la cuenta.
+              </AppText>
+              <FieldError message={fieldState.error?.message} />
             </View>
           )}
         />
-      ))}
-      <RoleSelector control={control} isSubmitting={isSubmitting} name="role" />
+      </AppCard>
+
+      <AppCard style={styles.card} variant="elevated">
+        <SectionHeader
+          subtitle="Podés asignar más de un rol según sus responsabilidades."
+          title="Roles"
+        />
+        <CreateRoleSelector control={control} isSubmitting={isSubmitting} />
+      </AppCard>
+
       {errorMessage ? (
         <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
           {errorMessage}
         </AppText>
       ) : null}
-      <AppButton label="Crear usuario" loading={isSubmitting} onPress={() => void submit()} />
+      <View style={styles.actions}>
+        <AppButton
+          disabled={isSubmitting}
+          label="Cancelar"
+          onPress={onCancel}
+          style={styles.action}
+          variant="secondary"
+        />
+        <AppButton
+          label="Revisar y crear"
+          loading={isSubmitting}
+          onPress={() => void submit()}
+          style={styles.action}
+        />
+      </View>
     </View>
+  );
+}
+
+function TextFieldController<T extends FieldValues>({
+  autoCapitalize = 'sentences',
+  autoComplete,
+  control,
+  disabled,
+  keyboardType = 'default',
+  label,
+  name,
+}: {
+  autoCapitalize?: TextInputProps['autoCapitalize'];
+  autoComplete: TextInputProps['autoComplete'];
+  control: Control<T>;
+  disabled: boolean;
+  keyboardType?: TextInputProps['keyboardType'];
+  label: string;
+  name: Path<T>;
+}) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <View style={styles.field}>
+          <AppText variant="label">{label}</AppText>
+          <Input
+            accessibilityLabel={label}
+            autoCapitalize={autoCapitalize}
+            autoComplete={autoComplete}
+            editable={!disabled}
+            keyboardType={keyboardType}
+            onBlur={field.onBlur}
+            onChangeText={field.onChange}
+            value={typeof field.value === 'string' ? field.value : ''}
+          />
+          <FieldError message={fieldState.error?.message} />
+        </View>
+      )}
+    />
+  );
+}
+
+function CreateRoleSelector({
+  control,
+  isSubmitting,
+}: {
+  control: Control<CreateUserFormInput>;
+  isSubmitting: boolean;
+}) {
+  return (
+    <Controller
+      control={control}
+      name="roles"
+      render={({ field, fieldState }) => (
+        <View style={styles.field}>
+          <View accessibilityLabel="Roles disponibles" style={styles.options}>
+            {managedUserRoles.map((role) => {
+              const checked = field.value.includes(role);
+              return (
+                <Pressable
+                  accessibilityHint={roleDescription(role)}
+                  accessibilityLabel={roleLabel(role)}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked, disabled: isSubmitting }}
+                  disabled={isSubmitting}
+                  key={role}
+                  onPress={() => {
+                    const nextRoles = checked
+                      ? field.value.filter((selectedRole) => selectedRole !== role)
+                      : [...field.value, role];
+                    field.onChange(nextRoles);
+                  }}
+                  style={[styles.roleOption, checked && styles.selectedRole]}
+                >
+                  <View style={[styles.checkmark, checked && styles.selectedCheckmark]}>
+                    {checked ? (
+                      <AppIcon color="textInverse" name="check" size={sizes.iconSm} />
+                    ) : null}
+                  </View>
+                  <AppIcon color={checked ? 'positive' : 'textSecondary'} name={ROLE_ICONS[role]} />
+                  <View style={styles.roleCopy}>
+                    <AppText variant="label">{roleLabel(role)}</AppText>
+                    <AppText color="textSecondary" variant="caption">
+                      {roleDescription(role)}
+                    </AppText>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+          {field.value.includes('admin') ? (
+            <View accessibilityRole="summary" style={styles.roleHelp}>
+              <AppIcon color="info" name="info" size={sizes.iconSm} />
+              <AppText color="textSecondary" style={styles.roleHelpCopy} variant="caption">
+                El rol Administrador permite gestionar usuarios internos y asignar roles.
+              </AppText>
+            </View>
+          ) : null}
+          <FieldError message={fieldState.error?.message} />
+        </View>
+      )}
+    />
   );
 }
 
@@ -158,35 +310,20 @@ function EditForm({
   return (
     <View style={styles.form}>
       {(['firstName', 'lastName', 'email'] as const).map((name) => (
-        <Controller
-          key={name}
+        <TextFieldController
+          autoCapitalize={name === 'email' ? 'none' : 'sentences'}
+          autoComplete={
+            name === 'email' ? 'email' : name === 'firstName' ? 'given-name' : 'family-name'
+          }
           control={control}
+          disabled={isSubmitting}
+          key={name}
+          keyboardType={name === 'email' ? 'email-address' : 'default'}
+          label={FIELD_LABELS[name]}
           name={name}
-          render={({ field, fieldState }) => (
-            <View style={styles.field}>
-              <AppText variant="label">{FIELD_LABELS[name]}</AppText>
-              <Input
-                accessibilityLabel={FIELD_LABELS[name]}
-                autoCapitalize={name === 'email' ? 'none' : 'sentences'}
-                autoComplete={
-                  name === 'email' ? 'email' : name === 'firstName' ? 'given-name' : 'family-name'
-                }
-                editable={!isSubmitting}
-                keyboardType={name === 'email' ? 'email-address' : 'default'}
-                onBlur={field.onBlur}
-                onChangeText={field.onChange}
-                value={field.value}
-              />
-              {fieldState.error ? (
-                <AppText color="danger" role="alert">
-                  {fieldState.error.message}
-                </AppText>
-              ) : null}
-            </View>
-          )}
         />
       ))}
-      <RoleSelector control={control} isSubmitting={isSubmitting} name="role" />
+      <EditRoleSelector control={control} isSubmitting={isSubmitting} />
       {errorMessage ? (
         <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
           {errorMessage}
@@ -197,19 +334,17 @@ function EditForm({
   );
 }
 
-function RoleSelector<T extends FieldValues>({
+function EditRoleSelector({
   control,
   isSubmitting,
-  name,
 }: {
-  control: Control<T>;
+  control: Control<UpdateUserFormInput>;
   isSubmitting: boolean;
-  name: 'role';
 }) {
   return (
     <Controller
       control={control}
-      name={name as Path<T>}
+      name="role"
       render={({ field, fieldState }) => (
         <View style={styles.field}>
           <AppText variant="label">Rol</AppText>
@@ -221,21 +356,25 @@ function RoleSelector<T extends FieldValues>({
                 disabled={isSubmitting}
                 key={role}
                 onPress={() => field.onChange(role)}
-                style={[styles.option, field.value === role && styles.selected]}
+                style={[styles.option, field.value === role && styles.selectedRole]}
               >
                 <AppText>{roleLabel(role)}</AppText>
               </Pressable>
             ))}
           </View>
-          {fieldState.error ? (
-            <AppText color="danger" role="alert">
-              {fieldState.error.message}
-            </AppText>
-          ) : null}
+          <FieldError message={fieldState.error?.message} />
         </View>
       )}
     />
   );
+}
+
+function FieldError({ message }: { message?: string | undefined }) {
+  return message ? (
+    <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
+      {message}
+    </AppText>
+  ) : null;
 }
 
 function Input(props: TextInputProps) {
@@ -243,6 +382,18 @@ function Input(props: TextInputProps) {
 }
 
 const styles = StyleSheet.create({
+  action: { flex: 1, minWidth: 160 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  card: { gap: spacing.md },
+  checkmark: {
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderRadius: radii.xs,
+    borderWidth: 1,
+    height: sizes.iconMd,
+    justifyContent: 'center',
+    width: sizes.iconMd,
+  },
   field: { gap: spacing.xs },
   form: { gap: spacing.md, width: '100%' },
   input: {
@@ -266,5 +417,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   options: { gap: spacing.xs },
-  selected: { borderColor: colors.positive },
+  roleCopy: { flex: 1, gap: spacing.xxs },
+  roleHelp: {
+    alignItems: 'flex-start',
+    backgroundColor: colors.surfaceSubtle,
+    borderRadius: radii.sm,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    padding: spacing.sm,
+  },
+  roleHelpCopy: { flex: 1 },
+  roleOption: {
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    minHeight: sizes.touchTarget,
+    padding: spacing.sm,
+  },
+  selectedCheckmark: { backgroundColor: colors.positive, borderColor: colors.positive },
+  selectedRole: { borderColor: colors.positive },
 });

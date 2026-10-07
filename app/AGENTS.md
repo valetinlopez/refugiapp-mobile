@@ -29,7 +29,7 @@
 - `(app)/animals/[id]`: incorpora la sección Adopción para los tres roles; `admin` y `shelter_manager` pueden gestionar postulaciones y aprobar, mientras `veterinarian` solo consulta el historial sin datos personales.
 - `(app)/animals/[id]/adoptions/new`: formulario protegido para registrar adoptante y postulación, con retorno a la sección Adopción.
 - `(app)/expenses/new`: alta de gasto con comprobante para `admin` y `shelter_manager`.
-- `(app)/users`: listado paginado, alta y edicion (`[id]/edit`) de usuarios internos, visible solo para `admin`; activacion y desactivacion se confirman desde el listado y el cambio de rol se confirma desde la edicion.
+- `(app)/users`: listado paginado, alta y edicion (`[id]/edit`) de usuarios internos, visible solo para `admin`; `new.tsx` mantiene el guard y compone de forma lazy `CreateUserScreen`, que posee formulario, confirmacion y mutacion. La activacion y desactivacion se confirman desde el listado y el cambio de rol se confirma desde la edicion.
 - `(app)/veterinarians`: listado, alta, detalle y edición de veterinarios; lectura para los tres roles y escritura para `admin`/`shelter_manager` (`canManageVets`). La desactivación se confirma desde el detalle.
 - `(app)/audit`: listado paginado y detalle de auditoría, visible solo para `admin` mediante `canReadAudit`.
 - `design-system`: catálogo interno, no funcionalidad de producción. Incluye la sección "Validación de referencias (D06)" que monta `ReferenceValidationSection` de `src/design-system` (23 casos reproducibles, fixtures deterministas y checklist de viewports).

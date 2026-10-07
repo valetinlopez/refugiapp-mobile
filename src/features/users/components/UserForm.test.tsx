@@ -15,16 +15,22 @@ const existingUser: UserResponse = {
 };
 
 describe('UserForm', () => {
-  it('submits normalized values and the selected role', async () => {
+  it('submits normalized values and every selected role', async () => {
     const onSubmit = jest.fn();
-    const screen = await render(<UserForm isSubmitting={false} onSubmit={onSubmit} />);
+    const screen = await render(
+      <UserForm isSubmitting={false} onCancel={jest.fn()} onSubmit={onSubmit} />
+    );
 
     await fireEvent.changeText(screen.getByLabelText('Nombre'), ' Ana ');
     await fireEvent.changeText(screen.getByLabelText('Apellido'), ' Perez ');
-    await fireEvent.changeText(screen.getByLabelText('Email'), ' ADMIN@Refugiapp.Local ');
+    await fireEvent.changeText(
+      screen.getByLabelText('Correo electrónico'),
+      ' ADMIN@Refugiapp.Local '
+    );
     await fireEvent.changeText(screen.getByLabelText('Contraseña inicial'), 'secure-pass-123');
-    await fireEvent.press(screen.getByRole('radio', { name: 'Administrador' }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Crear usuario' }));
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Administrador' }));
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Veterinario' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Revisar y crear' }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith(
@@ -32,15 +38,17 @@ describe('UserForm', () => {
         email: 'admin@refugiapp.local',
         firstName: 'Ana',
         lastName: 'Perez',
-        role: 'admin',
+        roles: ['shelter_manager', 'admin', 'veterinarian'],
       }),
       undefined
     );
   });
 
   it('shows validation messages before submitting invalid data', async () => {
-    const screen = await render(<UserForm isSubmitting={false} onSubmit={jest.fn()} />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Crear usuario' }));
+    const screen = await render(
+      <UserForm isSubmitting={false} onCancel={jest.fn()} onSubmit={jest.fn()} />
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Revisar y crear' }));
 
     expect(await screen.findByText('Ingresá el nombre.')).toBeTruthy();
     expect(screen.getByText('Ingresá el email.')).toBeTruthy();
@@ -52,6 +60,7 @@ describe('UserForm', () => {
       <UserForm
         errorMessage="Ya existe un usuario registrado con ese email."
         isSubmitting={false}
+        onCancel={jest.fn()}
         onSubmit={jest.fn()}
       />
     );
@@ -59,6 +68,31 @@ describe('UserForm', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Ya existe un usuario registrado con ese email.'
     );
+  });
+
+  it('explains the password requirement and exposes multirole state accessibly', async () => {
+    const screen = await render(
+      <UserForm isSubmitting={false} onCancel={jest.fn()} onSubmit={jest.fn()} />
+    );
+
+    expect(screen.getByText(/Mínimo 12 caracteres/)).toBeTruthy();
+    expect(screen.queryByText(/8 caracteres/)).toBeNull();
+    expect(
+      screen.getByRole('checkbox', { name: 'Encargado de refugio' }).props.accessibilityState
+    ).toEqual(expect.objectContaining({ checked: true }));
+
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Administrador' }));
+    expect(screen.getByText(/permite gestionar usuarios internos/)).toBeTruthy();
+  });
+
+  it('allows cancelling the create flow', async () => {
+    const onCancel = jest.fn();
+    const screen = await render(
+      <UserForm isSubmitting={false} onCancel={onCancel} onSubmit={jest.fn()} />
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
   it('prefills profile data in edit mode without a password field', async () => {

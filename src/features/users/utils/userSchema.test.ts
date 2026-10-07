@@ -6,7 +6,7 @@ describe('createUserSchema', () => {
     firstName: ' Ana ',
     lastName: ' Perez ',
     password: 'secure-pass-123',
-    role: 'admin' as const,
+    roles: ['admin', 'veterinarian'] as const,
   };
 
   it('normalizes email and trims names', () => {
@@ -24,6 +24,11 @@ describe('createUserSchema', () => {
       password: 'short',
     });
     expect(result.success).toBe(false);
+  });
+
+  it('requires at least one supported role', () => {
+    expect(createUserSchema.safeParse({ ...validInput, roles: [] }).success).toBe(false);
+    expect(createUserSchema.safeParse({ ...validInput, roles: ['unknown'] }).success).toBe(false);
   });
 });
 
