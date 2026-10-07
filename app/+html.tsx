@@ -22,7 +22,7 @@ export default function Root({ children }: { children: ReactNode }) {
         <ScrollViewStyleReset />
 
         {/* Using raw CSS styles as an escape-hatch to ensure the background color never flickers in dark-mode. */}
-        <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
+        <style dangerouslySetInnerHTML={{ __html: globalWebStyles }} />
         {/* Add any additional <head> elements that you want globally available on web... */}
       </head>
       <body>{children}</body>
@@ -30,7 +30,20 @@ export default function Root({ children }: { children: ReactNode }) {
   );
 }
 
-const responsiveBackground = `
+const globalWebStyles = `
 body {
   background-color: ${colors.background};
+}
+
+input[data-testid='login-email']:-webkit-autofill,
+input[data-testid='login-email']:-webkit-autofill:hover,
+input[data-testid='login-email']:-webkit-autofill:focus,
+input[data-testid='login-password']:-webkit-autofill,
+input[data-testid='login-password']:-webkit-autofill:hover,
+input[data-testid='login-password']:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px ${colors.surface} inset !important;
+  box-shadow: 0 0 0 1000px ${colors.surface} inset !important;
+  -webkit-text-fill-color: ${colors.textPrimary} !important;
+  caret-color: ${colors.textPrimary};
+  border-color: ${colors.border};
 }`;
