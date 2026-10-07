@@ -65,6 +65,23 @@ describe('AccountScreen', () => {
     expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeTruthy();
   });
 
+  it('opens the detailed profile from the identity card', async () => {
+    const onOpenProfile = jest.fn();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const screen = await render(
+      <QueryClientProvider client={queryClient}>
+        <SessionProvider>
+          <AccountScreen onOpenProfile={onOpenProfile} />
+        </SessionProvider>
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(screen.getByText(EMAIL)).toBeTruthy());
+
+    fireEvent.press(screen.getByRole('button', { name: 'Abrir Mi perfil' }));
+
+    expect(onOpenProfile).toHaveBeenCalledTimes(1);
+  });
+
   it('renders management and notifications in the redesigned hierarchy', async () => {
     const screen = await render(
       <QueryClientProvider

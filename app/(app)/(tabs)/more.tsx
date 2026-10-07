@@ -54,6 +54,7 @@ export default function MoreTabScreen() {
       heading="Más"
       management={<ManagementSection items={managementItems} onSelect={handleManagementSelect} />}
       notifications={<NotificationsSection />}
+      onOpenProfile={() => router.push('/profile' as Href)}
       subtitle="Tu espacio de trabajo"
     />
   );
