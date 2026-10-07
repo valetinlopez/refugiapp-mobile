@@ -8,16 +8,23 @@ import MoreTabScreen from '../more';
 jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
 jest.mock('@/features/auth/hooks/useCapabilities', () => ({ useCapabilities: jest.fn() }));
 jest.mock('@/features/auth/components/AccountScreen', () => {
-  const { View } = jest.requireActual('react-native') as typeof import('react-native');
+  const { Pressable, Text, View } = jest.requireActual(
+    'react-native'
+  ) as typeof import('react-native');
   return {
     AccountScreen: ({
       management,
       notifications,
+      onOpenProfile,
     }: {
       management: React.ReactNode;
       notifications: React.ReactNode;
+      onOpenProfile(): void;
     }) => (
       <View>
+        <Pressable accessibilityLabel="Abrir Mi perfil" onPress={onOpenProfile}>
+          <Text>Perfil</Text>
+        </Pressable>
         {management}
         {notifications}
       </View>
@@ -52,7 +59,10 @@ describe('MoreTabScreen management navigation', () => {
     expect(screen.getByRole('button', { name: 'Ver auditoría' })).toBeTruthy();
     expect(screen.getByText('Notificaciones existentes')).toBeTruthy();
 
-    fireEvent.press(screen.getByRole('button', { name: 'Ver auditoría' }));
+    await fireEvent.press(screen.getByLabelText('Abrir Mi perfil'));
+    expect(router.push).toHaveBeenCalledWith('/profile');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Ver auditoría' }));
     expect(router.push).toHaveBeenCalledWith('/audit');
   });
 

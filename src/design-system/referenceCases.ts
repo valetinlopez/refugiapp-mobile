@@ -85,13 +85,13 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     id: 'D06-03',
     index: 3,
     referenceFile: '03-my-profile.jpeg',
-    route: 'app/(app)/profile.tsx (pendiente)',
+    route: 'app/(app)/profile.tsx',
     audience: 'Los tres roles',
     states: ['default'],
     divergences: [
       {
-        kind: 'pending',
-        note: 'Implementar "Mi perfil" (RFG-142); hoy la identidad vive en la sección Cuenta del tab Más.',
+        kind: 'implemented',
+        note: 'Mi perfil implementado con identidad, estado, fechas, roles y permisos legibles (RFG-142).',
       },
       { kind: 'ux', note: 'Nunca se muestran UUID crudos.' },
     ],

@@ -1,14 +1,14 @@
 import { router, type Href } from 'expo-router';
 import { useCallback, useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LoadingState } from '@/components/feedback';
 import { DecorativeBackground } from '@/components/patterns';
-import { AppAvatar, AppBadge, AppButton, AppCard, AppText } from '@/components/primitives';
+import { AppAvatar, AppBadge, AppButton, AppCard, AppIcon, AppText } from '@/components/primitives';
 import { useConnectivityStatus } from '@/core/network';
 import { useSession } from '@/features/auth/session';
-import { colors, sizes, spacing } from '@/theme';
+import { colors, opacity, radii, sizes, spacing } from '@/theme';
 
 import { useSignOut } from '../session/useSignOut';
 import { accountDisplayName, accountInitials } from '../utils/accountPresentation';
@@ -21,6 +21,8 @@ export interface AccountScreenProps {
   management?: ReactNode;
   /** Preferencias y permiso push coordinados por la ruta. */
   notifications?: ReactNode;
+  /** Abre el detalle de la identidad cuando la ruta ya está disponible. */
+  onOpenProfile?(): void;
   heading?: string;
   subtitle?: string;
 }
@@ -28,6 +30,7 @@ export interface AccountScreenProps {
 export function AccountScreen({
   management,
   notifications,
+  onOpenProfile,
   heading = 'Cuenta',
   subtitle = 'Datos de tu sesión y salida segura',
 }: AccountScreenProps) {
@@ -70,24 +73,37 @@ export function AccountScreen({
           <AppText color="textSecondary">{subtitle}</AppText>
         </View>
 
-        <AppCard style={styles.profileCard} testID="account-identity" variant="organic">
-          <View accessibilityRole="summary" style={styles.profile}>
-            <AppAvatar
-              accessibilityLabel={`Iniciales de ${accountDisplayName(user)}`}
-              initials={accountInitials(user)}
-              size="lg"
-            />
-            <View style={styles.profileCopy}>
-              <AppText variant="heading3">{accountDisplayName(user)}</AppText>
-              <AppText color="textSecondary">{user.email}</AppText>
-              <View style={styles.roles}>
-                {roleLabels(user.roles).map((role) => (
-                  <AppBadge key={role} label={role} tone="positive" />
-                ))}
+        <Pressable
+          accessibilityHint={
+            onOpenProfile ? 'Abre los datos personales, roles y permisos de la cuenta' : undefined
+          }
+          accessibilityLabel={onOpenProfile ? 'Abrir Mi perfil' : undefined}
+          accessibilityRole={onOpenProfile ? 'button' : 'summary'}
+          disabled={onOpenProfile === undefined}
+          onPress={onOpenProfile}
+          style={({ pressed }) => [styles.profileAction, pressed && styles.pressed]}
+          testID="account-open-profile"
+        >
+          <AppCard style={styles.profileCard} testID="account-identity" variant="organic">
+            <View style={styles.profile}>
+              <AppAvatar
+                accessibilityLabel={`Iniciales de ${accountDisplayName(user)}`}
+                initials={accountInitials(user)}
+                size="lg"
+              />
+              <View style={styles.profileCopy}>
+                <AppText variant="heading3">{accountDisplayName(user)}</AppText>
+                <AppText color="textSecondary">{user.email}</AppText>
+                <View style={styles.roles}>
+                  {roleLabels(user.roles).map((role) => (
+                    <AppBadge key={role} label={role} tone="positive" />
+                  ))}
+                </View>
               </View>
+              {onOpenProfile ? <AppIcon color="textSecondary" name="chevronRight" /> : null}
             </View>
-          </View>
-        </AppCard>
+          </AppCard>
+        </Pressable>
 
         {management}
 
@@ -139,6 +155,7 @@ const styles = StyleSheet.create({
   profileCard: {
     overflow: 'hidden',
   },
+  profileAction: { borderRadius: radii.lg },
   profileCopy: {
     flex: 1,
     gap: spacing.xxs,
@@ -150,6 +167,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     marginTop: spacing.xs,
   },
+  pressed: { opacity: opacity.pressed },
   safeArea: {
     backgroundColor: colors.background,
     flex: 1,
