@@ -13,11 +13,13 @@ import { colors, radii, sizes } from '@/theme';
 
 import { AppText } from './AppText';
 
-export type AppAvatarSize = 'sm' | 'md' | 'lg';
+export type AppAvatarSize = 'sm' | 'md' | 'lg' | 'xl';
+export type AppAvatarShape = 'circle' | 'rounded';
 
 export type AppAvatarProps = ViewProps & {
   accessibilityLabel: string;
   initials?: string;
+  shape?: AppAvatarShape;
   size?: AppAvatarSize;
   source?: ImageSourcePropType | undefined;
 };
@@ -26,6 +28,7 @@ const avatarSizes: Record<AppAvatarSize, number> = {
   sm: sizes.avatarSm,
   md: sizes.avatarMd,
   lg: sizes.avatarLg,
+  xl: sizes.avatarXl,
 };
 
 function sourceUri(source: ImageSourcePropType | undefined): string | undefined {
@@ -37,6 +40,7 @@ function sourceUri(source: ImageSourcePropType | undefined): string | undefined 
 export function AppAvatar({
   accessibilityLabel,
   initials = '?',
+  shape = 'circle',
   size = 'md',
   source,
   style,
@@ -58,7 +62,12 @@ export function AppAvatar({
     <View
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="image"
-      style={[styles.frame, { height: dimension, width: dimension }, style]}
+      style={[
+        styles.frame,
+        shape === 'circle' ? styles.circle : styles.rounded,
+        { height: dimension, width: dimension },
+        style,
+      ]}
       {...props}
     >
       {showImage ? (
@@ -75,7 +84,10 @@ export function AppAvatar({
           testID="app-avatar-image"
         />
       ) : (
-        <AppText color="textPrimary" variant={size === 'lg' ? 'heading3' : 'label'}>
+        <AppText
+          color="textPrimary"
+          variant={size === 'lg' || size === 'xl' ? 'heading3' : 'label'}
+        >
           {initials.slice(0, 2).toUpperCase()}
         </AppText>
       )}
@@ -88,13 +100,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surfaceElevated,
     borderColor: colors.border,
-    borderRadius: radii.full,
     borderWidth: 1,
     justifyContent: 'center',
     overflow: 'hidden',
   },
+  circle: {
+    borderRadius: radii.full,
+  },
   image: {
     height: '100%',
     width: '100%',
+  },
+  rounded: {
+    borderRadius: radii.lg,
   },
 });

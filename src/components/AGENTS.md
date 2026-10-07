@@ -51,7 +51,7 @@
 - `brandAssets` (patterns): registro de los assets de marca (D02/RFG-135) con `resolveBrandSource(name)` — la UI no conoce nombres de archivo. Hojas vectoriales originales; hero fotográfico de stock licenciado (Pngtree) con atribución. Fuentes y procedencia en `docs/brand-assets.md`; regenerar con `npm run assets:brand`.
 - `performance`: configuración transversal de render por lotes y ventana para `FlatList`; cada listado conserva keys de dominio estables y un `renderItem` memoizado.
 - `dateFormat` (patterns): formateadores `es-AR` hoisteados para fechas (`formatDateShort`, `formatDateMedium`, `formatDateTime` y `formatRelativeDateTime`); `formatDateMedium` acepta fecha de calendario o ISO `date-time`, y las features y `DateTimeField` delegan en ellos en lugar de crear `Intl.DateTimeFormat` por render.
-- `AppAvatar` usa `expo-image` con caché memoria/disco, carga lazy en web, downscaling y `recyclingKey`; dimensiona las URLs Cloudinary al tamaño físico del avatar. Cae a iniciales de forma silenciosa si la imagen no carga (`onError`) y nunca muestra un avatar roto. El estado de fallo se resetea automáticamente al cambiar la URI.
+- `AppAvatar` usa `expo-image` con caché memoria/disco, carga lazy en web, downscaling y `recyclingKey`; dimensiona las URLs Cloudinary al tamaño físico del avatar. Admite tamaños `sm`/`md`/`lg`/`xl` y forma circular (default) o `rounded` para cabeceras protagonistas. Cae a iniciales de forma silenciosa si la imagen no carga (`onError`) y nunca muestra un avatar roto. El estado de fallo se resetea automáticamente al cambiar la URI.
 
 ## Testing
 

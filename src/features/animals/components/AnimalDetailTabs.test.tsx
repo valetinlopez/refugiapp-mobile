@@ -7,11 +7,11 @@ describe('AnimalDetailTabs', () => {
     const screen = await render(
       <AnimalDetailTabs activeTab="summary" canReadClinicalRecords={false} onChange={jest.fn()} />
     );
-    expect(screen.queryByRole('button', { name: 'Evolución clínica' })).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Evolución clínica' })).toBeNull();
     await screen.rerender(
       <AnimalDetailTabs activeTab="summary" canReadClinicalRecords onChange={jest.fn()} />
     );
-    expect(screen.getByRole('button', { name: 'Evolución clínica' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Evolución clínica' })).toBeTruthy();
   });
 
   it('changes the active section without navigation', async () => {
@@ -19,7 +19,7 @@ describe('AnimalDetailTabs', () => {
     const screen = await render(
       <AnimalDetailTabs activeTab="summary" canReadClinicalRecords onChange={onChange} />
     );
-    await fireEvent.press(screen.getByRole('button', { name: 'Tareas' }));
+    await fireEvent.press(screen.getByRole('tab', { name: 'Cuidados' }));
     expect(onChange).toHaveBeenCalledWith('tasks');
   });
 
@@ -27,6 +27,25 @@ describe('AnimalDetailTabs', () => {
     const screen = await render(
       <AnimalDetailTabs activeTab="summary" canReadClinicalRecords={false} onChange={jest.fn()} />
     );
-    expect(screen.getByRole('button', { name: 'Adopción' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Adopción' })).toBeTruthy();
+  });
+
+  it('exposes a tab list and announces the selected section', async () => {
+    const screen = await render(
+      <AnimalDetailTabs activeTab="history" canReadClinicalRecords onChange={jest.fn()} />
+    );
+
+    expect(screen.getByLabelText('Secciones del animal')).toHaveProp(
+      'accessibilityRole',
+      'tablist'
+    );
+    expect(screen.getByRole('tab', { name: 'Historial' })).toHaveProp('accessibilityState', {
+      selected: true,
+      disabled: false,
+    });
+    expect(screen.getByRole('tab', { name: 'Resumen' })).toHaveProp('accessibilityState', {
+      selected: false,
+      disabled: false,
+    });
   });
 });

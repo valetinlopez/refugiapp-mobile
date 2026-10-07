@@ -9,6 +9,7 @@ export const sizes = {
   avatarSm: 36,
   avatarMd: 48,
   avatarLg: 72,
+  avatarXl: 128,
   divider: 1,
   contentMaxWidth: 760,
   bottomNavigationHeight: 72,

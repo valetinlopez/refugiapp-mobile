@@ -24,6 +24,14 @@ describe('AppAvatar', () => {
     expect(screen.getByTestId('app-avatar-image')).toBeTruthy();
   });
 
+  it('supports a large rounded presentation for entity headers', async () => {
+    const screen = await render(
+      <AppAvatar accessibilityLabel="Foto de Luna" initials="LU" shape="rounded" size="xl" />
+    );
+
+    expect(screen.getByLabelText('Foto de Luna')).toHaveStyle({ height: 128, width: 128 });
+  });
+
   it('falls back to initials when the image fails to load', async () => {
     const screen = await render(
       <AppAvatar

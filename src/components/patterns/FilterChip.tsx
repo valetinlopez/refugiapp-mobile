@@ -3,7 +3,7 @@ import { Pressable, StyleSheet } from 'react-native';
 import { AppIcon, AppText, type AppIconName } from '@/components/primitives';
 import { colors, radii, sizes, spacing } from '@/theme';
 
-export type FilterChipRole = 'button' | 'radio';
+export type FilterChipRole = 'button' | 'radio' | 'tab';
 
 export interface FilterChipProps {
   accessibilityHint?: string | undefined;
