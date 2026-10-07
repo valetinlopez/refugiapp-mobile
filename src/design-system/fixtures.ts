@@ -1,4 +1,5 @@
 import type { AttachmentItem } from '@/components/patterns';
+import type { AnimalHistoryEvent } from '@/features/animals/types';
 import type { AnimalStatus, CareTaskStatus, UserRole } from '@/types/design-system';
 
 /**
@@ -128,31 +129,40 @@ export const CARE_TASK_FIXTURES: readonly CareTaskFixture[] = [
   },
 ];
 
-export interface AnimalEventFixture {
-  id: string;
-  title: string;
-  occurredAt: string;
-  detail: string;
-}
+export type AnimalEventFixture = AnimalHistoryEvent;
 
 export const ANIMAL_EVENT_FIXTURES: readonly AnimalEventFixture[] = [
   {
-    id: 'event-admission',
-    title: 'Ingreso al refugio',
-    occurredAt: '2026-08-15',
-    detail: 'Rescatada en el barrio y evaluada por el equipo veterinario.',
+    id: '10111111-1111-4111-8111-111111111111',
+    animalId: FIXTURE_UUIDS.animalLuna,
+    eventType: 'status_change',
+    description: 'Ingresado → En tratamiento',
+    occurredAt: '2026-09-18T14:20:00-03:00',
+    createdByUserId: null,
   },
   {
-    id: 'event-vaccine',
-    title: 'Vacunación',
-    occurredAt: '2026-08-20',
-    detail: 'Antirrábica y polivalente aplicadas.',
+    id: '20222222-2222-4222-8222-222222222222',
+    animalId: FIXTURE_UUIDS.animalLuna,
+    eventType: 'behavior_note',
+    description: 'Se muestra tranquila y sociable.',
+    occurredAt: '2026-09-17T10:35:00-03:00',
+    createdByUserId: null,
   },
   {
-    id: 'event-checkup',
-    title: 'Control general',
-    occurredAt: '2026-09-12',
-    detail: 'Evolución favorable; se continúa el tratamiento.',
+    id: '30333333-3333-4333-8333-333333333333',
+    animalId: FIXTURE_UUIDS.animalLuna,
+    eventType: 'transfer',
+    description: 'Área de ingreso → Sala tranquila.',
+    occurredAt: '2026-09-15T09:10:00-03:00',
+    createdByUserId: null,
+  },
+  {
+    id: '40444444-4444-4444-8444-444444444444',
+    animalId: FIXTURE_UUIDS.animalLuna,
+    eventType: 'intake',
+    description: 'Ingreso registrado en el refugio.',
+    occurredAt: '2026-09-12T11:30:00-03:00',
+    createdByUserId: null,
   },
 ];
 

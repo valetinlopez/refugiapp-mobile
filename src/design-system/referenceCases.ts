@@ -125,7 +125,10 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
         kind: 'implemented',
         note: 'Cabecera adaptable y pestañas desplazables compartidas (RFG-145).',
       },
-      { kind: 'pending', note: 'Contenido de Historial (RFG-146) y paginación UI.' },
+      {
+        kind: 'implemented',
+        note: 'Timeline filtrable, paginación incremental y estados completos (RFG-146).',
+      },
       { kind: 'contract', note: 'Historial paginado de 20 ítems.' },
     ],
     group: 'animals',

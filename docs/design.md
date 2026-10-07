@@ -406,7 +406,18 @@ El detalle del animal toma la jerarquía visual de `05-animal-detail-history.jpe
 - **Estado accesible:** el badge conserva icono y texto en español y el resumen accesible concatena nombre, especie/raza y estado. El color nunca es la única señal.
 - **Navegación local:** las secciones viven en un `tablist` horizontal sobre una única superficie elevada que recorta su contenido al radio del contenedor. Las opciones sin seleccionar no dibujan cards ni bordes individuales; solo la activa usa una pastilla lima. Cada opción tiene rol `tab`, estado `selected`, label e indicación accesible; el desplazamiento horizontal evita recortes.
 - **Capacidades preservadas:** Resumen, Historial, Cuidados, Gastos y Adopción siguen disponibles. Evolución clínica solo se presenta con `canReadClinicalRecords`; el deep link sin capacidad conserva el estado de acceso restringido y no ejecuta consultas clínicas.
-- **Alcance:** RFG-145 establece la cabecera y navegación comunes. El contenido y la paginación visual del Historial permanecen en RFG-146 y las demás secciones mantienen sus tickets de rediseño específicos.
+- **Alcance:** RFG-145 establece la cabecera y navegación comunes. El contenido y la paginación visual del Historial se implementan en RFG-146 y las demás secciones mantienen sus tickets de rediseño específicos.
+
+## 41. Timeline del historial animal (D13 / RFG-146)
+
+La pestaña Historial presenta exclusivamente los eventos generales entregados por `GET /animals/:animalId/events`. No mezcla tareas futuras ni registros clínicos, que conservan sus propias secciones y permisos.
+
+- **Timeline:** cada evento usa una tarjeta elevada conectada por un eje vertical. El marcador circular combina icono y tono según el tipo (`intake`, `transfer`, `status_change`, `behavior_note`, `adoption`, `general_note`); la tarjeta siempre muestra además el tipo en texto, descripción y fecha `es-AR`.
+- **Filtros:** el control compacto “Todos los eventos” expande un `radiogroup` con exactamente los seis valores publicados por OpenAPI. Elegir una opción actualiza `eventType`; no se envían filtros locales ni valores inventados.
+- **Paginación:** `useInfiniteQuery` solicita páginas de 20 y respeta el orden determinista del servidor (`occurredAt DESC, id DESC`). Las páginas se concatenan sin reordenar y deduplican por UUID para tolerar solapamientos; `FlatList` virtualiza el resultado y ofrece carga por scroll o por el CTA accesible “Cargar más eventos”.
+- **Estados:** carga inicial, vacío global, vacío filtrado, error, offline con reintento, carga incremental, fin de lista y pull-to-refresh permanecen diferenciados.
+- **Permisos:** los tres roles pueden leer y filtrar. “Agregar evento” solo aparece con `canEditAnimal` (`admin`/`shelter_manager`) y navega al formulario existente; `veterinarian` conserva historial de solo lectura. El backend vuelve a autorizar toda operación.
+- **Responsive y accesibilidad:** cabecera, filtro y CTA envuelven con fuente ampliada; controles de 44 pt; lista, eventos, filtros, estado expandido y selección exponen semántica accesible. Los marcadores son decorativos y el resumen del evento incluye todo su contenido textual.
 
 ## Referencias técnicas
 

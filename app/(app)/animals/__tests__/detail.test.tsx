@@ -3,6 +3,7 @@ import { fireEvent, render } from '@testing-library/react-native';
 import type { PropsWithChildren } from 'react';
 
 import { useSession } from '@/features/auth/session';
+import { animalEventsApi } from '@/features/animals/api/animalEventsApi';
 import { useAnimal } from '@/features/animals/hooks/useAnimal';
 import { useAnimalPhoto } from '@/features/animals/hooks/useAnimalPhoto';
 import { useChangeAnimalStatus } from '@/features/animals/hooks/useChangeAnimalStatus';
@@ -63,6 +64,10 @@ jest.mock('@/features/animals/hooks/useChangeAnimalStatus', () => ({
 
 jest.mock('@/features/medical-records/api/medicalRecordsApi', () => ({
   medicalRecordsApi: { listByAnimal: jest.fn() },
+}));
+
+jest.mock('@/features/animals/api/animalEventsApi', () => ({
+  animalEventsApi: { list: jest.fn() },
 }));
 
 const mockUseSession = useSession as jest.Mock;
@@ -185,5 +190,34 @@ describe('AnimalDetailScreen clinical access by role', () => {
 
     expect(await screen.findByText('Consulta general')).toBeTruthy();
     expect(medicalRecordsApi.listByAnimal).toHaveBeenCalledWith(ANIMAL_ID, {});
+  });
+});
+
+describe('AnimalDetailScreen history capabilities', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseLocalSearchParams.mockReturnValue({ id: ANIMAL_ID, tab: 'history' });
+    mockUseSession.mockReturnValue({ user: { roles: ['admin'] } });
+    mockAuthorizedAnimal();
+    (animalEventsApi.list as jest.Mock).mockResolvedValue({
+      items: [],
+      page: 1,
+      limit: 20,
+      total: 0,
+    });
+  });
+
+  it('offers event creation to roles with animal write capability', async () => {
+    const screen = await renderScreen();
+
+    expect(await screen.findByRole('button', { name: 'Agregar evento' })).toBeTruthy();
+  });
+
+  it('keeps the history read-only for veterinarians', async () => {
+    mockUseSession.mockReturnValue({ user: { roles: ['veterinarian'] } });
+    const screen = await renderScreen();
+
+    expect(await screen.findByText('Sin historial')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Agregar evento' })).toBeNull();
   });
 });
