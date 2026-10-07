@@ -39,3 +39,5 @@ export { AttachmentRow } from './AttachmentRow';
 export type { AttachmentItem, AttachmentRowProps, AttachmentStatus } from './AttachmentRow';
 export { ManagementSection } from './ManagementSection';
 export type { ManagementItem, ManagementSectionProps } from './ManagementSection';
+export { PasswordField } from './PasswordField';
+export type { PasswordFieldProps } from './PasswordField';

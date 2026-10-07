@@ -12,7 +12,10 @@ export const createUserSchema = z.object({
   firstName: z.string().trim().min(1, 'Ingresá el nombre.'),
   lastName: z.string().trim().min(1, 'Ingresá el apellido.'),
   password: z.string().min(12, 'La contraseña debe tener al menos 12 caracteres.'),
-  role: z.enum(managedUserRoles, { required_error: 'Seleccioná un rol.' }),
+  roles: z
+    .array(z.enum(managedUserRoles))
+    .min(1, 'Seleccioná al menos un rol.')
+    .max(managedUserRoles.length),
 });
 
 export type CreateUserFormInput = z.input<typeof createUserSchema>;

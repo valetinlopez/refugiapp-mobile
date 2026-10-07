@@ -367,6 +367,17 @@ La ruta interna `/design-system` incorpora el arnés de validación de D06 (RFG-
 - **Accesibilidad:** cada caso es un `summary` accesible con id, referencia, ruta, roles y estados; las divergencias y los viewports se comunican con texto e icono, nunca solo color. Los previews reutilizan los patrones y primitivas existentes.
 - **Fuera de alcance:** el rediseño por referencia (`RFG-140…RFG-166`), la regresión (`RFG-167`) y la certificación del release (`RFG-168`).
 
+## 38. Alta de usuario (D06-04 / RFG-143)
+
+La pantalla administrativa de alta conserva el contenido funcional de la referencia `04-user-create.jpeg` sin copiar valores que contradicen el backend.
+
+- **Jerarquía:** un único encabezado “Crear usuario” y tres cards `elevated`: Datos personales, Acceso inicial y Roles. La textura vegetal es decorativa, tiene overlay de contraste y permanece oculta a tecnologías asistivas.
+- **Credenciales:** email con autofill y `PasswordField` compartido con toggle accesible. La ayuda y la validación comunican el mínimo real de 12 caracteres; nunca se muestra el mínimo conceptual de 8 ni se vuelve a presentar la contraseña luego del alta. En web, los campos `create-user-*` reutilizan la neutralización de `-webkit-autofill` de `app/+html.tsx`: fondo `surface`, texto/caret `textPrimary`, borde `border` y foco con borde + anillo `focus`, sin desactivar el gestor de contraseñas.
+- **Multirrol:** cada rol soportado por OpenAPI es un checkbox de al menos 44 pt con nombre, descripción, icono y `accessibilityState.checked`. La selección usa borde, check, icono y texto, no solo color. Elegir Administrador añade ayuda contextual sobre su alcance.
+- **Confirmación:** “Revisar y crear” abre `ConfirmDialog`, resume email y roles y advierte que la contraseña no volverá a mostrarse. Solo la confirmación ejecuta la mutación; durante el envío bloquea ambas acciones.
+- **Errores:** conflicto de email, falta de permisos, payload inválido y falta de red tienen mensajes diferenciados y anunciados. Nunca se muestran detalles internos del backend.
+- **Responsive:** el contenido desplaza, las acciones envuelven y cada botón conserva un ancho útil en viewport angosto o con fuente ampliada.
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)

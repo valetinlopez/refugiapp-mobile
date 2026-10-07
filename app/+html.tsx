@@ -30,7 +30,7 @@ export default function Root({ children }: { children: ReactNode }) {
   );
 }
 
-const globalWebStyles = `
+export const globalWebStyles = `
 body {
   background-color: ${colors.background};
 }
@@ -40,7 +40,10 @@ input[data-testid='login-email']:-webkit-autofill:hover,
 input[data-testid='login-email']:-webkit-autofill:focus,
 input[data-testid='login-password']:-webkit-autofill,
 input[data-testid='login-password']:-webkit-autofill:hover,
-input[data-testid='login-password']:-webkit-autofill:focus {
+input[data-testid='login-password']:-webkit-autofill:focus,
+input[data-testid^='create-user-']:-webkit-autofill,
+input[data-testid^='create-user-']:-webkit-autofill:hover,
+input[data-testid^='create-user-']:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 1000px ${colors.surface} inset !important;
   box-shadow: 0 0 0 1000px ${colors.surface} inset !important;
   -webkit-text-fill-color: ${colors.textPrimary} !important;
@@ -49,7 +52,8 @@ input[data-testid='login-password']:-webkit-autofill:focus {
 }
 
 input[data-testid='login-email']:focus,
-input[data-testid='login-password']:focus {
+input[data-testid='login-password']:focus,
+input[data-testid^='create-user-']:focus {
   border-color: ${colors.focus} !important;
   outline: 2px solid ${colors.focus};
   outline-offset: 0;
