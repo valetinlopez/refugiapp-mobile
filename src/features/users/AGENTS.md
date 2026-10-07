@@ -29,4 +29,5 @@
 - Mantener visibles el rol y el estado de cada cuenta sin depender solo del color.
 - El header del listado envuelve sin solaparse en pantallas estrechas (`minWidth: 0` en el titulo, `flexShrink: 0` en el boton) y la lista reserva `paddingBottom` con `insets.bottom` para que la ultima card no quede tapada por la navegacion o el safe area.
 - Cubrir validacion del formulario y los flujos de listado, alta, edicion, activacion, desactivacion y falta de permisos.
+- Cubrir los deep links `/users`, `/users/new` y `/users/:id/edit` para los tres roles. Solo `admin` monta contenido; `shelter_manager` y `veterinarian` reciben el estado accesible “Sin permiso”. El rerender tras perder `canManageUsers` debe desmontar el contenido protegido.
 - Cubrir el contrato HTTP y la invalidacion de la lista despues de cada mutacion.

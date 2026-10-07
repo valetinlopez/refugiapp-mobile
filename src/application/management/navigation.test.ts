@@ -7,16 +7,34 @@ function destinationIds(roles: Parameters<typeof capabilitiesForRoles>[0]) {
 }
 
 describe('getAuthorizedManagementDestinations', () => {
-  it('shows every destination to admins in deterministic order', () => {
-    expect(destinationIds(['admin'])).toEqual(['veterinarians', 'users', 'audit']);
-  });
-
-  it.each([[['shelter_manager']], [['veterinarian']], [[]]] as const)(
-    'keeps only veterinarians without administrative capabilities for %j',
-    (roles) => {
-      expect(destinationIds(roles)).toEqual(['veterinarians']);
+  it.each([
+    {
+      blocked: [],
+      role: 'admin',
+      visible: ['veterinarians', 'users', 'audit'],
+    },
+    {
+      blocked: ['users', 'audit'],
+      role: 'shelter_manager',
+      visible: ['veterinarians'],
+    },
+    {
+      blocked: ['users', 'audit'],
+      role: 'veterinarian',
+      visible: ['veterinarians'],
+    },
+  ] as const)(
+    'defines visible and blocked destinations for $role',
+    ({ blocked, role, visible }) => {
+      const authorized = destinationIds([role]);
+      expect(authorized).toEqual(visible);
+      blocked.forEach((destination) => expect(authorized).not.toContain(destination));
     }
   );
+
+  it('denies privileged destinations when no capability is available', () => {
+    expect(destinationIds([])).toEqual(['veterinarians']);
+  });
 
   it('removes privileged destinations when capabilities are lost', () => {
     expect(destinationIds(['admin'])).toContain('users');

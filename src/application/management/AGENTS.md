@@ -23,3 +23,4 @@
 
 - Cubrir el registro y el orden para `admin`, `shelter_manager`, `veterinarian` y ausencia de capacidades.
 - Cubrir la pérdida de permisos para evitar que queden destinos privilegiados visibles.
+- La matriz D11 debe comprobar, para cada rol, tanto destinos visibles como destinos bloqueados; una regresion no puede aprobar solo por encontrar el caso positivo de admin.

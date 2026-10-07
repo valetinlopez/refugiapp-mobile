@@ -6,7 +6,7 @@ import { tokenStorage } from '@/core/storage';
 
 import { authApi } from '../api/authApi';
 import { SessionProvider } from '../session/SessionProvider';
-import type { User } from '../types';
+import type { User, UserRole } from '../types';
 import { ProfileScreen } from './ProfileScreen';
 
 jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
@@ -24,6 +24,30 @@ const USER: User = {
 };
 
 const { router } = jest.requireMock('expo-router') as { router: { push: jest.Mock } };
+
+const ALL_PERMISSION_LABELS = [
+  'Gestionar animales',
+  'Consultar historias clínicas',
+  'Gestionar usuarios internos',
+  'Gestionar gastos',
+  'Gestionar veterinarios',
+  'Gestionar adopciones',
+  'Consultar auditoría',
+] as const;
+
+const ROLE_PERMISSION_MATRIX = [
+  { role: 'admin', visible: ALL_PERMISSION_LABELS },
+  {
+    role: 'shelter_manager',
+    visible: [
+      'Gestionar animales',
+      'Gestionar gastos',
+      'Gestionar veterinarios',
+      'Gestionar adopciones',
+    ],
+  },
+  { role: 'veterinarian', visible: ['Consultar historias clínicas'] },
+] as const satisfies readonly { role: UserRole; visible: readonly string[] }[];
 
 async function renderProfile() {
   return render(
@@ -69,6 +93,21 @@ describe('ProfileScreen', () => {
     expect(screen.queryByText(USER.id)).toBeNull();
     expect(screen.queryByText('Gestionar usuarios internos')).toBeNull();
   });
+
+  it.each(ROLE_PERMISSION_MATRIX)(
+    'shows only effective permissions for $role',
+    async ({ role, visible }) => {
+      jest.mocked(authApi.getCurrentUser).mockResolvedValue({ ...USER, roles: [role] });
+      const screen = await renderProfile();
+      const visibleLabels = new Set<string>(visible);
+
+      await waitFor(() => expect(screen.getByTestId('profile-screen')).toBeTruthy());
+      visible.forEach((label) => expect(screen.getByText(label)).toBeTruthy());
+      ALL_PERMISSION_LABELS.filter((label) => !visibleLabels.has(label)).forEach((label) =>
+        expect(screen.queryByText(label)).toBeNull()
+      );
+    }
+  );
 
   it('opens the existing authenticated password change flow', async () => {
     const screen = await renderProfile();
