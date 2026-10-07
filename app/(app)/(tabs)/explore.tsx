@@ -275,6 +275,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: spacing.md,
     padding: spacing.lg,
+    paddingBottom: sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + spacing.lg,
   },
   safeArea: { backgroundColor: colors.background, flex: 1 },
   paginationError: {

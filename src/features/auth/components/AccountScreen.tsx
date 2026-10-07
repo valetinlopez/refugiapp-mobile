@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoadingState } from '@/components/feedback';
 import { AppButton, AppCard, AppText } from '@/components/primitives';
 import { useSession } from '@/features/auth/session';
-import { colors, spacing } from '@/theme';
+import { colors, sizes, spacing } from '@/theme';
 
 import { useSignOut } from '../session/useSignOut';
 import { roleLabels } from '../utils/roleLabels';
@@ -115,6 +115,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: spacing.lg,
     padding: spacing.lg,
+    paddingBottom: sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + spacing.lg,
   },
   field: {
     gap: spacing.xxs,

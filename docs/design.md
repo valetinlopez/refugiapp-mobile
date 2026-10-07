@@ -261,7 +261,7 @@ La diferencia de rol modifica acciones y módulos, no la identidad visual. Ocult
 
 La primera versión no necesita `react-native-svg`: radios nativos resuelven tarjetas y `expo-symbols` resuelve iconografía. Incorporar SVG solo para una textura lineal de hojas, un separador orgánico escalable o una forma de marca que no pueda expresarse con layout. Debe ser decorativo, liviano y no contener texto ni información de estado.
 
-Excepción vigente (ADR-0017/RFG-138): la barra de navegación inferior usa `react-native-svg` **solo** para el arco decorativo de su borde superior (`CurvedTabBar` + `tabBarCurvePath`). Es la única forma de marca que no se expresa con layout nativo; el resto de la interfaz sigue sin SVG y el arco es estático, oculto a tecnologías asistivas y sin estado.
+Excepción vigente (ADR-0017/RFG-138): la barra de navegación inferior usa `react-native-svg` **solo** para el arco decorativo de su borde superior (`CurvedTabBar` + `tabBarCurvePath`). Es la única forma de marca que no se expresa con layout nativo; el resto de la interfaz sigue sin SVG y el arco es estático, oculto a tecnologías asistivas y sin estado. La barra se superpone al borde inferior de la escena para que el área exterior situada sobre el arco muestre el contenido de la pantalla; las pantallas de los tabs reservan internamente la altura de navegación para que su último elemento pueda desplazarse por encima de la superficie.
 
 ## 29. Aspectos conceptuales del mockup
 
