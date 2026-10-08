@@ -16,13 +16,18 @@ describe('care task presentation', () => {
     });
   });
 
-  it('presents pending, cancelled and upcoming with icon and tone', () => {
+  it('presents pending, cancelled and upcoming with icon, text and tone', () => {
     expect(getCareTaskStatusPresentation('pending', null, now)).toEqual({
       icon: 'clock',
       label: 'Pendiente',
       tone: 'warning',
     });
-    expect(getCareTaskStatusPresentation('pending', '2026-09-23T12:00:00.000Z', now)).toEqual({
+    expect(getCareTaskStatusPresentation('pending', '2026-09-23T11:00:00.000Z', now)).toEqual({
+      icon: 'clock',
+      label: 'Próxima',
+      tone: 'warning',
+    });
+    expect(getCareTaskStatusPresentation('pending', '2026-09-24T12:00:00.000Z', now)).toEqual({
       icon: 'clock',
       label: 'Pendiente',
       tone: 'warning',

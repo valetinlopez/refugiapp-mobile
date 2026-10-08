@@ -204,7 +204,7 @@ function AnimalDetailContent({
                 router.push({
                   pathname: '/animals/[id]/files',
                   params: { id: animal.id },
-                })
+                } as unknown as Href)
               }
               variant="secondary"
             />

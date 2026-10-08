@@ -61,6 +61,8 @@
 - Mensaje de solo lectura explicativo para roles sin permisos de escritura en el listado; no se muestran botones que responderían 403.
 - Estados finales (`completed`, `cancelled`) presentados con icono, texto y tono, sin acciones disponibles.
 - Bloqueo de acciones por fila durante una mutación (`pendingActionId`), no global; el resto de la lista permanece interactiva.
+- Rediseño del listado global D18 (RFG-151): `CareTasksOverviewScreen` mantiene la ruta del tab delgada, presenta contadores de `pending`/`completed`/`cancelled` mediante tres queries independientes `limit=1` que comparten `animalId`, y pagina la lista seleccionada con `useInfiniteQuery` en páginas de 20. El selector de animal se aplica tanto a la lista como a los tres contadores.
+- Las tarjetas globales navegan al detalle y derivan `Vencida` cuando `dueAt < now` y `Próxima` cuando vence dentro de las siguientes 24 horas. Ambas son presentaciones con icono y texto; nunca se envían ni persisten como estados. La lista distingue carga, vacío, error, offline, reintento incremental y fin de paginación.
 
 ### Pendiente o deuda conocida
 
