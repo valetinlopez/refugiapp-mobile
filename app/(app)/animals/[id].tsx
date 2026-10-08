@@ -197,6 +197,18 @@ function AnimalDetailContent({
               </View>
             </AppCard>
 
+            <AppButton
+              icon="document"
+              label="Ver archivos"
+              onPress={() =>
+                router.push({
+                  pathname: '/animals/[id]/files',
+                  params: { id: animal.id },
+                })
+              }
+              variant="secondary"
+            />
+
             {canWrite ? (
               <View style={styles.writeSection}>
                 <AppButton

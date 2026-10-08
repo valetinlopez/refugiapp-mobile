@@ -17,6 +17,9 @@
 - `GET /media/:id`: lectura de un asset para mostrar la foto de perfil actual.
 - `POST /animals/:animalId/events`: alta de evento general para `admin` y `shelter_manager`.
 - `GET /animals/:animalId/events`: lectura para los tres roles.
+- `GET /media?ownerType=animal&ownerId=:animalId`: listado paginado de archivos del animal y PDFs, lectura para los tres roles.
+- `POST /media/upload` con `ownerType=animal` + `ownerId`: archivo vinculado directo al animal (imágenes JPEG/PNG/WebP y PDF); no hay paso huérfano para Archivos (D17/RFG-150).
+- `DELETE /media/:id`: borrado de un archivo del animal. `admin` y `shelter_manager` borran cualquier asset; `veterinarian` solo huérfanos propios o adjuntos clínicos, por lo que un `403` ante un archivo del animal es un estado esperado (D17/RFG-150).
 
 No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar endpoints sin confirmarlos en OpenAPI.
 
@@ -53,14 +56,15 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - `admin`: lectura y escritura general.
 - `shelter_manager`: lectura y escritura general.
 - `veterinarian`: lectura; no mostrar alta, edición general ni cambio de estado como acciones disponibles.
+- Archivos del animal: lectura para los tres roles desde `app/(app)/animals/[id]/files.tsx`; subida y borrado solo para `canEditAnimal` (`admin`/`shelter_manager`). `veterinarian` ve la galería de solo lectura sin acciones de subida ni borrado.
 - Un 403 del servidor sigue siendo posible y debe manejarse de forma segura.
 
 ## Estructura objetivo
 
-- `api/`: endpoints de animals (listado, alta, detalle, edición, cambio de estado y eventos generales) y media (alta huérfana y lectura).
-- `hooks/`: `animalKeys`, `useAnimals`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useCreateAnimalEvent`, `useAnimalHistory`, `useAnimalPhoto` e invalidaciones.
-- `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con sheet y confirmación (`AnimalStatusChanger`, `AnimalStatusSheet`, `StatusConfirmDialog`), tarjeta de listado (`AnimalCard` con avatar `AnimalCardAvatar`) y sección de historial (`AnimalHistory`).
-- `types/`: modelos de vista y aliases derivados de OpenAPI.
+- `api/`: endpoints de animals (listado, alta, detalle, edición, cambio de estado y eventos generales), media (alta huérfana y lectura) y `animalFilesApi` (listado por owner `animal`, subida vinculada directa y borrado).
+- `hooks/`: `animalKeys`, `useAnimals`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useCreateAnimalEvent`, `useAnimalHistory`, `useAnimalPhoto`, `useAnimalFiles` (paginación infinita), `useUploadAnimalFile` (progreso + cancelación) y `useDeleteAnimalFile`.
+- `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con sheet y confirmación (`AnimalStatusChanger`, `AnimalStatusSheet`, `StatusConfirmDialog`), tarjeta de listado (`AnimalCard` con avatar `AnimalCardAvatar`), sección de historial (`AnimalHistory`), selector de archivos (`AnimalFileUploader`), grid paginado de archivos (`AnimalFilesGrid`) y pantalla compositora (`AnimalFilesScreen`).
+- `types/`: modelos de vista y aliases derivados de OpenAPI, incluidos `AnimalFile`/`PaginatedAnimalFiles` con `toAnimalFile`, `toPaginatedAnimalFiles` y `flattenAnimalFilesPages`.
 - `utils/`: esquemas Zod, mappers al DTO, matriz de transiciones, presentación de eventos e historial y traducción de errores de backend.
 - Los componentes reutilizables sin dominio permanecen en `src/components` (p. ej. `FilterChip`).
 
@@ -73,6 +77,10 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - La subida de foto no bloquea el guardado: ante un error de foto (`phase: 'photo'`), el formulario conserva el borrador y ofrece reintentar o guardar sin foto (`skipPhoto`), que omite `profilePhotoMediaId` y conserva la foto actual.
 - Los errores de subida de foto y de PATCH se distinguen en UI; los errores de validación Zod muestran mensaje en español y hacen scroll y foco al primer campo inválido.
 - `PATCH /animals/:id/status` crea un evento `status_change` trazable; la UI explica la consecuencia antes de confirmar y reserva el tono danger para estados terminales. El selector es un `BottomSheet` (`src/components/feedback`, ADR-0018) con solo las transiciones válidas; los terminales encadenan un segundo `ConfirmDialog` `danger`.
+- Archivos del animal: sin optimistic updates. `useUploadAnimalFile` sube directo con `ownerType=animal` + `ownerId` (elimina el paso huérfano), expone progreso 0..1 con `AbortController` para cancelar y `UploadCancelledError` cuando se cancela; al éxito invalida `animalKeys.files(animalId)`. `useDeleteAnimalFile` invalida la misma key tras el borrado confirmado con `ConfirmDialog`.
+- `AnimalFilesScreen` filtra el `profilePhotoMediaId` vigente de la lista aplanada (`flattenAnimalFilesPages`), de modo que la foto de perfil nunca aparece duplicada en Archivos.
+- Las imágenes se optimizan en cliente con `optimizeCloudinaryImageUrl` (Cloudinary `f_auto/q_auto/c_fill`); los PDF caen a un glifo de documento. La lista conserva el orden del servidor, keys UUID estables y `FlatList` virtualizada sin `map` en `ScrollView`.
+- El error de subida distingue `UploadCancelledError` (cancelación silenciosa), mensajes por código y fallback genérico; el error de borrado traduce `403`/`404` y deja el resto al core. En ambos casos nunca se filtran payloads ni requestIds.
 
 ## Testing
 
@@ -101,7 +109,8 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Listado paginado (`GET /animals`) con filtros `status`, `species`, `sex` y nombre parcial mediante `useAnimals` (paginación infinita) y `AnimalCard`, con ruta `app/(app)/(tabs)/explore.tsx` para los tres roles. La búsqueda por nombre y la entrada libre de especie aplican debounce de 400 ms; la especie permanece abierta porque el contrato no publica un enum.
 - Foto de perfil en el listado: `AnimalCardAvatar` consulta `useAnimalPhoto(profilePhotoMediaId)` por tarjeta con caché compartida por `animalKeys.media` (query deduplicada por `mediaId` y `staleTime` de 5 min), sin fetch cuando `profilePhotoMediaId` es `null`, y fallback a iniciales ante error de red o fallo de imagen (`AppAvatar`). `AppAvatar` solicita a Cloudinary una variante ajustada a píxeles físicos y usa caché memoria/disco de `expo-image`. La invalidación de `animalKeys.all` al crear o editar la ficha mantiene la foto coherente sin optimistic updates; el reemplazo de foto genera un `mediaId` nuevo que entra como query nueva.
 - Lectura del historial general (`GET /animals/:animalId/events`) mediante `useAnimalHistory` con `useInfiniteQuery` (páginas de 20, filtro contractual `eventType`, orden del servidor sin reordenar y deduplicación por UUID). `AnimalHistory` usa `FlatList`, timeline con tipo/descripción/fecha, filtros accesibles, carga incremental por scroll/CTA, pull-to-refresh y estados loading/empty filtrado/error/offline/fin. “Agregar evento” solo se muestra con `canEditAnimal`; la invalidación posterior a crear conserva coherencia.
-- Detalle `app/(app)/animals/[id].tsx` como centro funcional con cabecera adaptable (`AnimalDetailHeader`) y `tablist` horizontal desplazable para Resumen, Historial, Cuidados, Gastos y Evolución clínica. La cabecera usa foto protagonista redondeada con fallback a iniciales, nombre sin truncar y estado mediante texto+icono; al envolver centra la foto. La barra recorta las opciones al radio de su contenedor y solo la pestaña activa dibuja una pastilla. Conserva la pestaña activa localmente. La clínica solo aparece para `admin`/`veterinarian` y un deep link no autorizado muestra acceso restringido sin ejecutar la query clínica.
+- Detalle `app/(app)/animals/[id].tsx` como centro funcional con cabecera adaptable (`AnimalDetailHeader`) y `tablist` horizontal desplazable para Resumen, Historial, Cuidados, Gastos y Evolución clínica. La cabecera usa foto protagonista redondeada con fallback a iniciales, nombre sin truncar y estado mediante texto+icono; al envolver centra la foto. La barra recorta las opciones al radio de su contenedor y solo la pestaña activa dibuja una pastilla. Conserva la pestaña activa localmente. La clínica solo aparece para `admin`/`veterinarian` y un deep link no autorizado muestra acceso restringido sin ejecutar la query clínica. El Resumen expone la entrada "Ver archivos" hacia `app/(app)/animals/[id]/files.tsx` para los tres roles.
+- Archivos del animal (D17/RFG-150): ruta delgada `app/(app)/animals/[id]/files.tsx` que compone `AnimalFilesScreen` (lectura para los tres roles; subida y borrado solo con `canEditAnimal`). `AnimalFilesGrid` renderiza galería paginada `FlatList` de dos columnas con miniaturas Cloudinary optimizadas (fallback a glifo de documento para PDF), keys UUID, pull-to-refresh, carga incremental y estados loading/empty/offline/error; borra con `ConfirmDialog` (`danger`, nunca sin confirmación). `AnimalFileUploader` ofrece cámara, galería y PDF con permisos explicados, `Linking.openSettings` cuando el permiso queda bloqueado y validación espejo de MIME/tamaño; `useUploadAnimalFile` publica progreso textual accesible y cancelación, y `flattenAnimalFilesPages` excluye el `profilePhotoMediaId` vigente para no duplicar la foto de perfil.
 - El detalle también compone la pestaña Adopción para los tres roles desde `src/features/adoptions`; la aprobación confirmada invalida `animalKeys.all` para reflejar el estado `adopted` sin actualización optimista.
 - Edición `app/(app)/animals/[id]/edit.tsx` con guard visual por rol y formulario compartido `AnimalProfileForm` (modos create/edit).
 - Formulario con React Hook Form + Zod, mensajes en español y validación cruzada `birthDate <= intakeDate`.
@@ -114,4 +123,4 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 ### Deuda conocida
 
-- E2E de alta de animal cubierto con Maestro por rol (`maestro/admin.yaml`, `shelter-manager.yaml`; selectores `animals-list`, `animal-card`). Falta E2E en dispositivo para edición, cambio de estado y registro de eventos generales (éxito, validación y error 403).
+- E2E de alta de animal cubierto con Maestro por rol (`maestro/admin.yaml`, `shelter-manager.yaml`; selectores `animals-list`, `animal-card`). Falta E2E en dispositivo para edición, cambio de estado, registro de eventos generales y Archivos del animal (subida con progreso, borrado confirmado y negativa por rol) (éxito, validación y error 403).

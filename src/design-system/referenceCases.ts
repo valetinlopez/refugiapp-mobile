@@ -191,13 +191,13 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     id: 'D06-09',
     index: 9,
     referenceFile: '09-animal-files-upload.jpeg',
-    route: 'app/(app)/animals/[id]/files.tsx (pendiente)',
-    audience: 'admin/shelter_manager según contrato de DELETE /media/:id',
+    route: 'app/(app)/animals/[id]/files.tsx',
+    audience: 'lectura los tres roles; subida/borrado admin/shelter_manager (canEditAnimal)',
     states: ['default', 'empty', 'error', 'offline'],
     divergences: [
       {
-        kind: 'pending',
-        note: '"Archivos del animal" (RFG-150); hoy no existe gestión de archivos por animal.',
+        kind: 'implemented',
+        note: 'Galería paginada con miniaturas optimizadas y fallback a glifo PDF (RFG-150).',
       },
       { kind: 'ux', note: 'Progreso textual, nunca solo color.' },
     ],
