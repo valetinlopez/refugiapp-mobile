@@ -136,6 +136,20 @@ describe('useUpdateAnimal', () => {
     );
   });
 
+  it('clears the current photo by sending null without uploading', async () => {
+    const upload = jest.spyOn(mediaApi, 'uploadOrphanPhoto');
+    const update = jest.spyOn(animalsApi, 'update').mockResolvedValue(createAnimal());
+    const { result } = await renderHook(() => useUpdateAnimal(ANIMAL_ID), { wrapper });
+
+    result.current.mutate(createInput({ removePhoto: true }));
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    expect(upload).not.toHaveBeenCalled();
+    expect(update).toHaveBeenCalledWith(ANIMAL_ID, { profilePhotoMediaId: null });
+  });
+
   it('uploads an orphan photo and links it on update', async () => {
     const upload = jest.spyOn(mediaApi, 'uploadOrphanPhoto').mockResolvedValue({
       id: '7fa85f64-5717-4562-b3fc-2c963f66afa6',

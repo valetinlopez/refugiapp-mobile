@@ -446,6 +446,21 @@ El alta de un evento general (`app/(app)/animals/[id]/events/new.tsx`) toma la j
 - **Estados de preparación:** `LoadingState` mientras `useAnimal` resuelve; `OfflineState` (vía `isNetworkError`) o `ErrorState` con reintento antes de montar el formulario; nunca un spinner infinito sin red.
 - **Accesibilidad y responsive:** radios `radiogroup`/`radio` con `selected`, errores por campo en `role="alert"`, target de 44 pt, contenido desplazable con fuente ampliada y sin alturas rígidas alrededor de texto. `testID` `create-event-description/cancel/submit` habilitan la regresión de RFG-167.
 
+## 44. Edición de animales (D16 / RFG-149)
+
+La edición de la ficha (`app/(app)/animals/[id]/edit.tsx`) adopta la jerarquía de `07-animal-edit.jpeg` sin copiar sus valores, su enum de especie (no publicado) ni un identificador correlativo. Es una pantalla de escritura para `admin`/`shelter_manager` (`canEditAnimal`); un deep link sin la capacidad monta el guard reactivo "Sin permiso" sin ejecutar la query y `veterinarian` no ve acciones de edición.
+
+- **Fondo y encabezado:** `DecorativeBackground variant="texture"` + `AccountHeaderRow` (retorno con `fallbackHref` al detalle) + `ScreenHeader` con "Editar animal" como único `heading1`. Cuando hay cambios pendientes, `actions` monta `UnsavedChangesIndicator`: punto `positive` + texto "Cambios sin guardar" (el estado nunca depende solo del color), con `accessibilityLiveRegion` y `testID="edit-dirty-badge"`.
+- **Formulario agrupado en cards `elevated`** (`AnimalProfileForm` modo edit, compartido con el alta):
+  - **Foto de perfil:** `ProfilePhotoPicker mode="edit"` presente al actual (`AppAvatar` con fallback a iniciales) con "Cambiar foto" (`secondary`, icono cámara) que abre un `BottomSheet` (cámara/galería) y "Quitar" (`secondary`, icono papelera). "Quitar" descarta una foto recién elegida o marca la actual para borrado; elegir una nueva revierte ese estado.
+  - **Datos principales:** `SectionHeader` + `Nombre`, `Especie` (campo abierto: el contrato no publica enum) y `Raza` como inputs con etiqueta visible; `Sexo` con `SegmentedControl` (`radiogroup`/`radio`, 44 pt).
+  - **Fechas:** `Fecha de ingreso` y `Fecha de nacimiento` con `DateTimeField mode="date"` (presentación `es-AR`, envío `YYYY-MM-DD`), más la ayuda "La fecha de nacimiento debe ser anterior o igual a la fecha de ingreso".
+- **Dirty global y por campo:** cada campo modificado (`dirtyFields`) muestra el indicador "Modificado" (punto + texto, `accessibilityLabel` "{campo} modificado"); la foto cuenta como cambio. El indicador global del encabezado refleja cualquier cambio, incluido el de foto.
+- **Guard de descarte:** salir con cambios pendientes (retorno del encabezado, botón `Descartar` o retroceso de Android) intercepta la navegación mediante `useUnsavedChangesGuard` (`beforeRemove` + `gestureEnabled` desactivado mientras hay borrador) y pide confirmación con `ConfirmDialog` no destructivo ("Seguir editando" / "Descartar"). Guardar con éxito omite el guard.
+- **Footer:** `Descartar` (`secondary`) + `Guardar cambios` (`primary`, `loading` durante la mutación). Los errores de foto y de guardado siguen diferenciados, con reintento y "Guardar sin foto"; los errores Zod hacen scroll y foco al primer campo inválido (offsets acumulados por card).
+- **Estados:** `LoadingState`, `OfflineState` (vía `isNetworkError`) y `ErrorState` con reintento antes de montar el formulario; `EmptyState` "Animal no encontrado".
+- **Accesibilidad y responsive:** un único H1, errores por campo en `role="alert"`, targets de 44 × 44, contenido desplazable con `keyboardShouldPersistTaps` y fuente ampliada. `testID` `edit-field-*`, `edit-photo-change/remove`, `edit-discard/submit` habilitan la regresión de RFG-167.
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)

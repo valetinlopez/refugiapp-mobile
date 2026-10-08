@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 
+import { BottomSheet } from '@/components/feedback';
 import { AppAvatar, AppButton, AppText } from '@/components/primitives';
 import {
   IMAGE_MEDIA_TYPES,
@@ -13,10 +14,18 @@ import { spacing } from '@/theme';
 
 import type { PhotoFile } from '../api/mediaApi';
 
+type PhotoSource = 'camera' | 'gallery';
+
 interface ProfilePhotoPickerProps {
   disabled?: boolean;
   fallbackUri?: string | null;
+  /** `edit` composes a single "Cambiar foto" trigger plus "Quitar". */
+  mode?: 'create' | 'edit';
   onChange(photo: PhotoFile | null): void;
+  /** Whether the current (already uploaded) photo is marked for removal. */
+  onRemove?: () => void;
+  removed?: boolean;
+  showRemove?: boolean;
   value: PhotoFile | null;
 }
 
@@ -29,15 +38,21 @@ function fileNameFromUri(uri: string): string {
 export function ProfilePhotoPicker({
   disabled = false,
   fallbackUri = null,
+  mode = 'create',
   onChange,
+  onRemove,
+  removed = false,
+  showRemove = false,
   value,
 }: ProfilePhotoPickerProps) {
   const [isPicking, setIsPicking] = useState(false);
   const [pickerError, setPickerError] = useState<string | null>(null);
   const [permissionBlocked, setPermissionBlocked] = useState(false);
+  const [sourceSheetVisible, setSourceSheetVisible] = useState(false);
 
-  async function handlePickPhoto(source: 'camera' | 'gallery'): Promise<void> {
+  async function handlePickPhoto(source: PhotoSource): Promise<void> {
     if (isPicking || disabled) return;
+    setSourceSheetVisible(false);
     setPickerError(null);
     setPermissionBlocked(false);
     setIsPicking(true);
@@ -98,37 +113,66 @@ export function ProfilePhotoPicker({
     }
   }
 
+  function handleRemove(): void {
+    if (disabled) return;
+    if (onRemove) {
+      onRemove();
+      return;
+    }
+    onChange(null);
+  }
+
   const busy = isPicking || disabled;
-  const displayUri = value ? { uri: value.uri } : fallbackUri ? { uri: fallbackUri } : undefined;
+  const previewUri = value?.uri ?? (!removed ? fallbackUri : null) ?? null;
+  const displayUri = previewUri ? { uri: previewUri } : undefined;
   const photoLabel = value
     ? `Foto de perfil seleccionada para ${value.name}`
-    : fallbackUri
-      ? 'Foto de perfil actual'
-      : 'Sin foto de perfil';
+    : removed
+      ? 'Sin foto de perfil'
+      : fallbackUri
+        ? 'Foto de perfil actual'
+        : 'Sin foto de perfil';
+  const canRemove = showRemove || value !== null;
 
   return (
     <View style={styles.container}>
       <AppAvatar accessibilityLabel={photoLabel} initials="?" size="lg" source={displayUri} />
       <View style={styles.actions}>
-        <AppButton
-          disabled={busy}
-          label="Tomar foto"
-          loading={isPicking}
-          onPress={() => void handlePickPhoto('camera')}
-          variant="secondary"
-        />
-        <AppButton
-          disabled={busy}
-          label={value ? 'Cambiar desde galería' : 'Elegir de galería'}
-          onPress={() => void handlePickPhoto('gallery')}
-          variant="secondary"
-        />
-        {value ? (
+        {mode === 'edit' ? (
+          <AppButton
+            disabled={busy}
+            icon="camera"
+            label="Cambiar foto"
+            loading={isPicking}
+            onPress={() => setSourceSheetVisible(true)}
+            testID="edit-photo-change"
+            variant="secondary"
+          />
+        ) : (
+          <AppButton
+            disabled={busy}
+            label="Tomar foto"
+            loading={isPicking}
+            onPress={() => void handlePickPhoto('camera')}
+            variant="secondary"
+          />
+        )}
+        {mode === 'create' ? (
+          <AppButton
+            disabled={busy}
+            label={value ? 'Cambiar desde galería' : 'Elegir de galería'}
+            onPress={() => void handlePickPhoto('gallery')}
+            variant="secondary"
+          />
+        ) : null}
+        {canRemove ? (
           <AppButton
             disabled={disabled}
+            icon="trash"
             label="Quitar"
-            onPress={() => onChange(null)}
-            variant="ghost"
+            onPress={handleRemove}
+            testID="edit-photo-remove"
+            variant="secondary"
           />
         ) : null}
       </View>
@@ -147,8 +191,35 @@ export function ProfilePhotoPicker({
         </View>
       ) : null}
       <AppText color="textSecondary" variant="caption">
-        Opcional. Tomá una foto o elegí una imagen JPEG, PNG o WebP de hasta 10 MB.
+        {mode === 'edit'
+          ? 'Opcional. Reemplazá o quitá la foto actual (JPEG, PNG o WebP de hasta 10 MB).'
+          : 'Opcional. Tomá una foto o elegí una imagen JPEG, PNG o WebP de hasta 10 MB.'}
       </AppText>
+
+      {mode === 'edit' ? (
+        <BottomSheet
+          onClose={() => setSourceSheetVisible(false)}
+          testID="photo-source-sheet"
+          title="Cambiar foto"
+          visible={sourceSheetVisible}
+        >
+          <AppButton
+            disabled={busy}
+            icon="camera"
+            label="Tomar foto"
+            onPress={() => void handlePickPhoto('camera')}
+            style={styles.sheetAction}
+            variant="secondary"
+          />
+          <AppButton
+            disabled={busy}
+            label="Elegir de galería"
+            onPress={() => void handlePickPhoto('gallery')}
+            style={styles.sheetAction}
+            variant="secondary"
+          />
+        </BottomSheet>
+      ) : null}
     </View>
   );
 }
@@ -164,5 +235,8 @@ const styles = StyleSheet.create({
   },
   permissionBlock: {
     gap: spacing.sm,
+  },
+  sheetAction: {
+    width: '100%',
   },
 });

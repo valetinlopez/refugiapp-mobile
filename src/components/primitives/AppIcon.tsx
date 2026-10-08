@@ -8,6 +8,7 @@ export type AppIconName =
   | 'add'
   | 'alert'
   | 'calendar'
+  | 'camera'
   | 'check'
   | 'chevronLeft'
   | 'chevronRight'
@@ -28,6 +29,7 @@ export type AppIconName =
   | 'offline'
   | 'paw'
   | 'refresh'
+  | 'trash'
   | 'transport';
 
 const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
@@ -35,6 +37,7 @@ const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   add: { ios: 'plus', android: 'add', web: 'add' },
   alert: { ios: 'exclamationmark.circle.fill', android: 'error', web: 'error' },
   calendar: { ios: 'calendar', android: 'calendar_month', web: 'calendar_month' },
+  camera: { ios: 'camera.fill', android: 'photo_camera', web: 'photo_camera' },
   check: { ios: 'checkmark.circle.fill', android: 'check_circle', web: 'check_circle' },
   chevronLeft: { ios: 'chevron.left', android: 'chevron_left', web: 'chevron_left' },
   chevronRight: { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' },
@@ -63,6 +66,7 @@ const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   offline: { ios: 'wifi.slash', android: 'wifi_off', web: 'wifi_off' },
   paw: { ios: 'pawprint.fill', android: 'pets', web: 'pets' },
   refresh: { ios: 'arrow.clockwise', android: 'refresh', web: 'refresh' },
+  trash: { ios: 'trash.fill', android: 'delete', web: 'delete' },
   transport: { ios: 'truck.box.fill', android: 'local_shipping', web: 'local_shipping' },
 };
 

@@ -159,10 +159,16 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     referenceFile: '07-animal-edit.jpeg',
     route: 'app/(app)/animals/[id]/edit.tsx',
     audience: 'admin/shelter_manager (canEditAnimal)',
-    states: ['default', 'loading', 'error'],
+    states: ['default', 'loading', 'error', 'offline'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-149).' },
-      { kind: 'contract', note: 'PATCH diferencial de la ficha.' },
+      {
+        kind: 'implemented',
+        note: 'Rediseño con cards, dirty global/por campo y guard de descarte (RFG-149).',
+      },
+      {
+        kind: 'contract',
+        note: 'PATCH diferencial de la ficha; quitar foto envía profilePhotoMediaId null.',
+      },
     ],
     group: 'animals',
   },

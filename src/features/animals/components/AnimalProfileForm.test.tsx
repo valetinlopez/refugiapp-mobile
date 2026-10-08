@@ -261,4 +261,72 @@ describe('AnimalProfileForm edit mode', () => {
       });
     });
   });
+
+  it('marks a field as modified after it changes', async () => {
+    const screen = await render(
+      <AnimalProfileForm
+        mode="edit"
+        animal={createAnimal()}
+        currentPhotoUri={null}
+        onSubmit={() => undefined}
+      />
+    );
+
+    expect(screen.queryByLabelText('Raza modificado')).toBeNull();
+    await fireEvent.changeText(screen.getByLabelText('Raza'), 'Mestiza');
+    expect(await screen.findByLabelText('Raza modificado')).toBeTruthy();
+  });
+
+  it('reports dirty state changes to the parent', async () => {
+    const onDirtyChange = jest.fn();
+    const screen = await render(
+      <AnimalProfileForm
+        mode="edit"
+        animal={createAnimal()}
+        currentPhotoUri={null}
+        onDirtyChange={onDirtyChange}
+        onSubmit={() => undefined}
+      />
+    );
+
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+    await fireEvent.changeText(screen.getByLabelText('Nombre'), 'Luna Editada');
+    await waitFor(() => {
+      expect(onDirtyChange).toHaveBeenLastCalledWith(true);
+    });
+  });
+
+  it('removes the current photo and submits removePhoto', async () => {
+    const onSubmit = jest.fn();
+    const animal = createAnimal();
+    const screen = await render(
+      <AnimalProfileForm mode="edit" animal={animal} currentPhotoUri={null} onSubmit={onSubmit} />
+    );
+
+    await fireEvent.press(screen.getByTestId('edit-photo-remove'));
+    expect(await screen.findByLabelText('Sin foto de perfil')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('edit-submit'));
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ photo: null, removePhoto: true })
+      );
+    });
+  });
+
+  it('requests discarding the draft from the footer', async () => {
+    const onDiscard = jest.fn();
+    const screen = await render(
+      <AnimalProfileForm
+        mode="edit"
+        animal={createAnimal()}
+        currentPhotoUri={null}
+        onDiscard={onDiscard}
+        onSubmit={() => undefined}
+      />
+    );
+
+    await fireEvent.press(screen.getByTestId('edit-discard'));
+    expect(onDiscard).toHaveBeenCalledTimes(1);
+  });
 });
