@@ -16,6 +16,7 @@ export interface UpdateAnimalInput {
   initial: Animal;
   form: UpdateAnimalFormValues;
   photo: PhotoFile | null;
+  removePhoto?: boolean;
   skipPhoto?: boolean;
 }
 
@@ -25,8 +26,8 @@ export function useUpdateAnimal(id: string) {
   const [upload, setUpload] = useState<{ fileName: string; progress: number } | null>(null);
 
   const mutation = useMutation<Animal, UpdateAnimalError, UpdateAnimalInput>({
-    mutationFn: async ({ form, initial, photo, skipPhoto = false }) => {
-      let profilePhotoMediaId: string | undefined;
+    mutationFn: async ({ form, initial, photo, removePhoto = false, skipPhoto = false }) => {
+      let profilePhotoMediaId: string | null | undefined;
 
       if (photo !== null && !skipPhoto) {
         abortController.current = new AbortController();
@@ -45,6 +46,8 @@ export function useUpdateAnimal(id: string) {
         } finally {
           setUpload(null);
         }
+      } else if (removePhoto && !skipPhoto) {
+        profilePhotoMediaId = null;
       }
 
       const request = toUpdateAnimalRequest(initial, form, profilePhotoMediaId);
@@ -55,7 +58,7 @@ export function useUpdateAnimal(id: string) {
       try {
         return await animalsApi.update(id, request);
       } catch (error) {
-        if (profilePhotoMediaId !== undefined) {
+        if (profilePhotoMediaId != null) {
           await mediaApi.deleteAsset(profilePhotoMediaId).catch(() => undefined);
         }
         throw new UpdateAnimalError('update', error);

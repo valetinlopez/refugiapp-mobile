@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Controller, useForm, type FieldErrors } from 'react-hook-form';
 import {
   Pressable,
@@ -11,9 +11,9 @@ import {
   type TextInputProps,
 } from 'react-native';
 
-import { AppButton, AppIcon, AppText } from '@/components/primitives';
 import { MediaUploadStatus } from '@/components/feedback';
-import { DateTimeField } from '@/components/patterns';
+import { AppButton, AppCard, AppIcon, AppText } from '@/components/primitives';
+import { DateTimeField, SectionHeader, SegmentedControl } from '@/components/patterns';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
 import type { PhotoFile } from '../api/mediaApi';
@@ -40,20 +40,40 @@ export const STATUS_OPTIONS: { label: string; value: AnimalStatus }[] = [
   { label: 'Fallecido', value: 'deceased' },
 ];
 
+export function ModifiedIndicator({ label }: { label: string }) {
+  return (
+    <View
+      accessibilityLabel={`${label} modificado`}
+      accessibilityRole="text"
+      style={styles.modified}
+    >
+      <View style={styles.modifiedDot} />
+      <AppText color="textSecondary" variant="caption">
+        Modificado
+      </AppText>
+    </View>
+  );
+}
+
 export function FormField({
   children,
   error,
   label,
+  modified = false,
   onLayout,
 }: {
   children: ReactNode;
   error: string | undefined;
   label: string;
+  modified?: boolean | undefined;
   onLayout?: (event: LayoutChangeEvent) => void;
 }) {
   return (
     <View onLayout={onLayout} style={styles.field}>
-      <AppText variant="label">{label}</AppText>
+      <View style={styles.labelRow}>
+        <AppText variant="label">{label}</AppText>
+        {modified ? <ModifiedIndicator label={label} /> : null}
+      </View>
       {children}
       {error ? (
         <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
@@ -133,6 +153,8 @@ export type AnimalEditModeProps = AnimalProfileFormBaseProps & {
   mode: 'edit';
   animal: Animal;
   currentPhotoUri: string | null;
+  onDiscard?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
   onSubmit(input: UpdateAnimalInput): void;
   photoErrorMessage?: string | null;
   scrollRef?: RefObject<ScrollView | null>;
@@ -335,6 +357,17 @@ const EDIT_FOCUSABLE_FIELDS: readonly string[] = [
   'intakeDate',
   'birthDate',
 ];
+type EditGroup = 'photo' | 'identity' | 'dates';
+const EDIT_FIELD_GROUP: Partial<Record<keyof UpdateAnimalFormInput, EditGroup>> = {
+  name: 'identity',
+  species: 'identity',
+  breed: 'identity',
+  sex: 'identity',
+  intakeDate: 'dates',
+  birthDate: 'dates',
+};
+
+const SEX_SEGMENTS = SEX_OPTIONS.map((option) => ({ id: option.value, label: option.label }));
 
 function EditProfileForm({
   animal,
@@ -342,39 +375,66 @@ function EditProfileForm({
   errorMessage,
   isSubmitting = false,
   onCancelUpload,
+  onDiscard,
+  onDirtyChange,
   onSubmit,
   photoErrorMessage,
   scrollRef,
   upload,
 }: AnimalEditModeProps) {
   const [photo, setPhoto] = useState<PhotoFile | null>(null);
+  const [removePhoto, setRemovePhoto] = useState(false);
   const fieldOffsets = useRef<Record<string, number>>({});
+  const groupOffsets = useRef<Record<EditGroup, number>>({ dates: 0, identity: 0, photo: 0 });
   const formOffset = useRef(0);
-  const { control, handleSubmit, setFocus } = useForm<UpdateAnimalFormInput>({
+  const {
+    control,
+    formState: { dirtyFields, isDirty },
+    handleSubmit,
+    setFocus,
+  } = useForm<UpdateAnimalFormInput>({
     resolver: zodResolver(updateAnimalSchema),
     defaultValues: toUpdateAnimalFormValues(animal),
     mode: 'onTouched',
   });
 
+  const photoDirty = photo !== null || removePhoto;
+  const dirty = isDirty || photoDirty;
+
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+
   function captureFormOffset(event: LayoutChangeEvent): void {
     formOffset.current = event.nativeEvent.layout.y;
-  }
-
-  function captureFieldOffset(name: string) {
-    return (event: LayoutChangeEvent) => {
-      fieldOffsets.current[name] = event.nativeEvent.layout.y;
-    };
   }
 
   function handleInvalid(errors: FieldErrors<UpdateAnimalFormInput>): void {
     const firstField = EDIT_FIELD_ORDER.find((key) => errors[key] !== undefined);
     if (firstField !== undefined) {
-      const y = formOffset.current + (fieldOffsets.current[firstField] ?? 0);
+      const group = EDIT_FIELD_GROUP[firstField];
+      const y =
+        formOffset.current +
+        (group === undefined ? 0 : groupOffsets.current[group]) +
+        (fieldOffsets.current[firstField] ?? 0);
       scrollRef?.current?.scrollTo({ animated: true, y: Math.max(0, y - spacing.md) });
       if (EDIT_FOCUSABLE_FIELDS.includes(firstField)) {
         setFocus(firstField);
       }
     }
+  }
+
+  function handlePhotoChange(nextPhoto: PhotoFile): void {
+    setPhoto(nextPhoto);
+    setRemovePhoto(false);
+  }
+
+  function handleRemovePhoto(): void {
+    if (photo !== null) {
+      setPhoto(null);
+      return;
+    }
+    setRemovePhoto(true);
   }
 
   function submit(skipPhoto: boolean): void {
@@ -385,151 +445,206 @@ function EditProfileForm({
         form: values,
         photo,
         ...(skipPhoto ? { skipPhoto: true } : {}),
+        ...(removePhoto ? { removePhoto: true } : {}),
       });
     }, handleInvalid)();
   }
 
   return (
     <View onLayout={captureFormOffset} style={styles.form}>
-      <Controller
-        control={control}
-        name="name"
-        render={({ field, fieldState }) => (
-          <FormField
-            error={fieldState.error?.message}
-            label="Nombre"
-            onLayout={captureFieldOffset('name')}
-          >
-            <FormTextInput
-              accessibilityLabel="Nombre"
-              autoCapitalize="words"
-              autoComplete="off"
-              editable={!isSubmitting}
-              maxLength={120}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="Luna"
-              value={field.value}
-            />
-          </FormField>
-        )}
-      />
-      <Controller
-        control={control}
-        name="species"
-        render={({ field, fieldState }) => (
-          <FormField
-            error={fieldState.error?.message}
-            label="Especie"
-            onLayout={captureFieldOffset('species')}
-          >
-            <FormTextInput
-              accessibilityLabel="Especie"
-              autoCapitalize="words"
-              autoComplete="off"
-              editable={!isSubmitting}
-              maxLength={80}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="dog"
-              value={field.value}
-            />
-          </FormField>
-        )}
-      />
-      <Controller
-        control={control}
-        name="breed"
-        render={({ field, fieldState }) => (
-          <FormField
-            error={fieldState.error?.message}
-            label="Raza"
-            onLayout={captureFieldOffset('breed')}
-          >
-            <FormTextInput
-              accessibilityLabel="Raza"
-              autoCapitalize="words"
-              autoComplete="off"
-              editable={!isSubmitting}
-              maxLength={80}
-              onBlur={field.onBlur}
-              onChangeText={field.onChange}
-              placeholder="Mestizo (opcional)"
-              value={field.value ?? ''}
-            />
-          </FormField>
-        )}
-      />
-      <Controller
-        control={control}
-        name="sex"
-        render={({ field, fieldState }) => (
-          <FormField
-            error={fieldState.error?.message}
-            label="Sexo"
-            onLayout={captureFieldOffset('sex')}
-          >
-            <OptionGroup
-              disabled={isSubmitting}
-              error={fieldState.error?.message}
-              label="Sexo"
-              onChange={field.onChange}
-              options={SEX_OPTIONS}
-              value={field.value}
-            />
-          </FormField>
-        )}
-      />
-      <Controller
-        control={control}
-        name="intakeDate"
-        render={({ field, fieldState }) => (
-          <FormField
-            error={fieldState.error?.message}
-            label="Fecha de ingreso"
-            onLayout={captureFieldOffset('intakeDate')}
-          >
-            <DateTimeField
-              accessibilityLabel="Fecha de ingreso"
-              disabled={isSubmitting}
-              maximumDate={new Date()}
-              mode="date"
-              onChange={field.onChange}
-              value={field.value}
-            />
-          </FormField>
-        )}
-      />
-      <Controller
-        control={control}
-        name="birthDate"
-        render={({ field, fieldState }) => (
-          <FormField
-            error={fieldState.error?.message}
-            label="Fecha de nacimiento"
-            onLayout={captureFieldOffset('birthDate')}
-          >
-            <DateTimeField
-              accessibilityLabel="Fecha de nacimiento"
-              disabled={isSubmitting}
-              maximumDate={new Date()}
-              mode="date"
-              onChange={field.onChange}
-              optional
-              value={field.value ?? ''}
-            />
-          </FormField>
-        )}
-      />
-      <View style={styles.field}>
-        <AppText variant="label">Foto de perfil</AppText>
+      <AppCard
+        onLayout={(event) => {
+          groupOffsets.current.photo = event.nativeEvent.layout.y;
+        }}
+        style={styles.card}
+        variant="elevated"
+      >
+        <SectionHeader title="Foto de perfil" />
         <ProfilePhotoPicker
           disabled={isSubmitting}
           fallbackUri={currentPhotoUri}
-          onChange={setPhoto}
+          mode="edit"
+          onChange={handlePhotoChange}
+          onRemove={handleRemovePhoto}
+          removed={removePhoto}
+          showRemove={photo !== null || animal.profilePhotoMediaId !== null}
           value={photo}
         />
-      </View>
+      </AppCard>
+
+      <AppCard
+        onLayout={(event) => {
+          groupOffsets.current.identity = event.nativeEvent.layout.y;
+        }}
+        style={styles.card}
+        variant="elevated"
+      >
+        <SectionHeader title="Datos principales" />
+        <Controller
+          control={control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <FormField
+              error={fieldState.error?.message}
+              label="Nombre"
+              modified={dirtyFields.name}
+              onLayout={(event) => {
+                fieldOffsets.current.name = event.nativeEvent.layout.y;
+              }}
+            >
+              <FormTextInput
+                accessibilityLabel="Nombre"
+                autoCapitalize="words"
+                autoComplete="off"
+                editable={!isSubmitting}
+                maxLength={120}
+                onBlur={field.onBlur}
+                onChangeText={field.onChange}
+                placeholder="Luna"
+                testID="edit-field-name"
+                value={field.value}
+              />
+            </FormField>
+          )}
+        />
+        <Controller
+          control={control}
+          name="species"
+          render={({ field, fieldState }) => (
+            <FormField
+              error={fieldState.error?.message}
+              label="Especie"
+              modified={dirtyFields.species}
+              onLayout={(event) => {
+                fieldOffsets.current.species = event.nativeEvent.layout.y;
+              }}
+            >
+              <FormTextInput
+                accessibilityLabel="Especie"
+                autoCapitalize="words"
+                autoComplete="off"
+                editable={!isSubmitting}
+                maxLength={80}
+                onBlur={field.onBlur}
+                onChangeText={field.onChange}
+                placeholder="dog"
+                testID="edit-field-species"
+                value={field.value}
+              />
+            </FormField>
+          )}
+        />
+        <Controller
+          control={control}
+          name="breed"
+          render={({ field, fieldState }) => (
+            <FormField
+              error={fieldState.error?.message}
+              label="Raza"
+              modified={dirtyFields.breed}
+              onLayout={(event) => {
+                fieldOffsets.current.breed = event.nativeEvent.layout.y;
+              }}
+            >
+              <FormTextInput
+                accessibilityLabel="Raza"
+                autoCapitalize="words"
+                autoComplete="off"
+                editable={!isSubmitting}
+                maxLength={80}
+                onBlur={field.onBlur}
+                onChangeText={field.onChange}
+                placeholder="Mestizo (opcional)"
+                testID="edit-field-breed"
+                value={field.value ?? ''}
+              />
+            </FormField>
+          )}
+        />
+        <Controller
+          control={control}
+          name="sex"
+          render={({ field, fieldState }) => (
+            <FormField
+              error={fieldState.error?.message}
+              label="Sexo"
+              modified={dirtyFields.sex}
+              onLayout={(event) => {
+                fieldOffsets.current.sex = event.nativeEvent.layout.y;
+              }}
+            >
+              <SegmentedControl
+                accessibilityLabel="Sexo"
+                onChange={field.onChange}
+                options={SEX_SEGMENTS}
+                testID="edit-field-sex"
+                value={field.value}
+              />
+            </FormField>
+          )}
+        />
+      </AppCard>
+
+      <AppCard
+        onLayout={(event) => {
+          groupOffsets.current.dates = event.nativeEvent.layout.y;
+        }}
+        style={styles.card}
+        variant="elevated"
+      >
+        <SectionHeader title="Fechas" />
+        <Controller
+          control={control}
+          name="intakeDate"
+          render={({ field, fieldState }) => (
+            <FormField
+              error={fieldState.error?.message}
+              label="Fecha de ingreso"
+              modified={dirtyFields.intakeDate}
+              onLayout={(event) => {
+                fieldOffsets.current.intakeDate = event.nativeEvent.layout.y;
+              }}
+            >
+              <DateTimeField
+                accessibilityLabel="Fecha de ingreso"
+                disabled={isSubmitting}
+                maximumDate={new Date()}
+                mode="date"
+                onChange={field.onChange}
+                value={field.value}
+              />
+            </FormField>
+          )}
+        />
+        <Controller
+          control={control}
+          name="birthDate"
+          render={({ field, fieldState }) => (
+            <FormField
+              error={fieldState.error?.message}
+              label="Fecha de nacimiento"
+              modified={dirtyFields.birthDate}
+              onLayout={(event) => {
+                fieldOffsets.current.birthDate = event.nativeEvent.layout.y;
+              }}
+            >
+              <DateTimeField
+                accessibilityLabel="Fecha de nacimiento"
+                disabled={isSubmitting}
+                maximumDate={new Date()}
+                mode="date"
+                onChange={field.onChange}
+                optional
+                value={field.value ?? ''}
+              />
+            </FormField>
+          )}
+        />
+        <AppText color="textSecondary" variant="caption">
+          La fecha de nacimiento debe ser anterior o igual a la fecha de ingreso.
+        </AppText>
+      </AppCard>
+
       {upload ? (
         <MediaUploadStatus
           fileName={upload.fileName}
@@ -564,14 +679,37 @@ function EditProfileForm({
           {errorMessage}
         </AppText>
       ) : null}
-      <AppButton label="Guardar cambios" loading={isSubmitting} onPress={() => submit(false)} />
+      <View style={styles.footer}>
+        <AppButton
+          disabled={isSubmitting}
+          label="Descartar"
+          onPress={() => onDiscard?.()}
+          testID="edit-discard"
+          variant="secondary"
+        />
+        <AppButton
+          label="Guardar cambios"
+          loading={isSubmitting}
+          onPress={() => submit(false)}
+          testID="edit-submit"
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  card: {
+    gap: spacing.md,
+  },
   field: {
     gap: spacing.xs,
+  },
+  footer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'flex-end',
   },
   form: {
     gap: spacing.md,
@@ -588,6 +726,24 @@ const styles = StyleSheet.create({
     minHeight: sizes.buttonHeight,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+  },
+  labelRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    justifyContent: 'space-between',
+  },
+  modified: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xxs,
+  },
+  modifiedDot: {
+    backgroundColor: colors.positive,
+    borderRadius: radii.full,
+    height: spacing.xs,
+    width: spacing.xs,
   },
   option: {
     alignItems: 'center',

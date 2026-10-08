@@ -50,6 +50,14 @@ const RECORD_TYPE_LABELS: Record<string, string> = {
   Other: 'Otro',
 };
 
+const SEX_PREVIEW_OPTIONS: readonly SegmentedControlOption<PreviewAnimalSex>[] = [
+  { id: 'female', label: 'Hembra' },
+  { id: 'male', label: 'Macho' },
+  { id: 'unknown', label: 'Desconocido' },
+];
+
+type PreviewAnimalSex = 'female' | 'male' | 'unknown';
+
 function LoginPreview() {
   return (
     <AppCard style={styles.stack} variant="organic">
@@ -170,14 +178,34 @@ function AnimalStatusPreview() {
 }
 
 function AnimalEditPreview() {
+  const [sex, setSex] = useState<PreviewAnimalSex>('female');
+
   return (
-    <AppCard style={styles.stack} variant="outlined">
+    <AppCard style={styles.stack} variant="elevated">
+      <View style={styles.badgeWrap}>
+        <View style={styles.dirtyDot} />
+        <AppText color="textSecondary" variant="caption">
+          Cambios sin guardar
+        </AppText>
+      </View>
       <MetadataRow label="Nombre" value="Luna" />
       <MetadataRow label="Especie" value="Perra" />
-      <MetadataRow label="Raza" value="Mestiza" />
+      <MetadataRow label="Raza · modificado" value="Mestiza" />
+      <SegmentedControl<PreviewAnimalSex>
+        accessibilityLabel="Sexo"
+        onChange={setSex}
+        options={SEX_PREVIEW_OPTIONS}
+        value={sex}
+      />
       <MetadataRow label="Ingreso" value={formatDateMedium('2026-08-15')} />
       <MetadataRow label="Nacimiento" value={formatDateMedium('2023-04-10')} />
-      <AppButton label="Guardar cambios" />
+      <AppText color="textSecondary" variant="caption">
+        La fecha de nacimiento debe ser anterior o igual a la fecha de ingreso.
+      </AppText>
+      <View style={styles.actionRow}>
+        <AppButton label="Descartar" variant="secondary" />
+        <AppButton label="Guardar cambios" />
+      </View>
     </AppCard>
   );
 }
@@ -541,6 +569,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
+  },
+  dirtyDot: {
+    alignSelf: 'center',
+    backgroundColor: colors.positive,
+    borderRadius: radii.full,
+    height: spacing.xs,
+    width: spacing.xs,
   },
   preview: {
     borderColor: colors.divider,
