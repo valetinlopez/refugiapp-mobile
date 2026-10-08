@@ -24,3 +24,33 @@ export function toCreateExpenseErrorMessage(error: unknown): string {
 
   return toApiErrorMessage(error);
 }
+
+export function toExpenseDetailErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    switch (error.status) {
+      case 403:
+        return 'Tu rol no tiene permiso para ver este gasto.';
+      case 404:
+        return 'El gasto ya no está disponible.';
+      default:
+        return toApiErrorMessage(error);
+    }
+  }
+
+  return toApiErrorMessage(error);
+}
+
+export function toDeleteExpenseErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    switch (error.status) {
+      case 403:
+        return 'Tu rol no tiene permiso para eliminar gastos.';
+      case 404:
+        return 'El gasto ya no está disponible o fue eliminado.';
+      default:
+        return toApiErrorMessage(error);
+    }
+  }
+
+  return toApiErrorMessage(error);
+}

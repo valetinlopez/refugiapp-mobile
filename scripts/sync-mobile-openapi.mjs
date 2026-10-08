@@ -36,6 +36,7 @@ const MOBILE_PATHS = [
   '/care-tasks/{id}/cancel',
   '/media/upload',
   '/expenses',
+  '/expenses/{id}',
   '/media/{id}',
   '/veterinarians',
   '/veterinarians/{id}',
