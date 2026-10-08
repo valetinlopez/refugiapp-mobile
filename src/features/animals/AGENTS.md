@@ -38,7 +38,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - `adopted` y `deceased` son terminales; la UI los confirma con un segundo diálogo destructivo y no como transición directa.
 - `ChangeAnimalStatusDto.occurredAt` es opcional: vacío delega la hora actual al backend; cuando se informa usa `DateTimeField` y la tolerancia de skew futuro de 60 segundos (ver ADR-0007) mediante `isValidStatusChangeOccurredAt`.
 - Los eventos manuales permitidos son `general_note`, `behavior_note` y `transfer`; los eventos de sistema no se crean desde UI.
-- `occurredAt` de eventos manuales es opcional: vacío delega la hora actual al backend; cuando se informa usa `DateTimeField`, ISO con offset local y tolerancia visual/validación de hasta 60 segundos de skew futuro.
+- `occurredAt` de eventos manuales es opcional: vacío delega la hora actual al backend; cuando se informa usa `DateTimeField`, ISO con offset local, ventana `intakeDate` (inicio de día local) ≤ `occurredAt` ≤ `now + 60 s` de skew futuro. La ventana pura vive en `src/core/validation` (`localDayStartMs`, `OCCURRED_AT_FUTURE_TOLERANCE_MS`) y la comparte `medical-records`.
 - `PATCH /animals/:id` no cambia `status`; el cambio de estado usa `PATCH /animals/:id/status`.
 
 ## Listado
@@ -90,7 +90,8 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Edición de ficha (`PATCH /animals/:id`) para `admin` y `shelter_manager` mediante `useUpdateAnimal`, sin tocar `status`.
 - Cambio de estado (`PATCH /animals/:id/status`) para `admin` y `shelter_manager` mediante `useChangeAnimalStatus`, con matriz de transiciones local, sheet de selección tipo `BottomSheet` (D14/RFG-147), `occurredAt` opcional validado con tolerancia de 60 s y confirmación destructiva adicional para estados terminales.
 - Alta de eventos generales (`POST /animals/:animalId/events`) para `admin` y `shelter_manager`, limitada a `general_note`, `behavior_note` y `transfer`; el backend registra al actor autenticado y la mutation invalida `animalKeys.history(animalId)`.
-- La fecha opcional de eventos generales usa el selector compartido `DateTimeField` con límite futuro de 60 segundos, fallback textual web y ayuda explícita sobre el valor por defecto del backend.
+- Rediseño del formulario Agregar evento (D15/RFG-148): card identidad `organic` (`AnimalEventIdentityCard`) con foto protagonista y badge fijo "Evento general"; selector de tipo como desplegable fiel a la referencia (`AnimalEventTypeField` = trigger + `BottomSheet` con radios de 44 × 44, `testID` `create-event-type-*`); formulario en card `elevated` con `SectionHeader`, descripción con contador `x/1000`, banner que explica la ventana de fecha con el nombre del animal, y footer Cancelar/Guardar con `testID` `create-event-cancel/submit`.
+- La fecha opcional de eventos generales usa el selector compartido `DateTimeField` con `minimumDate` = inicio de día local del `intakeDate` y `maximumDate` = `now + 60 s`, fallback textual web y ayuda explícita sobre el valor por defecto del backend. La validación local (`createAnimalEventSchema(intakeDate)`) rechaza antes del submit fechas anteriores al ingreso o futuras; el backend vuelve a validar.
 - Subida de foto de perfil como asset huérfano (`POST /media/upload` multipart) y vinculación con `profilePhotoMediaId` al crear o editar; limpieza best-effort del huérfano si la escritura falla después de subir.
 - La foto puede capturarse con cámara o elegirse desde galería; se aceptan JPEG, PNG y WebP de hasta 10 MB, con progreso y cancelación durante la subida.
 - Permiso de cámara/galería denegado con explicación; si el permiso queda bloqueado permanentemente (`canAskAgain=false`), se ofrece abrir los ajustes del dispositivo con `Linking.openSettings`.

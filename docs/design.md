@@ -432,6 +432,20 @@ El detalle del animal presenta el cambio de estado como un `BottomSheet` (`06-an
 - **Sin optimistic update:** `useChangeAnimalStatus` invalida `animalKeys.all`; un `409`/`403`/`404` se traduce con `toChangeStatusErrorMessage` en voseo y nunca reemplaza la autoridad del backend.
 - **Accesibilidad y responsive:** `dialog`/`radiogroup`/`radio` con `accessibilityState.selected`, título `header`, errores `role="alert"` + `liveRegion`, targets de 44 pt y contenido desplazable para fuente al 200 %. `testID` `status-sheet`, `status-option-{estado}`, `status-confirm`, `status-cancel` habilitan la regresión de RFG-167.
 
+## 43. Formulario Agregar evento (D15 / RFG-148)
+
+El alta de un evento general (`app/(app)/animals/[id]/events/new.tsx`) toma la jerarquía de `08-animal-event-new.jpeg` sin inventar el identificador correlativo que la referencia muestra (el contrato solo expone UUID). Es una pantalla de escritura para `admin`/`shelter_manager` (`canEditAnimal`); un deep link sin la capacidad muestra el guard reactivo "Sin permiso" y `veterinarian` conserva el historial de solo lectura.
+
+- **Fondo y encabezado:** `DecorativeBackground variant="texture"` + `AccountHeaderRow` (retorno con `fallbackHref` al detalle) + `ScreenHeader` con "Agregar evento" como único `heading1` y el subtítulo "Historial de {nombre}".
+- **Identidad (card `organic`):** `AnimalEventIdentityCard` reutiliza el lenguaje del detalle del animal — `AppAvatar` protagonista (128 pt, `rounded`, foto cacheada o iniciales) + nombre `display` sin truncar + especie · raza + badge — pero el badge es fijo de contexto ("Evento general", tono `info`) porque la pantalla se abre siempre para ese cometido. `role="summary"` y `testID="create-event-identity"`.
+- **Formulario (`AppCard elevated`):** `SectionHeader` "Información del evento" y tres campos:
+  - **Tipo de evento:** desplegable fiel a la referencia sin usar un picker JS. `AnimalEventTypeField` compone un trigger (superficie `surface`, borde, icono circular, valor y chevron) que abre el `BottomSheet` del sistema (ADR-0018) con las **solo tres** opciones de OpenAPI (`general_note`, `behavior_note`, `transfer`) como radio-cards de 44 × 44 con icono, descripción y marca de selección; el estado nunca se comunica solo por color. `testID` `create-event-type-trigger/sheet/option-{tipo}`.
+  - **Descripción:** campo multiline con contador `x/1000` anunciado (`accessibilityLiveRegion`) y `maxLength` contractual.
+  - **Fecha y hora (opcional):** `DateTimeField` compartido con `minimumDate` = inicio de día local del `intakeDate` y `maximumDate` = `now + 60 s`; vacío delega la hora actual al backend. Un banner con icono y texto explica la regla ("no puede ser futura ni anterior al ingreso de {nombre}"); la validación local (`createAnimalEventSchema(intakeDate)`) rechaza antes del submit ambas desviaciones y el backend vuelve a validar.
+- **Footer:** `Cancelar` (`secondary`) sin submit + `Guardar evento` (`primary`, `loading` durante la mutación, icono de confirmación). Los errores del servidor usan `role="alert"` y el borrador se conserva (no hay `reset`).
+- **Estados de preparación:** `LoadingState` mientras `useAnimal` resuelve; `OfflineState` (vía `isNetworkError`) o `ErrorState` con reintento antes de montar el formulario; nunca un spinner infinito sin red.
+- **Accesibilidad y responsive:** radios `radiogroup`/`radio` con `selected`, errores por campo en `role="alert"`, target de 44 pt, contenido desplazable con fuente ampliada y sin alturas rígidas alrededor de texto. `testID` `create-event-description/cancel/submit` habilitan la regresión de RFG-167.
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)
