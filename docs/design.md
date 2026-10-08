@@ -461,6 +461,16 @@ La edición de la ficha (`app/(app)/animals/[id]/edit.tsx`) adopta la jerarquía
 - **Estados:** `LoadingState`, `OfflineState` (vía `isNetworkError`) y `ErrorState` con reintento antes de montar el formulario; `EmptyState` "Animal no encontrado".
 - **Accesibilidad y responsive:** un único H1, errores por campo en `role="alert"`, targets de 44 × 44, contenido desplazable con `keyboardShouldPersistTaps` y fuente ampliada. `testID` `edit-field-*`, `edit-photo-change/remove`, `edit-discard/submit` habilitan la regresión de RFG-167.
 
+## 45. Experiencia global de Cuidados (D18 / RFG-151)
+
+El tab `Cuidados` adopta la jerarquía de `10-care-tasks-overview.jpeg` sin incorporar el tipo ni el responsable conceptuales de la referencia, porque el contrato vigente no publica esos campos.
+
+- **Resumen y filtros:** el encabezado muestra el total pendiente y un `SegmentedControl` para los tres estados persistidos. Cada opción combina label y contador; los contadores provienen de tres consultas `limit=1` independientes. El selector de animal abre un `BottomSheet` con radios y aplica el mismo `animalId` a lista y contadores.
+- **Listado:** `FlatList` virtualiza páginas de 20 y conserva el orden del backend. Cada tarjeta presenta avatar por iniciales, animal, título, descripción opcional, fecha `es-AR`, badge y chevron; toda la superficie abre el detalle con una única etiqueta accesible.
+- **Estados derivados:** `Vencida` se calcula cuando una tarea pendiente ya superó `dueAt`; `Próxima` cuando vence dentro de las siguientes 24 horas. Ambas señales incluyen icono y texto y nunca modifican los estados contractuales `pending`, `completed` y `cancelled`.
+- **Acciones y permisos:** el FAB `Nueva tarea` aparece solo para `admin` y `shelter_manager`; `veterinarian` conserva lectura y un aviso explícito. El detalle existente mantiene las mutaciones autorizadas y el backend vuelve a validar.
+- **Resiliencia:** carga inicial, vacío filtrado, error de servidor, offline con reintento, error de página siguiente, pull-to-refresh y fin de lista son estados diferenciados. Los controles mantienen targets de 44 × 44 y semántica `radiogroup`/`radio`.
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)
