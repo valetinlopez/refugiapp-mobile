@@ -2,6 +2,7 @@ import {
   getAllowedTransitions,
   getStatusBadge,
   getStatusConsequence,
+  getStatusDescription,
   getStatusLabel,
   isTerminalStatus,
 } from './animalTransitions';
@@ -66,6 +67,28 @@ describe('animalTransitions', () => {
       expect(getStatusConsequence('admitted')).not.toContain('irreversible');
       expect(getStatusConsequence('under_treatment')).toContain('tratamiento');
       expect(getStatusConsequence('available_for_adoption')).toContain('adopción');
+    });
+  });
+
+  describe('getStatusDescription', () => {
+    it('returns a short Spanish description for every status', () => {
+      expect(getStatusDescription('admitted')).toContain('ingreso');
+      expect(getStatusDescription('under_treatment')).toContain('seguimiento');
+      expect(getStatusDescription('available_for_adoption')).toContain('adoptantes');
+      expect(getStatusDescription('adopted')).toContain('adopción');
+      expect(getStatusDescription('deceased')).toContain('historial');
+    });
+
+    it('never returns an empty description', () => {
+      for (const status of [
+        'admitted',
+        'under_treatment',
+        'available_for_adoption',
+        'adopted',
+        'deceased',
+      ] as const) {
+        expect(getStatusDescription(status).length).toBeGreaterThan(0);
+      }
     });
   });
 

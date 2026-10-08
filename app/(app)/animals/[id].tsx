@@ -57,7 +57,9 @@ export default function AnimalDetailScreen() {
         }
         isSubmittingStatus={changeStatus.isPending}
         onBack={() => navigateBack(fallbackHref)}
-        onChangeStatus={(status) => changeStatus.mutate({ status })}
+        onChangeStatus={(status, occurredAt) =>
+          changeStatus.mutate(occurredAt === undefined ? { status } : { status, occurredAt })
+        }
         onRetry={() => void animalQuery.refetch()}
         onAdoptionApproved={() => {
           void queryClient.invalidateQueries({ queryKey: animalKeys.all });
@@ -78,7 +80,7 @@ interface AnimalDetailContentProps {
   isSubmittingStatus: boolean;
   onBack(): void;
   onAdoptionApproved(): void;
-  onChangeStatus(status: AnimalStatus): void;
+  onChangeStatus(status: AnimalStatus, occurredAt?: string): void;
   onRetry(): void;
   photoUri: string | null;
   query: ReturnType<typeof useAnimal>;
@@ -228,8 +230,8 @@ function AnimalDetailContent({
                   }
                   variant="secondary"
                 />
-                <AppText variant="heading2">Cambiar estado</AppText>
                 <AnimalStatusChanger
+                  animalName={animal.name}
                   currentStatus={animal.status}
                   errorMessage={changeStatusError}
                   onConfirm={onChangeStatus}

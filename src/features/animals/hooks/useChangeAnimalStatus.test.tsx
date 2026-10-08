@@ -62,6 +62,23 @@ describe('useChangeAnimalStatus', () => {
     expect(invalidate).toHaveBeenCalledWith({ queryKey: animalKeys.all });
   });
 
+  it('forwards an explicit occurredAt when provided', async () => {
+    const changeStatus = jest
+      .spyOn(animalsApi, 'changeStatus')
+      .mockResolvedValue(createAnimal('adopted'));
+    const { result } = await renderHook(() => useChangeAnimalStatus(ANIMAL_ID), { wrapper });
+
+    result.current.mutate({ status: 'adopted', occurredAt: '2026-10-07T10:00:00-03:00' });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    expect(changeStatus).toHaveBeenCalledWith(ANIMAL_ID, {
+      status: 'adopted',
+      occurredAt: '2026-10-07T10:00:00-03:00',
+    });
+  });
+
   it('exposes a 409 conflict as an error without touching the cache', async () => {
     jest.spyOn(animalsApi, 'changeStatus').mockRejectedValue({ status: 409 });
     const { result } = await renderHook(() => useChangeAnimalStatus(ANIMAL_ID), { wrapper });

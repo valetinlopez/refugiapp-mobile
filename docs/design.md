@@ -316,7 +316,7 @@ El acceso de cuenta es transversal al área autenticada y reutiliza el lenguaje 
 - **Composición:** modal nativo transparente con scrim y `accessibilityViewIsModal`; contenido centrado, tarjeta `surfaceElevated` con radio `lg` y ancho máx 480. `role="alert"` y `liveRegion` para anunciar el diálogo y sus errores.
 - **Contenido:** título con pregunta directa, detalle de la consecuencia y mensaje de error seguro opcional.
 - **Acciones:** `Cancelar`/`Volver` (`ghost`, deshabilitado durante la operación) y confirmación (`primary` o `danger`, con `danger` por defecto) con estado de carga que bloquea ambas acciones mientras se ejecuta (`confirming`).
-- **Regla:** toda acción destructiva exige confirmación explícita; nunca se ejecuta de forma inmediata. El borrado de un adjunto clínico ya subido (`DELETE /media/:id`) confirma antes de encolarse al guardado. La limpieza huérfana automática posterior a un fallo (foto de perfil, comprobante, adjuntos) permanece silenciosa porque no la inicia el usuario.
+- **Regla:** toda acción destructiva exige confirmación explícita; nunca se ejecuta de forma inmediata. El borrado de un adjunto clínico ya subido (`DELETE /media/:id`) confirma antes de encolarse al guardado. La limpieza huérfana automática posterior a un fallo (foto de perfil, comprobante, adjuntos) permanece silenciosa porque no la inicia el usuario. En el cambio de estado (D14) el patrón `BottomSheet` (§42) encadena un segundo `ConfirmDialog` `danger` para estados terminales.
 - **Tono del producto:** los mensajes de confirmación y de error usan voseo rioplatense ("¿Querés...?", "Revisá...", "Intentá...") de forma consistente en toda la app.
 
 ## 34. Assets de marca y decorativos (D02)
@@ -344,6 +344,8 @@ La fundación visual de D03 (RFG-136) agrega patrones reutilizables en `src/comp
 Tokens agregados por D03: `sizes.fab` (56), `sizes.dialogMaxWidth` (480) y `opacity.pressed`/`opacity.pressedSubtle`/`opacity.overlay`. Reemplazan valores antes dispersos en `AppButton`, `AppHeaderBack`, `BottomNavigation` y `ConfirmDialog`, manteniendo el criterio de no introducir medidas arbitrarias en componentes compartidos.
 
 D05 (RFG-138) agrega `sizes.bottomNavigationCurve` (14) para la altura del arco decorativo de la barra inferior (ver ADR-0017).
+
+D14 (RFG-147) agrega el patrón `BottomSheet` en `src/components/feedback`: sheet inferior sobre `Modal` nativo (`slide`), scrim, handle decorativo, superficie anclada al borde inferior con safe area y contenido desplazable. No conoce endpoints, roles ni dominio. Reutiliza los tokens existentes; no introduce medidas arbitrarias (ver ADR-0018).
 
 ## 36. Login editorial (D04)
 
@@ -418,6 +420,17 @@ La pestaña Historial presenta exclusivamente los eventos generales entregados p
 - **Estados:** carga inicial, vacío global, vacío filtrado, error, offline con reintento, carga incremental, fin de lista y pull-to-refresh permanecen diferenciados.
 - **Permisos:** los tres roles pueden leer y filtrar. “Agregar evento” solo aparece con `canEditAnimal` (`admin`/`shelter_manager`) y navega al formulario existente; `veterinarian` conserva historial de solo lectura. El backend vuelve a autorizar toda operación.
 - **Responsive y accesibilidad:** cabecera, filtro y CTA envuelven con fuente ampliada; controles de 44 pt; lista, eventos, filtros, estado expandido y selección exponen semántica accesible. Los marcadores son decorativos y el resumen del evento incluye todo su contenido textual.
+
+## 42. Cambio de estado del animal (D14 / RFG-147)
+
+El detalle del animal presenta el cambio de estado como un `BottomSheet` (`06-animal-status-change.jpeg`) sin copiar valores que contradicen el contrato: no se muestra el identificador correlativo de la referencia y los textos salen de la presentación local de estados.
+
+- **Entrada:** `AnimalStatusChanger` reemplaza la lista inline por una card `outlined` con "Estado actual" + `AppBadge` (icono + texto) y un botón secundario "Cambiar estado". Si el estado es terminal (`adopted`/`deceased`) no hay botón y se explica que es final. Solo se muestra con `canEditAnimal` (`admin`/`shelter_manager`); `veterinarian` no ve la acción y el backend revalida.
+- **Sheet:** `AnimalStatusSheet` compone `BottomSheet` con el estado actual, la instrucción "Seleccioná el nuevo estado de {nombre}" y **solo** las transiciones de `getAllowedTransitions` como radio-cards (icono circular, título, descripción y radio de 44 pt). El estado nunca se comunica solo por color: icono + texto + radio seleccionado.
+- **Fecha opcional:** "Fecha y hora del cambio (opcional)" reutiliza `DateTimeField` (`datetime`); vacío registra el momento actual en el backend. La validación pura `isValidStatusChangeOccurredAt` aplica la tolerancia de skew de 60 s de ADR-0007.
+- **Confirmación:** el botón del sheet confirma el estado no terminal directamente; los terminales cierran el sheet y abren `StatusConfirmDialog` (envuelve `ConfirmDialog`, tono `danger` por `isTerminalStatus`, ya no por comparación de strings). "Cancelar" en cualquier punto conserva el estado original.
+- **Sin optimistic update:** `useChangeAnimalStatus` invalida `animalKeys.all`; un `409`/`403`/`404` se traduce con `toChangeStatusErrorMessage` en voseo y nunca reemplaza la autoridad del backend.
+- **Accesibilidad y responsive:** `dialog`/`radiogroup`/`radio` con `accessibilityState.selected`, título `header`, errores `role="alert"` + `liveRegion`, targets de 44 pt y contenido desplazable para fuente al 200 %. `testID` `status-sheet`, `status-option-{estado}`, `status-confirm`, `status-cancel` habilitan la regresión de RFG-167.
 
 ## Referencias técnicas
 

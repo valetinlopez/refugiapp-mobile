@@ -32,6 +32,7 @@ export function getAllowedTransitions(status: AnimalStatus): AnimalStatus[] {
 interface StatusPresentation {
   badgeIcon: AppIconName;
   consequence: string;
+  description: string;
   label: string;
   tone: BadgeTone;
 }
@@ -41,12 +42,14 @@ const STATUS_PRESENTATION: Record<AnimalStatus, StatusPresentation> = {
     label: 'Ingresado',
     badgeIcon: 'info',
     tone: 'neutral',
+    description: 'El animal vuelve al estado de ingreso general.',
     consequence: 'El animal pasa a estado de ingreso general.',
   },
   under_treatment: {
     label: 'En tratamiento',
     badgeIcon: 'medical',
     tone: 'info',
+    description: 'Queda bajo seguimiento del equipo, sin ocultar su ficha general.',
     consequence:
       'El animal queda registrado bajo tratamiento. Solo el equipo clínico gestiona su historia.',
   },
@@ -54,12 +57,14 @@ const STATUS_PRESENTATION: Record<AnimalStatus, StatusPresentation> = {
     label: 'Disponible para adopción',
     badgeIcon: 'heart',
     tone: 'positive',
+    description: 'Queda listo y visible para adoptantes.',
     consequence: 'El animal pasa a estar visible para adopción.',
   },
   adopted: {
     label: 'Adoptado',
     badgeIcon: 'check',
     tone: 'positive',
+    description: 'Cierra el proceso de adopción de forma definitiva.',
     consequence:
       'Es un estado final e irreversible: el animal queda marcado como adoptado y ya no admite cambios.',
   },
@@ -67,6 +72,7 @@ const STATUS_PRESENTATION: Record<AnimalStatus, StatusPresentation> = {
     label: 'Fallecido',
     badgeIcon: 'paw',
     tone: 'neutral',
+    description: 'Estado final que se registra con respeto en el historial.',
     consequence:
       'Es un estado final e irreversible. El animal queda registrado como fallecido con respeto en su historial.',
   },
@@ -90,4 +96,8 @@ export function getStatusBadge(status: AnimalStatus): {
 
 export function getStatusConsequence(status: AnimalStatus): string {
   return STATUS_PRESENTATION[status].consequence;
+}
+
+export function getStatusDescription(status: AnimalStatus): string {
+  return STATUS_PRESENTATION[status].description;
 }

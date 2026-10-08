@@ -35,7 +35,8 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
   - `available_for_adoption` → `under_treatment | adopted | deceased`
   - `adopted` y `deceased` son terminales.
 - La UI anticipa las transiciones para usabilidad, pero el backend sigue siendo autoridad final; manejar `409`.
-- `adopted` y `deceased` son terminales.
+- `adopted` y `deceased` son terminales; la UI los confirma con un segundo diálogo destructivo y no como transición directa.
+- `ChangeAnimalStatusDto.occurredAt` es opcional: vacío delega la hora actual al backend; cuando se informa usa `DateTimeField` y la tolerancia de skew futuro de 60 segundos (ver ADR-0007) mediante `isValidStatusChangeOccurredAt`.
 - Los eventos manuales permitidos son `general_note`, `behavior_note` y `transfer`; los eventos de sistema no se crean desde UI.
 - `occurredAt` de eventos manuales es opcional: vacío delega la hora actual al backend; cuando se informa usa `DateTimeField`, ISO con offset local y tolerancia visual/validación de hasta 60 segundos de skew futuro.
 - `PATCH /animals/:id` no cambia `status`; el cambio de estado usa `PATCH /animals/:id/status`.
@@ -58,7 +59,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 - `api/`: endpoints de animals (listado, alta, detalle, edición, cambio de estado y eventos generales) y media (alta huérfana y lectura).
 - `hooks/`: `animalKeys`, `useAnimals`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useCreateAnimalEvent`, `useAnimalHistory`, `useAnimalPhoto` e invalidaciones.
-- `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con confirmación, tarjeta de listado (`AnimalCard` con avatar `AnimalCardAvatar`) y sección de historial (`AnimalHistory`).
+- `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con sheet y confirmación (`AnimalStatusChanger`, `AnimalStatusSheet`, `StatusConfirmDialog`), tarjeta de listado (`AnimalCard` con avatar `AnimalCardAvatar`) y sección de historial (`AnimalHistory`).
 - `types/`: modelos de vista y aliases derivados de OpenAPI.
 - `utils/`: esquemas Zod, mappers al DTO, matriz de transiciones, presentación de eventos e historial y traducción de errores de backend.
 - Los componentes reutilizables sin dominio permanecen en `src/components` (p. ej. `FilterChip`).
@@ -71,7 +72,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - `useUpdateAnimal` sube una foto huérfana solo si el usuario eligió una; si el `PATCH` falla después de subir, borra el asset huérfano best-effort.
 - La subida de foto no bloquea el guardado: ante un error de foto (`phase: 'photo'`), el formulario conserva el borrador y ofrece reintentar o guardar sin foto (`skipPhoto`), que omite `profilePhotoMediaId` y conserva la foto actual.
 - Los errores de subida de foto y de PATCH se distinguen en UI; los errores de validación Zod muestran mensaje en español y hacen scroll y foco al primer campo inválido.
-- `PATCH /animals/:id/status` crea un evento `status_change` trazable; la UI explica la consecuencia antes de confirmar y reserva el tono danger para estados terminales.
+- `PATCH /animals/:id/status` crea un evento `status_change` trazable; la UI explica la consecuencia antes de confirmar y reserva el tono danger para estados terminales. El selector es un `BottomSheet` (`src/components/feedback`, ADR-0018) con solo las transiciones válidas; los terminales encadenan un segundo `ConfirmDialog` `danger`.
 
 ## Testing
 
@@ -87,7 +88,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Tipos de red derivados de `openapi/mobile.openapi.json` (`CreateAnimalDto`, `UpdateAnimalDto`, `ChangeAnimalStatusDto`, `AnimalResponseDto`, `PaginatedAnimalsResponseDto`, `MediaAssetResponseDto`) con modelo de vista `Animal` y mapper `toAnimalView`.
 - Alta de animales (`POST /animals`) para `admin` y `shelter_manager` mediante `useCreateAnimal`.
 - Edición de ficha (`PATCH /animals/:id`) para `admin` y `shelter_manager` mediante `useUpdateAnimal`, sin tocar `status`.
-- Cambio de estado (`PATCH /animals/:id/status`) para `admin` y `shelter_manager` mediante `useChangeAnimalStatus`, con matriz de transiciones local y confirmación de consecuencia.
+- Cambio de estado (`PATCH /animals/:id/status`) para `admin` y `shelter_manager` mediante `useChangeAnimalStatus`, con matriz de transiciones local, sheet de selección tipo `BottomSheet` (D14/RFG-147), `occurredAt` opcional validado con tolerancia de 60 s y confirmación destructiva adicional para estados terminales.
 - Alta de eventos generales (`POST /animals/:animalId/events`) para `admin` y `shelter_manager`, limitada a `general_note`, `behavior_note` y `transfer`; el backend registra al actor autenticado y la mutation invalida `animalKeys.history(animalId)`.
 - La fecha opcional de eventos generales usa el selector compartido `DateTimeField` con límite futuro de 60 segundos, fallback textual web y ayuda explícita sobre el valor por defecto del backend.
 - Subida de foto de perfil como asset huérfano (`POST /media/upload` multipart) y vinculación con `profilePhotoMediaId` al crear o editar; limpieza best-effort del huérfano si la escritura falla después de subir.
@@ -105,7 +106,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - PATCH diferencial en edición (`toUpdateAnimalRequest` + `hasPatchChanges`): omite campos intactos, envía `null` para limpiar `breed`/`birthDate` y no-op cuando no hay cambios.
 - Normalización de fechas en la frontera: `toDateOnly` convierte el ISO datetime del backend a `YYYY-MM-DD` en `toAnimalView` (detalle, listado y respuestas de escritura) y en `toUpdateAnimalFormValues`/`toUpdateAnimalRequest`; las filas del detalle envuelven en pantallas estrechas (`flexWrap`) según `docs/design.md`.
 - Errores de subida de foto y de guardado distinguidos en UI, con reintento y opción "Guardar sin foto"; errores Zod con scroll y foco al primer campo inválido.
-- Confirmación de cambio de estado con `StatusConfirmDialog`, que envuelve el `ConfirmDialog` compartido del sistema de diseño (sin `Alert` nativo) y reserva el tono danger para estados terminales.
+- Selector de cambio de estado (`AnimalStatusChanger` + `AnimalStatusSheet`) sobre el patrón compartido `BottomSheet` con solo las transiciones válidas, estado actual con icono + texto, fecha opcional (`DateTimeField`) y doble confirmación para terminales con `StatusConfirmDialog` (envuelve `ConfirmDialog` sin `Alert` nativo; tono danger por `isTerminalStatus`).
 - Traducción de errores de backend a mensajes claros (`toCreateAnimalErrorMessage`, `toUpdateAnimalErrorMessage`, `toChangeStatusErrorMessage`) en voseo rioplatense, con fallback genérico delegado en `toApiErrorMessage` de `core/api`.
 - Unit tests (matriz de transiciones, esquemas, mappers, mensajes), integración multipart con transporte falso y component tests con RNTL.
 
