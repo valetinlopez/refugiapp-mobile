@@ -20,6 +20,12 @@ const MANAGEMENT_PRESENTATION: Readonly<Record<ManagementDestinationId, Manageme
     icon: 'medical',
     label: 'Veterinarios',
   },
+  expenses: {
+    description: 'Listado global de gastos del refugio',
+    hint: 'Ir a gastos',
+    icon: 'money',
+    label: 'Gastos',
+  },
   users: {
     description: 'Cuentas internas del refugio',
     hint: 'Ir a usuarios',

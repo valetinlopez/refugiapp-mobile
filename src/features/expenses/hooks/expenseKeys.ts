@@ -1,6 +1,10 @@
+import type { ExpenseFilters } from '../types';
+
 export const expenseKeys = {
   all: ['expenses'] as const,
   lists: () => [...expenseKeys.all, 'list'] as const,
+  list: (filters: ExpenseFilters) => [...expenseKeys.lists(), 'global', filters] as const,
+  infiniteList: (filters: ExpenseFilters) => [...expenseKeys.lists(), 'infinite', filters] as const,
   listByAnimal: (animalId: string) => [...expenseKeys.lists(), 'animal', animalId] as const,
   media: (mediaId: string) => [...expenseKeys.all, 'media', mediaId] as const,
 };
