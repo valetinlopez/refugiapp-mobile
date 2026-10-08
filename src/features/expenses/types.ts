@@ -27,6 +27,13 @@ export interface PaginatedExpenses {
   total: number;
 }
 
+export interface ExpenseFilters {
+  animalId?: string;
+  category?: ExpenseCategory;
+  from?: string;
+  to?: string;
+}
+
 export function toExpense(dto: ExpenseResponse): Expense {
   return {
     id: dto.id,

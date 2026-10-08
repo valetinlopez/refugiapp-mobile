@@ -28,6 +28,7 @@
 - `(app)/care-tasks/[id]`: detalle de tarea (lectura para los tres roles, con acciones de escritura según capacidad), destino seguro de la navegación por notificación push.
 - `(app)/animals/[id]`: incorpora la sección Adopción para los tres roles; `admin` y `shelter_manager` pueden gestionar postulaciones y aprobar, mientras `veterinarian` solo consulta el historial sin datos personales.
 - `(app)/animals/[id]/adoptions/new`: formulario protegido para registrar adoptante y postulación, con retorno a la sección Adopción.
+- `(app)/expenses`: listado global paginado de gastos (D21/RFG-154) para los tres roles, con filtros por animal, categoría y fechas y entrada desde "Más > Gestión"; la ruta delgada compone `AccountHeaderRow` (`fallbackHref='/more'`) y `ExpensesOverviewScreen`.
 - `(app)/expenses/new`: alta de gasto con comprobante para `admin` y `shelter_manager`.
 - `(app)/users`: listado paginado, alta y edicion (`[id]/edit`) de usuarios internos, visible solo para `admin`; `new.tsx` mantiene el guard y compone de forma lazy `CreateUserScreen`, que posee formulario, confirmacion y mutacion. La activacion y desactivacion se confirman desde el listado y el cambio de rol se confirma desde la edicion.
 - D11/RFG-144 prueba la matriz completa de Cuenta/Mas para los tres roles. Los deep links de listado, alta y edicion de usuarios deben conservar un guard local reactivo: al perder `canManageUsers`, desmontan el contenido protegido y muestran “Sin permiso”; ocultar el destino en Mas no sustituye este guard ni la autorizacion del backend.

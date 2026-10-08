@@ -249,11 +249,11 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     id: 'D06-13',
     index: 13,
     referenceFile: '13-expenses-overview.jpeg',
-    route: 'app/(app)/expenses/index.tsx (pendiente)',
+    route: 'app/(app)/expenses/index.tsx',
     audience: 'Lectura los tres roles; escritura admin/shelter_manager (canManageExpenses)',
     states: ['default', 'loading', 'empty', 'error', 'offline'],
     divergences: [
-      { kind: 'pending', note: 'Listado global (RFG-154).' },
+      { kind: 'implemented', note: 'Listado global (RFG-154).' },
       {
         kind: 'ux',
         note: 'No existe total monetario global; se muestra "Subtotal cargado".',

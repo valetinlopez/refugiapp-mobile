@@ -11,17 +11,17 @@ describe('getAuthorizedManagementDestinations', () => {
     {
       blocked: [],
       role: 'admin',
-      visible: ['veterinarians', 'users', 'audit'],
+      visible: ['veterinarians', 'expenses', 'users', 'audit'],
     },
     {
       blocked: ['users', 'audit'],
       role: 'shelter_manager',
-      visible: ['veterinarians'],
+      visible: ['veterinarians', 'expenses'],
     },
     {
       blocked: ['users', 'audit'],
       role: 'veterinarian',
-      visible: ['veterinarians'],
+      visible: ['veterinarians', 'expenses'],
     },
   ] as const)(
     'defines visible and blocked destinations for $role',
@@ -33,7 +33,7 @@ describe('getAuthorizedManagementDestinations', () => {
   );
 
   it('denies privileged destinations when no capability is available', () => {
-    expect(destinationIds([])).toEqual(['veterinarians']);
+    expect(destinationIds([])).toEqual(['veterinarians', 'expenses']);
   });
 
   it('removes privileged destinations when capabilities are lost', () => {
