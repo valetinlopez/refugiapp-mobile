@@ -2,12 +2,13 @@ import { apiClient, type HttpClient } from '@/core/api';
 
 import type {
   CreateExpenseRequest,
+  Expense,
   ExpenseFilters,
   ExpenseResponse,
   PaginatedExpenses,
   PaginatedExpensesResponse,
 } from '../types';
-import { toPaginatedExpenses } from '../types';
+import { toExpense, toPaginatedExpenses } from '../types';
 
 export const expensesApi = {
   async create(
@@ -16,6 +17,11 @@ export const expensesApi = {
   ): Promise<ExpenseResponse> {
     const response = await client.post<ExpenseResponse>('/expenses', data);
     return response.data;
+  },
+
+  async getById(id: string, client: HttpClient = apiClient): Promise<Expense> {
+    const response = await client.get<ExpenseResponse>(`/expenses/${id}`);
+    return toExpense(response.data);
   },
 
   async list(
@@ -47,5 +53,9 @@ export const expensesApi = {
       params: { page, limit },
     });
     return toPaginatedExpenses(response.data);
+  },
+
+  async remove(id: string, client: HttpClient = apiClient): Promise<void> {
+    await client.delete<void>(`/expenses/${id}`);
   },
 };

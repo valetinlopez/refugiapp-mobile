@@ -9,6 +9,8 @@
 
 - `POST /expenses`: crea un gasto con `animalId`, `category`, `amountCents`, `currency`, `description`, `incurredAt` y `ticketMediaId` opcional.
 - `GET /expenses`: listado global paginado con filtros `page`, `limit`, `animalId`, `category` y rango `from`/`to` (ISO `date-time`). `total` es el conteo paginado del servidor; no existe un total monetario global.
+- `GET /expenses/:id`: detalle de un gasto; devuelve `ExpenseResponseDto` y responde `404` si no existe o fue dado de baja. Lectura para los tres roles.
+- `DELETE /expenses/:id`: baja lógica (`deletedAt`) con `204` sin body; solo `admin` y `shelter_manager`. `404` si no existe o ya estaba dado de baja.
 - `GET /animals/:animalId/expenses`: lectura paginada por animal (hoy solo primera página de 20 en su detalle).
 - `POST /media/upload` sin owner crea el comprobante huérfano; `POST /expenses` lo vincula mediante `ticketMediaId`.
 - Categorías: `food | medicine | veterinary | supplies | transport | other`.
@@ -17,22 +19,24 @@
 
 ## Permisos
 
-- Los tres roles tienen lectura del listado global y del detalle por animal.
-- `admin` y `shelter_manager` pueden crear gastos; `veterinarian` no ve la acción de alta.
+- Los tres roles tienen lectura del listado global, del detalle (`GET /expenses/:id`) y del detalle por animal.
+- `admin` y `shelter_manager` pueden crear gastos y darlos de baja (`DELETE /expenses/:id`); `veterinarian` no ve las acciones de alta ni de borrado.
 - El backend vuelve a validar los permisos; el guard visual no lo reemplaza.
 
 ## Estructura y seguridad
 
-- `api/`: gastos (alta, listado global y por animal) y subida/borrado del comprobante.
+- `api/`: gastos (alta, detalle `getById`, listado global, listado por animal y baja `remove`) y subida/borrado del comprobante.
 - `components/`: formulario, selector de comprobante, listado global (`ExpensesOverviewScreen`, `ExpenseOverviewCard`, `ExpenseFilterSheets`).
 - `hooks/`: alta, `useInfiniteExpenses` (paginación global + `flattenExpensePages`), `useAnimalExpenses`, invalidaciones, `expenseKeys` y `useExpenseAnimals` (delega las opciones de animales en `src/application/animals`).
-- `utils/`: esquema Zod, mapper del request, presentación (`expensePresentation`), importes (`expenseTotals`), filtros de fecha (`expenseFilters`) y `expenseErrorMessages` (`toCreateExpenseErrorMessage` traduce 400/422, 403, 404, 409, cancelación de subida y red/timeout a español rioplatense, delegando el fallback en `toApiErrorMessage` de `core/api`).
+- `utils/`: esquema Zod, mapper del request, presentación (`expensePresentation`), importes (`expenseTotals`), filtros de fecha (`expenseFilters`) y `expenseErrorMessages` (`toCreateExpenseErrorMessage`, `toExpenseDetailErrorMessage` y `toDeleteExpenseErrorMessage` traducen 400/422, 403, 404, 409, cancelación de subida y red/timeout a español rioplatense, delegando el fallback en `toApiErrorMessage` de `core/api`).
 - No registrar importes, comprobantes, tokens ni payloads financieros en logs.
 - Si el alta falla después de subir media, borrar el asset huérfano best-effort (limpieza silenciosa; no es una acción iniciada por el usuario y no requiere confirmación).
 
 ## Testing
 
 - Unit tests de importes, filtros de fecha y del multipart.
+- Client API tests (transporte falso) del listado, del detalle (`getById`, mapeo `ticketMediaId` nulo, `404` y `403`) y de la baja (`remove`, `204` sin body, `404` y `403`).
+- Unit tests de los mensajes de error de alta, detalle y borrado.
 - Component test RNTL del formulario y del listado global (estados, permisos, filtros y fallback de nombre).
 - Hook tests de paginación global (`useInfiniteExpenses`), deduplicación e invalidación de gastos y dashboard.
 
@@ -48,8 +52,9 @@
 - El listado por animal ofrece `Registrar gasto` a roles de escritura con `animalId` precargado. Como el backend no expone `PATCH /expenses/:id`, informa que la edición no está disponible y no muestra una acción rota; `veterinarian` conserva una vista de solo lectura.
 - Errores del alta traducidos con `toCreateExpenseErrorMessage` (validación, permisos, recurso ausente, comprobante vinculado, cancelación de subida y red/timeout), sin exponer payloads ni tokens.
 - Listado global D21 (RFG-154): ruta delgada `app/(app)/expenses/index.tsx` (accesible desde "Más > Gestión" para los tres roles) que compone `ExpensesOverviewScreen`. `useInfiniteExpenses` pagina `GET /expenses` en páginas de 20 con deduplicación por UUID y sin reordenar; filtros por animal, categoría y rango de fechas (presets + rango simple con `DateTimeField`, día local inclusivo y validación `from ≤ to`). "Subtotal cargado" suma solo las páginas cargadas (`sumExpenseAmountCents`, enteros) y nunca se rotula como total global; el total de registros proviene del `total` paginado. Los nombres de animal se resuelven best-effort desde la cache compartida de `src/application/animals` con fallback explícito `Animal no disponible` (nunca UUID crudo). Estados loading/vacío/error/offline, pull-to-refresh, paginación incremental y FAB de alta solo con `canManageExpenses`.
+- Contrato D22 (RFG-155): el snapshot `openapi/mobile.openapi.json` incorpora `GET /expenses/{id}` y `DELETE /expenses/{id}` (ambos ya publicados por el backend) y los tipos generados siguen derivándose del snapshot sin tipos escritos a mano. `expensesApi` expone `getById` (mapea `ExpenseResponseDto` con `toExpense`, normaliza `ticketMediaId` nulo) y `remove` (`DELETE`, `204` sin body, sin mapper); `toExpenseDetailErrorMessage` y `toDeleteExpenseErrorMessage` traducen 403/404 y delegan el fallback en `toApiErrorMessage`. Sin hooks, query keys de detalle ni UI de detalle, que corresponden a RFG-157.
 
 ### Pendiente o deuda conocida
 
 - El listado por animal muestra la primera página de 20 gastos; todavía no expone paginación incremental.
-- El detalle y el borrado de un gasto dependen de ampliar el snapshot OpenAPI móvil (`RFG-155`) y de la historia de detalle (`RFG-157`); por eso las tarjetas del listado global hoy no navegan a un detalle inexistente.
+- El consumo UI del detalle y el borrado de un gasto (`/expenses/[id]`, confirmación, invalidaciones y navegación desde el listado global) depende de la historia de detalle (`RFG-157`); el contrato y el cliente API ya están listos tras RFG-155.
