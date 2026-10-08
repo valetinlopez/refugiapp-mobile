@@ -1,7 +1,15 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 
+import { useAnimalOptionPhoto } from '@/application/animals';
+
 import type { CareTask } from '../types';
 import { CareTaskForm } from './CareTaskForm';
+
+jest.mock('@/application/animals', () => ({
+  useAnimalOptionPhoto: jest.fn(),
+}));
+
+const mockUseAnimalOptionPhoto = useAnimalOptionPhoto as jest.Mock;
 
 jest.mock('@react-native-community/datetimepicker', () => {
   const React = jest.requireActual<typeof import('react')>('react');
@@ -47,12 +55,16 @@ function createTask(): CareTask {
 }
 
 describe('CareTaskForm', () => {
+  beforeEach(() => {
+    mockUseAnimalOptionPhoto.mockReturnValue({ data: 'https://cdn.test/luna.jpg' });
+  });
+
   it('creates a pending task with the selected animal and optional date', async () => {
     const onSubmit = jest.fn();
     const onCancel = jest.fn();
     const screen = await render(
       <CareTaskForm
-        animalOptions={[{ id: ANIMAL_ID, name: 'Luna' }]}
+        animalOptions={[{ id: ANIMAL_ID, name: 'Luna', profilePhotoMediaId: 'media-id' }]}
         mode="create"
         onCancel={onCancel}
         onSubmit={onSubmit}
@@ -62,6 +74,7 @@ describe('CareTaskForm', () => {
     expect(screen.getByLabelText('Estado inicial: Pendiente')).toBeTruthy();
     expect(screen.getByText('0 / 160')).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Seleccionar animal' }));
+    expect(screen.getByTestId('app-avatar-image')).toBeTruthy();
     await fireEvent.press(screen.getByRole('radio', { name: 'Luna' }));
     await fireEvent.changeText(screen.getByLabelText('Título'), '  Dar medicación  ');
     await fireEvent.changeText(screen.getByLabelText('Descripción'), '  Una dosis  ');

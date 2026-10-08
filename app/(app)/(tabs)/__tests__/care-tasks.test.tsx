@@ -9,6 +9,10 @@ import type { CareTask, PaginatedCareTasks } from '@/features/care-tasks/types';
 
 import CareTasksRoute from '../care-tasks';
 
+jest.mock('@/application/animals', () => ({
+  useAnimalOptionPhoto: jest.fn(() => ({ data: undefined })),
+}));
+
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), replace: jest.fn(), setParams: jest.fn() },
   useLocalSearchParams: () => ({}),

@@ -8,6 +8,10 @@ import { useCreateCareTask } from '@/features/care-tasks/hooks/useCreateCareTask
 
 import NewCareTaskScreen from '../new';
 
+jest.mock('@/application/animals', () => ({
+  useAnimalOptionPhoto: jest.fn(() => ({ data: undefined })),
+}));
+
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), canGoBack: jest.fn(), replace: jest.fn() },
   useLocalSearchParams: () => ({}),

@@ -11,7 +11,7 @@ import {
 
 import { BottomSheet } from '@/components/feedback';
 import { DateTimeField, SectionHeader } from '@/components/patterns';
-import { AppAvatar, AppBadge, AppButton, AppCard, AppIcon, AppText } from '@/components/primitives';
+import { AppBadge, AppButton, AppCard, AppIcon, AppText } from '@/components/primitives';
 import { colors, fontFamilies, opacity, radii, sizes, spacing } from '@/theme';
 
 import type {
@@ -25,6 +25,7 @@ import {
   type CreateCareTaskFormInput,
   updateCareTaskSchema,
 } from '../utils/careTaskSchema';
+import { CareTaskAnimalAvatar } from './CareTaskAnimalAvatar';
 
 interface BaseProps {
   errorMessage?: string | null;
@@ -215,9 +216,9 @@ function AnimalSelector({
         style={({ pressed }) => [styles.selector, pressed && styles.pressed]}
       >
         {selected ? (
-          <AppAvatar
-            accessibilityLabel={'Foto de ' + selected.name}
-            initials={selected.name}
+          <CareTaskAnimalAvatar
+            name={selected.name}
+            profilePhotoMediaId={selected.profilePhotoMediaId}
             size="sm"
           />
         ) : (
@@ -268,9 +269,9 @@ function AnimalSelector({
                   pressed && styles.pressed,
                 ]}
               >
-                <AppAvatar
-                  accessibilityLabel={'Foto de ' + animal.name}
-                  initials={animal.name}
+                <CareTaskAnimalAvatar
+                  name={animal.name}
+                  profilePhotoMediaId={animal.profilePhotoMediaId}
                   size="sm"
                 />
                 <AppText style={styles.optionName} variant="label">

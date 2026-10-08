@@ -26,3 +26,52 @@ export function formatCareTaskDate(value: string | null): string {
   if (value === null || value === '') return 'Sin fecha';
   return formatDateTime(value) || 'Sin fecha';
 }
+
+export interface CareTaskDetailStatusPresentation {
+  message: string;
+  primary: { icon: AppIconName; label: string; tone: BadgeTone };
+  secondary?: { icon: AppIconName; label: string; tone: BadgeTone };
+}
+
+export function getCareTaskDetailStatusPresentation(
+  status: CareTaskStatus,
+  dueAt: string | null,
+  now = new Date()
+): CareTaskDetailStatusPresentation {
+  if (status === 'completed') {
+    return {
+      primary: { icon: 'check', label: 'Completada', tone: 'positive' },
+      message: 'La tarea fue completada y ya no admite cambios.',
+    };
+  }
+  if (status === 'cancelled') {
+    return {
+      primary: { icon: 'close', label: 'Cancelada', tone: 'neutral' },
+      message: 'La tarea fue cancelada y ya no admite cambios.',
+    };
+  }
+
+  const primary = { icon: 'clock', label: 'Pendiente', tone: 'warning' } as const;
+  const derived = getCareTaskStatusPresentation(status, dueAt, now);
+  if (derived.label === 'Vencida') {
+    return {
+      primary,
+      secondary: derived,
+      message: 'Sigue pendiente · el vencimiento ya pasó.',
+    };
+  }
+  if (derived.label === 'Próxima') {
+    return {
+      primary,
+      secondary: derived,
+      message: 'Sigue pendiente · vence dentro de las próximas 24 horas.',
+    };
+  }
+  return {
+    primary,
+    message:
+      dueAt === null
+        ? 'Sigue pendiente · sin fecha de vencimiento.'
+        : 'Sigue pendiente · en plazo.',
+  };
+}

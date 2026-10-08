@@ -57,14 +57,14 @@ export function CareTasksOverviewScreen({
     () => flattenCareTaskPages(tasksQuery.data?.pages),
     [tasksQuery.data?.pages]
   );
-  const animalNames = useMemo(
-    () => new Map(animalsQuery.data?.map((animal) => [animal.id, animal.name]) ?? []),
+  const animalsById = useMemo(
+    () => new Map(animalsQuery.data?.map((animal) => [animal.id, animal]) ?? []),
     [animalsQuery.data]
   );
   const selectedAnimalName =
     animalId === undefined
       ? undefined
-      : (animalNames.get(animalId) ??
+      : (animalsById.get(animalId)?.name ??
         (animalId === initialAnimalId ? initialAnimalName : undefined));
   const statusOptions = STATUS_OPTIONS.map((option) => ({
     ...option,
@@ -77,12 +77,13 @@ export function CareTasksOverviewScreen({
   const renderTask = useCallback(
     ({ item }: { item: CareTask }) => (
       <CareTaskOverviewCard
-        animalName={animalNames.get(item.animalId) ?? 'Animal'}
+        animalName={animalsById.get(item.animalId)?.name ?? 'Animal'}
         onPress={() => openTask(item)}
+        profilePhotoMediaId={animalsById.get(item.animalId)?.profilePhotoMediaId}
         task={item}
       />
     ),
-    [animalNames, openTask]
+    [animalsById, openTask]
   );
   const loadMore = useCallback(() => {
     if (tasksQuery.hasNextPage && !tasksQuery.isFetchingNextPage) {
