@@ -1,4 +1,8 @@
-import { formatCareTaskDate, getCareTaskStatusPresentation } from './careTaskPresentation';
+import {
+  formatCareTaskDate,
+  getCareTaskDetailStatusPresentation,
+  getCareTaskStatusPresentation,
+} from './careTaskPresentation';
 
 describe('care task presentation', () => {
   const now = new Date('2026-09-22T12:00:00.000Z');
@@ -41,5 +45,30 @@ describe('care task presentation', () => {
 
   it('formats empty dates safely', () => {
     expect(formatCareTaskDate(null)).toBe('Sin fecha');
+  });
+
+  it('keeps the persisted pending status alongside overdue and upcoming derivations', () => {
+    expect(
+      getCareTaskDetailStatusPresentation('pending', '2026-09-21T12:00:00.000Z', now)
+    ).toMatchObject({
+      primary: { label: 'Pendiente' },
+      secondary: { label: 'Vencida' },
+      message: 'Sigue pendiente · el vencimiento ya pasó.',
+    });
+    expect(
+      getCareTaskDetailStatusPresentation('pending', '2026-09-23T11:00:00.000Z', now)
+    ).toMatchObject({
+      primary: { label: 'Pendiente' },
+      secondary: { label: 'Próxima' },
+    });
+  });
+
+  it('presents completed and cancelled as terminal states', () => {
+    expect(getCareTaskDetailStatusPresentation('completed', null, now)).toMatchObject({
+      primary: { label: 'Completada' },
+    });
+    expect(getCareTaskDetailStatusPresentation('cancelled', null, now)).toMatchObject({
+      primary: { label: 'Cancelada' },
+    });
   });
 });

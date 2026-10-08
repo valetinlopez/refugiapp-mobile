@@ -1,18 +1,25 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppAvatar, AppBadge, AppCard, AppIcon, AppText } from '@/components/primitives';
+import { AppBadge, AppCard, AppIcon, AppText } from '@/components/primitives';
 import { opacity, sizes, spacing } from '@/theme';
 
 import type { CareTask } from '../types';
 import { formatCareTaskDate, getCareTaskStatusPresentation } from '../utils/careTaskPresentation';
+import { CareTaskAnimalAvatar } from './CareTaskAnimalAvatar';
 
 export interface CareTaskOverviewCardProps {
   animalName: string;
   onPress(): void;
+  profilePhotoMediaId?: string | null | undefined;
   task: CareTask;
 }
 
-export function CareTaskOverviewCard({ animalName, onPress, task }: CareTaskOverviewCardProps) {
+export function CareTaskOverviewCard({
+  animalName,
+  onPress,
+  profilePhotoMediaId,
+  task,
+}: CareTaskOverviewCardProps) {
   const presentation = getCareTaskStatusPresentation(task.status, task.dueAt);
   const dateLabel = formatCareTaskDate(task.dueAt);
   const description = task.description?.trim();
@@ -26,7 +33,11 @@ export function CareTaskOverviewCard({ animalName, onPress, task }: CareTaskOver
       testID="care-task-overview-card"
     >
       <AppCard style={styles.card} variant="elevated">
-        <AppAvatar accessibilityLabel={`Foto de ${animalName}`} initials={animalName} size="lg" />
+        <CareTaskAnimalAvatar
+          name={animalName}
+          profilePhotoMediaId={profilePhotoMediaId}
+          size="lg"
+        />
         <View style={styles.content}>
           <AppText numberOfLines={1} variant="heading3">
             {animalName}

@@ -27,7 +27,7 @@
 
 - `api/`: tareas (el listado de opciones de animales delega en `src/application/animals`).
 - `components/`: formulario, tarjetas y confirmaciones.
-- `hooks/`: queries, mutations, `useCareTaskAnimals` (delega las opciones de animales en `src/application/animals`) e invalidaciones.
+- `hooks/`: queries, mutations, `useCareTaskAnimals`/`useCareTaskAnimal` (delegan la identidad resumida de animales en `src/application/animals`) e invalidaciones.
 - `utils/`: validación, mapeo y presentación.
 - `types.ts`: modelos de vista y aliases del contrato generado.
 
@@ -50,20 +50,21 @@
 - Listado embebido en el detalle del animal con completar/cancelar inline, confirmación e invalidación de queries después de la respuesta del backend (sin actualización optimista).
 - El listado embebido ofrece `Nueva tarea` a roles de escritura, abre `/care-tasks/new?animalId=` con el animal precargado y conserva el detalle/pestaña Tareas como fallback contextual.
 - Ruta principal `app/(app)/(tabs)/care-tasks.tsx` (tab visible "Cuidados", etiqueta renombrada en el layout; la ruta `care-tasks` no cambia); la ruta legacy `/inbox` redirige a `/care-tasks`.
-- Detalle de tarea `app/(app)/care-tasks/[id]/index.tsx` (lectura para los tres roles, acciones inline según `canEditAnimal` mediante `CareTaskCard`), destino seguro de la navegación por notificación push (RFG-126).
+- Detalle de tarea `app/(app)/care-tasks/[id]/index.tsx` como ruta delgada sobre `CareTaskDetailScreen`, visible para los tres roles y destino seguro de la navegación por notificación push (RFG-126/RFG-153).
 - Alta y edición mediante formularios validados.
 - `dueAt` opcional mediante selector nativo compartido; si se informa debe ser futuro, con fallback textual web.
 - Confirmaciones para completar y cancelar tareas pendientes mediante `CareTaskActionDialog`, que envuelve el `ConfirmDialog` compartido del sistema de diseño (danger para cancelar, primary para completar).
 - Invalidación de las queries de tareas y dashboard después de cada mutación.
 - Piloto de reintento offline (RFG-87): `useCompleteCareTask`/`useCancelCareTask` aceptan una `MutationRetryQueue` opcional de `src/core/network`; ante un fallo de red encolan la transición (`care-task-complete:<id>`, `care-task-cancel:<id>`) en lugar de perderla, y `AnimalCareTasks` muestra "Cambios pendientes de envío" con `testID="care-tasks-pending"`. La cola reintenta con backoff al reconectar; solo acepta estas transiciones marcadas `safeToRetry`.
 - Guards visuales de escritura para `admin` y `shelter_manager`.
-- El selector de animal usa el contrato compartido `src/application/animals`: `GET /animals?page=1&limit=100` sin sort en el request (orden alfabético en cliente) y fallback a `GET /animals/:id` cuando llega un `animalId` UUID válido y el listado falla o no lo contiene; el error se traduce por causa y el reintento funciona.
+- El selector de animal usa el contrato compartido `src/application/animals`: `GET /animals?page=1&limit=100` sin sort en el request (orden alfabético en cliente) y fallback a `GET /animals/:id` cuando llega un `animalId` UUID válido y el listado falla o no lo contiene; el error se traduce por causa y el reintento funciona. Selector, tarjetas globales y detalle resuelven la foto por `profilePhotoMediaId`, con cache y fallback a iniciales.
 - Mensaje de solo lectura explicativo para roles sin permisos de escritura en el listado; no se muestran botones que responderían 403.
 - Estados finales (`completed`, `cancelled`) presentados con icono, texto y tono, sin acciones disponibles.
 - Bloqueo de acciones por fila durante una mutación (`pendingActionId`), no global; el resto de la lista permanece interactiva.
 - Rediseño del listado global D18 (RFG-151): `CareTasksOverviewScreen` mantiene la ruta del tab delgada, presenta contadores de `pending`/`completed`/`cancelled` mediante tres queries independientes `limit=1` que comparten `animalId`, y pagina la lista seleccionada con `useInfiniteQuery` en páginas de 20. El selector de animal se aplica tanto a la lista como a los tres contadores.
 - Las tarjetas globales navegan al detalle y derivan `Vencida` cuando `dueAt < now` y `Próxima` cuando vence dentro de las siguientes 24 horas. Ambas son presentaciones con icono y texto; nunca se envían ni persisten como estados. La lista distingue carga, vacío, error, offline, reintento incremental y fin de paginación.
 - Rediseño del alta D19 (RFG-152): `CreateCareTaskScreen` concentra preparación, permisos y mutación; la ruta `app/(app)/care-tasks/new.tsx` solo valida el parámetro UUID y compone la feature. El formulario pide únicamente animal, título, descripción opcional y vencimiento opcional, explica que el estado inicial será `pending`, anuncia el resultado accesiblemente y conserva el borrador ante errores. El selector consume exclusivamente `AnimalOption` desde `src/application/animals` y no inventa tipo ni responsable asignable.
+- Rediseño del detalle D20 (RFG-153): `CareTaskDetailScreen` diferencia estado persistido de señales derivadas (`Vencida`/`Próxima`), presenta identidad del animal con foto, descripción y fechas, y permite abrir su ficha. Editar, completar y cancelar se muestran solo con `canEditAnimal`; completar/cancelar requieren confirmación y soportan la cola offline existente. Carga, UUID inválido, error, offline, pérdida de permiso y estados terminales tienen presentaciones explícitas.
 
 ### Pendiente o deuda conocida
 
