@@ -23,6 +23,7 @@ Los ADRs registran decisiones técnicas relevantes, su contexto y sus consecuenc
 | [ADR-0015](0015-brand-assets-marca-original.md)         | Assets de marca originales y pipeline de generación | Aceptado |
 | [ADR-0016](0016-hero-stock-licenciado-pngtree.md)       | Hero de stock licenciado (Pngtree) con atribución   | Aceptado |
 | [ADR-0017](0017-curved-tab-bar.md)                      | Barra de navegación inferior curva con SVG          | Aceptado |
+| [ADR-0018](0018-native-modal-bottom-sheet.md)           | Sheet inferior del sistema de diseño con Modal      | Aceptado |
 
 ## Cómo agregar una decisión
 

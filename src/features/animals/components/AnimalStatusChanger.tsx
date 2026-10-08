@@ -1,156 +1,133 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText } from '@/components/primitives';
-import { colors, radii, sizes, spacing } from '@/theme';
+import { AppBadge, AppButton, AppCard, AppText } from '@/components/primitives';
+import { spacing } from '@/theme';
 
 import type { AnimalStatus } from '../types';
 import {
   getAllowedTransitions,
-  getStatusConsequence,
+  getStatusBadge,
   getStatusLabel,
+  isTerminalStatus,
 } from '../utils/animalTransitions';
 
+import { AnimalStatusSheet } from './AnimalStatusSheet';
 import { StatusConfirmDialog } from './StatusConfirmDialog';
 
-interface AnimalStatusChangerProps {
+export interface AnimalStatusChangerProps {
+  animalName: string;
   currentStatus: AnimalStatus;
   disabled?: boolean;
   errorMessage?: string | null;
+  onConfirm(status: AnimalStatus, occurredAt?: string): void;
   submitting?: boolean;
-  onConfirm(status: AnimalStatus): void;
 }
 
+interface PendingStatus {
+  status: AnimalStatus;
+  occurredAt?: string;
+}
+
+/**
+ * Orquesta el cambio de estado (D14 / RFG-147): tarjeta de estado actual,
+ * sheet con las transiciones válidas y confirmación destructiva adicional para
+ * estados terminales (`adopted`, `deceased`). Nunca ejecuta la mutación: delega
+ * en `onConfirm` y el backend sigue siendo la autoridad final.
+ */
 export function AnimalStatusChanger({
+  animalName,
   currentStatus,
   disabled = false,
   errorMessage,
   onConfirm,
   submitting = false,
 }: AnimalStatusChangerProps) {
-  const [pending, setPending] = useState<AnimalStatus | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [pending, setPending] = useState<PendingStatus | null>(null);
   const allowed = getAllowedTransitions(currentStatus);
   const busy = disabled || submitting;
+  const badge = getStatusBadge(currentStatus);
 
-  function handleSelect(status: AnimalStatus): void {
-    if (busy) {
+  function handleConfirmFromSheet(status: AnimalStatus, occurredAt?: string): void {
+    setSheetOpen(false);
+    if (isTerminalStatus(status)) {
+      setPending(occurredAt === undefined ? { status } : { status, occurredAt });
       return;
     }
-    setPending(status);
+    onConfirm(status, occurredAt);
   }
 
-  function handleConfirm(): void {
+  function handleConfirmTerminal(): void {
     if (pending === null) {
       return;
     }
     const target = pending;
     setPending(null);
-    onConfirm(target);
+    onConfirm(target.status, target.occurredAt);
   }
 
   return (
-    <View style={styles.container}>
+    <AppCard style={styles.card} variant="outlined">
+      <View style={styles.current}>
+        <AppText color="textSecondary" variant="label">
+          Estado actual
+        </AppText>
+        <AppBadge icon={badge.icon} label={badge.label} tone={badge.tone} />
+      </View>
+
       {allowed.length === 0 ? (
         <AppText color="textSecondary">
           El estado actual (“{getStatusLabel(currentStatus)}”) es final y no admite cambios.
         </AppText>
       ) : (
-        <>
-          <AppText color="textSecondary" variant="caption">
-            Estado actual: {getStatusLabel(currentStatus)}
-          </AppText>
-          <View accessibilityRole="radiogroup" style={styles.options}>
-            {allowed.map((status) => (
-              <StatusOption
-                disabled={busy}
-                key={status}
-                label={getStatusLabel(status)}
-                onPress={() => handleSelect(status)}
-                selected={pending === status}
-              />
-            ))}
-          </View>
-          {pending !== null ? (
-            <StatusConfirmDialog
-              consequence={getStatusConsequence(pending)}
-              label={getStatusLabel(pending)}
-              onCancel={() => setPending(null)}
-              onConfirm={handleConfirm}
-              submitting={submitting}
-              visible
-            />
-          ) : null}
-        </>
+        <AppButton
+          accessibilityHint="Abre el selector de estados disponibles"
+          disabled={busy}
+          label="Cambiar estado"
+          onPress={() => setSheetOpen(true)}
+          testID="status-change-open"
+          variant="secondary"
+        />
       )}
+
       {errorMessage ? (
         <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
           {errorMessage}
         </AppText>
       ) : null}
-    </View>
-  );
-}
 
-function StatusOption({
-  disabled,
-  label,
-  onPress,
-  selected,
-}: {
-  disabled: boolean;
-  label: string;
-  onPress(): void;
-  selected: boolean;
-}) {
-  return (
-    <View
-      accessibilityLabel={label}
-      accessibilityRole="radio"
-      accessibilityState={{ disabled, selected }}
-      style={[styles.option, selected && styles.optionSelected]}
-    >
-      <AppText color={selected ? 'textPrimary' : 'textSecondary'} variant="label">
-        {label}
-      </AppText>
-      <Pressable
-        accessibilityLabel={`Cambiar estado a ${label}`}
-        accessibilityRole="button"
-        disabled={disabled}
-        onPress={onPress}
-        style={styles.optionButton}
-      >
-        <AppText variant="button">Cambiar</AppText>
-      </Pressable>
-    </View>
+      <AnimalStatusSheet
+        animalName={animalName}
+        currentStatus={currentStatus}
+        onClose={() => setSheetOpen(false)}
+        onConfirm={handleConfirmFromSheet}
+        submitting={submitting}
+        visible={sheetOpen}
+      />
+
+      {pending !== null ? (
+        <StatusConfirmDialog
+          onCancel={() => setPending(null)}
+          onConfirm={handleConfirmTerminal}
+          status={pending.status}
+          submitting={submitting}
+          visible
+        />
+      ) : null}
+    </AppCard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     gap: spacing.sm,
   },
-  option: {
+  current: {
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    borderWidth: 1,
     flexDirection: 'row',
-    gap: spacing.md,
+    flexWrap: 'wrap',
+    gap: spacing.sm,
     justifyContent: 'space-between',
-    minHeight: sizes.buttonHeight,
-    paddingHorizontal: spacing.md,
-  },
-  optionButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: sizes.touchTarget,
-    paddingHorizontal: spacing.sm,
-  },
-  optionSelected: {
-    borderColor: colors.positive,
-  },
-  options: {
-    gap: spacing.xs,
   },
 });

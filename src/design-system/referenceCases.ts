@@ -141,12 +141,15 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     audience: 'admin/shelter_manager (canEditAnimal)',
     states: ['default', 'restricted'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-147).' },
+      {
+        kind: 'implemented',
+        note: 'Selector tipo sheet con transiciones válidas y occurredAt opcional (RFG-147).',
+      },
       {
         kind: 'contract',
         note: 'Estados fijos del backend y matriz local animalTransitions.',
       },
-      { kind: 'ux', note: 'Confirmación destructiva explícita.' },
+      { kind: 'ux', note: 'Confirmación destructiva explícita para estados terminales.' },
     ],
     group: 'animals',
   },

@@ -7,13 +7,16 @@ import { animalKeys } from './animalKeys';
 
 export interface ChangeAnimalStatusInput {
   status: AnimalStatus;
+  /** ISO 8601 local. Omitted, the backend records the current time. */
+  occurredAt?: string;
 }
 
 export function useChangeAnimalStatus(id: string) {
   const queryClient = useQueryClient();
 
   return useMutation<Animal, Error, ChangeAnimalStatusInput>({
-    mutationFn: ({ status }) => animalsApi.changeStatus(id, { status }),
+    mutationFn: ({ occurredAt, status }) =>
+      animalsApi.changeStatus(id, occurredAt === undefined ? { status } : { status, occurredAt }),
     onSuccess: (updated) => {
       void queryClient.setQueryData(animalKeys.detail(id), updated);
       void queryClient.invalidateQueries({ queryKey: animalKeys.all });
