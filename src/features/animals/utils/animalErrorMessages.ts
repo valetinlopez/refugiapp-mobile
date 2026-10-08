@@ -138,3 +138,44 @@ export function toCreateAnimalEventErrorMessage(error: unknown): string {
 
   return toApiErrorMessage(error);
 }
+
+export function toAnimalFileUploadErrorMessage(error: unknown): string {
+  if (error instanceof UploadCancelledError) {
+    return 'La subida del archivo fue cancelada.';
+  }
+
+  if (error instanceof ApiError) {
+    switch (error.status) {
+      case 400:
+      case 422:
+        return 'El archivo no es válido. Solo se aceptan imágenes JPEG, PNG o WebP y PDF de hasta 10 MB.';
+      case 403:
+        return 'Tu rol no tiene permiso para subir archivos a este animal.';
+      case 404:
+        return 'El animal ya no está disponible.';
+      case 409:
+        return 'El archivo ya está vinculado a otro registro.';
+      case 413:
+        return 'El archivo supera el tamaño permitido de 10 MB.';
+      default:
+        return error.message;
+    }
+  }
+
+  return toApiErrorMessage(error);
+}
+
+export function toAnimalFileDeleteErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    switch (error.status) {
+      case 403:
+        return 'Tu rol no tiene permiso para eliminar este archivo.';
+      case 404:
+        return 'El archivo ya no está disponible.';
+      default:
+        return error.message;
+    }
+  }
+
+  return toApiErrorMessage(error);
+}

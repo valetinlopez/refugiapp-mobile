@@ -13,6 +13,7 @@ export type ChangeAnimalStatusRequest = components['schemas']['ChangeAnimalStatu
 export type AnimalResponse = components['schemas']['AnimalResponseDto'];
 export type PaginatedAnimalsResponse = components['schemas']['PaginatedAnimalsResponseDto'];
 export type MediaAsset = components['schemas']['MediaAssetResponseDto'];
+export type PaginatedMediaAssetsResponse = components['schemas']['PaginatedMediaAssetsResponseDto'];
 export type CreateAnimalHistoryEventRequest = components['schemas']['CreateAnimalHistoryEventDto'];
 export type AnimalHistoryEventResponse = components['schemas']['AnimalHistoryEventResponseDto'];
 export type PaginatedAnimalHistoryEventsResponse =
@@ -65,6 +66,23 @@ export interface PaginatedAnimalHistoryEvents {
   total: number;
 }
 
+export interface AnimalFile {
+  id: string;
+  name: string;
+  secureUrl: string;
+  /** Images render as optimized thumbnails; any other resource falls back to a glyph. */
+  isImage: boolean;
+  bytes: number | null;
+  format: string | null;
+}
+
+export interface PaginatedAnimalFiles {
+  items: AnimalFile[];
+  page: number;
+  limit: number;
+  total: number;
+}
+
 export function toAnimalView(dto: AnimalResponse): Animal {
   return {
     id: dto.id,
@@ -99,4 +117,52 @@ export function toPaginatedAnimalHistoryEvents(
   dto: PaginatedAnimalHistoryEventsResponse
 ): PaginatedAnimalHistoryEvents {
   return { ...dto, items: dto.items.map(toAnimalHistoryEvent) };
+}
+
+function fileNameFromPublicId(publicId: string, format: string | null, isImage: boolean): string {
+  const segment = publicId.split('/').pop() ?? '';
+  if (segment === '') return publicId;
+  if (isImage || format === null) return segment;
+  const extension = `.${format.toLowerCase()}`;
+  return segment.toLowerCase().endsWith(extension) ? segment : `${segment}${extension}`;
+}
+
+export function toAnimalFile(dto: MediaAsset): AnimalFile {
+  const format = typeof dto.format === 'string' ? dto.format : null;
+  const isImage = dto.resourceType === 'image';
+  return {
+    id: dto.id,
+    name: fileNameFromPublicId(dto.publicId, format, isImage),
+    secureUrl: dto.secureUrl,
+    isImage,
+    bytes: typeof dto.bytes === 'number' ? dto.bytes : null,
+    format,
+  };
+}
+
+export function toPaginatedAnimalFiles(dto: PaginatedMediaAssetsResponse): PaginatedAnimalFiles {
+  return { ...dto, items: dto.items.map(toAnimalFile) };
+}
+
+/**
+ * Flattens the paginated pages, removing duplicate ids and excluding the
+ * current profile photo so it never shows up twice in the animal's files.
+ */
+export function flattenAnimalFilesPages(
+  pages: readonly PaginatedAnimalFiles[] | undefined,
+  excludedMediaId: string | null = null
+): AnimalFile[] {
+  const seen = new Set<string>();
+  const files: AnimalFile[] = [];
+
+  for (const page of pages ?? []) {
+    for (const file of page.items) {
+      if (seen.has(file.id)) continue;
+      seen.add(file.id);
+      if (excludedMediaId !== null && file.id === excludedMediaId) continue;
+      files.push(file);
+    }
+  }
+
+  return files;
 }
