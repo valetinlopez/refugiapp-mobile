@@ -471,6 +471,18 @@ El tab `Cuidados` adopta la jerarquía de `10-care-tasks-overview.jpeg` sin inco
 - **Acciones y permisos:** el FAB `Nueva tarea` aparece solo para `admin` y `shelter_manager`; `veterinarian` conserva lectura y un aviso explícito. El detalle existente mantiene las mutaciones autorizadas y el backend vuelve a validar.
 - **Resiliencia:** carga inicial, vacío filtrado, error de servidor, offline con reintento, error de página siguiente, pull-to-refresh y fin de lista son estados diferenciados. Los controles mantienen targets de 44 × 44 y semántica `radiogroup`/`radio`.
 
+## 46. Nueva tarea de cuidado (D19 / RFG-152)
+
+El alta toma la jerarquía de `11-care-task-new.jpeg` y conserva estrictamente el contrato actual. No incorpora el tipo de tarea, la especie/raza ni un responsable asignable porque esos datos no forman parte de `CreateCareTaskDto` ni de la opción mínima compartida.
+
+- **Encabezado:** fondo de textura, fila de cuenta y retorno contextual, breadcrumb “Cuidados” y `ScreenHeader` con “Nueva tarea” / “Organizá el próximo cuidado”. La ruta conserva como fallback el detalle del animal cuando llega un UUID válido; de lo contrario vuelve al listado global.
+- **Formulario:** una card `elevated` agrupa selector de animal, título obligatorio con contador `x / 160`, descripción opcional con acción de limpieza y vencimiento opcional mediante `DateTimeField`. Los labels distinguen campos obligatorios y opcionales sin depender del color.
+- **Selector de animal:** trigger de 44 pt con avatar por iniciales, nombre y chevron; abre el `BottomSheet` compartido con `radiogroup`/`radio`. Las opciones provienen de `src/application/animals` y contienen solo UUID y nombre.
+- **Estado inicial:** una card `outlined` explica con icono, texto y badge que la tarea se crea como “Pendiente”. Es información de presentación: `pending` no se agrega al payload, porque el backend define el estado inicial.
+- **Acciones y resultado:** “Cancelar” vuelve al origen sin enviar; “Crear tarea” muestra carga durante una única mutación. El éxito invalida lista/contadores, anuncia “Tarea … creada como Pendiente” y vuelve al origen, donde el filtro inicial pendiente permite verla. Los errores conservan todos los campos para reintento manual.
+- **Estados y permisos:** carga, ausencia de animales, error conectado, offline y reintento se distinguen antes de montar el formulario. La pérdida de `canEditAnimal` desmonta inmediatamente el contenido de escritura y presenta “Sin permiso”; el backend vuelve a autorizar el `POST`.
+- **Responsive y accesibilidad:** cards y acciones envuelven, el contenido desplaza, los controles conservan áreas táctiles mínimas, errores usan `role="alert"`/live region y el resultado se anuncia mediante la API de accesibilidad.
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)
