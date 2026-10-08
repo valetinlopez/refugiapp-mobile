@@ -22,7 +22,7 @@
 
 ## Validación
 
-- `src/core/validation` centraliza validadores puros transversales sin dominio (p. ej. `isUuid`).
+- `src/core/validation` centraliza validadores puros transversales sin dominio (p. ej. `isUuid`) y la ventana de fechas compartida (`localDayStart`, `localDayStartMs` y `OCCURRED_AT_FUTURE_TOLERANCE_MS`), que permite validar un instante contra el inicio de día local de una fecha de calendario y la tolerancia de skew de 60 s (ADR-0007). `medical-records` conserva `utils/occurredAtWindow.ts` como re-export de compatibilidad; `animals` la consume directo desde aquí.
 - Las rutas y `src/application` consumen `isUuid` desde aquí en lugar de duplicar el patrón por feature; los `utils/uuid.ts` de features existentes re-exportan este validador.
 
 ## Media

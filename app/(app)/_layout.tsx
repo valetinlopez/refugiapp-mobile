@@ -32,10 +32,7 @@ export default function AppLayout() {
         <Stack.Screen name="animals/new" options={{ title: 'Alta de animal' }} />
         <Stack.Screen name="animals/[id]" options={{ title: 'Detalle del animal' }} />
         <Stack.Screen name="animals/[id]/edit" options={{ title: 'Editar animal' }} />
-        <Stack.Screen
-          name="animals/[id]/events/new"
-          options={{ title: 'Registrar evento general' }}
-        />
+        <Stack.Screen name="animals/[id]/events/new" options={{ title: 'Agregar evento' }} />
         <Stack.Screen
           name="animals/[id]/medical-records/new"
           options={{ title: 'Registrar consulta' }}

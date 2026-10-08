@@ -172,8 +172,13 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     referenceFile: '08-animal-event-new.jpeg',
     route: 'app/(app)/animals/[id]/events/new.tsx',
     audience: 'admin/shelter_manager (canEditAnimal)',
-    states: ['default', 'error'],
-    divergences: [{ kind: 'pending', note: 'Rediseño (RFG-148).' }],
+    states: ['default', 'loading', 'error', 'offline'],
+    divergences: [
+      {
+        kind: 'implemented',
+        note: 'Formulario rediseñado con card orgánica de identidad, selector de tipo por sheet y validación contra el intakeDate (RFG-148).',
+      },
+    ],
     group: 'animals',
   },
   {
