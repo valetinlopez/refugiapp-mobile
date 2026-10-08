@@ -47,22 +47,26 @@ function createTask(): CareTask {
 }
 
 describe('CareTaskForm', () => {
-  it('creates a task with animal, date and authenticated responsible', async () => {
+  it('creates a pending task with the selected animal and optional date', async () => {
     const onSubmit = jest.fn();
+    const onCancel = jest.fn();
     const screen = await render(
       <CareTaskForm
         animalOptions={[{ id: ANIMAL_ID, name: 'Luna' }]}
         mode="create"
+        onCancel={onCancel}
         onSubmit={onSubmit}
-        responsibleLabel="admin@refugiapp.test"
       />
     );
 
-    expect(screen.getByLabelText('Responsable del registro: admin@refugiapp.test')).toBeTruthy();
+    expect(screen.getByLabelText('Estado inicial: Pendiente')).toBeTruthy();
+    expect(screen.getByText('0 / 160')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Seleccionar animal' }));
     await fireEvent.press(screen.getByRole('radio', { name: 'Luna' }));
     await fireEvent.changeText(screen.getByLabelText('Título'), '  Dar medicación  ');
     await fireEvent.changeText(screen.getByLabelText('Descripción'), '  Una dosis  ');
-    await fireEvent.press(screen.getByLabelText('Elegir fecha y hora'));
+    expect(screen.getByText('18 / 160')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Elegir fecha y hora de vencimiento'));
     await fireEvent.press(screen.getByLabelText('selector de fecha y hora'));
     await fireEvent.press(screen.getByLabelText('Crear tarea'));
 
@@ -74,6 +78,9 @@ describe('CareTaskForm', () => {
         dueAt: expect.any(String),
       });
     });
+
+    await fireEvent.press(screen.getByLabelText('Cancelar'));
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
   it('edits a task and clears empty optional fields', async () => {
@@ -111,8 +118,8 @@ describe('CareTaskForm', () => {
         animalOptions={[{ id: ANIMAL_ID, name: 'Luna' }]}
         errorMessage="Tu rol no tiene permiso para realizar esta acción."
         mode="create"
+        onCancel={jest.fn()}
         onSubmit={onSubmit}
-        responsibleLabel="vet@refugiapp.test"
       />
     );
 
