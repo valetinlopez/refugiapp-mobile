@@ -12,5 +12,7 @@ export const medicalRecordKeys = {
     [...medicalRecordKeys.detail(recordId), 'attachments'] as const,
   changes: (recordId: string, filters: MedicalRecordChangeFilters) =>
     [...medicalRecordKeys.detail(recordId), 'changes', filters] as const,
+  animalIntake: (animalId: string) =>
+    [...medicalRecordKeys.all, 'animal-intake', animalId] as const,
   veterinarianOptions: ['veterinarians', 'options'] as const,
 };

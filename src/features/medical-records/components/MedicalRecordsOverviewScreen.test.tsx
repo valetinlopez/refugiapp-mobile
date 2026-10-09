@@ -215,7 +215,7 @@ describe('MedicalRecordsOverviewScreen', () => {
     expect(mockUseInfiniteMedicalRecords).toHaveBeenLastCalledWith({});
   });
 
-  it('navigates to the contextual create route when an animal is selected', async () => {
+  it('navigates to the global create route carrying the selected animal', async () => {
     const screen = await render(
       <MedicalRecordsOverviewScreen initialAnimalId={ANIMAL_ID} initialAnimalName="Luna" />
     );
@@ -224,16 +224,21 @@ describe('MedicalRecordsOverviewScreen', () => {
     await fireEvent.press(screen.getByTestId('clinical-global-create'));
 
     expect(router.push).toHaveBeenCalledWith({
-      pathname: '/animals/[id]/medical-records/new',
-      params: { id: ANIMAL_ID },
+      pathname: '/medical-records/new',
+      params: { animalId: ANIMAL_ID },
     });
   });
 
-  it('keeps read-only presentation without a selected animal', async () => {
+  it('offers the global create action without a selected animal', async () => {
     const screen = await render(<MedicalRecordsOverviewScreen />);
+    const { router } = jest.requireMock('expo-router') as { router: { push: jest.Mock } };
 
-    expect(screen.queryByTestId('clinical-global-create')).toBeNull();
-    expect(screen.getByText(/Para registrar un nuevo registro clínico/)).toBeTruthy();
+    const fab = screen.getByTestId('clinical-global-create');
+    expect(fab).toBeTruthy();
+
+    await fireEvent.press(fab);
+
+    expect(router.push).toHaveBeenCalledWith({ pathname: '/medical-records/new', params: {} });
   });
 
   it('clears active filters back to the unfiltered list', async () => {

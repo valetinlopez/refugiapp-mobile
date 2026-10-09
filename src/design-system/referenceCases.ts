@@ -320,7 +320,7 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
       { kind: 'contract', note: 'shelter_manager recibe 403.' },
       {
         kind: 'pending',
-        note: 'Paginación UI de la evolución clínica por animal y alta global (RFG-159).',
+        note: 'Paginación UI de la evolución clínica por animal.',
       },
     ],
     group: 'clinical',
@@ -329,14 +329,18 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     id: 'D06-17',
     index: 17,
     referenceFile: '17-medical-record-new.jpeg',
-    route: 'app/(app)/animals/[id]/medical-records/new.tsx',
+    route:
+      'app/(app)/medical-records/new.tsx (global, animalId opcional) y contextual app/(app)/animals/[id]/medical-records/new.tsx',
     audience: 'admin/veterinarian (canReadClinicalRecords)',
-    states: ['default', 'error'],
+    states: ['default', 'loading', 'empty', 'error', 'offline', 'restricted'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-159).' },
+      {
+        kind: 'implemented',
+        note: 'Alta global rediseñada (RFG-159) con selector de animal, cards Datos/Información/Adjuntos y footer Cancelar/Guardar.',
+      },
       {
         kind: 'contract',
-        note: 'Veterinario activo obligatorio (VETERINARIAN_INACTIVE).',
+        note: 'Veterinario opcional en el formulario; el backend responde VETERINARIAN_INACTIVE si se elige uno inactivo.',
       },
     ],
     group: 'clinical',

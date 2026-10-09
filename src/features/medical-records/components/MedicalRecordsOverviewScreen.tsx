@@ -290,11 +290,6 @@ export function MedicalRecordsOverviewScreen({
                 Estás trabajando con los registros ya cargados y sin conexión.
               </AppText>
             ) : null}
-            {!hasAnimalFilter && canReadClinicalRecords ? (
-              <AppText color="textSecondary" variant="caption">
-                Para registrar un nuevo registro clínico, elegí un animal.
-              </AppText>
-            ) : null}
           </View>
         }
         onEndReached={loadMore}
@@ -310,15 +305,19 @@ export function MedicalRecordsOverviewScreen({
         renderItem={renderRecord}
         testID="clinical-global-list"
       />
-      {hasAnimalFilter && canReadClinicalRecords ? (
+      {canReadClinicalRecords ? (
         <FAB
-          accessibilityHint="Abre el formulario de registro clínico del animal en su ficha"
-          accessibilityLabel={`Registrar consulta para ${selectedAnimalName ?? 'el animal'}`}
+          accessibilityHint="Abre el formulario global de registro clínico"
+          accessibilityLabel={
+            hasAnimalFilter
+              ? `Registrar consulta para ${selectedAnimalName ?? 'el animal'}`
+              : 'Registrar nuevo registro clínico'
+          }
           bottomOffset={spacing.lg}
           onPress={() =>
             router.push({
-              pathname: '/animals/[id]/medical-records/new',
-              params: { id: animalId ?? '' },
+              pathname: '/medical-records/new',
+              params: animalId === undefined ? {} : { animalId },
             })
           }
           testID="clinical-global-create"

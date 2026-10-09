@@ -1,7 +1,9 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 
+import type { AnimalOption } from '@/application/animals';
+
 import type { MedicalRecord } from '../types';
-import { MedicalRecordForm } from './MedicalRecordForm';
+import { MedicalRecordForm, type CreateMedicalRecordFormProps } from './MedicalRecordForm';
 
 jest.mock('@react-native-community/datetimepicker', () => {
   const React = jest.requireActual<typeof import('react')>('react');
@@ -35,9 +37,19 @@ jest.mock('expo-image-picker', () => ({
   launchImageLibraryAsync: jest.fn(async () => ({ canceled: true })),
 }));
 
+jest.mock('../hooks/useAnimalIntake', () => ({
+  useAnimalIntake: () => ({ data: '2026-01-10', isPending: false }),
+}));
+
+jest.mock('@/application/animals', () => ({
+  useAnimalOptionPhoto: () => ({ data: undefined }),
+}));
+
 const ANIMAL_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
 const VET_ID = '7fa85f64-5717-4562-b3fc-2c963f66afa6';
 const INTAKE_DATE = '2026-01-10';
+
+const ANIMAL_OPTIONS: AnimalOption[] = [{ id: ANIMAL_ID, name: 'Luna', species: 'dog' }];
 
 function createRecord(): MedicalRecord {
   return {
@@ -55,27 +67,37 @@ function createRecord(): MedicalRecord {
   };
 }
 
+function renderCreate(overrides: Partial<CreateMedicalRecordFormProps> = {}) {
+  const onSubmit = jest.fn();
+  const element = (
+    <MedicalRecordForm
+      animalOptions={ANIMAL_OPTIONS}
+      initialAnimalId={ANIMAL_ID}
+      mode="create"
+      onCancel={() => undefined}
+      onSubmit={onSubmit}
+      veterinarianOptions={[]}
+      {...overrides}
+    />
+  );
+  return { element, onSubmit };
+}
+
 describe('MedicalRecordForm (create)', () => {
   it('submits a validated medical record with optional fields', async () => {
-    const onSubmit = jest.fn();
-    const screen = await render(
-      <MedicalRecordForm
-        animalId={ANIMAL_ID}
-        intakeDate={INTAKE_DATE}
-        mode="create"
-        onSubmit={onSubmit}
-        veterinarianOptions={[{ id: VET_ID, name: 'Sofía Romero', licenseNumber: 'VET-001' }]}
-      />
-    );
+    const { element, onSubmit } = renderCreate({
+      veterinarianOptions: [{ id: VET_ID, name: 'Sofía Romero', licenseNumber: 'VET-001' }],
+    });
+    const screen = await render(element);
 
-    expect(screen.getByRole('radio', { name: 'Consulta' })).toBeTruthy();
+    expect(screen.getByText('Consulta')).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText('Título'), '  Consulta general  ');
     await fireEvent.press(screen.getByLabelText('Elegir fecha y hora'));
     await fireEvent.press(screen.getByLabelText('picker'));
-    await fireEvent.press(screen.getByRole('radio', { name: 'Sofía Romero' }));
+    await fireEvent.press(screen.getByTestId('clinical-veterinarian-field'));
+    await fireEvent.press(screen.getByText('Sofía Romero'));
     await fireEvent.changeText(screen.getByLabelText('Diagnóstico'), '  Otitis leve  ');
-    await fireEvent.changeText(screen.getByPlaceholderText('Plan indicado (opcional)'), '');
-    await fireEvent.press(screen.getByLabelText('Registrar consulta'));
+    await fireEvent.press(screen.getByTestId('clinical-record-submit'));
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith({
@@ -95,19 +117,11 @@ describe('MedicalRecordForm (create)', () => {
   });
 
   it('shows validation errors and does not submit invalid data', async () => {
-    const onSubmit = jest.fn();
-    const screen = await render(
-      <MedicalRecordForm
-        animalId={ANIMAL_ID}
-        intakeDate={INTAKE_DATE}
-        mode="create"
-        onSubmit={onSubmit}
-        veterinarianOptions={[]}
-      />
-    );
+    const { element, onSubmit } = renderCreate();
+    const screen = await render(element);
 
     await fireEvent.changeText(screen.getByLabelText('Título'), 'x');
-    await fireEvent.press(screen.getByLabelText('Registrar consulta'));
+    await fireEvent.press(screen.getByTestId('clinical-record-submit'));
 
     expect(await screen.findByText('El título debe tener al menos 3 caracteres.')).toBeTruthy();
     expect(screen.getByText('La fecha y hora es obligatoria.')).toBeTruthy();
@@ -115,19 +129,13 @@ describe('MedicalRecordForm (create)', () => {
   });
 
   it('shows a server error like 403 while submitting', async () => {
-    const screen = await render(
-      <MedicalRecordForm
-        animalId={ANIMAL_ID}
-        errorMessage="Tu rol no tiene permiso para registrar datos clínicos."
-        intakeDate={INTAKE_DATE}
-        isSubmitting
-        mode="create"
-        onSubmit={() => undefined}
-        veterinarianOptions={[]}
-      />
-    );
+    const { element } = renderCreate({
+      errorMessage: 'Tu rol no tiene permiso para registrar datos clínicos.',
+      isSubmitting: true,
+    });
+    const screen = await render(element);
 
-    expect(screen.getByLabelText('Registrar consulta')).toBeDisabled();
+    expect(screen.getByTestId('clinical-record-submit')).toBeDisabled();
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Tu rol no tiene permiso para registrar datos clínicos.'
     );
@@ -135,17 +143,11 @@ describe('MedicalRecordForm (create)', () => {
 
   it('renders an empty state with retry when there are no active veterinarians', async () => {
     const onRetryVeterinarians = jest.fn();
-    const screen = await render(
-      <MedicalRecordForm
-        animalId={ANIMAL_ID}
-        intakeDate={INTAKE_DATE}
-        mode="create"
-        onRetryVeterinarians={onRetryVeterinarians}
-        onSubmit={() => undefined}
-        veterinarianOptions={[]}
-        veterinariansStatus="empty"
-      />
-    );
+    const { element } = renderCreate({
+      onRetryVeterinarians,
+      veterinariansStatus: 'empty',
+    });
+    const screen = await render(element);
 
     expect(screen.getByText('Sin veterinarios activos')).toBeTruthy();
     expect(
@@ -157,17 +159,11 @@ describe('MedicalRecordForm (create)', () => {
 
   it('renders a recoverable error state when veterinarians fail to load', async () => {
     const onRetryVeterinarians = jest.fn();
-    const screen = await render(
-      <MedicalRecordForm
-        animalId={ANIMAL_ID}
-        intakeDate={INTAKE_DATE}
-        mode="create"
-        onRetryVeterinarians={onRetryVeterinarians}
-        onSubmit={() => undefined}
-        veterinarianOptions={[]}
-        veterinariansStatus="error"
-      />
-    );
+    const { element } = renderCreate({
+      onRetryVeterinarians,
+      veterinariansStatus: 'error',
+    });
+    const screen = await render(element);
 
     expect(screen.getByText('No se pudieron cargar los veterinarios')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Reintentar'));
@@ -175,37 +171,20 @@ describe('MedicalRecordForm (create)', () => {
   });
 
   it('shows a loading state while veterinarians are being fetched', async () => {
-    const screen = await render(
-      <MedicalRecordForm
-        animalId={ANIMAL_ID}
-        intakeDate={INTAKE_DATE}
-        mode="create"
-        onSubmit={() => undefined}
-        veterinarianOptions={[]}
-        veterinariansStatus="loading"
-      />
-    );
+    const { element } = renderCreate({ veterinariansStatus: 'loading' });
+    const screen = await render(element);
 
     expect(screen.getByLabelText('Cargando veterinarios')).toBeTruthy();
   });
 
   it('submits without a veterinarian when the options list is empty', async () => {
-    const onSubmit = jest.fn();
-    const screen = await render(
-      <MedicalRecordForm
-        animalId={ANIMAL_ID}
-        intakeDate={INTAKE_DATE}
-        mode="create"
-        onSubmit={onSubmit}
-        veterinarianOptions={[]}
-        veterinariansStatus="empty"
-      />
-    );
+    const { element, onSubmit } = renderCreate({ veterinariansStatus: 'empty' });
+    const screen = await render(element);
 
     await fireEvent.changeText(screen.getByLabelText('Título'), 'Consulta sin veterinario');
     await fireEvent.press(screen.getByLabelText('Elegir fecha y hora'));
     await fireEvent.press(screen.getByLabelText('picker'));
-    await fireEvent.press(screen.getByLabelText('Registrar consulta'));
+    await fireEvent.press(screen.getByTestId('clinical-record-submit'));
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith({
@@ -221,6 +200,36 @@ describe('MedicalRecordForm (create)', () => {
         },
         attachments: [],
       });
+    });
+  });
+
+  it('does not submit without an animal and lets the user pick one', async () => {
+    const { element, onSubmit } = renderCreate({
+      animalOptions: ANIMAL_OPTIONS,
+      initialAnimalId: undefined,
+    });
+    const screen = await render(element);
+
+    await fireEvent.changeText(screen.getByLabelText('Título'), 'Consulta general');
+    await fireEvent.press(screen.getByLabelText('Elegir fecha y hora'));
+    await fireEvent.press(screen.getByLabelText('picker'));
+    await fireEvent.press(screen.getByTestId('clinical-record-submit'));
+
+    expect(await screen.findByText('Seleccioná un animal válido.')).toBeTruthy();
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByLabelText('Seleccionar animal'));
+    await fireEvent.press(screen.getByLabelText('Luna'));
+    await fireEvent.press(screen.getByLabelText('Elegir fecha y hora'));
+    await fireEvent.press(screen.getByLabelText('picker'));
+    await fireEvent.press(screen.getByTestId('clinical-record-submit'));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          form: expect.objectContaining({ animalId: ANIMAL_ID }),
+        })
+      );
     });
   });
 });
