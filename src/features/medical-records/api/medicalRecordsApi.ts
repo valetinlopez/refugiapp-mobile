@@ -34,6 +34,29 @@ export const medicalRecordsApi = {
     return toMedicalRecord(response.data);
   },
 
+  /**
+   * Global clinical history. The contract only accepts `recordType`, `from` and
+   * `to`; there is no `animalId` server filter, so an animal selection is a
+   * client-side concern of the screen.
+   */
+  async list(
+    filters: MedicalRecordFilters = {},
+    page = 1,
+    limit = 20,
+    client: HttpClient = apiClient
+  ): Promise<PaginatedMedicalRecords> {
+    const response = await client.get<PaginatedMedicalRecordsResponse>('/medical-records', {
+      params: {
+        page,
+        limit,
+        recordType: filters.recordType,
+        from: filters.from,
+        to: filters.to,
+      },
+    });
+    return toPaginatedMedicalRecords(response.data);
+  },
+
   async listByAnimal(
     animalId: string,
     filters: MedicalRecordFilters = {},

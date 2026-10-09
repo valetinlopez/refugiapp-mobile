@@ -9,6 +9,7 @@
 ## Contratos
 
 - `POST /medical-records`: crea un registro con `animalId`, `recordType`, `title`, `occurredAt`, `veterinarianId` opcional, `diagnosis`/`treatment`/`notes` opcionales y `attachmentMediaIds` (máx 10).
+- `GET /medical-records`: historia clínica global paginada con filtros `page`, `limit` (1–100, default 20), `recordType`, `from` y `to` (ISO `date-time`) y orden determinista `occurredAt DESC, id DESC`. El contrato **no acepta `animalId` ni `veterinarianId`**: el filtro por animal es una decisión de UI sobre las páginas cargadas (`filterRecordsByAnimal`), nunca un query param.
 - `GET /animals/:animalId/medical-records`: evolución clínica paginada con filtros `recordType`, `from`, `to` y orden `occurredAt DESC, id DESC`.
 - `GET /medical-records/:id`: detalle de un registro.
 - `PATCH /medical-records/:id`: edición parcial. Solo se cambian los campos enviados:
@@ -28,17 +29,24 @@
 
 ## Permisos
 
-- Solo `admin` y `veterinarian` pueden leer, crear y editar la evolución clínica.
-- `shelter_manager` no ve acciones clínicas; un 403 del servidor debe manejarse de forma segura.
+- Solo `admin` y `veterinarian` pueden leer, crear y editar la evolución clínica y la historia clínica global; `shelter_manager` recibe `403` del servidor.
+- El destino "Historia clínica" de la sección Gestión se filtra por `canReadClinicalRecords` (`src/application/management`), y la ruta repite el guard para deep links: sin capacidad muestra "Sin permiso" sin montar la query.
+- Un `403` del servidor debe manejarse de forma segura (`toGlobalMedicalRecordsErrorMessage`).
 - El backend registra al actor autenticado en `medical_record_changes` al editar; no hay `createdByUserId` en el registro.
 
 ## Estructura
 
 - `api/`: `medicalRecordsApi`, `medicalRecordChangesApi` (historial de cambios), `clinicalAttachmentsApi` (upload/lista/borrado) y `veterinarianOptionsApi`.
-- `components/`: `MedicalRecordForm` (modos create/edit), `ClinicalAttachmentPicker`, `ClinicalHistory`, `MedicalRecordChangeCard` y `MedicalRecordChangesScreen`.
-- `hooks/`: keys, queries, mutations e invalidaciones de la evolución clínica; `useMedicalRecordChanges` con paginación infinita.
-- `utils/`: esquemas Zod, mapper de diff PATCH, presentación (incluida `medicalRecordChangePresentation` para labels, valores y filtros del historial) y errores.
+- `components/`: `MedicalRecordForm` (modos create/edit), `ClinicalAttachmentPicker`, `ClinicalHistory`, `MedicalRecordChangeCard`, `MedicalRecordChangesScreen`, y la historia clínica global (`MedicalRecordsOverviewScreen`, `MedicalRecordOverviewCard`, `MedicalRecordFilterSheets`).
+- `hooks/`: keys, queries, mutations e invalidaciones de la evolución clínica; `useMedicalRecordChanges` con paginación infinita y `useInfiniteMedicalRecords`/`flattenMedicalRecordPages` para la historia global.
+- `utils/`: esquemas Zod, mapper de diff PATCH, presentación (incluida `medicalRecordChangePresentation` para labels, valores y filtros del historial), filtros globales (`globalClinicalFilters`) y errores.
 - `types.ts`: modelos de vista y aliases del contrato generado.
+
+## Historia clínica global (RFG-158 / D25)
+
+- Los nombres de animal y veterinario se resuelven best-effort desde caches compartidas sin request por fila: `src/application/animals` (con fallback a `GET /animals/:id` para un `animalId` UUID) y `src/application/veterinarians` (directorio activo; `null` → "Sin veterinario asignado", id inactivo/fuera de página → "Veterinario no disponible"; nunca UUID crudo).
+- El filtro de tipo y el rango de fechas viajan al servidor; el filtro de animal filtra en cliente `filterRecordsByAnimal` sobre las páginas cargadas y la UI lo comunica explícitamente junto al contador paginado `total`, sin rotular un total global inexistente.
+- El FAB de alta es contextual: solo aparece con un animal seleccionado y navega al flujo por animal existente (`/animals/[id]/medical-records/new`); el alta global dedicada llega con RFG-159.
 
 ## Seguridad y privacidad
 
@@ -52,7 +60,8 @@
 - Unit tests para validación y diff PATCH (omit vs null, trim a null).
 - Unit tests para la ventana de `occurredAt`: inicio de día local, offsets de zona horaria y tolerancia futura.
 - Unit tests del historial: paginación (`getNextPageParam` sin duplicados ni saltos), orden del servidor preservado, formateo seguro de valores (nulos, extensos, estructurados), labels de campos, filtros y rango inválido.
-- Component tests RNTL para crear, editar, adjuntos, estados de veterinarios, error 403, historial (carga, vacío, error, reintento, filtros) y accesibilidad.
+- Unit tests de la historia global: `toClinicalDateFilterIso` (día local inclusivo), presets, `filterRecordsByAnimal` y `flattenMedicalRecordPages`.
+- Component tests RNTL para crear, editar, adjuntos, estados de veterinarios, error 403, historial (carga, vacío, error, reintento, filtros), listado global (filtros tipo/fechas/animal cliente, fallback de nombres, paginación y accesibilidad) y accesibilidad.
 - Hook tests para invalidación de la evolución clínica tras mutación.
 
 ## Estado
@@ -76,10 +85,13 @@
 - Historial de cambios de un registro médico (RFG-124, contrato RFG-96): ruta `app/(app)/animals/[id]/medical-records/[recordId]/changes.tsx` accesible desde el botón "Ver historial" de cada tarjeta en `ClinicalHistory`, restringida por `canReadClinicalRecords` (un deep link para `shelter_manager` muestra acceso restringido sin montar la pantalla ni ejecutar la query). La pantalla consume `GET /medical-records/:id/changes` con `useInfiniteQuery` (páginas de 20, orden determinista del servidor, fin de paginación con aviso "No hay más cambios", pull-to-refresh y estados loading/empty/error/offline con reintento). Filtros completos: tipo de operación (chips), actor por UUID (input con label "Usuario que realizó el cambio (UUID)", placeholder con ejemplo `123e4567-…`; `isUuid` valida, un valor no UUID se descarta) y rango de fechas con `DateTimeField` (rango incompleto o `from > to` no dispara query y muestra mensaje en español). Cada tarjeta presenta operación, actor por nombre con fecha relativa + absoluta (`changedBy`, RFG-129), y las diferencias campo por campo con `previousValues` formateado de forma segura (el contrato no expone valores nuevos, solo anteriores).
 - Presentación del actor del historial (RFG-129): `changedBy` (nombre e iniciales vía `ActorRow`), con fallback a UUID durante rollout y "Usuario del sistema" cuando actor y fallback son `null`.
 - Los datos clínicos solo viven en la cache en memoria de TanStack Query (sin persistencia a disco); se limpian al cerrar sesión.
+- Historia clínica global (RFG-158 / D25): ruta delgada `app/(app)/medical-records/index.tsx` (guard `canReadClinicalRecords` + `AccountHeaderRow` con `fallbackHref='/more'`) que compone `MedicalRecordsOverviewScreen`. `useInfiniteMedicalRecords` pagina `GET /medical-records` en páginas de 20 con deduplicación por UUID y orden del servidor sin reordenar. Tres filtros en `BottomSheet`: animal (cliente sobre páginas cargadas, con aviso explícito), tipo (7 valores) y fechas (presets + rango con `DateTimeField`, día local inclusivo, `from > to` no dispara query). Nombres best-effort desde `src/application/animals` y `src/application/veterinarians` con fallback explícito ("Animal no disponible", "Sin veterinario asignado"/"Veterinario no disponible") y nunca un UUID crudo; foto de animal resuelta con `useAnimalOptionPhoto` (cache por media ID, sin fetch para filas sin foto). Destino "Historia clínica" en `src/application/management` filtrado por `canReadClinicalRecords` (visible `admin`/`veterinarian`, oculto `shelter_manager`) y FAB de alta contextual a `/animals/[id]/medical-records/new` solo cuando hay animal seleccionado (el alta global es RFG-159). Estados loading/vacío/error/offline con reintento, paginación incremental, pull-to-refresh y `testID` `clinical-global-list`/`clinical-load-more`/`clinical-end-of-list`/`clinical-*-filter`/`clinical-global-create`.
 
 ### Pendiente o deuda conocida
 
 - `occurredAt` se captura con `@react-native-community/datetimepicker`; falta validar el selector en dispositivos iOS/Android reales.
 - La evolución clínica se presenta con una página de 20 ítems; no hay paginación UI visible.
+- El filtro de animal de la historia clínica global es best-effort sobre las páginas cargadas porque el contrato global no publica `animalId`; si el backend lo incorpora, reemplaza el filtro cliente.
+- El FAB de alta global no existe: RFG-159 creará `/medical-records/new` con `animalId` opcional y moverá la acción de creación desde la tarjeta de la lista global.
 - E2E de creación clínica y negativa por rol cubierto con Maestro (`maestro/admin.yaml`, `veterinarian.yaml`, `clinical-denied.yaml`; selector `clinical-history`; `shelter_manager` nunca monta la query clínica).
 - E2E del flujo de historial de cambios cubierto con Maestro (RFG-132, `maestro/medical-history.yaml`): registro → historial → paginación → actor por nombre y diff campo a campo con etiquetas en español. Selectores `clinical-record-history-button`, `history-filter-*` y `history-end-of-list`; `FilterChip` acepta `testID`.

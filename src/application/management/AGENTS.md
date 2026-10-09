@@ -15,6 +15,7 @@
 ## Invariantes
 
 - `veterinarians` está disponible para cualquier sesión autenticada.
+- `medical-records` (historia clínica global) requiere `canReadClinicalRecords`.
 - `users` requiere `canManageUsers`.
 - `audit` requiere `canReadAudit`.
 - Agregar un destino exige definir su capacidad aquí y su presentación accesible en la ruta consumidora.

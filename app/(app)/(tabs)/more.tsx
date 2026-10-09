@@ -26,6 +26,12 @@ const MANAGEMENT_PRESENTATION: Readonly<Record<ManagementDestinationId, Manageme
     icon: 'money',
     label: 'Gastos',
   },
+  'medical-records': {
+    description: 'Historia clínica global del refugio',
+    hint: 'Ir a historia clínica',
+    icon: 'medical',
+    label: 'Historia clínica',
+  },
   users: {
     description: 'Cuentas internas del refugio',
     hint: 'Ir a usuarios',
