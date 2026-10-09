@@ -27,3 +27,20 @@ export function getExpenseCategoryLabel(category: ExpenseCategory): string {
 export function formatExpenseDate(value: string): string {
   return formatDateMedium(value);
 }
+
+/**
+ * Resolves the "registered by" value best-effort from session data.
+ *
+ * `ExpenseResponseDto` only exposes `createdByUserId` (UUID), with no readable
+ * name and no user lookup available to every role, so a raw UUID is never
+ * rendered. When the expense belongs to the current user we can say "Vos";
+ * otherwise the row is omitted (`null`) instead of inventing or leaking an id.
+ */
+export function getRegisteredByLabel(
+  createdByUserId: string | null,
+  currentUserId: string | null | undefined
+): string | null {
+  if (createdByUserId === null) return null;
+  if (currentUserId != null && createdByUserId === currentUserId) return 'Vos';
+  return null;
+}

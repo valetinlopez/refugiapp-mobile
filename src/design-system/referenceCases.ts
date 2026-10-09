@@ -280,14 +280,22 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     id: 'D06-15',
     index: 15,
     referenceFile: '15-expense-detail.jpeg',
-    route: 'app/(app)/expenses/[id].tsx (pendiente)',
-    audience: 'Los tres roles (lectura)',
-    states: ['default', 'loading', 'error'],
+    route: 'app/(app)/expenses/[id]/index.tsx',
+    audience: 'Los tres roles (lectura); borrado admin/shelter_manager (canManageExpenses)',
+    states: ['default', 'loading', 'empty', 'error', 'offline', 'restricted'],
     divergences: [
-      { kind: 'pending', note: 'Detalle (RFG-157).' },
+      { kind: 'implemented', note: 'Detalle y borrado (RFG-157).' },
       {
         kind: 'contract',
-        note: 'Requiere ampliar el snapshot OpenAPI móvil (RFG-155) para detalle y borrado.',
+        note: 'El contrato expone createdByUserId (UUID) sin nombre legible; la fila "Registrado por" solo aparece si el gasto es del usuario actual.',
+      },
+      {
+        kind: 'contract',
+        note: 'El animal no publica código correlativo (#A-1048); se muestra nombre y, si existen, especie y raza.',
+      },
+      {
+        kind: 'ux',
+        note: 'El nombre del comprobante se deriva de format; bytes y resource provienen de GET /media/:id.',
       },
     ],
     group: 'expenses',
