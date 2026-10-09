@@ -7,3 +7,4 @@ export {
   resolveVeterinarianLabel,
   useVeterinarianDirectory,
 } from './useVeterinarianDirectory';
+export { useVeterinarianDirectoryEntry } from './useVeterinarianDirectoryEntry';

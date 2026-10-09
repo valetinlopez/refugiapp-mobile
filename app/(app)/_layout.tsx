@@ -46,6 +46,7 @@ export default function AppLayout() {
           options={{ title: 'Historial de cambios' }}
         />
         <Stack.Screen name="medical-records/index" options={{ title: 'Historia clínica' }} />
+        <Stack.Screen name="medical-records/[id]" options={{ title: 'Registro clínico' }} />
         <Stack.Screen name="care-tasks/new" options={{ title: 'Crear tarea' }} />
         <Stack.Screen name="care-tasks/[id]/index" options={{ title: 'Detalle de la tarea' }} />
         <Stack.Screen name="care-tasks/[id]/edit" options={{ title: 'Editar tarea' }} />

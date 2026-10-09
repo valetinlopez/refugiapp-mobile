@@ -133,3 +133,21 @@ export function toGlobalMedicalRecordsErrorMessage(error: unknown): string {
   }
   return toApiErrorMessage(error);
 }
+
+export function toMedicalRecordDetailErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 403) return 'Tu rol no tiene permiso para ver este registro clínico.';
+    if (error.status === 404) return 'El registro clínico ya no está disponible.';
+  }
+  return toApiErrorMessage(error);
+}
+
+export function toDeleteMedicalRecordErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 403) return 'Tu rol no tiene permiso para eliminar registros clínicos.';
+    if (error.status === 404) {
+      return 'El registro clínico ya no está disponible o fue eliminado.';
+    }
+  }
+  return toApiErrorMessage(error);
+}

@@ -71,3 +71,14 @@ describe('medicalRecordsApi.list', () => {
     expect(result.items[0]).toMatchObject({ id: 'record-1', veterinarianId: null });
   });
 });
+
+describe('medicalRecordsApi.remove', () => {
+  it('soft-deletes one record through the documented endpoint', async () => {
+    const recordId = '0e2a3b4c-5d6e-4f80-9a10-b11c12d13e14';
+    const client = createClient({
+      [`DELETE /api/v1/medical-records/${recordId}`]: () => ({ status: 204 }),
+    });
+
+    await expect(medicalRecordsApi.remove(recordId, client)).resolves.toBeUndefined();
+  });
+});
