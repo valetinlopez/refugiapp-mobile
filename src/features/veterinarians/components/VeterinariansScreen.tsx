@@ -1,181 +1,270 @@
 import { router, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, TextInput, View, type ListRenderItem } from 'react-native';
+import {
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  TextInput,
+  View,
+  type ListRenderItem,
+} from 'react-native';
 
 import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
-import { FilterChip } from '@/components/patterns';
 import { virtualizedListPerformanceProps } from '@/components/performance';
-import { AppButton, AppText } from '@/components/primitives';
+import {
+  DecorativeBackground,
+  ScreenHeader,
+  SectionHeader,
+  SegmentedControl,
+  type SegmentedControlOption,
+} from '@/components/patterns';
+import { AppButton, AppText, FAB } from '@/components/primitives';
 import { isNetworkError } from '@/core/network';
 import { colors, radii, sizes, spacing } from '@/theme';
 
-import { useVeterinarians } from '../hooks/useVeterinarians';
-import type { VeterinarianResponse } from '../types';
 import {
+  flattenVeterinarianPages,
+  useVeterinarians,
+  type VeterinarianListFilters,
+} from '../hooks/useVeterinarians';
+import type { VeterinarianResponse, VeterinarianStatusFilter } from '../types';
+import {
+  hasActiveVeterinarianFilters,
+  toVeterinarianAdvancedFilters,
   toVeterinarianErrorMessage,
   toVeterinarianSearchFilter,
 } from '../utils/veterinarianPresentation';
 import { VeterinarianCard } from './VeterinarianCard';
+import { VeterinarianFilterSheet } from './VeterinarianFilterSheet';
 
 const SEARCH_DEBOUNCE_MS = 400;
-type StatusFilterValue = 'active' | 'inactive';
+
+const STATUS_OPTIONS: readonly SegmentedControlOption<VeterinarianStatusFilter>[] = [
+  { id: 'all', label: 'Todos' },
+  { id: 'active', label: 'Activos' },
+  { id: 'inactive', label: 'Inactivos' },
+];
 
 export function VeterinariansScreen({ canWrite }: { canWrite: boolean }) {
-  const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('active');
-  const [searchInput, setSearchInput] = useState('');
-  const search = useDebouncedValue(searchInput, SEARCH_DEBOUNCE_MS);
+  const [status, setStatus] = useState<VeterinarianStatusFilter>('all');
+  const [quickSearch, setQuickSearch] = useState('');
+  const debouncedQuickSearch = useDebouncedValue(quickSearch, SEARCH_DEBOUNCE_MS);
+  const [advancedFilters, setAdvancedFilters] = useState<VeterinarianListFilters>({});
+  const [filterDraft, setFilterDraft] = useState({ name: '', licenseNumber: '' });
+  const [filterSheetVisible, setFilterSheetVisible] = useState(false);
 
-  const filters = useMemo(
+  const searchFilters = useMemo<VeterinarianListFilters>(() => {
+    if (advancedFilters.name !== undefined || advancedFilters.licenseNumber !== undefined) {
+      return advancedFilters;
+    }
+    return toVeterinarianSearchFilter(debouncedQuickSearch);
+  }, [advancedFilters, debouncedQuickSearch]);
+
+  const filters = useMemo<VeterinarianListFilters>(
     () => ({
-      ...toVeterinarianSearchFilter(search),
-      isActive: statusFilter === 'active',
+      ...searchFilters,
+      ...(status === 'all' ? {} : { isActive: status === 'active' }),
     }),
-    [search, statusFilter]
+    [searchFilters, status]
   );
-  const veterinariansQuery = useVeterinarians(filters);
 
+  const veterinariansQuery = useVeterinarians(filters);
   const veterinarians = useMemo(
-    () => veterinariansQuery.data?.pages.flatMap((page) => page.items) ?? [],
-    [veterinariansQuery.data]
+    () => flattenVeterinarianPages(veterinariansQuery.data?.pages),
+    [veterinariansQuery.data?.pages]
   );
+  const total = veterinariansQuery.data?.pages[0]?.total ?? 0;
+  const hasFilters = hasActiveVeterinarianFilters(filters, status);
 
   const handlePress = useCallback((veterinarian: VeterinarianResponse) => {
     router.push({ pathname: '/veterinarians/[id]', params: { id: veterinarian.id } });
   }, []);
-
   const renderItem = useCallback<ListRenderItem<VeterinarianResponse>>(
     ({ item }) => <VeterinarianCard onPress={handlePress} veterinarian={item} />,
     [handlePress]
   );
-
-  const handleEndReached = useCallback(() => {
+  const loadMore = useCallback(() => {
     if (veterinariansQuery.hasNextPage && !veterinariansQuery.isFetchingNextPage) {
       void veterinariansQuery.fetchNextPage();
     }
   }, [veterinariansQuery]);
+  const refresh = useCallback(() => {
+    void veterinariansQuery.refetch();
+  }, [veterinariansQuery]);
+  const handleQuickSearchChange = useCallback((value: string) => {
+    setQuickSearch(value);
+    if (value.trim() !== '') setAdvancedFilters({});
+  }, []);
+  const openFilterSheet = useCallback(() => {
+    setFilterDraft({
+      name: advancedFilters.name ?? '',
+      licenseNumber: advancedFilters.licenseNumber ?? '',
+    });
+    setFilterSheetVisible(true);
+  }, [advancedFilters]);
+  const applyAdvancedFilters = useCallback(() => {
+    setAdvancedFilters(toVeterinarianAdvancedFilters(filterDraft.name, filterDraft.licenseNumber));
+    setQuickSearch('');
+    setFilterSheetVisible(false);
+  }, [filterDraft]);
+  const clearFilters = useCallback(() => {
+    setStatus('all');
+    setQuickSearch('');
+    setAdvancedFilters({});
+    setFilterDraft({ name: '', licenseNumber: '' });
+  }, []);
 
-  if (veterinariansQuery.isPending) {
-    return <LoadingState label="Cargando veterinarios" />;
-  }
-
-  if (veterinariansQuery.isError && veterinariansQuery.data === undefined) {
-    if (isNetworkError(veterinariansQuery.error)) {
-      return (
-        <OfflineState
-          actionLabel={offlineCopy.actionLabel}
-          message={offlineCopy.message}
-          onAction={() => void veterinariansQuery.refetch()}
-          testID={OFFLINE_STATE_TEST_ID}
-          title={offlineCopy.title}
-        />
-      );
-    }
-    return (
+  const listState = veterinariansQuery.isPending ? (
+    <LoadingState label="Cargando veterinarios" />
+  ) : veterinariansQuery.isError ? (
+    isNetworkError(veterinariansQuery.error) ? (
+      <OfflineState
+        actionLabel={offlineCopy.actionLabel}
+        message={offlineCopy.message}
+        onAction={refresh}
+        testID={OFFLINE_STATE_TEST_ID}
+        title={offlineCopy.title}
+      />
+    ) : (
       <ErrorState
         actionLabel="Reintentar"
         message={toVeterinarianErrorMessage(veterinariansQuery.error)}
-        onAction={() => void veterinariansQuery.refetch()}
+        onAction={refresh}
         title="No se pudieron cargar los veterinarios"
       />
-    );
-  }
+    )
+  ) : (
+    <EmptyState
+      {...(hasFilters ? { actionLabel: 'Limpiar filtros', onAction: clearFilters } : {})}
+      message={
+        hasFilters
+          ? 'No hay veterinarios que coincidan con los filtros seleccionados.'
+          : canWrite
+            ? 'Todavía no hay veterinarios registrados. Podés dar de alta uno nuevo.'
+            : 'Todavía no hay veterinarios registrados.'
+      }
+      title="Sin veterinarios"
+    />
+  );
 
   const header = (
     <View style={styles.header}>
-      <View style={styles.headingRow}>
-        <View style={styles.heading}>
-          <AppText variant="heading1">Veterinarios</AppText>
-          <AppText color="textSecondary">
-            {veterinariansQuery.data?.pages[0]?.total ?? 0} profesionales
-          </AppText>
-        </View>
-        {canWrite ? (
+      <ScreenHeader subtitle="Personal veterinario registrado" title="Veterinarios" />
+      <TextInput
+        accessibilityLabel="Buscar veterinario por nombre o matrícula"
+        autoCapitalize="none"
+        autoCorrect={false}
+        onChangeText={handleQuickSearchChange}
+        placeholder="Buscar por nombre o matrícula"
+        placeholderTextColor={colors.textSecondary}
+        returnKeyType="search"
+        style={styles.search}
+        testID="veterinarians-search"
+        value={quickSearch}
+      />
+      <SegmentedControl<VeterinarianStatusFilter>
+        accessibilityLabel="Filtrar por estado"
+        onChange={setStatus}
+        options={STATUS_OPTIONS}
+        testID="veterinarians-status"
+        value={status}
+      />
+      <View style={styles.filterActions}>
+        <AppButton
+          icon="filter"
+          label="Filtros"
+          onPress={openFilterSheet}
+          testID="veterinarians-open-filters"
+          variant="secondary"
+        />
+        {hasFilters ? (
           <AppButton
-            icon="medical"
-            label="Nuevo"
-            onPress={() => router.push('/veterinarians/new' as Href)}
-            variant="secondary"
+            label="Limpiar"
+            onPress={clearFilters}
+            testID="veterinarians-clear-filters"
+            variant="ghost"
           />
         ) : null}
       </View>
-      <TextInput
-        accessibilityLabel="Buscar veterinario"
-        autoCapitalize="none"
-        autoCorrect={false}
-        onChangeText={setSearchInput}
-        placeholder="Buscar por nombre o matrícula"
-        placeholderTextColor={colors.textSecondary}
-        style={styles.search}
-        value={searchInput}
-      />
-      <StatusFilter selected={statusFilter} onSelect={setStatusFilter} />
+      {veterinarians.length > 0 ? (
+        <SectionHeader
+          subtitle={`${total} ${total === 1 ? 'registrado' : 'registrados'}`}
+          title="Profesionales"
+        />
+      ) : null}
     </View>
   );
 
   return (
-    <FlatList
-      {...virtualizedListPerformanceProps}
-      contentContainerStyle={styles.list}
-      data={veterinarians}
-      keyExtractor={(veterinarian) => veterinarian.id}
-      ListEmptyComponent={
-        <EmptyState
-          message={
-            canWrite
-              ? 'Todavía no hay veterinarios con ese estado. Podés dar de alta uno nuevo.'
-              : 'Todavía no hay veterinarios con ese estado.'
-          }
-          title="Sin veterinarios"
-        />
-      }
-      ListFooterComponent={
-        veterinariansQuery.isFetchingNextPage ? (
-          <LoadingState label="Cargando más veterinarios" />
-        ) : veterinariansQuery.isFetchNextPageError ? (
-          <View style={styles.paginationError}>
-            <AppText color="danger">No pudimos cargar más veterinarios.</AppText>
+    <View style={styles.container}>
+      <DecorativeBackground variant="texture" />
+      <FlatList
+        {...virtualizedListPerformanceProps}
+        contentContainerStyle={styles.list}
+        data={veterinarians}
+        keyExtractor={(veterinarian) => veterinarian.id}
+        ListEmptyComponent={listState}
+        ListFooterComponent={
+          veterinarians.length === 0 ? null : veterinariansQuery.isFetchingNextPage ? (
+            <LoadingState label="Cargando más veterinarios" />
+          ) : veterinariansQuery.isFetchNextPageError ? (
+            <View style={styles.paginationState}>
+              <AppText color="danger">No pudimos cargar más veterinarios.</AppText>
+              <AppButton label="Reintentar carga" onPress={loadMore} variant="secondary" />
+            </View>
+          ) : veterinariansQuery.hasNextPage ? (
             <AppButton
-              label="Reintentar carga"
-              onPress={() => void veterinariansQuery.fetchNextPage()}
+              label="Cargar más veterinarios"
+              onPress={loadMore}
+              testID="veterinarians-load-more"
               variant="secondary"
             />
-          </View>
-        ) : null
-      }
-      ListHeaderComponent={header}
-      onEndReached={handleEndReached}
-      onEndReachedThreshold={0.4}
-      onRefresh={() => void veterinariansQuery.refetch()}
-      refreshing={veterinariansQuery.isRefetching}
-      renderItem={renderItem}
-      testID="veterinarians-list"
-    />
-  );
-}
-
-function StatusFilter({
-  onSelect,
-  selected,
-}: {
-  onSelect(status: StatusFilterValue): void;
-  selected: StatusFilterValue;
-}) {
-  return (
-    <View style={styles.filterGroup}>
-      <AppText variant="label">Estado</AppText>
-      <View style={styles.filters}>
-        <FilterChip
-          label="Activos"
-          onPress={() => onSelect('active')}
-          selected={selected === 'active'}
+          ) : (
+            <AppText
+              color="textSecondary"
+              style={styles.endOfList}
+              testID="veterinarians-end-of-list"
+            >
+              No hay más veterinarios
+            </AppText>
+          )
+        }
+        ListHeaderComponent={header}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.4}
+        refreshControl={
+          <RefreshControl
+            colors={[colors.positive]}
+            onRefresh={refresh}
+            refreshing={veterinariansQuery.isRefetching && !veterinariansQuery.isFetchingNextPage}
+            tintColor={colors.positive}
+          />
+        }
+        renderItem={renderItem}
+        testID="veterinarians-list"
+      />
+      {canWrite ? (
+        <FAB
+          accessibilityHint="Abre el formulario para dar de alta un veterinario"
+          accessibilityLabel="Nuevo veterinario"
+          bottomOffset={spacing.lg}
+          onPress={() => router.push('/veterinarians/new' as Href)}
+          testID="veterinarians-create"
         />
-        <FilterChip
-          label="Inactivos"
-          onPress={() => onSelect('inactive')}
-          selected={selected === 'inactive'}
-        />
-      </View>
+      ) : null}
+      <VeterinarianFilterSheet
+        licenseNumber={filterDraft.licenseNumber}
+        name={filterDraft.name}
+        onApply={applyAdvancedFilters}
+        onChangeLicenseNumber={(value) =>
+          setFilterDraft((draft) => ({ ...draft, licenseNumber: value }))
+        }
+        onChangeName={(value) => setFilterDraft((draft) => ({ ...draft, name: value }))}
+        onClear={clearFilters}
+        onClose={() => setFilterSheetVisible(false)}
+        visible={filterSheetVisible}
+      />
     </View>
   );
 }
@@ -192,22 +281,17 @@ function useDebouncedValue(value: string, delayMs: number): string {
 }
 
 const styles = StyleSheet.create({
-  filterGroup: { gap: spacing.xxs },
-  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  container: { backgroundColor: colors.background, flex: 1 },
+  endOfList: { paddingVertical: spacing.sm, textAlign: 'center' },
+  filterActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   header: { gap: spacing.sm, marginBottom: spacing.md },
-  heading: { flex: 1, gap: spacing.xxs },
-  headingRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
   list: {
-    backgroundColor: colors.background,
     flexGrow: 1,
-    gap: spacing.md,
-    padding: spacing.lg,
-  },
-  paginationError: {
-    alignItems: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.md,
+    padding: spacing.lg,
+    paddingBottom: sizes.fab + spacing['2xl'] + spacing.lg,
   },
+  paginationState: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md },
   search: {
     backgroundColor: colors.surface,
     borderColor: colors.border,

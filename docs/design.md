@@ -84,7 +84,7 @@ Los radios disponibles son 6, 10, 16, 24, 32, 36 y píldora. `lg` (24) es el est
 
 ## 10. Iconografía
 
-`AppIcon` centraliza símbolos de `expo-symbols`, con SF Symbols en iOS y Material Symbols en Android/web. Se usan iconos simples, sólidos o de trazo consistente. Un icono decorativo se oculta a tecnologías de asistencia; uno interactivo requiere `accessibilityLabel` en el control que lo contiene. No se mezclan emojis con iconos de producto. El set incluye `account` (identidad/cuenta), `logout` (salida), `eye`/`eyeOff` (toggle mostrar/ocultar contraseña) y `refresh`, mapeados a SF Symbols y Material Symbols.
+`AppIcon` centraliza símbolos de `expo-symbols`, con SF Symbols en iOS y Material Symbols en Android/web. Se usan iconos simples, sólidos o de trazo consistente. Un icono decorativo se oculta a tecnologías de asistencia; uno interactivo requiere `accessibilityLabel` en el control que lo contiene. No se mezclan emojis con iconos de producto. El set incluye `account` (identidad/cuenta), `logout` (salida), `eye`/`eyeOff` (toggle mostrar/ocultar contraseña), `mail`/`phone` (líneas de contacto de identidad) y `refresh`, mapeados a SF Symbols y Material Symbols.
 
 ## 11. Fotografía animal
 
@@ -504,6 +504,15 @@ El listado global (`app/(app)/medical-records/index.tsx`) adopta la jerarquía d
 - **Alta contextual:** el FAB aparece solo con un animal elegido y navega al flujo por animal existente (`/animals/[id]/medical-records/new`); sin animal se explica "Para registrar un nuevo registro clínico, elegí un animal". El alta global dedicada llega con RFG-159.
 - **Accesibilidad:** un único H1, labels accesibles en español más `testID` en inglés (`clinical-global-list`, `clinical-load-more`, `clinical-end-of-list`, `clinical-{animal|type|date}-filter`, `clinical-global-create`), targets de 44 × 44, decorativos ocultos a AT y contenido desplazable con fuente ampliada.
 
+## 49. Listado de veterinarios (D28 / RFG-161)
+
+La ruta `app/(app)/veterinarians/index.tsx` adopta la jerarquía de `19-veterinarians-list.jpeg` y conserva estrictamente el contrato de `GET /veterinarians`. Lectura para los tres roles; el alta solo aparece con `canManageVets` (`admin`/`shelter_manager`).
+
+- **Encabezado y filtros:** fondo de textura, fila de cuenta y retorno con `fallbackHref='/more'`, `ScreenHeader` único `heading1` "Veterinarios" con subtítulo "Personal veterinario registrado", un buscador rápido visible con debounce que lee el término (dígitos → matrícula, si no → nombre) y un `SegmentedControl` `Todos/Activos/Inactivos` con `Todos` por defecto (`isActive: undefined`). Los filtros activos habilitan "Limpiar"; el filtro de estado se combina en AND con la búsqueda. La sección "Profesionales" muestra el `total` paginado del servidor (nunca un total inventado).
+- **Filtros avanzados:** `VeterinarianFilterSheet` (sobre `BottomSheet`, ADR-0018) permite enviar `name` y `licenseNumber` juntos en AND —lo que el buscador rápido no puede— con campos recortados y vacíos omitidos. El buscador rápido y los filtros avanzados son mutuamente excluyentes para no perder ni duplicar filtros; las acciones del sheet son "Limpiar" y "Aplicar".
+- **Tarjeta:** fila elevada con avatar de iniciales, nombre, matrícula y las líneas de contacto que existan (email del perfil con fallback a `user.email`, y teléfono), con badge de estado icono + texto (`Activo`/`Inactivo`) y chevron. Omite las líneas ausentes sin inventar un placeholder y nunca muestra el UUID. Toda la tarjeta es un único botón accesible con label completo.
+- **Paginación y estados:** `FlatList` virtualiza páginas de 20 con orden determinista `lastName ASC, firstName ASC, id ASC` sin reordenar y deduplicación por UUID; CTA "Cargar más veterinarios", fin "No hay más veterinarios", pull-to-refresh y estados de carga, vacío (con/sin filtros y con/sin permiso de alta), error de servidor traducido y offline con reintento diferenciados. El `FAB` "Nuevo veterinario" aparece solo con `canManageVets`.
+- **Accesibilidad:** un único H1, labels accesibles en español más `testID` en inglés (`veterinarians-list`, `veterinarians-search`, `veterinarians-status`, `veterinarians-open-filters`, `veterinarians-clear-filters`, `veterinarians-filter-sheet`/`-name`/`-license`/`-apply`/`-clear`, `veterinarians-load-more`, `veterinarians-end-of-list`, `veterinarians-create`), targets de 44 × 44, decorativos ocultos a AT y contenido desplazable con fuente ampliada.
 ## 49. Detalle de registro clínico (D27 / RFG-160)
 
 El detalle (`/medical-records/[id]`) toma la jerarquía de `18-medical-record-detail.jpeg` sin inventar un identificador correlativo ni datos no publicados. Es accesible solo para `admin` y `veterinarian` mediante `canReadClinicalRecords`; `shelter_manager` ve “Sin permiso” y no monta consultas.
