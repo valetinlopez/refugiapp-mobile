@@ -1,11 +1,17 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppBadge, AppCard, AppText } from '@/components/primitives';
-import { radii, spacing } from '@/theme';
+import { AppAvatar, AppBadge, AppCard, AppIcon, AppText } from '@/components/primitives';
+import { opacity, sizes, spacing } from '@/theme';
 
 import type { VeterinarianResponse } from '../types';
-import { veterinarianFullName } from '../utils/veterinarianPresentation';
+import {
+  veterinarianAccessibilityLabel,
+  veterinarianContactEmail,
+  veterinarianContactPhone,
+  veterinarianFullName,
+  veterinarianInitials,
+} from '../utils/veterinarianPresentation';
 
 export interface VeterinarianCardProps {
   onPress(veterinarian: VeterinarianResponse): void;
@@ -17,31 +23,57 @@ export const VeterinarianCard = memo(function VeterinarianCard({
   veterinarian,
 }: VeterinarianCardProps) {
   const name = veterinarianFullName(veterinarian);
+  const email = veterinarianContactEmail(veterinarian);
+  const phone = veterinarianContactPhone(veterinarian);
+  const active = veterinarian.isActive;
 
   return (
     <Pressable
-      accessibilityLabel={`${name}, matrícula ${veterinarian.licenseNumber}, ${
-        veterinarian.isActive ? 'Activo' : 'Inactivo'
-      }`}
+      accessibilityHint="Abre el perfil del veterinario"
+      accessibilityLabel={veterinarianAccessibilityLabel(veterinarian)}
       accessibilityRole="button"
       onPress={() => onPress(veterinarian)}
-      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
+      style={({ pressed }) => (pressed ? styles.pressed : null)}
+      testID="veterinarian-card"
     >
-      <AppCard variant="outlined">
-        <View style={styles.header}>
-          <View style={styles.identity}>
-            <AppText variant="heading3">{name}</AppText>
-            <AppText color="textSecondary">Matrícula {veterinarian.licenseNumber}</AppText>
-            {veterinarian.user?.email ? (
-              <AppText color="textSecondary" variant="caption">
-                Usuario: {veterinarian.user.email}
+      <AppCard style={styles.card} variant="elevated">
+        <AppAvatar
+          accessibilityLabel={`Veterinario: ${name}`}
+          initials={veterinarianInitials(veterinarian)}
+          size="md"
+        />
+        <View style={styles.body}>
+          <AppText numberOfLines={2} variant="heading3">
+            {name}
+          </AppText>
+          <AppText color="textSecondary" numberOfLines={1} variant="label">
+            Matrícula {veterinarian.licenseNumber}
+          </AppText>
+          {email ? (
+            <View style={styles.contactRow}>
+              <AppIcon color="textSecondary" name="mail" size={sizes.iconSm} />
+              <AppText color="textSecondary" numberOfLines={1} variant="caption">
+                {email}
               </AppText>
-            ) : null}
-          </View>
+            </View>
+          ) : null}
+          {phone ? (
+            <View style={styles.contactRow}>
+              <AppIcon color="textSecondary" name="phone" size={sizes.iconSm} />
+              <AppText color="textSecondary" numberOfLines={1} variant="caption">
+                {phone}
+              </AppText>
+            </View>
+          ) : null}
+        </View>
+        <View style={styles.trailing}>
           <AppBadge
-            label={veterinarian.isActive ? 'Activo' : 'Inactivo'}
-            tone={veterinarian.isActive ? 'positive' : 'neutral'}
+            icon={active ? 'check' : 'close'}
+            label={active ? 'Activo' : 'Inactivo'}
+            labelNumberOfLines={1}
+            tone={active ? 'positive' : 'neutral'}
           />
+          <AppIcon color="textSecondary" name="chevronRight" size={sizes.iconMd} />
         </View>
       </AppCard>
     </Pressable>
@@ -49,13 +81,28 @@ export const VeterinarianCard = memo(function VeterinarianCard({
 });
 
 const styles = StyleSheet.create({
-  header: {
-    alignItems: 'flex-start',
+  body: {
+    flex: 1,
+    gap: spacing.xxs,
+    minWidth: 0,
+  },
+  card: {
+    alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.sm,
-    justifyContent: 'space-between',
   },
-  identity: { flex: 1, gap: spacing.xxs },
-  pressable: { borderRadius: radii.lg },
-  pressed: { opacity: 0.84 },
+  contactRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xxs,
+  },
+  pressed: {
+    opacity: opacity.pressed,
+  },
+  trailing: {
+    alignItems: 'flex-end',
+    flexShrink: 0,
+    gap: spacing.sm,
+    maxWidth: '42%',
+  },
 });

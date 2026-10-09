@@ -365,7 +365,20 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     route: 'app/(app)/veterinarians/index.tsx',
     audience: 'Lectura los tres roles; gestión admin/shelter_manager (canManageVets)',
     states: ['default', 'loading', 'empty', 'error', 'offline'],
-    divergences: [{ kind: 'pending', note: 'Rediseño (RFG-161).' }],
+    divergences: [
+      {
+        kind: 'implemented',
+        note: 'Listado rediseñado (RFG-161): buscador rápido, filtros avanzados por sheet, estado no cromático y FAB por capacidad.',
+      },
+      {
+        kind: 'ux',
+        note: 'Los dos campos de búsqueda de la referencia se concentran en un buscador rápido + sheet de filtros; el estado (Todos/Activos/Inactivos) permanece visible.',
+      },
+      {
+        kind: 'contract',
+        note: 'El DTO no publica prefijo Dr./Dra.; se muestra el nombre real y se conserva el orden determinista del backend.',
+      },
+    ],
     group: 'veterinarians',
   },
   {

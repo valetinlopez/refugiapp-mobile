@@ -1,10 +1,15 @@
 import { ApiError } from '@/core/api';
 
 import {
-  toVeterinarianCreateErrorPresentation,
+  hasActiveVeterinarianFilters,
+  toVeterinarianAdvancedFilters,
   toVeterinarianErrorMessage,
   toVeterinarianSearchFilter,
+  veterinarianAccessibilityLabel,
+  veterinarianContactEmail,
+  veterinarianContactPhone,
   veterinarianFullName,
+  veterinarianInitials,
 } from './veterinarianPresentation';
 import type { VeterinarianResponse } from '../types';
 
@@ -131,5 +136,93 @@ describe('toVeterinarianSearchFilter', () => {
   it('filters by license number when the term contains digits', () => {
     expect(toVeterinarianSearchFilter('VET-001')).toEqual({ licenseNumber: 'VET-001' });
     expect(toVeterinarianSearchFilter('MN 12345')).toEqual({ licenseNumber: 'MN 12345' });
+  });
+});
+
+describe('veterinarianInitials', () => {
+  it('builds uppercase initials from first and last name', () => {
+    expect(veterinarianInitials(VETERINARIAN)).toBe('SR');
+  });
+});
+
+describe('veterinarianContactEmail', () => {
+  it('prefers the professional email of the profile', () => {
+    expect(
+      veterinarianContactEmail({
+        ...VETERINARIAN,
+        email: 'vet@refugiapp.local',
+      })
+    ).toBe('vet@refugiapp.local');
+  });
+
+  it('falls back to the linked user email', () => {
+    const linkedUser = { email: 'user@refugiapp.local' } as NonNullable<
+      VeterinarianResponse['user']
+    >;
+
+    expect(
+      veterinarianContactEmail({
+        ...VETERINARIAN,
+        email: null,
+        user: linkedUser,
+      })
+    ).toBe('user@refugiapp.local');
+  });
+
+  it('returns undefined instead of a placeholder when there is no email', () => {
+    expect(veterinarianContactEmail({ ...VETERINARIAN, email: '   ' })).toBeUndefined();
+  });
+});
+
+describe('veterinarianContactPhone', () => {
+  it('trims the phone and returns undefined when blank', () => {
+    expect(veterinarianContactPhone({ ...VETERINARIAN, phone: ' 1145550101 ' })).toBe('1145550101');
+    expect(veterinarianContactPhone({ ...VETERINARIAN, phone: null })).toBeUndefined();
+  });
+});
+
+describe('toVeterinarianAdvancedFilters', () => {
+  it('omits blank fields', () => {
+    expect(toVeterinarianAdvancedFilters('  ', '')).toEqual({});
+  });
+
+  it('trims and sends both filters together', () => {
+    expect(toVeterinarianAdvancedFilters(' Romero ', ' VET-001 ')).toEqual({
+      name: 'Romero',
+      licenseNumber: 'VET-001',
+    });
+  });
+});
+
+describe('hasActiveVeterinarianFilters', () => {
+  it('is false only when the default status has no search', () => {
+    expect(hasActiveVeterinarianFilters({}, 'all')).toBe(false);
+  });
+
+  it('is true for a non-default status or any search term', () => {
+    expect(hasActiveVeterinarianFilters({}, 'inactive')).toBe(true);
+    expect(hasActiveVeterinarianFilters({ name: 'Romero' }, 'all')).toBe(true);
+    expect(hasActiveVeterinarianFilters({ licenseNumber: 'VET-001' }, 'all')).toBe(true);
+  });
+});
+
+describe('veterinarianAccessibilityLabel', () => {
+  it('concatenates identity, license, contact and state', () => {
+    expect(
+      veterinarianAccessibilityLabel({
+        ...VETERINARIAN,
+        email: 'vet@refugiapp.local',
+        phone: '1145550101',
+      })
+    ).toBe(
+      'Sofía Romero, matrícula VET-001, email vet@refugiapp.local, teléfono 1145550101, Activo'
+    );
+  });
+
+  it('omits missing contact lines and never leaks a UUID', () => {
+    const label = veterinarianAccessibilityLabel({ ...VETERINARIAN, isActive: false });
+
+    expect(label).toBe('Sofía Romero, matrícula VET-001, Inactivo');
+    expect(label).not.toContain(VETERINARIAN.id);
   });
 });

@@ -23,11 +23,13 @@ export type AppIconName =
   | 'home'
   | 'info'
   | 'logout'
+  | 'mail'
   | 'medical'
   | 'menu'
   | 'money'
   | 'offline'
   | 'paw'
+  | 'phone'
   | 'refresh'
   | 'trash'
   | 'transport';
@@ -60,11 +62,13 @@ const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
     android: 'logout',
     web: 'logout',
   },
+  mail: { ios: 'envelope.fill', android: 'mail', web: 'mail' },
   medical: { ios: 'stethoscope', android: 'stethoscope', web: 'stethoscope' },
   menu: { ios: 'ellipsis', android: 'more_horiz', web: 'more_horiz' },
   money: { ios: 'banknote.fill', android: 'payments', web: 'payments' },
   offline: { ios: 'wifi.slash', android: 'wifi_off', web: 'wifi_off' },
   paw: { ios: 'pawprint.fill', android: 'pets', web: 'pets' },
+  phone: { ios: 'phone.fill', android: 'call', web: 'call' },
   refresh: { ios: 'arrow.clockwise', android: 'refresh', web: 'refresh' },
   trash: { ios: 'trash.fill', android: 'delete', web: 'delete' },
   transport: { ios: 'truck.box.fill', android: 'local_shipping', web: 'local_shipping' },

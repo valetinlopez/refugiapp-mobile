@@ -1,6 +1,11 @@
+import { getActorInitials } from '@/components/patterns';
 import { ApiError, toApiErrorMessage } from '@/core/api';
 
-import type { VeterinarianResponse } from '../types';
+import type {
+  VeterinarianListFilters,
+  VeterinarianResponse,
+  VeterinarianStatusFilter,
+} from '../types';
 
 export type VeterinarianCreateConflictField = 'createUserEmail' | 'licenseNumber';
 
@@ -13,13 +18,79 @@ export function veterinarianFullName(veterinarian: VeterinarianResponse): string
   return `${veterinarian.firstName} ${veterinarian.lastName}`.trim();
 }
 
-export function toVeterinarianSearchFilter(search: string): {
-  name?: string;
-  licenseNumber?: string;
-} {
+export function veterinarianInitials(
+  veterinarian: Pick<VeterinarianResponse, 'firstName' | 'lastName'>
+): string {
+  return getActorInitials(veterinarian.firstName, veterinarian.lastName);
+}
+
+/**
+ * Preferred professional email of the veterinarian, falling back to the linked
+ * access user email. Returns `undefined` (never a placeholder) when neither
+ * exists, so the card omits the line instead of inventing contact data.
+ */
+export function veterinarianContactEmail(veterinarian: VeterinarianResponse): string | undefined {
+  const email = veterinarian.email?.trim() || veterinarian.user?.email?.trim();
+  return email ? email : undefined;
+}
+
+export function veterinarianContactPhone(veterinarian: VeterinarianResponse): string | undefined {
+  const phone = veterinarian.phone?.trim();
+  return phone ? phone : undefined;
+}
+
+/**
+ * Quick-search heuristic for the single visible search box: a term with digits
+ * searches by license number, otherwise by name. The backend combines filters
+ * in AND, so only one is ever sent from the quick search.
+ */
+export function toVeterinarianSearchFilter(search: string): VeterinarianListFilters {
   const term = search.trim();
   if (term === '') return {};
   return /\d/.test(term) ? { licenseNumber: term } : { name: term };
+}
+
+/**
+ * Explicit filters from the advanced filter sheet. Allows sending `name` and
+ * `licenseNumber` together (AND), which the quick-search heuristic cannot.
+ * Blank fields are omitted so they never narrow the query.
+ */
+export function toVeterinarianAdvancedFilters(
+  name: string,
+  licenseNumber: string
+): VeterinarianListFilters {
+  const trimmedName = name.trim();
+  const trimmedLicense = licenseNumber.trim();
+  return {
+    ...(trimmedName !== '' ? { name: trimmedName } : {}),
+    ...(trimmedLicense !== '' ? { licenseNumber: trimmedLicense } : {}),
+  };
+}
+
+export function hasActiveVeterinarianFilters(
+  filters: VeterinarianListFilters,
+  status: VeterinarianStatusFilter
+): boolean {
+  return (
+    status !== 'all' ||
+    (filters.name !== undefined && filters.name !== '') ||
+    (filters.licenseNumber !== undefined && filters.licenseNumber !== '')
+  );
+}
+
+/**
+ * Full accessible label of the list card: identity, license, the contact lines
+ * that are actually shown and the state as text. Keeps the whole row a single
+ * announced button without leaking a UUID.
+ */
+export function veterinarianAccessibilityLabel(veterinarian: VeterinarianResponse): string {
+  const parts = [veterinarianFullName(veterinarian), `matrícula ${veterinarian.licenseNumber}`];
+  const email = veterinarianContactEmail(veterinarian);
+  const phone = veterinarianContactPhone(veterinarian);
+  if (email) parts.push(`email ${email}`);
+  if (phone) parts.push(`teléfono ${phone}`);
+  parts.push(veterinarian.isActive ? 'Activo' : 'Inactivo');
+  return parts.join(', ');
 }
 
 export function toVeterinarianErrorMessage(error: unknown): string {
