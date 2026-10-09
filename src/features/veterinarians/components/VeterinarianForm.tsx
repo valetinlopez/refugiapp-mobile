@@ -2,9 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, Switch, TextInput, View, type TextInputProps } from 'react-native';
 
-import { AppButton, AppText } from '@/components/primitives';
+import { PasswordField, SectionHeader } from '@/components/patterns';
+import { AppBadge, AppButton, AppCard, AppIcon, AppText } from '@/components/primitives';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
+import type { VeterinarianCreateConflictField } from '../utils/veterinarianPresentation';
 import {
   veterinarianFormSchema,
   type VeterinarianFieldName,
@@ -18,7 +20,10 @@ interface VeterinarianFormProps {
   initialValues?: VeterinarianFormValues;
   isSubmitting: boolean;
   mode?: VeterinarianFormMode;
+  onCancel?: (() => void) | undefined;
+  onFieldChange?: (() => void) | undefined;
   onSubmit(values: VeterinarianFormValues): void;
+  serverErrors?: Partial<Record<VeterinarianCreateConflictField, string>> | undefined;
   submitLabel: string;
 }
 
@@ -39,6 +44,7 @@ interface FormFieldConfig {
   autoComplete?: TextInputProps['autoComplete'];
   keyboardType?: TextInputProps['keyboardType'];
   label: string;
+  hint?: string;
   multiline?: boolean;
   name: TextFieldName;
   secureTextEntry?: boolean;
@@ -65,7 +71,8 @@ const BASE_FIELDS: readonly FormFieldConfig[] = [
 const CREATE_USER_FIELDS: readonly FormFieldConfig[] = [
   {
     name: 'createUserEmail',
-    label: 'Email del usuario',
+    label: 'Correo electrónico de acceso',
+    hint: 'Si lo dejás vacío, se usará el correo profesional indicado arriba.',
     autoCapitalize: 'none',
     autoComplete: 'email',
     keyboardType: 'email-address',
@@ -73,6 +80,7 @@ const CREATE_USER_FIELDS: readonly FormFieldConfig[] = [
   {
     name: 'createUserPassword',
     label: 'Contraseña inicial',
+    hint: 'Mínimo 12 caracteres. No se volverá a mostrar después del alta.',
     autoComplete: 'new-password',
     secureTextEntry: true,
     textContentType: 'newPassword',
@@ -84,7 +92,10 @@ export function VeterinarianForm({
   initialValues,
   isSubmitting,
   mode = 'create',
+  onCancel,
+  onFieldChange,
   onSubmit,
+  serverErrors,
   submitLabel,
 }: VeterinarianFormProps) {
   const { control, handleSubmit } = useForm<VeterinarianFormInput, unknown, VeterinarianFormValues>(
@@ -95,39 +106,59 @@ export function VeterinarianForm({
   );
   const shouldCreateUser = useWatch({ control, name: 'shouldCreateUser' });
   const submit = handleSubmit(onSubmit);
+  const professionalFields = BASE_FIELDS.map((field) => (
+    <FieldController
+      key={field.name}
+      control={control}
+      field={field}
+      isSubmitting={isSubmitting}
+      onFieldChange={onFieldChange}
+      serverError={field.name === 'licenseNumber' ? serverErrors?.licenseNumber : undefined}
+    />
+  ));
 
   return (
     <View style={styles.form}>
-      {BASE_FIELDS.map((field) => (
-        <FieldController
-          key={field.name}
-          control={control}
-          field={field}
-          isSubmitting={isSubmitting}
-        />
-      ))}
+      {mode === 'create' ? (
+        <AppCard style={styles.card} variant="elevated">
+          <SectionHeader
+            subtitle="Datos de identificación y contacto profesional."
+            title="Información profesional"
+          />
+          {professionalFields}
+        </AppCard>
+      ) : (
+        professionalFields
+      )}
 
       {mode === 'create' ? (
-        <View style={styles.createUserSection}>
-          <AppText variant="label">Crear acceso para el veterinario</AppText>
+        <AppCard style={styles.card} variant="elevated">
+          <SectionHeader
+            action={<AppBadge icon="medical" label="Rol Veterinario" tone="info" />}
+            subtitle="Opcional. La cuenta se crea o reutiliza junto con el perfil."
+            title="Acceso a Refugiapp"
+          />
           <Controller
             control={control}
             name="shouldCreateUser"
             render={({ field: { onChange, value } }) => (
               <View style={styles.switchRow}>
                 <View style={styles.switchCopy}>
-                  <AppText>Crear usuario de acceso</AppText>
+                  <AppText variant="label">Crear usuario de acceso</AppText>
                   <AppText color="textSecondary" variant="caption">
-                    Crea un usuario con rol veterinario y lo vincula automáticamente.
+                    El servidor lo vincula de forma atómica y asigna únicamente el rol Veterinario.
                   </AppText>
                 </View>
                 <Switch
                   accessibilityHint="Si se activa, se crea un usuario con rol veterinario en la misma operación."
                   accessibilityLabel="Crear usuario de acceso"
                   disabled={isSubmitting}
-                  onValueChange={onChange}
+                  onValueChange={(nextValue) => {
+                    onChange(nextValue);
+                    onFieldChange?.();
+                  }}
                   thumbColor={value ? colors.textPrimary : colors.disabledText}
-                  trackColor={{ false: colors.disabledSurface, true: colors.info }}
+                  trackColor={{ false: colors.disabledSurface, true: colors.positive }}
                   value={value}
                 />
               </View>
@@ -141,11 +172,22 @@ export function VeterinarianForm({
                   control={control}
                   field={field}
                   isSubmitting={isSubmitting}
+                  onFieldChange={onFieldChange}
+                  serverError={
+                    field.name === 'createUserEmail' ? serverErrors?.createUserEmail : undefined
+                  }
                 />
               ))}
+              <View accessibilityRole="summary" style={styles.atomicHelp}>
+                <AppIcon color="info" name="info" size={sizes.iconSm} />
+                <AppText color="textSecondary" style={styles.atomicHelpCopy} variant="caption">
+                  Si el correo ya pertenece a un usuario disponible, se reutiliza la cuenta. Si el
+                  alta falla, no queda un usuario sin perfil profesional.
+                </AppText>
+              </View>
             </View>
           ) : null}
-        </View>
+        </AppCard>
       ) : null}
 
       {errorMessage ? (
@@ -153,7 +195,26 @@ export function VeterinarianForm({
           {errorMessage}
         </AppText>
       ) : null}
-      <AppButton label={submitLabel} loading={isSubmitting} onPress={() => void submit()} />
+      <View style={styles.actions}>
+        {mode === 'create' && onCancel ? (
+          <AppButton
+            disabled={isSubmitting}
+            label="Cancelar"
+            onPress={onCancel}
+            style={styles.action}
+            testID="create-veterinarian-cancel"
+            variant="secondary"
+          />
+        ) : null}
+        <AppButton
+          icon="check"
+          label={submitLabel}
+          loading={isSubmitting}
+          onPress={() => void submit()}
+          style={styles.action}
+          testID={mode === 'create' ? 'create-veterinarian-submit' : undefined}
+        />
+      </View>
     </View>
   );
 }
@@ -164,9 +225,17 @@ interface FieldControllerProps {
   >['control'];
   field: FormFieldConfig;
   isSubmitting: boolean;
+  onFieldChange?: (() => void) | undefined;
+  serverError?: string | undefined;
 }
 
-function FieldController({ control, field, isSubmitting }: FieldControllerProps) {
+function FieldController({
+  control,
+  field,
+  isSubmitting,
+  onFieldChange,
+  serverError,
+}: FieldControllerProps) {
   return (
     <Controller
       control={control}
@@ -179,21 +248,41 @@ function FieldController({ control, field, isSubmitting }: FieldControllerProps)
           keyboardType: field.keyboardType,
           multiline: field.multiline,
           onBlur: fieldController.onBlur,
-          onChangeText: fieldController.onChange,
+          onChangeText: (value) => {
+            fieldController.onChange(value);
+            onFieldChange?.();
+          },
           secureTextEntry: field.secureTextEntry,
           textContentType: field.textContentType,
           value: fieldController.value ?? '',
         };
-        return (
-          <Field error={fieldState.error?.message ?? null} label={field.label} {...inputProps} />
-        );
+        const error = fieldState.error?.message ?? serverError ?? null;
+
+        if (field.secureTextEntry) {
+          const { secureTextEntry: _secureTextEntry, ...passwordInputProps } = inputProps;
+          return (
+            <View style={styles.field}>
+              <PasswordField {...passwordInputProps} label={field.label} />
+              {field.hint ? (
+                <AppText color="textSecondary" variant="caption">
+                  {field.hint}
+                </AppText>
+              ) : null}
+              <FieldError message={error} />
+            </View>
+          );
+        }
+
+        return <Field error={error} hint={field.hint} label={field.label} {...inputProps} />;
       }}
     />
   );
 }
 
-function Field(props: TextInputProps & { error?: string | null; label: string }) {
-  const { error, label, style, ...inputProps } = props;
+function Field(
+  props: TextInputProps & { error?: string | null; hint?: string | undefined; label: string }
+) {
+  const { error, hint, label, style, ...inputProps } = props;
   return (
     <View style={styles.field}>
       <AppText variant="label">{label}</AppText>
@@ -203,24 +292,38 @@ function Field(props: TextInputProps & { error?: string | null; label: string })
         style={[styles.input, inputProps.multiline === true && styles.multiline, style]}
         {...inputProps}
       />
-      {error ? (
-        <AppText color="danger" role="alert">
-          {error}
+      {hint ? (
+        <AppText color="textSecondary" variant="caption">
+          {hint}
         </AppText>
       ) : null}
+      <FieldError message={error} />
     </View>
   );
 }
 
+function FieldError({ message }: { message?: string | null | undefined }) {
+  return message ? (
+    <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
+      {message}
+    </AppText>
+  ) : null;
+}
+
 const styles = StyleSheet.create({
-  createUserFields: { gap: spacing.md },
-  createUserSection: {
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    gap: spacing.sm,
-    padding: spacing.md,
+  action: { flex: 1, minWidth: 160 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  atomicHelp: {
+    alignItems: 'flex-start',
+    backgroundColor: colors.surfaceSubtle,
+    borderRadius: radii.sm,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    padding: spacing.sm,
   },
+  atomicHelpCopy: { flex: 1, minWidth: 0 },
+  card: { gap: spacing.md },
+  createUserFields: { gap: spacing.md },
   field: { gap: spacing.xs },
   form: { gap: spacing.md, width: '100%' },
   input: {

@@ -41,7 +41,10 @@ describe('VeterinarianForm', () => {
     await fireEvent.changeText(screen.getByLabelText('Apellido'), 'Romero');
     await fireEvent.changeText(screen.getByLabelText('Matrícula'), 'VET-001');
     await fireEvent(screen.getByLabelText('Crear usuario de acceso'), 'valueChange', true);
-    await fireEvent.changeText(screen.getByLabelText('Email del usuario'), 'vet@refugiapp.local');
+    await fireEvent.changeText(
+      screen.getByLabelText('Correo electrónico de acceso'),
+      'vet@refugiapp.local'
+    );
     await fireEvent.changeText(screen.getByLabelText('Contraseña inicial'), 'Refugia-2026-secure');
     await fireEvent.press(screen.getByRole('button', { name: 'Crear veterinario' }));
 
@@ -129,6 +132,66 @@ describe('VeterinarianForm', () => {
 
     expect(screen.queryByLabelText('Crear usuario de acceso')).toBeNull();
     expect(screen.queryByLabelText('Contraseña inicial')).toBeNull();
+  });
+
+  it('uses the D29 sections without exposing the conceptual user selector', async () => {
+    const screen = await render(
+      <VeterinarianForm isSubmitting={false} onSubmit={jest.fn()} submitLabel="Crear perfil" />
+    );
+
+    expect(screen.getByRole('header', { name: 'Información profesional' })).toBeTruthy();
+    expect(screen.getByRole('header', { name: 'Acceso a Refugiapp' })).toBeTruthy();
+    expect(screen.getByText('Rol Veterinario')).toBeTruthy();
+    expect(screen.queryByText('Seleccionar usuario')).toBeNull();
+  });
+
+  it('shows license and access-email conflicts beside different fields', async () => {
+    const initialValues = {
+      firstName: 'Sofía',
+      lastName: 'Romero',
+      licenseNumber: 'VET-001',
+      email: undefined,
+      phone: undefined,
+      notes: undefined,
+      shouldCreateUser: true,
+      createUserEmail: 'vet@refugiapp.local',
+      createUserPassword: 'Refugia-2026-secure',
+    };
+    const screen = await render(
+      <VeterinarianForm
+        initialValues={initialValues}
+        isSubmitting={false}
+        onSubmit={jest.fn()}
+        serverErrors={{
+          createUserEmail: 'Ese correo ya está vinculado.',
+          licenseNumber: 'Esa matrícula ya existe.',
+        }}
+        submitLabel="Crear perfil"
+      />
+    );
+
+    expect(screen.getByLabelText('Matrícula').parent?.props).toBeTruthy();
+    expect(screen.getByText('Esa matrícula ya existe.')).toBeTruthy();
+    expect(screen.getByLabelText('Correo electrónico de acceso').parent?.props).toBeTruthy();
+    expect(screen.getByText('Ese correo ya está vinculado.')).toBeTruthy();
+  });
+
+  it('offers a cancel action without submitting', async () => {
+    const onCancel = jest.fn();
+    const onSubmit = jest.fn();
+    const screen = await render(
+      <VeterinarianForm
+        isSubmitting={false}
+        onCancel={onCancel}
+        onSubmit={onSubmit}
+        submitLabel="Crear perfil"
+      />
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('announces a create error returned by the feature', async () => {

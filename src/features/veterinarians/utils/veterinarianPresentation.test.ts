@@ -1,6 +1,7 @@
 import { ApiError } from '@/core/api';
 
 import {
+  toVeterinarianCreateErrorPresentation,
   toVeterinarianErrorMessage,
   toVeterinarianSearchFilter,
   veterinarianFullName,
@@ -85,6 +86,34 @@ describe('toVeterinarianErrorMessage', () => {
     const message = toVeterinarianErrorMessage(new Error('Bearer secret-token'));
 
     expect(message).not.toContain('secret-token');
+  });
+});
+
+describe('toVeterinarianCreateErrorPresentation', () => {
+  it('places a duplicated license next to the license field', () => {
+    expect(
+      toVeterinarianCreateErrorPresentation(apiError(409, 'LICENSE_NUMBER_ALREADY_EXISTS'))
+    ).toEqual({
+      field: 'licenseNumber',
+      message: 'Ya existe un veterinario con esa matrícula.',
+    });
+  });
+
+  it.each(['EMAIL_ALREADY_EXISTS', 'USER_ALREADY_LINKED_TO_VETERINARIAN'])(
+    'places %s next to the access email field',
+    (code) => {
+      expect(toVeterinarianCreateErrorPresentation(apiError(409, code))).toEqual({
+        field: 'createUserEmail',
+        message: toVeterinarianErrorMessage(apiError(409, code)),
+      });
+    }
+  );
+
+  it('keeps non-field errors at form level', () => {
+    expect(toVeterinarianCreateErrorPresentation(apiError(403))).toEqual({
+      field: null,
+      message: 'Tu rol no tiene permiso para gestionar veterinarios.',
+    });
   });
 });
 

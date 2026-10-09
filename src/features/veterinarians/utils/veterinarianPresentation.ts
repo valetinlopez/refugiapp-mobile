@@ -2,6 +2,13 @@ import { ApiError, toApiErrorMessage } from '@/core/api';
 
 import type { VeterinarianResponse } from '../types';
 
+export type VeterinarianCreateConflictField = 'createUserEmail' | 'licenseNumber';
+
+export interface VeterinarianCreateErrorPresentation {
+  field: VeterinarianCreateConflictField | null;
+  message: string;
+}
+
 export function veterinarianFullName(veterinarian: VeterinarianResponse): string {
   return `${veterinarian.firstName} ${veterinarian.lastName}`.trim();
 }
@@ -43,4 +50,32 @@ export function toVeterinarianErrorMessage(error: unknown): string {
     }
   }
   return toApiErrorMessage(error);
+}
+
+/**
+ * Places create conflicts next to the credential that must be corrected.
+ *
+ * The backend keeps the create operation atomic; this presentation only helps
+ * the operator distinguish the two recoverable conflicts without exposing the
+ * server payload or request identifiers.
+ */
+export function toVeterinarianCreateErrorPresentation(
+  error: unknown
+): VeterinarianCreateErrorPresentation {
+  const message = toVeterinarianErrorMessage(error);
+
+  if (error instanceof ApiError) {
+    if (error.code === 'LICENSE_NUMBER_ALREADY_EXISTS') {
+      return { field: 'licenseNumber', message };
+    }
+    if (
+      error.code === 'EMAIL_ALREADY_EXISTS' ||
+      error.code === 'USER_ALREADY_LINKED_TO_VETERINARIAN' ||
+      error.code === 'VET_CREATE_USER_EMAIL_REQUIRED'
+    ) {
+      return { field: 'createUserEmail', message };
+    }
+  }
+
+  return { field: null, message };
 }
