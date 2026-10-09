@@ -117,3 +117,19 @@ export function toUpdateMedicalRecordErrorMessage(error: unknown): string {
 
   return toApiErrorMessage(root);
 }
+
+/**
+ * Global clinical history list. `shelter_manager` receives a server-side 403;
+ * it is surfaced as a safe, actionable message without exposing the payload.
+ */
+export function toGlobalMedicalRecordsErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 403) {
+      return 'Tu rol no tiene permiso para consultar la historia clínica del refugio.';
+    }
+    if (error.status === 400 || error.status === 422) {
+      return 'Revisá los filtros de la historia clínica e intentá de nuevo.';
+    }
+  }
+  return toApiErrorMessage(error);
+}

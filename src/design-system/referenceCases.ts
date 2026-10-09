@@ -304,12 +304,24 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     id: 'D06-16',
     index: 16,
     referenceFile: '16-clinical-history-overview.jpeg',
-    route: 'app/(app)/animals/[id].tsx (pestaña Evolución clínica) y global (pendiente)',
+    route:
+      'app/(app)/animals/[id].tsx (pestaña Evolución clínica) y global app/(app)/medical-records/index.tsx',
     audience: 'admin/veterinarian (canReadClinicalRecords)',
     states: ['default', 'loading', 'empty', 'error', 'offline', 'restricted'],
     divergences: [
-      { kind: 'pending', note: 'Historia clínica global (RFG-158) y paginación UI.' },
+      {
+        kind: 'implemented',
+        note: 'Historia clínica global (RFG-158) con paginación incremental y filtros tipo/fechas/animal.',
+      },
+      {
+        kind: 'contract',
+        note: 'El contrato global no acepta animalId; el filtro por animal filtra en cliente sobre páginas cargadas.',
+      },
       { kind: 'contract', note: 'shelter_manager recibe 403.' },
+      {
+        kind: 'pending',
+        note: 'Paginación UI de la evolución clínica por animal y alta global (RFG-159).',
+      },
     ],
     group: 'clinical',
   },

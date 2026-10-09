@@ -493,6 +493,17 @@ El detalle toma la jerarquía de `12-care-task-detail.jpeg` y conserva los estad
 - **Acciones:** editar, completar y cancelar aparecen únicamente con capacidad de escritura y solo mientras la tarea está pendiente. Completar y cancelar usan `ConfirmDialog`; el backend revalida permisos y las mutaciones invalidan detalle, listas, contadores y dashboard.
 - **Resiliencia:** UUID inválido, carga, error conectado, offline con reintento, transición en cola y pérdida reactiva de permiso se presentan por separado. Los estados terminales no ofrecen acciones incompatibles.
 
+## 48. Historia clínica global (D25 / RFG-158)
+
+El listado global (`app/(app)/medical-records/index.tsx`) adopta la jerarquía de `16-clinical-history-overview.jpeg` y conserva estrictamente el contrato de `GET /medical-records`. Es de lectura y alta para `admin`/`veterinarian` (`canReadClinicalRecords`); `shelter_manager` recibe `403` y el destino de Gestión se oculta.
+
+- **Encabezado y resumen:** fondo de textura, fila de cuenta y retorno con `fallbackHref='/more'`, `ScreenHeader` único `heading1` "Historia clínica" con subtítulo "Registros clínicos del refugio" y una card `outlined` resumen que muestra el total paginado según tipo y fechas (nunca un total global) y, con filtro animal activo, el aviso explícito "El filtro de animal se aplica sobre los registros cargados (N)". La fecha y el conteo no asumen un total monetario ni un universo completo que el servidor no declara.
+- **Filtros:** tres triggers `secondary` sobre `BottomSheet` (ADR-0018) con radio-cards de 44 × 44 y `radiogroup`/`radio`: animal (foto/nombre desde `src/application/animals`), tipo (los 7 valores publicados) y fechas (presets "Últimos 7 días / 30 días / Este mes" + rango con `DateTimeField`; incompleto o `from > to` no dispara query). El filtro de tipo y el rango viajan al servidor; el de animal filtra en cliente sobre las páginas cargadas y la UI lo comunica.
+- **Tarjeta de registro:** fila elevada con avatar del animal (foto cacheada por media ID, iniciales como fallback), nombre del animal, badge `info` con icono y tipo, título del registro a 2 líneas, fecha `es-AR` y veterinario. Toda la tarjeta es un botón accesible con label completo y abre la ficha del animal; los nombres se resuelven best-effort desde caches compartidas con fallback explícito ("Animal no disponible", "Sin veterinario asignado"/"Veterinario no disponible"); nunca un UUID crudo. Resolver nombres no genera request por fila.
+- **Paginación y estados:** `FlatList` virtualiza páginas de 20 con orden del servidor sin reordenar y deduplicación por UUID; CTA "Cargar más registros", fin "No hay más registros", pull-to-refresh y estados de carga, vacío, vacío filtrado, error de servidor (con mensaje traducido) y offline con reintento diferenciados.
+- **Alta contextual:** el FAB aparece solo con un animal elegido y navega al flujo por animal existente (`/animals/[id]/medical-records/new`); sin animal se explica "Para registrar un nuevo registro clínico, elegí un animal". El alta global dedicada llega con RFG-159.
+- **Accesibilidad:** un único H1, labels accesibles en español más `testID` en inglés (`clinical-global-list`, `clinical-load-more`, `clinical-end-of-list`, `clinical-{animal|type|date}-filter`, `clinical-global-create`), targets de 44 × 44, decorativos ocultos a AT y contenido desplazable con fuente ampliada.
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)

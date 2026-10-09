@@ -11,17 +11,17 @@ describe('getAuthorizedManagementDestinations', () => {
     {
       blocked: [],
       role: 'admin',
-      visible: ['veterinarians', 'expenses', 'users', 'audit'],
+      visible: ['veterinarians', 'expenses', 'medical-records', 'users', 'audit'],
     },
     {
-      blocked: ['users', 'audit'],
+      blocked: ['users', 'audit', 'medical-records'],
       role: 'shelter_manager',
       visible: ['veterinarians', 'expenses'],
     },
     {
       blocked: ['users', 'audit'],
       role: 'veterinarian',
-      visible: ['veterinarians', 'expenses'],
+      visible: ['veterinarians', 'expenses', 'medical-records'],
     },
   ] as const)(
     'defines visible and blocked destinations for $role',
@@ -36,9 +36,8 @@ describe('getAuthorizedManagementDestinations', () => {
     expect(destinationIds([])).toEqual(['veterinarians', 'expenses']);
   });
 
-  it('removes privileged destinations when capabilities are lost', () => {
-    expect(destinationIds(['admin'])).toContain('users');
-    expect(destinationIds(['veterinarian'])).not.toContain('users');
-    expect(destinationIds(['veterinarian'])).not.toContain('audit');
+  it('removes the clinical destination when the capability is lost', () => {
+    expect(destinationIds(['admin'])).toContain('medical-records');
+    expect(destinationIds(['shelter_manager'])).not.toContain('medical-records');
   });
 });

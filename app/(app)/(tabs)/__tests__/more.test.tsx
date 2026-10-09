@@ -57,6 +57,7 @@ describe('MoreTabScreen management navigation', () => {
     expect(screen.getByRole('button', { name: 'Veterinarios' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Usuarios' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Ver auditoría' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Historia clínica' })).toBeTruthy();
     expect(screen.getByText('Notificaciones existentes')).toBeTruthy();
 
     await fireEvent.press(screen.getByLabelText('Abrir Mi perfil'));
@@ -76,6 +77,11 @@ describe('MoreTabScreen management navigation', () => {
       expect(screen.getByRole('button', { name: 'Veterinarios' })).toBeTruthy();
       expect(screen.queryByRole('button', { name: 'Usuarios' })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Ver auditoría' })).toBeNull();
+      if (role === 'shelter_manager') {
+        expect(screen.queryByRole('button', { name: 'Historia clínica' })).toBeNull();
+      } else {
+        expect(screen.getByRole('button', { name: 'Historia clínica' })).toBeTruthy();
+      }
     }
   );
 
