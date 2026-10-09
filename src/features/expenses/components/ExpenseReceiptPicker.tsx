@@ -90,7 +90,6 @@ export function ExpenseReceiptPicker({
 
   return (
     <View style={styles.container}>
-      <AppText variant="label">Comprobante</AppText>
       {value ? (
         <View accessibilityLabel={`Comprobante: ${value.name}`} style={styles.file}>
           <AppIcon color="textSecondary" name="medical" size={sizes.iconSm} />
@@ -123,7 +122,7 @@ export function ExpenseReceiptPicker({
         />
         <AppButton
           disabled={disabled || isPicking}
-          label="Elegir PDF"
+          label="Subir archivo"
           onPress={() => void pickPdf()}
           variant="secondary"
         />
@@ -134,7 +133,7 @@ export function ExpenseReceiptPicker({
         </AppText>
       ) : null}
       <AppText color="textSecondary" variant="caption">
-        Obligatorio. Imagen o PDF de hasta 10 MB.
+        Opcional · Imagen o PDF de hasta 10 MB.
       </AppText>
     </View>
   );
