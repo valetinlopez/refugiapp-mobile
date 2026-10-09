@@ -48,6 +48,25 @@ describe('veterinarianDirectoryApi', () => {
       { id: VET_ID, name: 'Sofía Gómez', licenseNumber: 'MP 100' },
     ]);
   });
+
+  it('resolves one veterinarian without reading the whole directory', async () => {
+    const client = createClient({
+      [`GET /api/v1/veterinarians/${VET_ID}`]: () => ({
+        body: {
+          id: VET_ID,
+          firstName: 'Sofía',
+          lastName: 'Gómez',
+          licenseNumber: 'MP 100',
+        },
+      }),
+    });
+
+    await expect(veterinarianDirectoryApi.getById(VET_ID, client)).resolves.toEqual({
+      id: VET_ID,
+      name: 'Sofía Gómez',
+      licenseNumber: 'MP 100',
+    });
+  });
 });
 
 describe('resolveVeterinarianLabel', () => {

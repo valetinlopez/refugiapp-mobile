@@ -3,6 +3,8 @@ import { ApiError } from '@/core/api';
 import {
   CreateMedicalRecordError,
   toCreateMedicalRecordErrorMessage,
+  toDeleteMedicalRecordErrorMessage,
+  toMedicalRecordDetailErrorMessage,
   toUpdateMedicalRecordErrorMessage,
   UpdateMedicalRecordError,
 } from './medicalRecordErrorMessages';
@@ -141,6 +143,34 @@ describe('toUpdateMedicalRecordErrorMessage', () => {
   it('falls back to a safe message for unknown errors', () => {
     expect(toUpdateMedicalRecordErrorMessage(new Error('boom'))).toBe(
       'Ocurrió un error inesperado. Intentá de nuevo.'
+    );
+  });
+});
+
+describe('medical record detail errors', () => {
+  it('translates a missing detail without exposing server payloads', () => {
+    const error = new ApiError({
+      code: 'NOT_FOUND',
+      message: 'Internal detail',
+      requestId: 'req-1',
+      status: 404,
+    });
+
+    expect(toMedicalRecordDetailErrorMessage(error)).toBe(
+      'El registro clínico ya no está disponible.'
+    );
+  });
+
+  it('translates a forbidden soft-delete', () => {
+    const error = new ApiError({
+      code: 'FORBIDDEN',
+      message: 'Internal detail',
+      requestId: 'req-1',
+      status: 403,
+    });
+
+    expect(toDeleteMedicalRecordErrorMessage(error)).toBe(
+      'Tu rol no tiene permiso para eliminar registros clínicos.'
     );
   });
 });

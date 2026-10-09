@@ -7,4 +7,5 @@
 export const veterinarianDirectoryKeys = {
   all: ['veterinarians'] as const,
   directory: () => [...veterinarianDirectoryKeys.all, 'directory'] as const,
+  detail: (id: string) => [...veterinarianDirectoryKeys.all, 'detail', id] as const,
 };

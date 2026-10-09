@@ -25,6 +25,10 @@ export const medicalRecordsApi = {
     return toMedicalRecord(response.data);
   },
 
+  async remove(id: string, client: HttpClient = apiClient): Promise<void> {
+    await client.delete(`/medical-records/${id}`);
+  },
+
   async update(
     id: string,
     data: UpdateMedicalRecordRequest,

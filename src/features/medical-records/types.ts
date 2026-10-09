@@ -93,9 +93,12 @@ export interface VeterinarianOption {
 export type VeterinariansStatus = 'loading' | 'error' | 'empty' | 'ready';
 
 export interface ClinicalAttachment {
+  bytes?: number | null;
+  format?: string | null;
   id: string;
-  secureUrl: string;
   name: string;
+  resourceType?: 'image' | 'video' | 'raw';
+  secureUrl: string;
 }
 
 export function toMedicalRecord(dto: MedicalRecordResponse): MedicalRecord {
@@ -130,10 +133,19 @@ export function toVeterinarianOption(dto: VeterinarianResponse): VeterinarianOpt
 
 export function toClinicalAttachment(dto: MediaAsset): ClinicalAttachment {
   const publicId = dto.publicId.split('/').pop() ?? dto.publicId;
+  const format = typeof dto.format === 'string' && dto.format !== '' ? dto.format : null;
+  const hasExtension = publicId.includes('.');
   return {
+    bytes: typeof dto.bytes === 'number' ? dto.bytes : null,
+    format,
     id: dto.id,
     secureUrl: dto.secureUrl,
-    name: publicId !== '' ? publicId : dto.id,
+    name:
+      publicId !== ''
+        ? `${publicId}${format !== null && !hasExtension ? `.${format.toLowerCase()}` : ''}`
+        : dto.id,
+    resourceType:
+      dto.resourceType === 'image' || dto.resourceType === 'video' ? dto.resourceType : 'raw',
   };
 }
 
