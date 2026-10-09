@@ -11,7 +11,7 @@ export default function VeterinariansRoute() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <AccountHeaderRow accessibilityHint="Volver al inicio" fallbackHref="/" />
+      <AccountHeaderRow accessibilityHint="Volver a Más" fallbackHref="/more" />
       <VeterinariansScreen canWrite={canManageVets} />
     </SafeAreaView>
   );

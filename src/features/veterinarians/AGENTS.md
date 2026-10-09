@@ -39,7 +39,7 @@
 ## Estructura
 
 - `api/`: `veterinariansApi` (listado, detalle, alta, edición y desactivación).
-- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianDetail`, `VeterinarianForm`, `DeactivateVeterinarianDialog` y `ReactivateVeterinarianDialog`.
+- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianFilterSheet`, `VeterinarianDetail`, `VeterinarianForm`, `DeactivateVeterinarianDialog` y `ReactivateVeterinarianDialog`.
 - `VeterinarianForm` recibe `mode` (`create` | `edit`): solo en `create` expone el toggle "Crear usuario de acceso" con email y contraseña del usuario; en `edit` no ofrece vínculo.
 - `hooks/`: keys, listado infinito, detalle y mutations.
 - `types.ts`: aliases derivados del contrato generado.
@@ -54,6 +54,10 @@
 
 ## UI y accesibilidad
 
+- Listado rediseñado (D28/RFG-161): fondo de textura, `ScreenHeader` único ("Veterinarios"/"Personal veterinario registrado"), un buscador rápido visible con debounce de 400 ms (`toVeterinarianSearchFilter`: con dígitos busca matrícula, sin dígitos busca nombre), `SegmentedControl` visible `Todos/Activos/Inactivos` (default `Todos` → `isActive: undefined`), botón `Filtros` que abre `VeterinarianFilterSheet` y botón `Limpiar` solo con filtros activos. El buscador rápido y los filtros avanzados son mutuamente excluyentes: escribir en el rápido descarta lo avanzado y `Aplicar` del sheet descarta el rápido; el estado se combina en AND con la búsqueda. La lista conserva el orden determinista del backend y deduplica UUID al aplanar páginas (`flattenVeterinarianPages`).
+- `VeterinarianFilterSheet` permite enviar `name` y `licenseNumber` juntos (AND, algo que el buscador rápido no puede); los campos se recortan y los vacíos se omiten (`toVeterinarianAdvancedFilters`). Los borradores viven en la pantalla (no hay `setState` dentro de un efecto).
+- `VeterinarianCard` muestra avatar de iniciales, nombre, matrícula y las líneas de contacto que existan (email del perfil con fallback a `user.email`, y teléfono); omite las ausentes sin inventar texto. El badge combina icono + texto + tono y toda la tarjeta es un único botón accesible; nunca se usa el UUID como identidad.
+- El alta se ofrece con `FAB` ("Nuevo veterinario") solo con `canWrite` (`canManageVets`); no hay botón de alta en la cabecera.
 - Mantener visibles matrícula y estado sin depender solo del color (`AppBadge` con texto).
 - El toggle de creación de usuario usa `Switch` de RN con `accessibilityLabel`/`accessibilityHint`; el label del campo de contraseña indica el mínimo de 12 caracteres.
 - Área táctil mínima de 44 × 44 y labels accesibles en botones.
@@ -81,6 +85,7 @@
 - Guard visual por capacidad `canManageVets` para escritura; lectura para los tres roles.
 - Reactivación habilitada con `POST /veterinarians/:id/reactivate`: botón en el detalle de un veterinario inactivo, confirmación con `ReactivateVeterinarianDialog`, traducción de `VETERINARIAN_ALREADY_ACTIVE` e invalidación de listado, detalle y opciones del formulario clínico tras éxito.
 - Búsqueda del listado por nombre o matrícula (el API ya lo soportaba; ahora la UI expone el filtro).
+- Rediseño del listado D28 (RFG-161): ruta delgada con `fallbackHref='/more'`, `DecorativeBackground`, `ScreenHeader`, buscador rápido, `SegmentedControl` de estado con default `Todos`, `VeterinarianFilterSheet` para `name` + `licenseNumber` en AND, `Limpiar`, FAB de alta por capacidad y tarjeta con avatar, contacto y badge no cromático. `FlatList` con pull-to-refresh, CTA "Cargar más veterinarios", fin de lista y deduplicación por UUID; estados loading/vacío (con/sin filtros y con/sin `canWrite`)/error/offline/reintento. Sin endpoints, roles ni tipos nuevos.
 - La coordinación de la sección "Gestión" se extrajo a `src/application/management` y al patrón compartido `src/components/patterns/ManagementSection` (RFG-140); esta feature solo conserva sus pantallas y reglas de veterinarios.
 
 ### Pendiente o deuda conocida
