@@ -523,6 +523,17 @@ El detalle (`/medical-records/[id]`) toma la jerarquía de `18-medical-record-de
 - **Acciones:** “Editar registro” reutiliza la edición contextual existente. “Eliminar registro” abre `ConfirmDialog` y recién ejecuta la baja lógica al confirmar; no hay optimistic update. El éxito vuelve al origen e invalida historia global y evolución por animal; el historial de cambios permanece en el servidor.
 - **Estados:** UUID inválido, carga, 404/403 seguro, offline con reintento, adjuntos vacíos, error de resolución de entidades y pérdida reactiva de permiso se diferencian. Los controles conservan targets de 44 × 44, el color no es la única señal y la pantalla desplaza con fuente ampliada.
 
+## 50. Alta de veterinario (D29 / RFG-162)
+
+El alta (`/veterinarians/new`) toma la jerarquía de `20-veterinarian-new.jpeg` y reemplaza el selector conceptual de usuario interno por el contrato atómico vigente. Solo `admin` y `shelter_manager` (`canManageVets`) acceden; una pérdida de capacidad desmonta el formulario y muestra “Sin permiso”.
+
+- **Jerarquía:** textura vegetal decorativa, eyebrow “Veterinarios”, `ScreenHeader` único con “Nuevo veterinario” y cards elevadas para “Información profesional” y “Acceso a Refugiapp”. El contenido desplaza, mantiene ancho de lectura y no fija alturas alrededor de texto.
+- **Información profesional:** nombre, apellido y matrícula obligatorios; correo, teléfono y notas opcionales. Labels visibles, ayudas y errores acompañan cada input.
+- **Acceso opcional:** el switch accesible revela correo y contraseña inicial. El rol se presenta como badge fijo “Rol Veterinario”; no existe selector de roles, usuario existente ni UUID manual. La contraseña usa `PasswordField`, mínimo real de 12 caracteres y nunca se persiste ni vuelve a mostrarse.
+- **Atomicidad:** el submit envía una sola operación `POST /veterinarians` con `createUser`. El servidor crea o reutiliza por correo y vincula dentro de la misma transacción; la UI explica que una falla no deja una cuenta huérfana.
+- **Conflictos y resiliencia:** `LICENSE_NUMBER_ALREADY_EXISTS` se muestra junto a Matrícula; los conflictos de email/usuario vinculado se muestran junto al correo de acceso. Un error general, falta de permiso u offline conserva el borrador para reintento manual y no duplica envíos automáticamente.
+- **Acciones y accesibilidad:** “Cancelar” y “Crear perfil” envuelven en ancho reducido, conservan targets mínimos y bloquean durante el envío. El éxito se anuncia a tecnologías asistivas y vuelve al listado.
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)

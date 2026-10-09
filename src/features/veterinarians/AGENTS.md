@@ -39,7 +39,7 @@
 ## Estructura
 
 - `api/`: `veterinariansApi` (listado, detalle, alta, edición y desactivación).
-- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianFilterSheet`, `VeterinarianDetail`, `VeterinarianForm`, `DeactivateVeterinarianDialog` y `ReactivateVeterinarianDialog`.
+- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianDetail`, `CreateVeterinarianScreen`, `VeterinarianForm`, `DeactivateVeterinarianDialog` y `ReactivateVeterinarianDialog`.
 - `VeterinarianForm` recibe `mode` (`create` | `edit`): solo en `create` expone el toggle "Crear usuario de acceso" con email y contraseña del usuario; en `edit` no ofrece vínculo.
 - `hooks/`: keys, listado infinito, detalle y mutations.
 - `types.ts`: aliases derivados del contrato generado.
@@ -87,6 +87,7 @@
 - Búsqueda del listado por nombre o matrícula (el API ya lo soportaba; ahora la UI expone el filtro).
 - Rediseño del listado D28 (RFG-161): ruta delgada con `fallbackHref='/more'`, `DecorativeBackground`, `ScreenHeader`, buscador rápido, `SegmentedControl` de estado con default `Todos`, `VeterinarianFilterSheet` para `name` + `licenseNumber` en AND, `Limpiar`, FAB de alta por capacidad y tarjeta con avatar, contacto y badge no cromático. `FlatList` con pull-to-refresh, CTA "Cargar más veterinarios", fin de lista y deduplicación por UUID; estados loading/vacío (con/sin filtros y con/sin `canWrite`)/error/offline/reintento. Sin endpoints, roles ni tipos nuevos.
 - La coordinación de la sección "Gestión" se extrajo a `src/application/management` y al patrón compartido `src/components/patterns/ManagementSection` (RFG-140); esta feature solo conserva sus pantallas y reglas de veterinarios.
+- Alta D29 (RFG-162): la ruta conserva únicamente el guard `canManageVets` y compone `CreateVeterinarianScreen`; la pantalla usa textura, jerarquía editorial y cards separadas para información profesional y acceso. El acceso opcional envía un único `createUser` (correo + contraseña ≥ 12) dentro de `POST /veterinarians`, muestra el rol fijo `veterinarian`, no ofrece selector/UUID/roles y ubica los conflictos de matrícula y correo junto a campos distintos. El borrador queda en memoria ante error u offline para reintento manual; la contraseña nunca se persiste ni se registra.
 
 ### Pendiente o deuda conocida
 

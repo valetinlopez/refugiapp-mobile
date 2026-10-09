@@ -389,7 +389,7 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     audience: 'admin/shelter_manager (canManageVets)',
     states: ['default', 'error'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-162).' },
+      { kind: 'implemented', note: 'Rediseño de alta (RFG-162).' },
       { kind: 'contract', note: 'Vínculo vía createUser, sin selector de usuario existente.' },
     ],
     group: 'veterinarians',

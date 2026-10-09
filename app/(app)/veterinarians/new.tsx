@@ -1,22 +1,16 @@
-import { router, type Href } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/feedback';
 import { navigateBack } from '@/components/navigation';
-import { AppText } from '@/components/primitives';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
-import { VeterinarianForm } from '@/features/veterinarians/components/VeterinarianForm';
-import { useCreateVeterinarian } from '@/features/veterinarians/hooks/useVeterinarianMutations';
-import { toCreateVeterinarianRequest } from '@/features/veterinarians/utils/veterinarianMappers';
-import { toVeterinarianErrorMessage } from '@/features/veterinarians/utils/veterinarianPresentation';
+import { CreateVeterinarianScreen } from '@/features/veterinarians/components/CreateVeterinarianScreen';
 import { colors, spacing } from '@/theme';
 
 export default function NewVeterinarianRoute() {
   const { canManageVets } = useCapabilities();
-  const createVeterinarian = useCreateVeterinarian();
-  const veterinariansHref = '/veterinarians' as Href;
+  const veterinariansHref = '/veterinarians' as const;
 
   if (!canManageVets) {
     return (
@@ -29,7 +23,7 @@ export default function NewVeterinarianRoute() {
           <EmptyState
             actionLabel="Volver"
             message="Solo los encargados y administradores pueden crear veterinarios."
-            onAction={() => navigateBack('/')}
+            onAction={() => navigateBack(veterinariansHref)}
             title="Sin permiso"
           />
         </View>
@@ -43,32 +37,12 @@ export default function NewVeterinarianRoute() {
         accessibilityHint="Volver a veterinarios"
         fallbackHref={veterinariansHref}
       />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <AppText variant="heading1">Nuevo veterinario</AppText>
-        <AppText color="textSecondary">
-          La matrícula debe ser única. Podés crearle su acceso con rol veterinario o dejarlo sin
-          vínculo.
-        </AppText>
-        <VeterinarianForm
-          errorMessage={
-            createVeterinarian.error ? toVeterinarianErrorMessage(createVeterinarian.error) : null
-          }
-          isSubmitting={createVeterinarian.isPending}
-          mode="create"
-          onSubmit={(values) =>
-            createVeterinarian.mutate(toCreateVeterinarianRequest(values), {
-              onSuccess: () => router.replace(veterinariansHref),
-            })
-          }
-          submitLabel="Crear veterinario"
-        />
-      </ScrollView>
+      <CreateVeterinarianScreen />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', padding: spacing.lg },
-  content: { flexGrow: 1, gap: spacing.md, padding: spacing.lg },
   safeArea: { backgroundColor: colors.background, flex: 1 },
 });
