@@ -3,6 +3,7 @@ import { ApiError } from '@/core/api';
 import {
   hasActiveVeterinarianFilters,
   toVeterinarianAdvancedFilters,
+  toVeterinarianCreateErrorPresentation,
   toVeterinarianErrorMessage,
   toVeterinarianSearchFilter,
   veterinarianAccessibilityLabel,
