@@ -2,13 +2,13 @@ import { apiClient, type HttpClient } from '@/core/api';
 
 import type {
   CreateExpenseRequest,
-  Expense,
+  ExpenseDetail,
   ExpenseFilters,
   ExpenseResponse,
   PaginatedExpenses,
   PaginatedExpensesResponse,
 } from '../types';
-import { toExpense, toPaginatedExpenses } from '../types';
+import { toExpenseDetail, toPaginatedExpenses } from '../types';
 
 export const expensesApi = {
   async create(
@@ -19,9 +19,9 @@ export const expensesApi = {
     return response.data;
   },
 
-  async getById(id: string, client: HttpClient = apiClient): Promise<Expense> {
+  async getById(id: string, client: HttpClient = apiClient): Promise<ExpenseDetail> {
     const response = await client.get<ExpenseResponse>(`/expenses/${id}`);
-    return toExpense(response.data);
+    return toExpenseDetail(response.data);
   },
 
   async list(

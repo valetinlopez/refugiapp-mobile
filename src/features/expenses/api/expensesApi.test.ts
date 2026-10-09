@@ -17,6 +17,7 @@ function response() {
     currency: 'ARS',
     description: 'Consulta de control',
     ticketMediaId: EXPENSE_ID,
+    createdByUserId: EXPENSE_ID,
     incurredAt: '2026-09-20T10:00:00.000Z',
     createdAt: '2026-09-20T10:00:00.000Z',
     updatedAt: '2026-09-20T10:00:00.000Z',
@@ -95,7 +96,22 @@ describe('expensesApi.getById', () => {
       description: 'Consulta de control',
       ticketMediaId: EXPENSE_ID,
       incurredAt: '2026-09-20T10:00:00.000Z',
+      createdAt: '2026-09-20T10:00:00.000Z',
+      updatedAt: '2026-09-20T10:00:00.000Z',
+      createdByUserId: EXPENSE_ID,
     });
+  });
+
+  it('normalizes a null actor to null without leaking a placeholder', async () => {
+    const client = createClient({
+      [`GET /api/v1/expenses/${EXPENSE_ID}`]: () => ({
+        body: { ...response(), createdByUserId: null },
+      }),
+    });
+
+    const expense = await expensesApi.getById(EXPENSE_ID, client);
+
+    expect(expense.createdByUserId).toBeNull();
   });
 
   it('normalizes a missing receipt to null', async () => {

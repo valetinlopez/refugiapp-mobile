@@ -1,14 +1,14 @@
 import { router, type Href } from 'expo-router';
 import { Image } from 'expo-image';
 import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
 import { AppButton, AppCard, AppText } from '@/components/primitives';
 import { optimizeCloudinaryImageUrl } from '@/core/media';
 import { isNetworkError } from '@/core/network';
-import { colors, radii, sizes, spacing } from '@/theme';
+import { colors, opacity, radii, sizes, spacing } from '@/theme';
 
 import { useAnimalExpenses } from '../hooks/useAnimalExpenses';
 import { useExpenseReceipt } from '../hooks/useExpenseReceipt';
@@ -77,45 +77,54 @@ const ExpenseCard = memo(function ExpenseCard({ expense }: { expense: Expense })
     ? optimizeCloudinaryImageUrl(receipt.data, { width: 400 })
     : undefined;
   return (
-    <AppCard
+    <Pressable
+      accessibilityHint="Abre el detalle del gasto"
       accessibilityLabel={`${getExpenseCategoryLabel(expense.category)}, ${formatAmountCents(expense.amountCents)}, ${expense.description}`}
+      accessibilityRole="button"
+      onPress={() =>
+        router.push({ pathname: '/expenses/[id]', params: { id: expense.id } } as unknown as Href)
+      }
+      style={({ pressed }) => pressed && styles.pressed}
     >
-      <View style={styles.row}>
-        <View style={styles.text}>
-          <AppText numberOfLines={1} variant="heading3">
-            {formatAmountCents(expense.amountCents)}
-          </AppText>
-          <AppText color="textSecondary" numberOfLines={2} variant="label">
-            {getExpenseCategoryLabel(expense.category)} · {formatExpenseDate(expense.incurredAt)}
-          </AppText>
-          <AppText numberOfLines={3}>{expense.description}</AppText>
-        </View>
-        {receiptUri ? (
-          <Image
-            accessibilityLabel="Comprobante del gasto"
-            allowDownscaling
-            cachePolicy="memory-disk"
-            contentFit="cover"
-            loading="lazy"
-            priority="low"
-            recyclingKey={expense.id}
-            source={{ uri: receiptUri }}
-            style={styles.receipt}
-          />
-        ) : expense.ticketMediaId ? (
-          <View accessibilityLabel="Comprobante no disponible" style={styles.receiptFallback}>
-            <AppText color="textSecondary" variant="caption">
-              Comprobante
+      <AppCard>
+        <View style={styles.row}>
+          <View style={styles.text}>
+            <AppText numberOfLines={1} variant="heading3">
+              {formatAmountCents(expense.amountCents)}
             </AppText>
+            <AppText color="textSecondary" numberOfLines={2} variant="label">
+              {getExpenseCategoryLabel(expense.category)} · {formatExpenseDate(expense.incurredAt)}
+            </AppText>
+            <AppText numberOfLines={3}>{expense.description}</AppText>
           </View>
-        ) : null}
-      </View>
-    </AppCard>
+          {receiptUri ? (
+            <Image
+              accessibilityLabel="Comprobante del gasto"
+              allowDownscaling
+              cachePolicy="memory-disk"
+              contentFit="cover"
+              loading="lazy"
+              priority="low"
+              recyclingKey={expense.id}
+              source={{ uri: receiptUri }}
+              style={styles.receipt}
+            />
+          ) : expense.ticketMediaId ? (
+            <View accessibilityLabel="Comprobante no disponible" style={styles.receiptFallback}>
+              <AppText color="textSecondary" variant="caption">
+                Comprobante
+              </AppText>
+            </View>
+          ) : null}
+        </View>
+      </AppCard>
+    </Pressable>
   );
 });
 
 const styles = StyleSheet.create({
   list: { gap: spacing.sm },
+  pressed: { opacity: opacity.pressed },
   receipt: {
     borderRadius: radii.md,
     flexShrink: 0,

@@ -84,6 +84,7 @@ export function ExpensesOverviewScreen({
       <ExpenseOverviewCard
         animalName={animalNames.get(item.animalId) ?? 'Animal no disponible'}
         expense={item}
+        onPress={(id) => router.push({ pathname: '/expenses/[id]', params: { id } })}
       />
     ),
     [animalNames]
