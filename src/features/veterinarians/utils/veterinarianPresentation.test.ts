@@ -1,6 +1,7 @@
 import { ApiError } from '@/core/api';
 
 import {
+  formatVeterinarianUserRoles,
   hasActiveVeterinarianFilters,
   toVeterinarianAdvancedFilters,
   toVeterinarianCreateErrorPresentation,
@@ -11,6 +12,7 @@ import {
   veterinarianContactPhone,
   veterinarianFullName,
   veterinarianInitials,
+  veterinarianLinkedUserName,
 } from './veterinarianPresentation';
 import type { VeterinarianResponse } from '../types';
 
@@ -143,6 +145,29 @@ describe('toVeterinarianSearchFilter', () => {
 describe('veterinarianInitials', () => {
   it('builds uppercase initials from first and last name', () => {
     expect(veterinarianInitials(VETERINARIAN)).toBe('SR');
+  });
+});
+
+describe('linked veterinarian user presentation', () => {
+  const user: NonNullable<VeterinarianResponse['user']> = {
+    id: '22222222-2222-4222-8222-222222222222',
+    email: 'sofia.user@refugiapp.local',
+    firstName: 'Sofía',
+    lastName: 'Romero',
+    roles: ['veterinarian', 'admin'],
+    isActive: true,
+    createdAt: '2026-09-01T00:00:00.000Z',
+    updatedAt: '2026-09-01T00:00:00.000Z',
+  };
+
+  it('uses the readable full name and never the user UUID', () => {
+    expect(veterinarianLinkedUserName(user)).toBe('Sofía Romero');
+    expect(veterinarianLinkedUserName(user)).not.toContain(user.id);
+  });
+
+  it('translates every contractual role to a readable label', () => {
+    expect(formatVeterinarianUserRoles(user.roles)).toBe('Veterinario, Administrador');
+    expect(formatVeterinarianUserRoles([])).toBe('Sin rol');
   });
 });
 
