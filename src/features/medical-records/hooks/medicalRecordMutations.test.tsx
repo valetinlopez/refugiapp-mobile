@@ -9,6 +9,7 @@ import type { MedicalRecordRecordFields } from '../utils/medicalRecordSchema';
 
 import { medicalRecordKeys } from './medicalRecordKeys';
 import { useCreateMedicalRecord } from './useCreateMedicalRecord';
+import { useDeleteMedicalRecord } from './useDeleteMedicalRecord';
 import { useUpdateMedicalRecord } from './useUpdateMedicalRecord';
 
 const ANIMAL_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
@@ -180,6 +181,19 @@ describe('medical record mutations', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(setData).toHaveBeenCalledWith(medicalRecordKeys.detail(RECORD_ID), record());
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: medicalRecordKeys.lists() });
+  });
+
+  it('removes the detail cache and invalidates lists after soft-delete', async () => {
+    jest.spyOn(medicalRecordsApi, 'remove').mockResolvedValue(undefined);
+    const invalidate = jest.spyOn(queryClient, 'invalidateQueries');
+    const removeQueries = jest.spyOn(queryClient, 'removeQueries');
+    const { result } = await renderHook(() => useDeleteMedicalRecord(), { wrapper });
+
+    result.current.mutate(RECORD_ID);
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(removeQueries).toHaveBeenCalledWith({ queryKey: medicalRecordKeys.detail(RECORD_ID) });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: medicalRecordKeys.lists() });
   });
 

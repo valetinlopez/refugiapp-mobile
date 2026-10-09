@@ -3,7 +3,7 @@
 ## Responsabilidad
 
 - Gestiona los registros médicos (consultas, vacunas, desparasitaciones, cirugías, resultados de laboratorio, tratamientos y otros) y la evolución clínica del animal.
-- Permite crear y editar registros según permisos, incluidos adjuntos clínicos vinculados por media.
+- Permite crear, editar y dar de baja lógica registros según permisos, incluidos adjuntos clínicos vinculados por media.
 - No gestiona la ficha general del animal, los eventos generales ni las tareas de cuidado; pertenecen a `animals` y `care-tasks`.
 
 ## Contratos
@@ -13,6 +13,7 @@
 - `GET /animals/:animalId/medical-records`: evolución clínica paginada con filtros `recordType`, `from`, `to` y orden `occurredAt DESC, id DESC`.
 - `GET /animals/:id`: solo para resolver el `intakeDate` del animal elegido en el alta global (ventana de `occurredAt`). Se lee una vez por selección y se normaliza a `YYYY-MM-DD` con `toDateOnly` de `src/core/validation`; no es un request por fila.
 - `GET /medical-records/:id`: detalle de un registro.
+- `DELETE /medical-records/:id`: baja lógica confirmada; el historial de cambios permanece disponible y la UI no aplica optimistic updates.
 - `PATCH /medical-records/:id`: edición parcial. Solo se cambian los campos enviados:
   - `recordType`, `title`, `occurredAt`: omitir conserva el valor.
   - `veterinarianId`: omitir conserva; `null` desvincula al veterinario.
@@ -30,7 +31,7 @@
 
 ## Permisos
 
-- Solo `admin` y `veterinarian` pueden leer, crear y editar la evolución clínica y la historia clínica global; `shelter_manager` recibe `403` del servidor.
+- Solo `admin` y `veterinarian` pueden leer, crear, editar y dar de baja lógica la evolución clínica y la historia clínica global; `shelter_manager` recibe `403` del servidor.
 - El destino "Historia clínica" de la sección Gestión se filtra por `canReadClinicalRecords` (`src/application/management`), y la ruta repite el guard para deep links: sin capacidad muestra "Sin permiso" sin montar la query.
 - Un `403` del servidor debe manejarse de forma segura (`toGlobalMedicalRecordsErrorMessage`).
 - El backend registra al actor autenticado en `medical_record_changes` al editar; no hay `createdByUserId` en el registro.
@@ -38,7 +39,7 @@
 ## Estructura
 
 - `api/`: `medicalRecordsApi`, `medicalRecordChangesApi` (historial de cambios), `clinicalAttachmentsApi` (upload/lista/borrado), `veterinarianOptionsApi` y `animalIntakeApi` (resolución diferida del `intakeDate` del animal elegido en el alta global).
-- `components/`: `MedicalRecordForm` (modos create/edit; el create es el rediseño D26 con `AnimalRecordField`, `ClinicalRecordTypeField`, `VeterinarianRecordField` y `AnimalOptionAvatar`), `CreateMedicalRecordScreen` (compositora del alta global), `ClinicalAttachmentPicker`, `ClinicalHistory`, `MedicalRecordChangeCard`, `MedicalRecordChangesScreen`, y la historia clínica global (`MedicalRecordsOverviewScreen`, `MedicalRecordOverviewCard`, `MedicalRecordFilterSheets`).
+- `components/`: `MedicalRecordForm` (modos create/edit; el create es el rediseño D26 con `AnimalRecordField`, `ClinicalRecordTypeField`, `VeterinarianRecordField` y `AnimalOptionAvatar`), `CreateMedicalRecordScreen`, detalle D27 (`MedicalRecordDetailScreen`/`MedicalRecordDetail`), `ClinicalAttachmentPicker`, `ClinicalHistory`, `MedicalRecordChangeCard`, `MedicalRecordChangesScreen`, y la historia clínica global (`MedicalRecordsOverviewScreen`, `MedicalRecordOverviewCard`, `MedicalRecordFilterSheets`).
 - `hooks/`: keys, queries, mutations e invalidaciones de la evolución clínica; `useMedicalRecordAnimals` (opciones mínimas vía `application/animals`), `useAnimalIntake` (intake diferido por selección), `useMedicalRecordChanges` con paginación infinita y `useInfiniteMedicalRecords`/`flattenMedicalRecordPages` para la historia global.
 - `utils/`: esquemas Zod, mapper de diff PATCH, presentación (incluida `medicalRecordChangePresentation` para labels, valores y filtros del historial), filtros globales (`globalClinicalFilters`) y errores.
 - `types.ts`: modelos de vista y aliases del contrato generado.
@@ -49,6 +50,7 @@
 - El filtro de tipo y el rango de fechas viajan al servidor; el filtro de animal filtra en cliente `filterRecordsByAnimal` sobre las páginas cargadas y la UI lo comunica explícitamente junto al contador paginado `total`, sin rotular un total global inexistente.
 - El FAB de alta de la historia clínica global está siempre visible con `canReadClinicalRecords` y abre la ruta global `/medical-records/new` (con `animalId` precargado cuando hay animal filtrado); el alta contextual por animal reutiliza la misma pantalla.
 - Alta global (D26/RFG-159): ruta delgada `app/(app)/medical-records/new.tsx` (guard `canReadClinicalRecords`, `animalId` opcional validado como UUID) y contextual `app/(app)/animals/[id]/medical-records/new.tsx`, ambas componen `CreateMedicalRecordScreen`. El formulario rediseñado agrupa cards `Datos del registro` (animal, veterinario opcional, tipo, título con contador y fecha), `Información clínica` y `Adjuntos` (contador `x/10`), con footer `Cancelar`/`Guardar registro`. El animal se elige por `BottomSheet` con búsqueda sobre las opciones de `application/animals`; al cambiarlo se limpia `occurredAt` y se resuelve su `intakeDate` con `useAnimalIntake` para la ventana. El veterinario sigue siendo opcional y no bloqueante.
+- Detalle global (D27/RFG-160): `/medical-records/[id]` resuelve registro, animal y veterinario individualmente mediante fronteras de aplicación; lista adjuntos por owner, permite abrir solo URLs HTTPS, reutiliza la edición contextual y confirma `DELETE /medical-records/:id`. La baja espera al servidor, elimina la cache de detalle e invalida listas globales y por animal. El listado global sigue usando directorios compartidos, sin N+1.
 
 ## Seguridad y privacidad
 
@@ -89,6 +91,7 @@
 - Los datos clínicos solo viven en la cache en memoria de TanStack Query (sin persistencia a disco); se limpian al cerrar sesión.
 - Historia clínica global (RFG-158 / D25): ruta delgada `app/(app)/medical-records/index.tsx` (guard `canReadClinicalRecords` + `AccountHeaderRow` con `fallbackHref='/more'`) que compone `MedicalRecordsOverviewScreen`. `useInfiniteMedicalRecords` pagina `GET /medical-records` en páginas de 20 con deduplicación por UUID y orden del servidor sin reordenar. Tres filtros en `BottomSheet`: animal (cliente sobre páginas cargadas, con aviso explícito), tipo (7 valores) y fechas (presets + rango con `DateTimeField`, día local inclusivo, `from > to` no dispara query). Nombres best-effort desde `src/application/animals` y `src/application/veterinarians` con fallback explícito ("Animal no disponible", "Sin veterinario asignado"/"Veterinario no disponible") y nunca un UUID crudo; foto de animal resuelta con `useAnimalOptionPhoto` (cache por media ID, sin fetch para filas sin foto). Destino "Historia clínica" en `src/application/management` filtrado por `canReadClinicalRecords` (visible `admin`/`veterinarian`, oculto `shelter_manager`) y FAB de alta contextual a `/animals/[id]/medical-records/new` solo cuando hay animal seleccionado (el alta global es RFG-159). Estados loading/vacío/error/offline con reintento, paginación incremental, pull-to-refresh y `testID` `clinical-global-list`/`clinical-load-more`/`clinical-end-of-list`/`clinical-*-filter`/`clinical-global-create`.
 - Alta global (D26/RFG-159): ruta delgada `app/(app)/medical-records/new.tsx` que valida el `animalId` opcional, repite el guard `canReadClinicalRecords` y compone `AccountHeaderRow` + `CreateMedicalRecordScreen`; la ruta contextual `app/(app)/animals/[id]/medical-records/new.tsx` reutiliza la misma pantalla preseleccionando el animal. El formulario rediseñado (`MedicalRecordForm` create) usa cards y `SectionHeader`, selector de animal por `BottomSheet` con búsqueda (`AnimalRecordField`) sobre `application/animals`, tipo por `ClinicalRecordTypeField`, veterinario opcional con limpieza (`VeterinarianRecordField`, estados loading/error/empty no bloqueantes), título con contador `x/160` y banner de la regla de fecha, e información clínica opcional sobre `AppCard`; el conteo `x / 10 archivos` y el tope de adjuntos siguen en `ClinicalAttachmentPicker`. Al cambiar el animal se limpia `occurredAt` y `useAnimalIntake` resuelve el `intakeDate` (una lectura diferida por selección, sin request por fila) para la ventana del picker y el esquema. El FAB global queda siempre visible con capacidad y navega a `/medical-records/new`. `testID` `clinical-record-submit`/`clinical-record-cancel`/`clinical-animal-field`/`clinical-type-field`/`clinical-veterinarian-field`.
+- Detalle global (D27/RFG-160): `app/(app)/medical-records/[id].tsx` protege el deep link antes de montar queries y delega en `MedicalRecordDetailScreen`. Presenta identidad con foto, tipo, título, fecha y veterinario; cards diferenciadas para diagnóstico, tratamiento y notas; adjuntos con thumbnail `expo-image`, tipo, tamaño y apertura HTTPS; edición y eliminación confirmada para `admin`/`veterinarian`. Estados UUID inválido, loading, error, offline/reintento, adjuntos vacíos y pérdida de capacidad quedan cubiertos.
 
 ### Pendiente o deuda conocida
 

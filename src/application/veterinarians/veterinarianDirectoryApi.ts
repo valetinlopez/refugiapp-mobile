@@ -33,4 +33,9 @@ export const veterinarianDirectoryApi = {
       .map(toDirectoryEntry)
       .sort((a, b) => a.name.localeCompare(b.name, 'es'));
   },
+
+  async getById(id: string, client: HttpClient = apiClient): Promise<VeterinarianDirectoryEntry> {
+    const response = await client.get<VeterinarianResponse>(`/veterinarians/${id}`);
+    return toDirectoryEntry(response.data);
+  },
 };

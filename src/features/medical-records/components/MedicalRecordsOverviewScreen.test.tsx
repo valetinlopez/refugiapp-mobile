@@ -110,6 +110,18 @@ describe('MedicalRecordsOverviewScreen', () => {
     expect(screen.queryByText(ANIMAL_ID)).toBeNull();
   });
 
+  it('opens the clinical record detail from the whole card', async () => {
+    const screen = await render(<MedicalRecordsOverviewScreen />);
+    const { router } = jest.requireMock('expo-router') as { router: { push: jest.Mock } };
+
+    await fireEvent.press(screen.getByTestId('clinical-overview-card'));
+
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/medical-records/[id]',
+      params: { id: 'record-1' },
+    });
+  });
+
   it('falls back explicitly for an unassigned or unavailable veterinarian', async () => {
     mockUseInfiniteMedicalRecords.mockReturnValue(
       queryResult([

@@ -89,8 +89,8 @@ export function MedicalRecordsOverviewScreen({
   const hasFilters = hasActiveGlobalClinicalFilters(recordType, dateRange) || hasAnimalFilter;
   const dateLabel = formatDateRangeLabel(dateRange);
 
-  const openAnimalClinicalTab = useCallback((recordAnimalId: string) => {
-    router.push({ pathname: '/animals/[id]', params: { id: recordAnimalId } });
+  const openRecordDetail = useCallback((recordId: string) => {
+    router.push({ pathname: '/medical-records/[id]', params: { id: recordId } });
   }, []);
 
   const renderRecord = useCallback(
@@ -99,13 +99,13 @@ export function MedicalRecordsOverviewScreen({
       return (
         <ClinicalRecordRow
           animal={animal}
-          onPress={() => openAnimalClinicalTab(item.animalId)}
+          onPress={() => openRecordDetail(item.id)}
           record={item}
           veterinarianName={resolveVeterinarianLabel(veterinarianNames, item.veterinarianId)}
         />
       );
     },
-    [animalById, openAnimalClinicalTab, veterinarianNames]
+    [animalById, openRecordDetail, veterinarianNames]
   );
 
   const loadMore = useCallback(() => {
