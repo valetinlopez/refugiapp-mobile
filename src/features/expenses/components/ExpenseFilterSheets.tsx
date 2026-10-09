@@ -24,7 +24,7 @@ const DATE_PRESETS: readonly {
   { id: 'thisMonth', label: 'Este mes' },
 ];
 
-function SheetOption({
+export function SheetOption({
   label,
   onPress,
   selected,

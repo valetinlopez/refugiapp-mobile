@@ -269,8 +269,10 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     audience: 'admin/shelter_manager (canManageExpenses)',
     states: ['default', 'error'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-156).' },
+      { kind: 'implemented', note: 'Rediseño (RFG-156).' },
       { kind: 'contract', note: 'Sin edición de gastos.' },
+      { kind: 'ux', note: 'Comprobante realmente opcional y moneda ARS fija no-editable.' },
+      { kind: 'ux', note: 'Contador de descripción x/1000 (OpenAPI no publica maxLength).' },
     ],
     group: 'expenses',
   },

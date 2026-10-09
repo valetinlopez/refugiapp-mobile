@@ -12,7 +12,7 @@ import { dashboardQueryKey, expenseKeys } from './expenseKeys';
 
 export interface CreateExpenseInput {
   form: ExpenseFormValues;
-  receipt: ReceiptFile;
+  receipt: ReceiptFile | null;
 }
 
 export function useCreateExpense() {
@@ -25,11 +25,13 @@ export function useCreateExpense() {
       controller.current = new AbortController();
       let mediaId: string | undefined;
       try {
-        const media = await expenseReceiptApi.upload(receipt, undefined, {
-          signal: controller.current.signal,
-          onUploadProgress: setUploadProgress,
-        });
-        mediaId = media.id;
+        if (receipt) {
+          const media = await expenseReceiptApi.upload(receipt, undefined, {
+            signal: controller.current.signal,
+            onUploadProgress: setUploadProgress,
+          });
+          mediaId = media.id;
+        }
         return await expensesApi.create(toCreateExpenseRequest(form, mediaId));
       } catch (error) {
         if (mediaId) await expenseReceiptApi.delete(mediaId).catch(() => undefined);

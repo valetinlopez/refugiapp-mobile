@@ -15,6 +15,9 @@
 - `POST /media/upload` sin owner crea el comprobante huérfano; `POST /expenses` lo vincula mediante `ticketMediaId`.
 - Categorías: `food | medicine | veterinary | supplies | transport | other`.
 - `amountCents` es un entero no negativo y la moneda enviada por esta UI es `ARS`.
+- La UI captura el importe en unidades de pesos (`amountUnits`) y lo convierte a `amountCents` con `parseArsUnitsToCents` (sin aritmética de punto flotante); la moneda se presenta como `ARS` fijo no-editable.
+- `incurredAt` se captura como fecha y hora locales (`DateTimeField` `mode="datetime"`) y se serializa a ISO en el mapper.
+- `ticketMediaId` es opcional: el formulario puede enviarse sin comprobante y `toCreateExpenseRequest` omite el campo.
 - Los tipos de red derivan de `openapi/mobile.openapi.json`.
 
 ## Permisos
@@ -26,15 +29,15 @@
 ## Estructura y seguridad
 
 - `api/`: gastos (alta, detalle `getById`, listado global, listado por animal y baja `remove`) y subida/borrado del comprobante.
-- `components/`: formulario, selector de comprobante, listado global (`ExpensesOverviewScreen`, `ExpenseOverviewCard`, `ExpenseFilterSheets`).
-- `hooks/`: alta, `useInfiniteExpenses` (paginación global + `flattenExpensePages`), `useAnimalExpenses`, invalidaciones, `expenseKeys` y `useExpenseAnimals` (delega las opciones de animales en `src/application/animals`).
-- `utils/`: esquema Zod, mapper del request, presentación (`expensePresentation`), importes (`expenseTotals`), filtros de fecha (`expenseFilters`) y `expenseErrorMessages` (`toCreateExpenseErrorMessage`, `toExpenseDetailErrorMessage` y `toDeleteExpenseErrorMessage` traducen 400/422, 403, 404, 409, cancelación de subida y red/timeout a español rioplatense, delegando el fallback en `toApiErrorMessage` de `core/api`).
+- `components/`: formulario con selectores por `BottomSheet` (`ExpenseForm`, `ExpensePickerFields`, `ExpenseAnimalAvatar`), selector de comprobante (`ExpenseReceiptPicker`), pantalla compositora `CreateExpenseScreen`, listado global (`ExpensesOverviewScreen`, `ExpenseOverviewCard`, `ExpenseFilterSheets`).
+- `hooks/`: alta (`useCreateExpense` con comprobante opcional), `useInfiniteExpenses` (paginación global + `flattenExpensePages`), `useAnimalExpenses`, invalidaciones, `expenseKeys` y `useExpenseAnimals` (delega las opciones de animales en `src/application/animals`).
+- `utils/`: esquema Zod (`amountUnits` + `incurredAt` datetime), conversión pura a centavos (`expenseAmount`), mapper del request, presentación (`expensePresentation`), importes (`expenseTotals`), filtros de fecha (`expenseFilters`) y `expenseErrorMessages` (`toCreateExpenseErrorMessage`, `toExpenseDetailErrorMessage` y `toDeleteExpenseErrorMessage` traducen 400/422, 403, 404, 409, cancelación de subida y red/timeout a español rioplatense, delegando el fallback en `toApiErrorMessage` de `core/api`).
 - No registrar importes, comprobantes, tokens ni payloads financieros en logs.
 - Si el alta falla después de subir media, borrar el asset huérfano best-effort (limpieza silenciosa; no es una acción iniciada por el usuario y no requiere confirmación).
 
 ## Testing
 
-- Unit tests de importes, filtros de fecha y del multipart.
+- Unit tests de la conversión de unidades a centavos (`expenseAmount`), del esquema y mapper del request, de los filtros de fecha y del multipart.
 - Client API tests (transporte falso) del listado, del detalle (`getById`, mapeo `ticketMediaId` nulo, `404` y `403`) y de la baja (`remove`, `204` sin body, `404` y `403`).
 - Unit tests de los mensajes de error de alta, detalle y borrado.
 - Component test RNTL del formulario y del listado global (estados, permisos, filtros y fallback de nombre).
@@ -44,8 +47,9 @@
 
 ### Implementado
 
-- Alta de gasto con comprobante obligatorio, progreso/cancelación de subida y selección de animal.
-- `incurredAt` se captura como fecha de calendario local mediante `DateTimeField`; el valor inicial usa el día local y se transforma a ISO solo en el mapper del request.
+- Alta de gasto con importe en unidades de pesos y conversión exacta a `amountCents` (`parseArsUnitsToCents`, sin floats), moneda `ARS` explícita y fija, fecha y hora (`DateTimeField` `datetime`), descripción con contador `x/1000` (divergencia `ux`; OpenAPI no publica `maxLength`), y comprobante realmente opcional (subir imagen o PDF, fotografiar o elegir de galería; cancelación y progreso de subida; `ticketMediaId` ausente no se envía).
+- Rediseño D23 (RFG-156): `CreateExpenseScreen` (feature) con guard `canManageExpenses`, `DecorativeBackground`, eyebrow `Gastos` + `ScreenHeader` `display`, estados loading/error/offline/fallback/vacío con reintento, y anuncio accesible del resultado; la ruta `app/(app)/expenses/new.tsx` valida el UUID y compone `AccountHeaderRow` (`fallbackHref='/expenses'`) + la pantalla. Selector de animal por `BottomSheet` con búsqueda por nombre y foto cacheada (`useAnimalOptionPhoto`); selector de categoría por `BottomSheet` con las 6 categorías del contrato.
+- `incurredAt` se captura como fecha y hora locales mediante `DateTimeField`; el valor inicial usa día y hora locales y se transforma a ISO solo en el mapper del request.
 - Guard visual por rol e invalidación de gastos y dashboard.
 - El selector de animal usa el contrato compartido `src/application/animals`: `GET /animals?page=1&limit=100` sin sort en el request (orden alfabético en cliente) y fallback a `GET /animals/:id` cuando llega un `animalId` UUID válido y el listado falla o no lo contiene; el error se traduce por causa y el reintento funciona.
 - Listado de gastos por animal en su detalle, con importe `amountCents` formateado en ARS, categoría, fecha, estados de carga/vacío/error y miniatura del comprobante cuando el contrato devuelve un UUID válido. La miniatura usa `expo-image`, caché memoria/disco y una transformación Cloudinary cuadrada de 400 px.
