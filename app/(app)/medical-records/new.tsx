@@ -1,4 +1,4 @@
-import { useLocalSearchParams, type Href } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,31 +10,21 @@ import { CreateMedicalRecordScreen } from '@/features/medical-records/components
 import { isUuid } from '@/features/medical-records/utils/uuid';
 import { colors, spacing } from '@/theme';
 
-export default function NewAnimalMedicalRecordRoute() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+export default function NewMedicalRecordRoute() {
+  const { animalId } = useLocalSearchParams<{ animalId?: string }>();
   const { canReadClinicalRecords } = useCapabilities();
-  const animalId = typeof id === 'string' && isUuid(id) ? id : '';
-  const fallbackHref: Href = animalId
-    ? { pathname: '/animals/[id]', params: { id: animalId, tab: 'clinical' } }
-    : '/explore';
+  const initialAnimalId = typeof animalId === 'string' && isUuid(animalId) ? animalId : undefined;
 
-  if (!canReadClinicalRecords || animalId === '') {
+  if (!canReadClinicalRecords) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <AccountHeaderRow
-          accessibilityHint="Volver al detalle del animal"
-          fallbackHref={fallbackHref}
-        />
+        <AccountHeaderRow accessibilityHint="Volver a Más" fallbackHref="/more" />
         <View style={styles.centered}>
           <EmptyState
             actionLabel="Volver"
-            message={
-              animalId === ''
-                ? 'No pudimos identificar el animal.'
-                : 'Tu rol no habilita registrar datos clínicos.'
-            }
-            onAction={() => navigateBack(fallbackHref)}
-            title={animalId === '' ? 'Animal inválido' : 'Sin permiso'}
+            message="Tu rol no habilita registrar datos clínicos."
+            onAction={() => navigateBack('/more')}
+            title="Sin permiso"
           />
         </View>
       </SafeAreaView>
@@ -44,10 +34,10 @@ export default function NewAnimalMedicalRecordRoute() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <AccountHeaderRow
-        accessibilityHint="Volver al detalle del animal"
-        fallbackHref={fallbackHref}
+        accessibilityHint="Volver a la historia clínica"
+        fallbackHref="/medical-records"
       />
-      <CreateMedicalRecordScreen initialAnimalId={animalId} />
+      <CreateMedicalRecordScreen {...(initialAnimalId !== undefined ? { initialAnimalId } : {})} />
     </SafeAreaView>
   );
 }

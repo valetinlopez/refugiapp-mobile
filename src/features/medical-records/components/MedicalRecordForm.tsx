@@ -1,16 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, type ReactNode } from 'react';
-import { Controller, useForm, type Control } from 'react-hook-form';
+import { Controller, useForm, useWatch, type Control } from 'react-hook-form';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
-import { AppButton, AppIcon, AppText } from '@/components/primitives';
+import type { AnimalOption } from '@/application/animals';
 import { EmptyState, ErrorState, LoadingState, MediaUploadStatus } from '@/components/feedback';
-import { DateTimeField } from '@/components/patterns';
+import { DateTimeField, SectionHeader } from '@/components/patterns';
+import { AppButton, AppCard, AppIcon, AppText } from '@/components/primitives';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
 
 import type { AttachmentFile } from '../api/clinicalAttachmentsApi';
 import type { CreateMedicalRecordInput } from '../hooks/useCreateMedicalRecord';
 import type { UpdateMedicalRecordInput } from '../hooks/useUpdateMedicalRecord';
+import { useAnimalIntake } from '../hooks/useAnimalIntake';
 import type {
   ClinicalAttachment,
   MedicalRecord,
@@ -21,7 +23,7 @@ import type {
 import {
   createMedicalRecordSchema,
   type CreateMedicalRecordFormInput,
-  MEDICAL_RECORD_TYPE_VALUES,
+  MAX_MEDICAL_ATTACHMENTS,
   updateMedicalRecordSchema,
   type UpdateMedicalRecordFormInput,
 } from '../utils/medicalRecordSchema';
@@ -29,65 +31,76 @@ import {
   toMedicalRecordRecordFields,
   toUpdateMedicalRecordFormValues,
 } from '../utils/toMedicalRecordFormValues';
-import { getRecordTypeLabel } from '../utils/medicalRecordPresentation';
+import { RECORD_TYPE_OPTIONS } from '../utils/medicalRecordPresentation';
 import { intakeStartOfDay, OCCURRED_AT_FUTURE_TOLERANCE_MS } from '../utils/occurredAtWindow';
 
+import { AnimalRecordField } from './AnimalRecordField';
 import { ClinicalAttachmentPicker } from './ClinicalAttachmentPicker';
+import { ClinicalRecordTypeField } from './ClinicalRecordTypeField';
+import { VeterinarianRecordField } from './VeterinarianRecordField';
 
-export const RECORD_TYPE_OPTIONS: { label: string; value: MedicalRecordType }[] =
-  MEDICAL_RECORD_TYPE_VALUES.map((value) => ({
-    label: getRecordTypeLabel(value),
-    value,
-  }));
+const TITLE_MAX_LENGTH = 160;
 
-interface BaseProps {
+type CreateProps = {
+  animalOptions: AnimalOption[];
   errorMessage?: string | null;
+  initialAnimalId?: string | undefined;
   isSubmitting?: boolean;
-  intakeDate: string;
+  onCancel(): void;
   onCancelUpload?(): void;
   onRetryVeterinarians?(): void;
+  onSubmit(input: CreateMedicalRecordInput): void;
   upload?: { fileName: string; progress: number } | null;
   veterinarianOptions: VeterinarianOption[];
   veterinariansStatus?: VeterinariansStatus;
-}
-
-type CreateProps = BaseProps & {
-  animalId: string;
-  mode: 'create';
-  onSubmit(input: CreateMedicalRecordInput): void;
 };
 
-type EditProps = BaseProps & {
+type EditProps = {
+  errorMessage?: string | null;
   existingAttachments: ClinicalAttachment[];
+  isSubmitting?: boolean;
+  intakeDate: string;
   mode: 'edit';
+  onCancelUpload?(): void;
+  onRetryVeterinarians?(): void;
   onSubmit(input: UpdateMedicalRecordInput): void;
   record: MedicalRecord;
+  upload?: { fileName: string; progress: number } | null;
+  veterinarianOptions: VeterinarianOption[];
+  veterinariansStatus?: VeterinariansStatus;
 };
 
-export type MedicalRecordFormProps = CreateProps | EditProps;
+export type CreateMedicalRecordFormProps = CreateProps & { mode: 'create' };
+export type EditMedicalRecordFormProps = EditProps;
+
+export type MedicalRecordFormProps = CreateMedicalRecordFormProps | EditMedicalRecordFormProps;
 
 export function MedicalRecordForm(props: MedicalRecordFormProps) {
   return props.mode === 'create' ? <CreateForm {...props} /> : <EditForm {...props} />;
 }
 
 function CreateForm({
-  animalId,
+  animalOptions,
   errorMessage,
-  intakeDate,
+  initialAnimalId,
   isSubmitting = false,
+  onCancel,
   onCancelUpload,
   onRetryVeterinarians,
   onSubmit,
   upload,
   veterinarianOptions,
   veterinariansStatus = 'ready',
-}: CreateProps) {
+}: CreateProps & { mode: 'create' }) {
+  const [selectedAnimalId, setSelectedAnimalId] = useState(initialAnimalId ?? '');
   const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
-  const intakeStart = intakeStartOfDay(intakeDate);
-  const { control, handleSubmit } = useForm<CreateMedicalRecordFormInput>({
+  const intakeQuery = useAnimalIntake(selectedAnimalId);
+  const intakeDate = intakeQuery.data ?? '';
+  const intakeStart = intakeDate === '' ? null : intakeStartOfDay(intakeDate);
+  const { control, handleSubmit, setValue } = useForm<CreateMedicalRecordFormInput>({
     resolver: zodResolver(createMedicalRecordSchema(intakeDate)),
     defaultValues: {
-      animalId,
+      animalId: initialAnimalId ?? '',
       recordType: 'consultation',
       title: '',
       occurredAt: '',
@@ -99,26 +112,203 @@ function CreateForm({
     },
     mode: 'onTouched',
   });
+  const title = useWatch({ control, name: 'title', defaultValue: '' });
+
+  function selectAnimal(animalId: string): void {
+    setSelectedAnimalId(animalId);
+    setValue('animalId', animalId, { shouldValidate: true });
+    setValue('occurredAt', '', { shouldValidate: false });
+  }
 
   return (
     <View style={styles.form}>
-      <RecordFields
-        control={control as unknown as Control<RecordFieldsValues>}
-        disabled={isSubmitting}
-        intakeStart={intakeStart}
-        {...(onRetryVeterinarians ? { onRetryVeterinarians } : {})}
-        veterinarianOptions={veterinarianOptions}
-        veterinariansStatus={veterinariansStatus}
-      />
-      <View style={styles.field}>
-        <AppText variant="label">Adjuntos clínicos</AppText>
+      <AppCard style={styles.card} variant="elevated">
+        <SectionHeader subtitle="Datos clínicos mínimos del registro." title="Datos del registro" />
+        <Controller
+          control={control}
+          name="animalId"
+          render={({ field, fieldState }) => (
+            <Field error={fieldState.error?.message} label="Animal *">
+              <AnimalRecordField
+                animals={animalOptions}
+                disabled={isSubmitting}
+                onChange={selectAnimal}
+                value={field.value}
+              />
+            </Field>
+          )}
+        />
+        <Controller
+          control={control}
+          name="veterinarianId"
+          render={({ field, fieldState }) => (
+            <Field error={fieldState.error?.message} label="Veterinario (opcional)">
+              <VeterinarianRecordField
+                disabled={isSubmitting}
+                onChange={field.onChange}
+                {...(onRetryVeterinarians ? { onRetry: onRetryVeterinarians } : {})}
+                options={veterinarianOptions}
+                status={veterinariansStatus}
+                value={field.value ?? ''}
+              />
+            </Field>
+          )}
+        />
+        <Controller
+          control={control}
+          name="recordType"
+          render={({ field, fieldState }) => (
+            <Field error={fieldState.error?.message} label="Tipo *">
+              <ClinicalRecordTypeField
+                disabled={isSubmitting}
+                onChange={field.onChange}
+                value={field.value}
+              />
+            </Field>
+          )}
+        />
+        <Controller
+          control={control}
+          name="title"
+          render={({ field, fieldState }) => (
+            <Field
+              action={
+                <AppText color="textSecondary" variant="caption">
+                  {String(title.length)}/{TITLE_MAX_LENGTH}
+                </AppText>
+              }
+              error={fieldState.error?.message}
+              hint="Entre 3 y 160 caracteres."
+              label="Título *"
+            >
+              <FormInput
+                accessibilityLabel="Título"
+                autoCapitalize="sentences"
+                editable={!isSubmitting}
+                maxLength={TITLE_MAX_LENGTH}
+                onBlur={field.onBlur}
+                onChangeText={field.onChange}
+                placeholder="Ej. Consulta general"
+                returnKeyType="next"
+                value={field.value}
+              />
+            </Field>
+          )}
+        />
+        <Controller
+          control={control}
+          name="occurredAt"
+          render={({ field, fieldState }) => (
+            <Field error={fieldState.error?.message} label="Fecha y hora *">
+              <DateTimeField
+                accessibilityLabel="Fecha y hora"
+                disabled={isSubmitting}
+                maximumDate={new Date(new Date().getTime() + OCCURRED_AT_FUTURE_TOLERANCE_MS)}
+                {...(intakeStart ? { minimumDate: intakeStart } : {})}
+                mode="datetime"
+                onChange={field.onChange}
+                value={field.value ?? ''}
+              />
+              <View style={styles.hint}>
+                <AppIcon color="info" name="info" size={16} />
+                <AppText color="textSecondary" style={styles.hintText} variant="caption">
+                  La fecha no puede ser futura ni anterior al ingreso
+                  {intakeDate === '' ? ' del animal.' : ` (${intakeDate}).`}
+                </AppText>
+              </View>
+            </Field>
+          )}
+        />
+      </AppCard>
+
+      <AppCard style={styles.card} variant="elevated">
+        <SectionHeader
+          subtitle="Opcional. Podés completarlo más tarde."
+          title="Información clínica"
+        />
+        <Controller
+          control={control}
+          name="diagnosis"
+          render={({ field, fieldState }) => (
+            <Field error={fieldState.error?.message} label="Diagnóstico (opcional)">
+              <FormInput
+                accessibilityLabel="Diagnóstico"
+                autoCapitalize="sentences"
+                editable={!isSubmitting}
+                multiline
+                numberOfLines={3}
+                onBlur={field.onBlur}
+                onChangeText={field.onChange}
+                placeholder="Hallazgos (opcional)"
+                style={styles.multiline}
+                textAlignVertical="top"
+                value={field.value ?? ''}
+              />
+            </Field>
+          )}
+        />
+        <Controller
+          control={control}
+          name="treatment"
+          render={({ field, fieldState }) => (
+            <Field error={fieldState.error?.message} label="Tratamiento (opcional)">
+              <FormInput
+                accessibilityLabel="Tratamiento"
+                autoCapitalize="sentences"
+                editable={!isSubmitting}
+                multiline
+                numberOfLines={3}
+                onBlur={field.onBlur}
+                onChangeText={field.onChange}
+                placeholder="Plan indicado (opcional)"
+                style={styles.multiline}
+                textAlignVertical="top"
+                value={field.value ?? ''}
+              />
+            </Field>
+          )}
+        />
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field, fieldState }) => (
+            <Field error={fieldState.error?.message} label="Notas (opcional)">
+              <FormInput
+                accessibilityLabel="Notas"
+                autoCapitalize="sentences"
+                editable={!isSubmitting}
+                multiline
+                numberOfLines={3}
+                onBlur={field.onBlur}
+                onChangeText={field.onChange}
+                placeholder="Observaciones (opcional)"
+                style={styles.multiline}
+                textAlignVertical="top"
+                value={field.value ?? ''}
+              />
+            </Field>
+          )}
+        />
+      </AppCard>
+
+      <AppCard style={styles.card} variant="elevated">
+        <SectionHeader
+          action={
+            <AppText color="textSecondary" variant="caption">
+              {String(attachments.length)} / {MAX_MEDICAL_ATTACHMENTS} archivos
+            </AppText>
+          }
+          subtitle="Imágenes o PDF."
+          title="Adjuntos"
+        />
         <ClinicalAttachmentPicker
           disabled={isSubmitting}
           onChange={setAttachments}
           onRemoveExisting={() => undefined}
           value={attachments}
         />
-      </View>
+      </AppCard>
+
       {upload ? (
         <MediaUploadStatus
           fileName={upload.fileName}
@@ -128,16 +318,28 @@ function CreateForm({
         />
       ) : null}
       <FormError message={errorMessage} />
-      <AppButton
-        label="Registrar consulta"
-        loading={isSubmitting}
-        onPress={() =>
-          void handleSubmit((raw) => {
-            const values = createMedicalRecordSchema(intakeDate).parse(raw);
-            onSubmit({ form: values, attachments });
-          })()
-        }
-      />
+      <View style={styles.actions}>
+        <AppButton
+          disabled={isSubmitting}
+          label="Cancelar"
+          onPress={onCancel}
+          style={styles.actionButton}
+          testID="clinical-record-cancel"
+          variant="secondary"
+        />
+        <AppButton
+          label="Guardar registro"
+          loading={isSubmitting}
+          onPress={() =>
+            void handleSubmit((raw) => {
+              const values = createMedicalRecordSchema(intakeDate).parse(raw);
+              onSubmit({ form: values, attachments });
+            })()
+          }
+          style={styles.actionButton}
+          testID="clinical-record-submit"
+        />
+      </View>
     </View>
   );
 }
@@ -491,18 +693,30 @@ function OptionGroup<T extends string>({
 }
 
 function Field({
+  action,
   children,
   error,
+  hint,
   label,
 }: {
+  action?: ReactNode;
   children: ReactNode;
   error: string | undefined;
+  hint?: string;
   label: string;
 }) {
   return (
     <View style={styles.field}>
-      <AppText variant="label">{label}</AppText>
+      <View style={styles.fieldHeader}>
+        <AppText variant="label">{label}</AppText>
+        {action}
+      </View>
       {children}
+      {hint ? (
+        <AppText color="textSecondary" variant="caption">
+          {hint}
+        </AppText>
+      ) : null}
       {error ? (
         <AppText accessibilityLiveRegion="polite" color="danger" role="alert">
           {error}
@@ -531,13 +745,23 @@ function FormError({ message }: { message: string | null | undefined }) {
 }
 
 const styles = StyleSheet.create({
+  actionButton: { flex: 1 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  card: { gap: spacing.md },
   field: {
     gap: spacing.xs,
+  },
+  fieldHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   form: {
     gap: spacing.md,
     width: '100%',
   },
+  hint: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.xs },
+  hintText: { flex: 1, minWidth: 0 },
   input: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
