@@ -2,11 +2,15 @@ import {
   AUDIT_ACTIONS,
   AUDIT_RESOURCE_TYPES,
   auditActionLabel,
+  auditCopyAnnouncement,
   auditRangeError,
+  auditResourceIcon,
   auditResourceTypeLabel,
   buildAuditFilters,
+  buildAuditMetadataRows,
   formatAuditDateBoth,
   formatAuditIdentifier,
+  formatAuditMetadataJson,
   isHighRiskAuditAction,
   sanitizeAuditMetadata,
 } from './auditPresentation';
@@ -113,5 +117,61 @@ describe('auditPresentation', () => {
   it('shortens resource identifiers without exposing the complete value in the list', () => {
     expect(formatAuditIdentifier('223e4567-e89b-42d3-a456-426614174000')).toBe('223e4567…');
     expect(formatAuditIdentifier(null)).toBe('Sin identificador');
+  });
+
+  it('maps every resource type to an icon', () => {
+    for (const resourceType of AUDIT_RESOURCE_TYPES) {
+      expect(auditResourceIcon(resourceType)).toBeTruthy();
+    }
+  });
+
+  it('builds friendly rows for scalar metadata and keeps nested values for JSON', () => {
+    const rows = buildAuditMetadataRows({
+      result: 'Denegado',
+      reason: 'Sin permiso',
+      correlationId: 'corr-123',
+      method: 'GET',
+      roles: ['admin'],
+      nested: { foo: 'bar' },
+      empty: '',
+      missing: null,
+    });
+    expect(rows).toEqual([
+      { key: 'result', label: 'Resultado', value: 'Denegado', copyable: false },
+      { key: 'reason', label: 'Motivo', value: 'Sin permiso', copyable: false },
+      { key: 'correlationId', label: 'ID de correlación', value: 'corr-123', copyable: true },
+      { key: 'method', label: 'Método', value: 'GET', copyable: false },
+      { key: 'empty', label: 'Empty', value: 'No disponible', copyable: false },
+      { key: 'missing', label: 'Missing', value: 'No disponible', copyable: false },
+    ]);
+  });
+
+  it('marks UUID-like values as copyable even with an unknown key', () => {
+    const rows = buildAuditMetadataRows({
+      ref: '223e4567-e89b-42d3-a456-426614174000',
+      note: 'texto',
+    });
+    expect(rows.find((row) => row.key === 'ref')?.copyable).toBe(true);
+    expect(rows.find((row) => row.key === 'note')?.copyable).toBe(false);
+  });
+
+  it('returns no rows for non-object metadata', () => {
+    expect(buildAuditMetadataRows(null)).toEqual([]);
+    expect(buildAuditMetadataRows('text')).toEqual([]);
+    expect(buildAuditMetadataRows(['a'])).toEqual([]);
+  });
+
+  it('serializes sanitized metadata and drops the empty case', () => {
+    expect(formatAuditMetadataJson({ email: 'a@b.com', token: 'secret' })).toBe(
+      JSON.stringify({ email: 'a@b.com' }, null, 2)
+    );
+    expect(formatAuditMetadataJson({ token: 'secret' })).toBe('');
+    expect(formatAuditMetadataJson(null)).toBe('');
+  });
+
+  it('builds copy announcements from a readable label', () => {
+    expect(auditCopyAnnouncement('Identificador del recurso')).toBe(
+      'Identificador del recurso copiado.'
+    );
   });
 });

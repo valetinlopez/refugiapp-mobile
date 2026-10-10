@@ -84,7 +84,7 @@ Los radios disponibles son 6, 10, 16, 24, 32, 36 y píldora. `lg` (24) es el est
 
 ## 10. Iconografía
 
-`AppIcon` centraliza símbolos de `expo-symbols`, con SF Symbols en iOS y Material Symbols en Android/web. Se usan iconos simples, sólidos o de trazo consistente. Un icono decorativo se oculta a tecnologías de asistencia; uno interactivo requiere `accessibilityLabel` en el control que lo contiene. No se mezclan emojis con iconos de producto. El set incluye `account` (identidad/cuenta), `logout` (salida), `eye`/`eyeOff` (toggle mostrar/ocultar contraseña), `mail`/`phone` (líneas de contacto de identidad) y `refresh`, mapeados a SF Symbols y Material Symbols.
+`AppIcon` centraliza símbolos de `expo-symbols`, con SF Symbols en iOS y Material Symbols en Android/web. Se usan iconos simples, sólidos o de trazo consistente. Un icono decorativo se oculta a tecnologías de asistencia; uno interactivo requiere `accessibilityLabel` en el control que lo contiene. No se mezclan emojis con iconos de producto. El set incluye `account` (identidad/cuenta), `logout` (salida), `eye`/`eyeOff` (toggle mostrar/ocultar contraseña), `mail`/`phone` (líneas de contacto de identidad), `copy` (copiado de identificadores en Auditoría) y `refresh`, mapeados a SF Symbols y Material Symbols.
 
 ## 11. Fotografía animal
 
@@ -563,6 +563,16 @@ La ruta `/audit` adopta la jerarquía de `22-audit-list.jpeg` sin convertir los 
 - **Riesgo:** accesos denegados y fallos de login, refresh o recuperación se marcan “Riesgo alto” mediante badge con icono, texto, borde y color `danger`; el label accesible también incluye el riesgo. Los eventos normales no reciben una alerta falsa.
 - **Paginación y resiliencia:** `FlatList` conserva el orden determinista del servidor, agrega páginas sin reordenar, ofrece “Cargar más eventos”, reintento específico si falla una página posterior, pull-to-refresh y fin explícito. Carga, vacío, vacío filtrado, error conectado y offline tienen estados diferenciados sin mostrar payloads ni metadata sensible.
 - **Accesibilidad:** encabezados semánticos, targets mínimos, sheets descartables, controles con labels completos y señales de estado no cromáticas. Los selectores E2E se mantienen y el flujo Maestro abre el sheet antes de elegir una acción.
+
+## 54. Detalle de auditoría (D33 / RFG-166)
+
+La ruta `/audit/[id]` adopta la jerarquía de `23-audit-detail.jpeg` sobre los patrones compartidos de D03. Solo `admin` (`canReadAudit`) monta el módulo; una pérdida de capacidad lo reemplaza por “Sin permiso” sin ejecutar la consulta. La cabecera usa `ScreenHeader` `display` “Detalle de auditoría / Registro de actividad del sistema” y badge textual “Solo administradores” sobre textura decorativa.
+
+- **Hero de evento:** card `outlined` con icono del tipo de recurso, acción y tipo traducidos, fecha relativa + absoluta y, para eventos sensibles, badge “Riesgo alto” con icono, texto y borde `danger`. Toda la señal de riesgo combina icono, texto y color; nunca depende solo del color.
+- **Información del evento:** filas `MetadataRow` para acción, fecha y hora y tipo de recurso; UUID de recurso y de actor con botón `AuditCopyButton` (ícono `copy` → `check`, target de 44 × 44, label “Copiar …”) o “Sin identificador” cuando el contrato no lo expone; y `ActorRow` con nombre, iniciales y email. El email sigue reservado al detalle.
+- **Metadatos:** el backend no fija las claves, por lo que se presenta una vista híbrida: los valores escalares se muestran como filas legibles con etiquetas en español para claves conocidas y humanizadas para el resto, las claves identificadoras (UUID, correlación, deduplicación, códigos) se pueden copiar, y una lista de objetos/arrays permanece en el JSON sanitizado. El bloque “Mostrar/Ocultar datos sanitizados” usa `accessibilityState.expanded` y solo aparece cuando hay contenido.
+- **Copiado accesible:** `useCopyAuditText` envuelve `expo-clipboard`; copiar anuncia el resultado a tecnologías asistivas y muestra feedback textual (“Copiado”/“No se pudo copiar”) además del cambio de icono. Un fallo de copiado anuncia un mensaje seguro y no rompe la pantalla. Nunca se copian ni muestran secretos: la metadata se vuelve a sanitizar en el cliente.
+- **Estados:** loading, offline con reintento, error con reintento y “Sin identificador” en los campos nulos. Los `testID` (`audit-copy-resource-id`, `audit-copy-actor-id`, `audit-metadata-json-toggle`) quedan estables para la regresión de RFG-167.
 
 ## Referencias técnicas
 

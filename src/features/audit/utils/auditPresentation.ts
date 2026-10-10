@@ -4,6 +4,7 @@ import {
   parseDateOnly,
   toLocalDateTimeIso,
 } from '@/components/patterns';
+import type { AppIconName } from '@/components/primitives';
 import { ApiError } from '@/core/api';
 import { isUuid } from '@/core/validation';
 
@@ -103,7 +104,59 @@ const RESOURCE_TYPE_LABELS: Record<AuditResourceType, string> = {
   adoption: 'Adopción',
 };
 
+const RESOURCE_TYPE_ICONS: Record<AuditResourceType, AppIconName> = {
+  user: 'account',
+  medical_record: 'medical',
+  expense: 'money',
+  care_task: 'document',
+  auth_session: 'logout',
+  authorization: 'alert',
+  notification: 'info',
+  adopter: 'account',
+  adoption_application: 'document',
+  adoption: 'heart',
+};
+
 const SENSITIVE_KEY = /(password|token|secret|authorization|credential|api.?key)/i;
+
+const METADATA_KEY_LABELS: Record<string, string> = {
+  result: 'Resultado',
+  outcome: 'Resultado',
+  status: 'Estado',
+  reason: 'Motivo',
+  origin: 'Origen',
+  source: 'Origen',
+  method: 'Método',
+  path: 'Ruta',
+  email: 'Email',
+  roles: 'Roles',
+  licenseNumber: 'Matrícula',
+  kind: 'Tipo',
+  platform: 'Plataforma',
+  count: 'Cantidad',
+  total: 'Total',
+  dedupKey: 'Clave de deduplicación',
+  correlationId: 'ID de correlación',
+  correlation_id: 'ID de correlación',
+  resourceName: 'Recurso',
+  userId: 'Usuario',
+  animalId: 'Animal',
+};
+
+const COPYABLE_KEY = /(^|_|\.|-)id$|uuid|correlat|dedup|code|ref|key$/i;
+
+export interface AuditMetadataRow {
+  key: string;
+  label: string;
+  value: string;
+  copyable: boolean;
+}
+
+export function auditCopyAnnouncement(label: string): string {
+  return `${label} copiado.`;
+}
+
+export const AUDIT_COPY_ERROR_ANNOUNCEMENT = 'No pudimos copiar. Intentá nuevamente.';
 
 export function auditActionLabel(action: AuditAction): string {
   return ACTION_LABELS[action];
@@ -111,6 +164,10 @@ export function auditActionLabel(action: AuditAction): string {
 
 export function auditResourceTypeLabel(resourceType: AuditResourceType): string {
   return RESOURCE_TYPE_LABELS[resourceType];
+}
+
+export function auditResourceIcon(resourceType: AuditResourceType): AppIconName {
+  return RESOURCE_TYPE_ICONS[resourceType];
 }
 
 export function auditActionTone(action: AuditAction): 'info' | 'danger' {
@@ -150,6 +207,55 @@ export function sanitizeAuditMetadata(value: unknown): unknown {
       .filter(([key]) => !SENSITIVE_KEY.test(key))
       .map(([key, nested]) => [key, sanitizeAuditMetadata(nested)])
   );
+}
+
+function humanizeMetadataKey(key: string): string {
+  const spaced = key
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .trim();
+  return spaced === '' ? key : spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+function formatAuditMetadataValue(value: unknown): string {
+  if (value === null || value === undefined) return 'No disponible';
+  if (typeof value === 'boolean') return value ? 'Sí' : 'No';
+  if (typeof value === 'string') return value.trim() === '' ? 'No disponible' : value;
+  if (typeof value === 'number' || typeof value === 'bigint') return String(value);
+  return '';
+}
+
+/**
+ * Turns already-sanitized metadata into friendly label/value rows. Only scalar
+ * values become rows; nested objects and arrays stay in the technical JSON view
+ * so unknown shapes keep a safe, readable presentation. The caller must pass
+ * sanitized metadata (or use `sanitizeAuditMetadata` first).
+ */
+export function buildAuditMetadataRows(metadata: unknown): AuditMetadataRow[] {
+  if (metadata === null || typeof metadata !== 'object' || Array.isArray(metadata)) return [];
+  const rows: AuditMetadataRow[] = [];
+  for (const [key, rawValue] of Object.entries(metadata as Record<string, unknown>)) {
+    if (rawValue !== null && typeof rawValue === 'object') continue;
+    const value = formatAuditMetadataValue(rawValue);
+    if (value === '') continue;
+    rows.push({
+      key,
+      label: METADATA_KEY_LABELS[key] ?? humanizeMetadataKey(key),
+      value,
+      copyable: COPYABLE_KEY.test(key) || isUuid(String(rawValue ?? '')),
+    });
+  }
+  return rows;
+}
+
+/** Pretty JSON of the sanitized metadata, or an empty string when there is nothing to show. */
+export function formatAuditMetadataJson(metadata: unknown): string {
+  const sanitized = sanitizeAuditMetadata(metadata);
+  const isEmpty =
+    sanitized === null ||
+    typeof sanitized !== 'object' ||
+    Object.keys(sanitized as Record<string, unknown>).length === 0;
+  return isEmpty ? '' : JSON.stringify(sanitized, null, 2);
 }
 
 export function buildAuditFilters(
