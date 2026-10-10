@@ -9,6 +9,7 @@ const mockPush = jest.fn();
 jest.mock('expo-router', () => ({ router: { push: (...args: unknown[]) => mockPush(...args) } }));
 jest.mock('../utils/auditPresentation', () => ({
   auditActionLabel: jest.fn(() => 'Inicio de sesión fallido'),
+  auditResourceIcon: jest.fn(() => 'logout'),
   auditResourceTypeLabel: jest.fn(() => 'Sesión'),
   formatAuditDate: jest.fn(() => '1 oct 2026, 12:00'),
   formatAuditIdentifier: jest.fn(() => 'Sin identificador'),

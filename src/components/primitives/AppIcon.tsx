@@ -14,6 +14,7 @@ export type AppIconName =
   | 'chevronRight'
   | 'clock'
   | 'close'
+  | 'copy'
   | 'document'
   | 'error'
   | 'eye'
@@ -45,6 +46,7 @@ const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   chevronRight: { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' },
   clock: { ios: 'clock.fill', android: 'schedule', web: 'schedule' },
   close: { ios: 'xmark', android: 'close', web: 'close' },
+  copy: { ios: 'doc.on.doc', android: 'content_copy', web: 'content_copy' },
   document: { ios: 'doc.fill', android: 'description', web: 'description' },
   error: { ios: 'exclamationmark.triangle.fill', android: 'warning', web: 'warning' },
   eye: { ios: 'eye', android: 'visibility', web: 'visibility' },

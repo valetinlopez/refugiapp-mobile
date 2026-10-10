@@ -427,10 +427,11 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     referenceFile: '23-audit-detail.jpeg',
     route: 'app/(app)/audit/[id].tsx',
     audience: 'Solo admin (canReadAudit)',
-    states: ['default', 'loading', 'error'],
+    states: ['default', 'loading', 'error', 'offline'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-166).' },
+      { kind: 'implemented', note: 'Detalle rediseñado (RFG-166).' },
       { kind: 'contract', note: 'GET /audit-logs/:id; el email del actor solo en el detalle.' },
+      { kind: 'ux', note: 'Metadata híbrida: filas legibles + JSON sanitizado colapsable.' },
     ],
     group: 'audit',
   },

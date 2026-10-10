@@ -3,12 +3,13 @@ import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ActorRow, resolveActorLabel } from '@/components/patterns';
-import { AppBadge, AppCard, AppIcon, AppText, type AppIconName } from '@/components/primitives';
+import { AppBadge, AppCard, AppIcon, AppText } from '@/components/primitives';
 import { colors, radii, sizes, spacing } from '@/theme';
 
-import type { AuditLogView, AuditResourceType } from '../types';
+import type { AuditLogView } from '../types';
 import {
   auditActionLabel,
+  auditResourceIcon,
   auditResourceTypeLabel,
   formatAuditDate,
   formatAuditIdentifier,
@@ -16,19 +17,6 @@ import {
 } from '../utils/auditPresentation';
 
 const SYSTEM_ACTOR_LABEL = 'Sistema';
-
-const RESOURCE_ICONS: Record<AuditResourceType, AppIconName> = {
-  user: 'account',
-  medical_record: 'medical',
-  expense: 'money',
-  care_task: 'document',
-  auth_session: 'logout',
-  authorization: 'alert',
-  notification: 'info',
-  adopter: 'account',
-  adoption_application: 'document',
-  adoption: 'heart',
-};
 
 export const AuditLogCard = memo(function AuditLogCard({ entry }: { entry: AuditLogView }) {
   const actionLabel = auditActionLabel(entry.action);
@@ -53,7 +41,7 @@ export const AuditLogCard = memo(function AuditLogCard({ entry }: { entry: Audit
         <View style={[styles.icon, isHighRisk && styles.highRiskIcon]}>
           <AppIcon
             color={isHighRisk ? 'danger' : 'info'}
-            name={RESOURCE_ICONS[entry.resourceType]}
+            name={auditResourceIcon(entry.resourceType)}
             size={sizes.iconLg}
           />
         </View>
