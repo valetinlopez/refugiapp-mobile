@@ -1,8 +1,28 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+
+import { sizes } from '@/theme';
 
 import { VeterinarianForm } from './VeterinarianForm';
 
 describe('VeterinarianForm', () => {
+  it('keeps create controls flexible for narrow screens and 200 percent text', async () => {
+    const screen = await render(
+      <VeterinarianForm isSubmitting={false} onSubmit={jest.fn()} submitLabel="Crear veterinario" />
+    );
+    const actions = StyleSheet.flatten(screen.getByTestId('veterinarian-form-actions').props.style);
+    const switchRow = StyleSheet.flatten(
+      screen.getByTestId('veterinarian-create-user-row').props.style
+    );
+
+    expect(actions).toEqual(expect.objectContaining({ flexDirection: 'row', flexWrap: 'wrap' }));
+    expect(switchRow).toEqual(
+      expect.objectContaining({ alignItems: 'flex-start', minHeight: sizes.touchTarget })
+    );
+    expect(actions.height).toBeUndefined();
+    expect(switchRow.height).toBeUndefined();
+  });
+
   it('submits trimmed required values without creating a user', async () => {
     const onSubmit = jest.fn();
     const screen = await render(

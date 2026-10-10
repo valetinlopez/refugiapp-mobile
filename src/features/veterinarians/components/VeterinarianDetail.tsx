@@ -126,6 +126,7 @@ export function VeterinarianDetail({
         accessibilityLabel={`${name}, matrícula ${veterinarian.licenseNumber}, ${veterinarian.isActive ? 'Activo' : 'Inactivo'}`}
         accessibilityRole="summary"
         style={styles.identityCard}
+        testID="veterinarian-identity-card"
         variant="elevated"
       >
         <AppAvatar
@@ -173,6 +174,7 @@ export function VeterinarianDetail({
           }
           accessibilityRole="summary"
           style={styles.userCard}
+          testID="veterinarian-user-card"
           variant="elevated"
         >
           <View style={styles.iconFrame}>
@@ -325,6 +327,11 @@ const styles = StyleSheet.create({
   },
   rowCopy: { flex: 1, gap: spacing.xxs, minWidth: 0 },
   section: { gap: spacing.sm },
-  userCard: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.md },
+  userCard: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+  },
   userCopy: { flex: 1, gap: spacing.xxs, minWidth: 0 },
 });

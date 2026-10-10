@@ -30,14 +30,22 @@ export default function VeterinarianDetailRoute() {
   const reactivateVeterinarian = useReactivateVeterinarian();
 
   const handleConfirmDeactivate = useCallback(() => {
+    if (!canManageVets) {
+      setConfirmVisible(false);
+      return;
+    }
     deactivateVeterinarian.mutate(veterinarianId, { onSuccess: () => setConfirmVisible(false) });
-  }, [deactivateVeterinarian, veterinarianId]);
+  }, [canManageVets, deactivateVeterinarian, veterinarianId]);
 
   const handleConfirmReactivate = useCallback(() => {
+    if (!canManageVets) {
+      setConfirmReactivateVisible(false);
+      return;
+    }
     reactivateVeterinarian.mutate(veterinarianId, {
       onSuccess: () => setConfirmReactivateVisible(false),
     });
-  }, [reactivateVeterinarian, veterinarianId]);
+  }, [canManageVets, reactivateVeterinarian, veterinarianId]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -50,8 +58,8 @@ export default function VeterinarianDetailRoute() {
       <ScrollView contentContainerStyle={styles.content} testID="veterinarian-detail-screen">
         <VeterinarianDetail
           canWrite={canManageVets}
-          confirmReactivateVisible={confirmReactivateVisible}
-          confirmVisible={confirmVisible}
+          confirmReactivateVisible={canManageVets && confirmReactivateVisible}
+          confirmVisible={canManageVets && confirmVisible}
           deactivateError={
             deactivateVeterinarian.error
               ? toVeterinarianErrorMessage(deactivateVeterinarian.error)

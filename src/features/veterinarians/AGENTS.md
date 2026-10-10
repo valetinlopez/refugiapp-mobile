@@ -72,6 +72,8 @@
 - Unit tests de mappers create/edit (PATCH diferencial: omit vs null; `createUser` presente solo con toggle activo; sin `userId`).
 - Unit tests de traducción de errores (409 matrícula, 409 email, 409 usuario vinculado, 400 `VET_*`, 403, 404, fallback seguro).
 - Component tests RNTL: listado, detalle con/sin `user`, alta con y sin creación de usuario, edición sin sección de usuario, desactivación con confirmación, reactivación con confirmación, permisos por rol, búsqueda por nombre/matrícula y errores de conflicto.
+- Certificación D31: cubrir `admin`, `shelter_manager` y `veterinarian` en lista/alta/perfil/edición; simular pérdida reactiva de `canManageVets`, bloquear la mutación si había una confirmación abierta y no montar la query protegida de edición sin capacidad.
+- Los invariantes responsive se prueban estructuralmente: ancho de lectura `sizes.contentMaxWidth`, filas/cards con wrap, acciones sin altura fija y targets `sizes.touchTarget`. La verificación visual usa `docs/design-validation/veterinarians.md`.
 - Hook tests de invalidación tras cada mutación.
 
 ## Estado
@@ -90,6 +92,7 @@
 - La coordinación de la sección "Gestión" se extrajo a `src/application/management` y al patrón compartido `src/components/patterns/ManagementSection` (RFG-140); esta feature solo conserva sus pantallas y reglas de veterinarios.
 - Alta D29 (RFG-162): la ruta conserva únicamente el guard `canManageVets` y compone `CreateVeterinarianScreen`; la pantalla usa textura, jerarquía editorial y cards separadas para información profesional y acceso. El acceso opcional envía un único `createUser` (correo + contraseña ≥ 12) dentro de `POST /veterinarians`, muestra el rol fijo `veterinarian`, no ofrece selector/UUID/roles y ubica los conflictos de matrícula y correo junto a campos distintos. El borrador queda en memoria ante error u offline para reintento manual; la contraseña nunca se persiste ni se registra.
 - Perfil D30 (RFG-163): la pantalla usa textura y card de identidad, separa contacto, datos profesionales y usuario interno, y deriva nombre/email/roles/estado del objeto `user` enriquecido. Las acciones aparecen según `canManageVets` y `isActive`; desactivar/reactivar se confirman, no son optimistas y conservan el historial clínico. Loading, ausencia, error y offline/reintento permanecen diferenciados.
+- Certificación D31 (RFG-164): lista, alta y perfil limitan el ancho de lectura y permiten wrap/fuente ampliada sin alturas rígidas; la matriz completa de roles está cubierta. La pérdida de `canManageVets` cierra confirmaciones, bloquea cambios de estado y deshabilita la query de edición; los conflictos de matrícula/correo preservan el borrador y las mutaciones de estado no eliminan caché clínica.
 
 ### Pendiente o deuda conocida
 

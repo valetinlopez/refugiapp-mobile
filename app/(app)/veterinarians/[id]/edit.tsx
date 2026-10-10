@@ -27,7 +27,7 @@ export default function EditVeterinarianRoute() {
   const fallbackHref: Href = veterinarianId
     ? { pathname: '/veterinarians/[id]', params: { id: veterinarianId } }
     : '/veterinarians';
-  const veterinarianQuery = useVeterinarian(veterinarianId);
+  const veterinarianQuery = useVeterinarian(veterinarianId, canManageVets);
   const updateVeterinarian = useUpdateVeterinarian();
 
   if (!canManageVets) {

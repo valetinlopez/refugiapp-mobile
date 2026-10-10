@@ -4,19 +4,20 @@ Este directorio es el índice de documentación viva del frontend móvil.
 
 ## Mapa de documentos
 
-| Documento                                                    | Propósito                                     | Cuándo actualizarlo                                                   |
-| ------------------------------------------------------------ | --------------------------------------------- | --------------------------------------------------------------------- |
-| [`../architecture.md`](../architecture.md)                   | Arquitectura, fronteras, flujos y estado real | Cambios estructurales, de dependencias, navegación, seguridad o datos |
-| [`../AGENTS.md`](../AGENTS.md)                               | Reglas globales para contribuir               | Cambios de convenciones globales o gates                              |
-| [`design.md`](design.md)                                     | Sistema visual y accesibilidad                | Tokens, componentes, patrones o reglas visuales                       |
-| [`brand-assets.md`](brand-assets.md)                         | Procedencia y uso de los assets de marca      | Al crear o modificar assets originales de la experiencia móvil        |
-| [`documentation-governance.md`](documentation-governance.md) | Política de mantenimiento documental          | Cambios en el proceso o catálogo documental                           |
-| [`decisions/`](decisions/)                                   | ADRs de decisiones técnicas significativas    | Al tomar o reemplazar una decisión de arquitectura                    |
-| [`../README.md`](../README.md)                               | Instalación, ejecución y orientación inicial  | Cambios operativos o de onboarding                                    |
-| [`release-runbook.md`](release-runbook.md)                   | Builds EAS, seguridad y publicación interna   | Cambios de build, firma, versionado o distribución                    |
-| [`releases/`](releases/)                                     | Notas y evidencia por candidata               | Cada candidata o publicación                                          |
-| [`design-references/`](design-references/README.md)          | Referencias visuales y matriz de trazabilidad | Al versionar, renombrar o catalogar referencias visuales              |
-| [`design-validation/`](design-validation/checklist.md)       | Checklist de validación visual D06            | Al preparar o ejecutar la validación por referencia y viewport        |
+| Documento                                                                  | Propósito                                     | Cuándo actualizarlo                                                            |
+| -------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------ |
+| [`../architecture.md`](../architecture.md)                                 | Arquitectura, fronteras, flujos y estado real | Cambios estructurales, de dependencias, navegación, seguridad o datos          |
+| [`../AGENTS.md`](../AGENTS.md)                                             | Reglas globales para contribuir               | Cambios de convenciones globales o gates                                       |
+| [`design.md`](design.md)                                                   | Sistema visual y accesibilidad                | Tokens, componentes, patrones o reglas visuales                                |
+| [`brand-assets.md`](brand-assets.md)                                       | Procedencia y uso de los assets de marca      | Al crear o modificar assets originales de la experiencia móvil                 |
+| [`documentation-governance.md`](documentation-governance.md)               | Política de mantenimiento documental          | Cambios en el proceso o catálogo documental                                    |
+| [`decisions/`](decisions/)                                                 | ADRs de decisiones técnicas significativas    | Al tomar o reemplazar una decisión de arquitectura                             |
+| [`../README.md`](../README.md)                                             | Instalación, ejecución y orientación inicial  | Cambios operativos o de onboarding                                             |
+| [`release-runbook.md`](release-runbook.md)                                 | Builds EAS, seguridad y publicación interna   | Cambios de build, firma, versionado o distribución                             |
+| [`releases/`](releases/)                                                   | Notas y evidencia por candidata               | Cada candidata o publicación                                                   |
+| [`design-references/`](design-references/README.md)                        | Referencias visuales y matriz de trazabilidad | Al versionar, renombrar o catalogar referencias visuales                       |
+| [`design-validation/`](design-validation/checklist.md)                     | Checklist de validación visual D06            | Al preparar o ejecutar la validación por referencia y viewport                 |
+| [`design-validation/veterinarians.md`](design-validation/veterinarians.md) | Certificación D31 de Veterinarios             | Al modificar lista, alta, perfil, permisos o cambios de estado de veterinarios |
 
 ## Reglas locales
 

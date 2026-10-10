@@ -1,6 +1,6 @@
 import { render, waitFor } from '@testing-library/react-native';
 
-import { capabilitiesForRoles } from '@/application/authorization';
+import { capabilitiesForRoles, type UserRole } from '@/application/authorization';
 import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { CreateVeterinarianScreen } from '@/features/veterinarians/components/CreateVeterinarianScreen';
 
@@ -24,11 +24,23 @@ describe('NewVeterinarianRoute', () => {
     mockCapabilities.mockReturnValue(capabilitiesForRoles(['admin']));
   });
 
-  it('delegates the allowed route to the feature screen', async () => {
+  it.each(['admin', 'shelter_manager'] as const satisfies readonly UserRole[])(
+    'delegates the allowed route to the feature screen for %s',
+    async (role) => {
+      mockCapabilities.mockReturnValue(capabilitiesForRoles([role]));
+      const screen = await render(<NewVeterinarianRoute />);
+
+      expect(screen.getByText('Formulario veterinario')).toBeTruthy();
+      expect(mockCreateScreen).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it('blocks the create route for veterinarians', async () => {
+    mockCapabilities.mockReturnValue(capabilitiesForRoles(['veterinarian']));
     const screen = await render(<NewVeterinarianRoute />);
 
-    expect(screen.getByText('Formulario veterinario')).toBeTruthy();
-    expect(mockCreateScreen).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Sin permiso')).toBeTruthy();
+    expect(screen.queryByText('Formulario veterinario')).toBeNull();
   });
 
   it('does not mount the form when the capability is lost', async () => {

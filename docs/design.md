@@ -545,6 +545,15 @@ El detalle (`/veterinarians/[id]`) adopta la jerarquía de `21-veterinarian-prof
 - **Acciones y conservación:** editar y cambiar estado aparecen solo con capacidad de escritura. Desactivar y reactivar exigen `ConfirmDialog`; el copy previo y el diálogo aclaran que el historial clínico permanece asociado. No hay actualización optimista.
 - **Resiliencia y accesibilidad:** UUID inválido, loading, ausencia, error, offline/reintento y pérdida reactiva de permiso se presentan por separado. El contenido desplaza con fuente ampliada, usa targets mínimos y conserva labels completos sin depender solo del color.
 
+## 52. Certificación de Veterinarios (D31 / RFG-164)
+
+Lista, alta y perfil se certifican como una experiencia continua mediante la matriz de `docs/design-validation/veterinarians.md`.
+
+- **Responsive:** el listado limita el ancho de lectura con `sizes.contentMaxWidth`; formularios, acciones, identidad y usuario vinculado permiten crecimiento vertical y wrap sin fijar alturas alrededor de texto. Los controles conservan `sizes.touchTarget` con fuente al 200 %.
+- **Roles:** `admin` y `shelter_manager` conservan gestión; `veterinarian` mantiene lectura. Si `canManageVets` se pierde durante la sesión, se desmonta el alta, se deshabilita la consulta de edición y cualquier confirmación abierta se cierra sin mutar.
+- **Conflictos:** matrícula y correo se presentan junto al campo correspondiente, sin vaciar el borrador. Los mensajes no exponen payloads, request IDs ni identificadores internos.
+- **Preservación:** desactivar/reactivar cambia disponibilidad mediante endpoints dedicados e invalida solo la raíz de veterinarios; no elimina el perfil, usuario vinculado ni historia clínica.
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)

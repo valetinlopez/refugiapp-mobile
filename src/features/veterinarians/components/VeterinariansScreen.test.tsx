@@ -1,4 +1,7 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+
+import { sizes } from '@/theme';
 
 import { ApiError } from '@/core/api';
 
@@ -85,6 +88,23 @@ describe('VeterinariansScreen', () => {
     const screen = await render(<VeterinariansScreen canWrite />);
 
     expect(screen.getByRole('button', { name: 'Nuevo veterinario' })).toBeTruthy();
+  });
+
+  it('limits the reading width on tablet without fixing the list height', async () => {
+    const screen = await render(<VeterinariansScreen canWrite />);
+    const style = StyleSheet.flatten(
+      screen.getByTestId('veterinarians-list').props.contentContainerStyle
+    );
+
+    expect(style).toEqual(
+      expect.objectContaining({
+        alignSelf: 'center',
+        flexGrow: 1,
+        maxWidth: sizes.contentMaxWidth,
+        width: '100%',
+      })
+    );
+    expect(style.height).toBeUndefined();
   });
 
   it('navigates to the detail on press', async () => {

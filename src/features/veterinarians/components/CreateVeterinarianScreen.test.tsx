@@ -78,6 +78,26 @@ describe('CreateVeterinarianScreen', () => {
     expect(screen.getByText('Ya existe un veterinario con esa matrícula.')).toBeTruthy();
   });
 
+  it('places an email conflict beside the access email without clearing the draft', async () => {
+    mockCreateVeterinarian.mockReturnValue(
+      mutationState({ error: apiError(409, 'EMAIL_ALREADY_EXISTS') })
+    );
+    const screen = await render(<CreateVeterinarianScreen />);
+
+    await fireEvent(screen.getByLabelText('Crear usuario de acceso'), 'valueChange', true);
+    await fireEvent.changeText(
+      screen.getByLabelText('Correo electrónico de acceso'),
+      'duplicado@refugiapp.local'
+    );
+
+    expect(
+      screen.getByText(
+        'Ese email ya está registrado como usuario. Usá otro o contactá a un administrador.'
+      )
+    ).toBeTruthy();
+    expect(screen.getByDisplayValue('duplicado@refugiapp.local')).toBeTruthy();
+  });
+
   it('keeps the draft retryable after an offline mutation error', async () => {
     mockCreateVeterinarian.mockReturnValue(mutationState({ error: apiError(0, 'NETWORK_ERROR') }));
     const screen = await render(<CreateVeterinarianScreen />);
