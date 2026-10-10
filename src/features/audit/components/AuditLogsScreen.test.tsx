@@ -1,5 +1,8 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
+import { OFFLINE_STATE_TEST_ID } from '@/components/feedback/offlineCopy';
+import { ApiError } from '@/core/api';
+
 import { AuditLogsScreen } from './AuditLogsScreen';
 
 import { useAuditLogs } from '../hooks/useAuditLogs';
@@ -64,6 +67,7 @@ function createQueryResult(overrides: Record<string, unknown> = {}) {
     fetchNextPage: jest.fn(),
     hasNextPage: false,
     isError: false,
+    isFetchNextPageError: false,
     isFetchingNextPage: false,
     isPending: false,
     isRefetching: false,
@@ -97,6 +101,28 @@ describe('AuditLogsScreen', () => {
     expect(refetch).toHaveBeenCalled();
   });
 
+  it('shows an offline state with a retry action for network failures', async () => {
+    const refetch = jest.fn();
+    mockUseAuditLogs.mockReturnValue(
+      createQueryResult({
+        data: undefined,
+        error: new ApiError({
+          code: 'NETWORK_ERROR',
+          message: 'No pudimos conectar.',
+          requestId: 'request-id',
+          status: 0,
+        }),
+        isError: true,
+        refetch,
+      })
+    );
+    const screen = await render(<AuditLogsScreen />);
+
+    expect(screen.getByTestId(OFFLINE_STATE_TEST_ID)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
   it('shows an empty state when there are no events', async () => {
     mockUseAuditLogs.mockReturnValue(
       createQueryResult({ data: { pages: [{ items: [], page: 1, limit: 20, total: 0 }] } })
@@ -120,10 +146,16 @@ describe('AuditLogsScreen', () => {
     mockUseAuditLogs.mockReturnValue(createQueryResult());
     const screen = await render(<AuditLogsScreen />);
 
+    await fireEvent.press(screen.getByTestId('audit-filter-action-open'));
     await fireEvent.press(screen.getByRole('button', { name: 'Acceso denegado' }));
+    await fireEvent.press(screen.getByTestId('audit-filter-resource-open'));
     await fireEvent.press(screen.getByRole('button', { name: 'Autorización' }));
     const actorInput = screen.getByLabelText('Actor (UUID)');
     await fireEvent.changeText(actorInput, ACTOR_UUID);
+    await fireEvent.changeText(
+      screen.getByLabelText('Identificador del recurso (UUID)'),
+      '44444444-4444-4444-8444-444444444444'
+    );
     await fireEvent.press(screen.getByRole('button', { name: 'Fecha desde' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Fecha hasta' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Aplicar filtros' }));
@@ -132,6 +164,7 @@ describe('AuditLogsScreen', () => {
     expect(filters.action).toBe('access.denied');
     expect(filters.resourceType).toBe('authorization');
     expect(filters.actorUserId).toBe(ACTOR_UUID);
+    expect(filters.resourceId).toBe('44444444-4444-4444-8444-444444444444');
     expect(filters.from).toMatch(/^2026-09-01T00:00:00/);
     expect(filters.to).toMatch(/^2026-09-28T23:59:00/);
   });
@@ -163,6 +196,7 @@ describe('AuditLogsScreen', () => {
     mockUseAuditLogs.mockReturnValue(createQueryResult());
     const screen = await render(<AuditLogsScreen />);
 
+    await fireEvent.press(screen.getByTestId('audit-filter-action-open'));
     await fireEvent.press(screen.getByRole('button', { name: 'Acceso denegado' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Aplicar filtros' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Limpiar' }));
@@ -175,6 +209,17 @@ describe('AuditLogsScreen', () => {
     const screen = await render(<AuditLogsScreen />);
 
     expect(screen.getByText('No hay más eventos')).toBeTruthy();
+  });
+
+  it('offers an explicit retry when a later page fails', async () => {
+    const fetchNextPage = jest.fn();
+    mockUseAuditLogs.mockReturnValue(
+      createQueryResult({ fetchNextPage, hasNextPage: true, isFetchNextPageError: true })
+    );
+    const screen = await render(<AuditLogsScreen />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Reintentar carga' }));
+    expect(fetchNextPage).toHaveBeenCalled();
   });
 
   it('concatenates pages preserving the deterministic server order without duplicates', async () => {
@@ -208,12 +253,16 @@ describe('AuditLogsScreen', () => {
     mockUseAuditLogs.mockReturnValue(createQueryResult({ hasNextPage: false }));
     const screen = await render(<AuditLogsScreen />);
 
-    expect(screen.getByTestId('audit-filter-action-user.create')).toBeTruthy();
-    expect(screen.getByTestId('audit-filter-action-access.denied')).toBeTruthy();
-    expect(screen.getByTestId('audit-filter-resource-user')).toBeTruthy();
+    expect(screen.getByTestId('audit-filter-action-open')).toBeTruthy();
+    expect(screen.getByTestId('audit-filter-resource-open')).toBeTruthy();
     expect(screen.getByTestId('audit-filter-actor')).toBeTruthy();
+    expect(screen.getByTestId('audit-filter-resource-id')).toBeTruthy();
     expect(screen.getByTestId('audit-filter-apply')).toBeTruthy();
     expect(screen.getByTestId('audit-filter-clear')).toBeTruthy();
     expect(screen.getByTestId('audit-end-of-list')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('audit-filter-action-open'));
+    expect(screen.getByTestId('audit-filter-action-user.create')).toBeTruthy();
+    expect(screen.getByTestId('audit-filter-action-access.denied')).toBeTruthy();
   });
 });

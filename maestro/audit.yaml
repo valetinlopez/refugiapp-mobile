@@ -32,6 +32,8 @@ tags: [e2e, sprint-13, RFG-132]
     timeout: 15000
 # Filtro por acción "Usuario creado" (user.create) y verificación de resultados legibles.
 - tapOn:
+    id: audit-filter-action-open
+- tapOn:
     id: audit-filter-action-user.create
 - tapOn:
     id: audit-filter-apply

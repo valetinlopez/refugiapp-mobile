@@ -114,12 +114,21 @@ export function auditResourceTypeLabel(resourceType: AuditResourceType): string 
 }
 
 export function auditActionTone(action: AuditAction): 'info' | 'danger' {
-  return action === 'access.denied' ||
+  return isHighRiskAuditAction(action) ? 'danger' : 'info';
+}
+
+export function isHighRiskAuditAction(action: AuditAction): boolean {
+  return (
+    action === 'access.denied' ||
     action === 'auth.login_failure' ||
     action === 'auth.refresh_failure' ||
     action === 'auth.password_reset_failed'
-    ? 'danger'
-    : 'info';
+  );
+}
+
+export function formatAuditIdentifier(value: string | null): string {
+  if (!value) return 'Sin identificador';
+  return value.length > 12 ? `${value.slice(0, 8)}…` : value;
 }
 
 export function formatAuditDate(value: string): string {
@@ -147,6 +156,7 @@ export function buildAuditFilters(
   action: AuditAction | undefined,
   resourceType: AuditResourceType | undefined,
   actorUserId: string,
+  resourceId: string,
   from: string,
   to: string
 ) {
@@ -156,6 +166,9 @@ export function buildAuditFilters(
   };
   if (actorUserId.trim() !== '' && isUuid(actorUserId.trim())) {
     filters.actorUserId = actorUserId.trim();
+  }
+  if (resourceId.trim() !== '' && isUuid(resourceId.trim())) {
+    filters.resourceId = resourceId.trim();
   }
   if (!from || !to || parseDateOnly(from).getTime() > parseDateOnly(to).getTime()) return filters;
   const fromDate = parseDateOnly(from);

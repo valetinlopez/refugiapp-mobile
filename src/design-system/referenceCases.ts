@@ -416,7 +416,7 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     audience: 'Solo admin (canReadAudit)',
     states: ['default', 'loading', 'empty', 'error', 'offline'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-165).' },
+      { kind: 'implemented', note: 'Listado rediseñado con filtros y riesgo accesible (RFG-165).' },
       { kind: 'contract', note: 'Actor enriquecido en GET /audit-logs.' },
     ],
     group: 'audit',

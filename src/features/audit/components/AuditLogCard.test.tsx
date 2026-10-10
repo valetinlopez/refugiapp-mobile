@@ -9,9 +9,10 @@ const mockPush = jest.fn();
 jest.mock('expo-router', () => ({ router: { push: (...args: unknown[]) => mockPush(...args) } }));
 jest.mock('../utils/auditPresentation', () => ({
   auditActionLabel: jest.fn(() => 'Inicio de sesión fallido'),
-  auditActionTone: jest.fn(() => 'danger'),
   auditResourceTypeLabel: jest.fn(() => 'Sesión'),
   formatAuditDate: jest.fn(() => '1 oct 2026, 12:00'),
+  formatAuditIdentifier: jest.fn(() => 'Sin identificador'),
+  isHighRiskAuditAction: jest.fn(() => true),
 }));
 
 const UUID = '22222222-2222-4222-8222-222222222222';
@@ -75,6 +76,21 @@ describe('AuditLogCard', () => {
 
     expect(screen.getByText('María López')).toBeTruthy();
     expect(screen.queryByText(UUID)).toBeNull();
+  });
+
+  it('communicates a high-risk event with text and an icon-backed badge', async () => {
+    const screen = await render(<AuditLogCard entry={entry()} />);
+
+    expect(screen.getByText('Riesgo alto')).toBeTruthy();
+    expect(screen.getByLabelText(/riesgo alto/)).toBeTruthy();
+  });
+
+  it('does not expose event metadata in the list card', async () => {
+    const screen = await render(
+      <AuditLogCard entry={entry({ metadata: { reason: 'internal-only-value' } })} />
+    );
+
+    expect(screen.queryByText('internal-only-value')).toBeNull();
   });
 
   it('falls back to the UUID during rollout when actor is absent', async () => {

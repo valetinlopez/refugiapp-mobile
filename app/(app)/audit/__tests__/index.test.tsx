@@ -29,4 +29,17 @@ describe('AuditRoute', () => {
     const screen = await render(<AuditRoute />);
     expect(screen.queryByText('Sin permiso')).toBeNull();
   });
+
+  it('reacts to permission loss and replaces the protected module', async () => {
+    mockUseCapabilities.mockReturnValue({ canReadAudit: true });
+    const screen = await render(<AuditRoute />);
+
+    mockUseCapabilities.mockReturnValue({ canReadAudit: false });
+    await screen.rerender(<AuditRoute />);
+
+    expect(screen.getByText('Sin permiso')).toBeTruthy();
+    expect(
+      screen.getByText('Solo los administradores pueden consultar la auditoría.')
+    ).toBeTruthy();
+  });
 });
