@@ -2,7 +2,7 @@
 
 ## Responsabilidad
 
-- Es el arnés interno de validación visual de las 23 referencias versionadas (D06 / RFG-139).
+- Es el arnés interno de validación visual de las 25 referencias versionadas (D06 / RFG-139, ampliado en D36/D37).
 - Mantiene el catálogo de casos reproducibles, los fixtures deterministas y la matriz de viewports.
 - Expone `ReferenceValidationSection` para la ruta interna `/design-system`.
 - No implementa reglas de negocio, endpoints, permisos ni pantallas de producción; no conoce features.
@@ -23,7 +23,7 @@
 
 ## Invariantes
 
-- 23 casos, ids `D06-01…D06-23`, un archivo de referencia por caso y sin duplicados.
+- 25 casos, ids `D06-01…D06-25`, un archivo de referencia por caso y sin duplicados.
 - Los estados y tipos de divergencia pertenecen a los enums de `types.ts`.
 - Los viewports provienen siempre de `REFERENCE_VIEWPORTS`; no repetir etiquetas a mano.
 - Los fixtures no dependen del reloj (`DESIGN_SYSTEM_NOW` los ancla) ni de servicios externos.
@@ -37,14 +37,14 @@
 ## Testing
 
 - Unit tests: invariantes del catálogo, matriz de viewports y determinismo de fixtures.
-- Component tests RNTL: metadatos y checklist del caso, y render de los 23 casos y previews.
+- Component tests RNTL: metadatos y checklist del caso, y render de los 25 casos y previews.
 - Al agregar o renombrar una referencia, actualizar también `docs/design-validation/checklist.md` y `docs/design-references/README.md`.
 
 ## Estado
 
 ### Implementado
 
-- Catálogo de 23 casos con ruta, rol, estados, divergencias y checklist de seis viewports.
+- Catálogo de 25 casos con ruta, rol, estados, divergencias y checklist de seis viewports.
 - Previews deterministas con patrones compartidos y fixtures sintéticos.
 - Sección integrada en `/design-system` y cubierta por unit y component tests.
 

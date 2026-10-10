@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { expensesApi } from '../api/expensesApi';
-import { dashboardQueryKey, expenseKeys } from './expenseKeys';
+import { dashboardQueryKey, expenseKeys, homeQueryKey } from './expenseKeys';
 
 /**
  * Soft-deletes an expense (`DELETE /expenses/:id`, `204`).
@@ -20,6 +20,7 @@ export function useDeleteExpense() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: expenseKeys.lists() }),
         queryClient.invalidateQueries({ queryKey: dashboardQueryKey }),
+        queryClient.invalidateQueries({ queryKey: homeQueryKey }),
       ]);
     },
     retry: 0,

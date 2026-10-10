@@ -1,3 +1,4 @@
+import type { HomePriorityState } from '@/application/home';
 import type { AppIconName } from '@/components/primitives';
 import type { BadgeTone } from '@/types/design-system';
 
@@ -19,4 +20,14 @@ const STATUS_PRESENTATION: Record<DashboardAnimalStatus, DashboardStatusPresenta
 
 export function getStatusPresentation(status: DashboardAnimalStatus): DashboardStatusPresentation {
   return STATUS_PRESENTATION[status];
+}
+
+const HOME_PRIORITY_PRESENTATION: Record<HomePriorityState, DashboardStatusPresentation> = {
+  overdue: { icon: 'alert', label: 'Vencida', tone: 'danger' },
+  upcoming: { icon: 'clock', label: 'Próxima', tone: 'warning' },
+  pending: { icon: 'calendar', label: 'Pendiente', tone: 'default' },
+};
+
+export function getHomePriorityPresentation(state: HomePriorityState): DashboardStatusPresentation {
+  return HOME_PRIORITY_PRESENTATION[state];
 }

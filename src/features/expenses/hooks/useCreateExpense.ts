@@ -8,7 +8,7 @@ import { expensesApi } from '../api/expensesApi';
 import type { ExpenseResponse, ReceiptFile } from '../types';
 import type { ExpenseFormValues } from '../utils/expenseSchema';
 import { toCreateExpenseRequest } from '../utils/toCreateExpenseRequest';
-import { dashboardQueryKey, expenseKeys } from './expenseKeys';
+import { dashboardQueryKey, expenseKeys, homeQueryKey } from './expenseKeys';
 
 export interface CreateExpenseInput {
   form: ExpenseFormValues;
@@ -43,6 +43,7 @@ export function useCreateExpense() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: expenseKeys.lists() }),
         queryClient.invalidateQueries({ queryKey: dashboardQueryKey }),
+        queryClient.invalidateQueries({ queryKey: homeQueryKey }),
       ]);
     },
     onSettled: () => {

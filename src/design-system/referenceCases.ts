@@ -7,9 +7,10 @@ export interface ReferenceGroup {
 }
 
 /**
- * Grouping of the 23 references for the catalog and the checklist. The order
+ * Grouping of the 25 references for the catalog and the checklist. The order
  * follows the walkthrough defined by D01 (auth → account → management →
- * animal → care → expenses → clinical → veterinarians → audit).
+ * animal → care → expenses → clinical → veterinarians → audit) plus the two
+ * final references added in Sprint 22 (Inicio and Animales list).
  */
 export const REFERENCE_GROUPS: readonly ReferenceGroup[] = [
   {
@@ -31,16 +32,21 @@ export const REFERENCE_GROUPS: readonly ReferenceGroup[] = [
   },
   { id: 'veterinarians', title: 'Veterinarios (19–21)', subtitle: 'Listado, alta y perfil.' },
   { id: 'audit', title: 'Auditoría (22–23)', subtitle: 'Listado y detalle con actor legible.' },
+  {
+    id: 'final',
+    title: 'Inicio y cierre (24–25)',
+    subtitle: 'Panel de portada y listado final de animales.',
+  },
 ];
 
 /**
- * The 23 reproducible cases (D06 / RFG-139).
+ * The 25 reproducible cases (D06 / RFG-139, ampliado en D36/D37).
  *
  * This is a direct, typed mirror of the D01 traceability matrix in
  * `docs/design-references/README.md §2`. It is deliberately declarative: route,
  * audience, states and divergences match the source of truth and never add
  * invented endpoints, roles or permissions. The unit tests enforce the
- * invariants (23 cases, unique ids and reference files, known enums).
+ * invariants (25 cases, unique ids and reference files, known enums).
  */
 export const REFERENCE_CASES: readonly ReferenceCase[] = [
   {
@@ -434,6 +440,50 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
       { kind: 'ux', note: 'Metadata híbrida: filas legibles + JSON sanitizado colapsable.' },
     ],
     group: 'audit',
+  },
+  {
+    id: 'D06-24',
+    index: 24,
+    referenceFile: '24-dashboard-home.jpeg',
+    route: 'app/(app)/(tabs)/index.tsx',
+    audience: 'Los tres roles (lectura); clínica: canReadClinicalRecords',
+    states: ['default', 'loading', 'empty', 'error', 'offline'],
+    divergences: [
+      {
+        kind: 'implemented',
+        note: 'Inicio rediseñado (RFG-169) con saludo, hero, resumen, accesos y prioridades.',
+      },
+      {
+        kind: 'ux',
+        note: 'No hay total monetario mensual; Gastos muestra el total de registros.',
+      },
+      {
+        kind: 'ux',
+        note: 'Las prioridades son best-effort sobre la página cargada; no prometen el global.',
+      },
+      { kind: 'contract', note: 'No existe contrato de unread count.' },
+    ],
+    group: 'final',
+  },
+  {
+    id: 'D06-25',
+    index: 25,
+    referenceFile: '25-animals-list.jpeg',
+    route: 'app/(app)/(tabs)/explore.tsx',
+    audience: 'Los tres roles (lectura); escritura admin/shelter_manager (canEditAnimal)',
+    states: ['default', 'loading', 'empty', 'error', 'offline'],
+    divergences: [
+      { kind: 'pending', note: 'Rediseño del listado (D37 / RFG-170).' },
+      {
+        kind: 'contract',
+        note: 'Sin sort: el backend ordena createdAt ASC, id ASC (no implementar "Ingreso reciente").',
+      },
+      {
+        kind: 'contract',
+        note: 'Sin catálogo de especies: el filtro de especie es texto, no un selector incompleto.',
+      },
+    ],
+    group: 'final',
   },
 ];
 

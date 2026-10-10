@@ -2,7 +2,7 @@ import { brandAssets, resolveBrandSource } from './brandAssets';
 
 describe('brandAssets (RFG-135)', () => {
   it('registers every brand asset with a WebP source and a PNG fallback', () => {
-    const names = ['heroRescuedDog', 'brandLeafMark', 'leafTextureTile'] as const;
+    const names = ['heroRescuedDog', 'heroHome', 'brandLeafMark', 'leafTextureTile'] as const;
 
     expect(Object.keys(brandAssets)).toEqual([...names]);
 
@@ -16,6 +16,7 @@ describe('brandAssets (RFG-135)', () => {
 
   it('keeps a stable source set per asset so the UI layer stays decoupled from file names', () => {
     expect(resolveBrandSource('heroRescuedDog')).toBe(brandAssets.heroRescuedDog);
+    expect(resolveBrandSource('heroHome')).toBe(brandAssets.heroHome);
     expect(resolveBrandSource('brandLeafMark')).toBe(brandAssets.brandLeafMark);
     expect(resolveBrandSource('leafTextureTile')).toBe(brandAssets.leafTextureTile);
   });

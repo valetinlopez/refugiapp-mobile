@@ -515,6 +515,61 @@ function AuditDetailPreview() {
   );
 }
 
+function DashboardHomePreview() {
+  const pending = CARE_TASK_FIXTURES.filter((task) => task.status === 'pending');
+  return (
+    <View style={styles.stack}>
+      <AppText variant="heading3">Buenas tardes, Andrés</AppText>
+      <AppText color="textSecondary" variant="caption">
+        Hoy, 20 de septiembre
+      </AppText>
+      <AppCard style={styles.stack} variant="organic">
+        <View style={styles.badgeWrap}>
+          <AppBadge icon="paw" label="Animales: 48" />
+          <AppBadge icon="medical" label="En tratamiento: 9" tone="info" />
+          <AppBadge icon="calendar" label="Cuidados pendientes: 6" tone="warning" />
+        </View>
+      </AppCard>
+      <AppCard style={styles.stack}>
+        <AppText variant="label">Prioridades de hoy</AppText>
+        {pending.map((task) => (
+          <TaskRow
+            animalName={task.animalName}
+            assignee={task.assignee}
+            dueAt={new Date(task.dueAt)}
+            isClinical={task.isClinical}
+            key={task.id}
+            now={DESIGN_SYSTEM_NOW}
+            status={task.status}
+            timeLabel={task.timeLabel}
+            title={task.title}
+          />
+        ))}
+      </AppCard>
+    </View>
+  );
+}
+
+function AnimalsListPreview() {
+  return (
+    <View style={styles.stack}>
+      {ANIMAL_FIXTURES.map((animal) => {
+        const presentation = ANIMAL_STATUS_PRESENTATION[animal.status];
+        return (
+          <EntityCard
+            avatar={{ accessibilityLabel: `Foto de ${animal.name}`, initials: animal.name }}
+            badge={{ icon: 'paw', label: presentation.label, tone: presentation.tone }}
+            key={animal.id}
+            meta={`${animal.species} · ${animal.breed}`}
+            onPress={() => undefined}
+            title={animal.name}
+          />
+        );
+      })}
+    </View>
+  );
+}
+
 const PREVIEWS: Partial<Record<ReferenceCase['id'], () => ReactNode>> = {
   'D06-01': LoginPreview,
   'D06-02': MorePreview,
@@ -539,6 +594,8 @@ const PREVIEWS: Partial<Record<ReferenceCase['id'], () => ReactNode>> = {
   'D06-21': VetProfilePreview,
   'D06-22': AuditListPreview,
   'D06-23': AuditDetailPreview,
+  'D06-24': DashboardHomePreview,
+  'D06-25': AnimalsListPreview,
 };
 
 /**

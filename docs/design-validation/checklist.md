@@ -4,7 +4,7 @@
 
 ## 1. Propósito y alcance
 
-D06 prepara la validación visual de las 23 referencias versionadas en `docs/design-references/`. No rediseña pantallas de producción: cada historia de rediseño (RFG-140…RFG-168) reutiliza estos casos y esta checklist, y la regresión y certificación finales pertenecen a `RFG-167` y `RFG-168`.
+D06 prepara la validación visual de las 25 referencias versionadas en `docs/design-references/`. No rediseña pantallas de producción: cada historia de rediseño (RFG-140…RFG-170) reutiliza estos casos y esta checklist, y la regresión y certificación finales pertenecen a `RFG-167` y `RFG-168`.
 
 - Fuente de trazabilidad: `docs/design-references/README.md` (D01 / RFG-134).
 - Sistema visual y accesibilidad: `docs/design.md`.
@@ -18,7 +18,7 @@ D06 prepara la validación visual de las 23 referencias versionadas en `docs/des
 3. Recorrer los seis viewports de la sección 3 y tildar la matriz de la sección 5.
 4. Registrar hallazgos como incidencia con el `Caso` (`D06-NN`) y el viewport afectado; no bloquear D06 por divergencias ya catalogadas como `pendiente` (pertenecen a su historia de rediseño).
 
-## 3. Matriz de viewports (obligatoria para los 23 casos)
+## 3. Matriz de viewports (obligatoria para los 25 casos)
 
 | Viewport      | Qué verificar                                                                               |
 | ------------- | ------------------------------------------------------------------------------------------- |
@@ -68,6 +68,8 @@ Marcar cada celda cuando el caso pase en ese viewport. `Caso` enlaza con el `tes
 | 21  | `21-veterinarian-profile.jpeg`      | D06-21 | ☐       | ☐       | ☐      | ☐          | ☐            | ☐             |
 | 22  | `22-audit-list.jpeg`                | D06-22 | ☐       | ☐       | ☐      | ☐          | ☐            | ☐             |
 | 23  | `23-audit-detail.jpeg`              | D06-23 | ☐       | ☐       | ☐      | ☐          | ☐            | ☐             |
+| 24  | `24-dashboard-home.jpeg`            | D06-24 | ☐       | ☐       | ☐      | ☐          | ☐            | ☐             |
+| 25  | `25-animals-list.jpeg`              | D06-25 | ☐       | ☐       | ☐      | ☐          | ☐            | ☐             |
 
 ## 6. Estados por caso
 
@@ -82,7 +84,7 @@ Los estados relevantes (incluidos `loading`, `empty`, `error`, `offline` y `rest
 
 ## 8. Trazabilidad
 
-- ID del plan: D06 (tarea `RFG-139 — Preparar la validación visual de las 23 referencias`).
+- ID del plan: D06 (tarea `RFG-139 — Preparar la validación visual de las 23 referencias`; ampliado a 25 casos finales con D36/`RFG-169` y D37/`RFG-170`).
 - Épica: `RFG-133 — Finalización visual y UX móvil según referencias 2026`.
 - Dependencia funcional: D01 (`RFG-134`, completada).
-- Consumidores: historias de rediseño `RFG-140…RFG-166`; regresión y certificación en `RFG-167`/`RFG-168`.
+- Consumidores: historias de rediseño `RFG-140…RFG-170`; regresión y certificación en `RFG-167`/`RFG-168`.

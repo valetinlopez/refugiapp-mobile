@@ -358,16 +358,16 @@ La pantalla de acceso replica la composición editorial de la referencia `01-log
 - **Formulario:** reutiliza `PasswordField` (toggle de visibilidad 44 × 44) y expone `autoComplete`/`textContentType` (email `emailAddress`, password `password`) y `returnKeyType next → done`; el error de validación y el aviso de sesión vencida se anuncian con `role="alert"` y `accessibilityLiveRegion`. En web, `app/+html.tsx` neutraliza el celeste nativo de `-webkit-autofill` solo para los campos del login y conserva `surface`, `textPrimary` y `border`, sin desactivar el autocompletado ni los gestores de contraseñas. El foco reemplaza el contorno blanco/negro del navegador con borde y anillo de 2 px en el token semántico `focus`; no usa `positive`, reservado para éxito y acciones principales.
 - **Divergencia `ux` aceptada:** no se añaden iconos dentro de los inputs, ya que exigirían una primitiva compartida de campo nueva o duplicar el estilo del campo; se prioriza no crear una abstracción compartida para un único consumidor. El icono `account` decora el encabezado de la tarjeta. `app/(auth)/_layout.tsx` declara `title` por pantalla para el documento web.
 
-## 37. Validación visual de las 23 referencias (D06)
+## 37. Validación visual de las 25 referencias (D06)
 
-La ruta interna `/design-system` incorpora el arnés de validación de D06 (RFG-139), que prepara la comparación de las 23 referencias con la implementación. No rediseña pantallas ni introduce tokens: cataloga y hace reproducible cada referencia.
+La ruta interna `/design-system` incorpora el arnés de validación de D06 (RFG-139), que prepara la comparación de las 25 referencias con la implementación. No rediseña pantallas ni introduce tokens: cataloga y hace reproducible cada referencia.
 
-- **Casos:** `src/design-system/referenceCases.ts` reproduce la matriz D01 (`docs/design-references/README.md §2`) con id estable `D06-01…D06-23`, archivo de referencia, ruta, rol/capacidad, estados y divergencias. La matriz D01 manda; el arnés la refleja.
+- **Casos:** `src/design-system/referenceCases.ts` reproduce la matriz D01 (`docs/design-references/README.md §2`) con id estable `D06-01…D06-25`, archivo de referencia, ruta, rol/capacidad, estados y divergencias. La matriz D01 manda; el arnés la refleja.
 - **Fixtures:** `src/design-system/fixtures.ts` usa UUID, fechas e importes fijos y ancla los estados derivados en `DESIGN_SYSTEM_NOW`; no incluye datos personales reales (solo identidades `*@refugiapp.test`) ni depende de red o servicios externos.
 - **Viewports:** `src/design-system/viewports.ts` fija la matriz `320 × 568`, `390 × 844`, tablet, horizontal aplicable, fuente 200 % y reduce motion; la checklist humana vive en `docs/design-validation/checklist.md`.
-- **Catálogo:** `ReferenceValidationSection` agrupa los casos por dominio (Acceso y cuenta, Animales, Cuidados, Gastos, Clínica, Veterinarios, Auditoría); `ReferenceCaseCard` muestra los metadatos, las divergencias, la checklist de seis viewports y el caso reproducible con `testID` `ds-case-D06-NN` para `RFG-167`.
+- **Catálogo:** `ReferenceValidationSection` agrupa los casos por dominio (Acceso y cuenta, Animales, Cuidados, Gastos, Clínica, Veterinarios, Auditoría, Inicio y cierre); `ReferenceCaseCard` muestra los metadatos, las divergencias, la checklist de seis viewports y el caso reproducible con `testID` `ds-case-D06-NN` para `RFG-167`.
 - **Accesibilidad:** cada caso es un `summary` accesible con id, referencia, ruta, roles y estados; las divergencias y los viewports se comunican con texto e icono, nunca solo color. Los previews reutilizan los patrones y primitivas existentes.
-- **Fuera de alcance:** el rediseño por referencia (`RFG-140…RFG-166`), la regresión (`RFG-167`) y la certificación del release (`RFG-168`).
+- **Fuera de alcance:** el rediseño por referencia (`RFG-140…RFG-170`), la regresión (`RFG-167`) y la certificación del release (`RFG-168`).
 
 ## 38. Alta de usuario (D06-04 / RFG-143)
 
@@ -573,6 +573,17 @@ La ruta `/audit/[id]` adopta la jerarquía de `23-audit-detail.jpeg` sobre los p
 - **Metadatos:** el backend no fija las claves, por lo que se presenta una vista híbrida: los valores escalares se muestran como filas legibles con etiquetas en español para claves conocidas y humanizadas para el resto, las claves identificadoras (UUID, correlación, deduplicación, códigos) se pueden copiar, y una lista de objetos/arrays permanece en el JSON sanitizado. El bloque “Mostrar/Ocultar datos sanitizados” usa `accessibilityState.expanded` y solo aparece cuando hay contenido.
 - **Copiado accesible:** `useCopyAuditText` envuelve `expo-clipboard`; copiar anuncia el resultado a tecnologías asistivas y muestra feedback textual (“Copiado”/“No se pudo copiar”) además del cambio de icono. Un fallo de copiado anuncia un mensaje seguro y no rompe la pantalla. Nunca se copian ni muestran secretos: la metadata se vuelve a sanitizar en el cliente.
 - **Estados:** loading, offline con reintento, error con reintento y “Sin identificador” en los campos nulos. Los `testID` (`audit-copy-resource-id`, `audit-copy-actor-id`, `audit-metadata-json-toggle`) quedan estables para la regresión de RFG-167.
+
+## 55. Inicio / dashboard (D36 / RFG-169)
+
+La ruta `app/(app)/(tabs)/index.tsx` conserva la consulta existente (`GET /dashboard/overview`) y adopta la jerarquía editorial de `24-dashboard-home.jpeg` sin inventar métricas. El saludo (`HomeGreeting`) es el único `heading1` y combina `firstName` de la sesión con la fecha local `es-AR` (`Hoy, 10 de octubre`); nunca depende de texto en un bitmap. El atajo de cuenta sigue siendo `AccountMenuButton` (44 × 44).
+
+- **Hero (`HomeHero`):** banner fotográfico de perro y gato sobre el asset `heroHome` (fotografía de stock 16:9 con atribución, ver `docs/brand-assets.md`), compuesto con `DecorativeImage` (oculto a AT, sin texto, `aspectRatio` 16:9, `cachePolicy="memory-disk"` y fallback PNG). Es ornamental y no comunica estado.
+- **Resumen del día (`TodaySummaryCard`):** card `organic` con tres métricas (icono + valor + etiqueta): animales y en tratamiento desde `GET /dashboard/overview`, y cuidados pendientes exactos desde `src/application/home` (`total` de `GET /care-tasks?status=pending&page=1&limit=1`). Un conteo que no cargó se muestra como `—` con label accesible "sin datos"; nunca `NaN`.
+- **Accesos rápidos (`HomeQuickAccess`):** grilla responsive de dos columnas que colapsa a una cuando el viewport o la fuente al 200 % no permiten dos. Cada tarjeta navega a un destino real —Animales (`/explore`), Cuidados (`/care-tasks`), Historia clínica (`/medical-records`) y Gastos (`/expenses`)—, con icono + texto (nunca solo color), chevron y target ≥ 44 × 44. Historia clínica se filtra por `canReadClinicalRecords`. El subtítulo usa conteos reales (registrados/pendientes/registros) con fallback neutro.
+- **Prioridades de hoy (`TodayPriorities` + `HomePriorityRow`):** vista compacta best-effort de la página cargada de pendientes, ordenada por urgencia, con estado derivado `Vencida`/`Próxima`/`Pendiente` (icono + texto) y acceso a la agenda completa. El nombre del animal se resuelve por la cache compartida `animal-options`; sin coincidencia cae a "Animal no disponible", nunca a un UUID. Las filas están memoizadas y navegan al detalle de la tarea.
+- **Estados:** skeleton estático de la nueva jerarquía (respeta reduce motion), vacío cuando no hay animales, error con reintento, offline con reintento y pull-to-refresh que refetchea el overview y el resumen. El `content` limita el ancho a `sizes.contentMaxWidth` (760 pt) centrado en tablet y reserva el inset de la bottom navigation.
+- **Divergencias aceptadas:** no hay total monetario mensual (el contrato no publica agregación) y los accesos de Gastos muestran el total de registros; no hay unread count; las prioridades son best-effort sobre el conjunto cargado.
 
 ## Referencias técnicas
 
