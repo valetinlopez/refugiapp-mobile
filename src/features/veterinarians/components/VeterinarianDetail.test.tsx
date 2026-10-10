@@ -59,6 +59,7 @@ describe('VeterinarianDetail', () => {
   it('shows license number, state and contact data', async () => {
     const screen = await renderDetail();
 
+    expect(screen.getByRole('header', { name: 'Perfil veterinario' })).toBeTruthy();
     expect(screen.getByText('Sofía Romero')).toBeTruthy();
     expect(screen.getByText('Matrícula VET-001')).toBeTruthy();
     expect(screen.getByText('Activo')).toBeTruthy();
@@ -76,7 +77,7 @@ describe('VeterinarianDetail', () => {
     expect(screen.getByText('Sin notas')).toBeTruthy();
   });
 
-  it('shows the linked user email and role instead of a raw uuid', async () => {
+  it('shows the linked user identity, email, role and state instead of a raw uuid', async () => {
     const linked = {
       ...VET,
       user: {
@@ -92,8 +93,11 @@ describe('VeterinarianDetail', () => {
     };
     const screen = await renderDetail({ query: detailQuery({ data: linked }) });
 
+    expect(screen.getAllByText('Sofía Romero')).toHaveLength(2);
     expect(screen.getByText('vet-user@refugiapp.local')).toBeTruthy();
     expect(screen.getByText('Veterinario')).toBeTruthy();
+    expect(screen.getByText('Cuenta activa')).toBeTruthy();
+    expect(screen.queryByText('22222222-2222-4222-8222-222222222222')).toBeNull();
   });
 
   it('offers edit and deactivate actions with write permission', async () => {
@@ -101,7 +105,7 @@ describe('VeterinarianDetail', () => {
     const onRequestDeactivate = jest.fn();
     const screen = await renderDetail({ onEdit, onRequestDeactivate });
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Editar' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Editar perfil' }));
     expect(onEdit).toHaveBeenCalledTimes(1);
 
     await fireEvent.press(screen.getByRole('button', { name: 'Desactivar veterinario' }));
@@ -138,7 +142,7 @@ describe('VeterinarianDetail', () => {
   it('does not offer write actions without permission', async () => {
     const screen = await renderDetail({ canWrite: false });
 
-    expect(screen.queryByRole('button', { name: 'Editar' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Editar perfil' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Desactivar veterinario' })).toBeNull();
     expect(
       screen.getByText(/Tu rol permite consultar veterinarios, pero no editarlos/)
@@ -159,6 +163,11 @@ describe('VeterinarianDetail', () => {
 
     await fireEvent.press(reactivate);
     expect(onRequestReactivate).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByText(
+        'El historial clínico asociado se conserva mientras el perfil está inactivo.'
+      )
+    ).toBeTruthy();
   });
 
   it('does not offer deactivate or reactivate actions without write permission', async () => {

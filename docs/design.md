@@ -513,6 +513,7 @@ La ruta `app/(app)/veterinarians/index.tsx` adopta la jerarquía de `19-veterina
 - **Tarjeta:** fila elevada con avatar de iniciales, nombre, matrícula y las líneas de contacto que existan (email del perfil con fallback a `user.email`, y teléfono), con badge de estado icono + texto (`Activo`/`Inactivo`) y chevron. Omite las líneas ausentes sin inventar un placeholder y nunca muestra el UUID. Toda la tarjeta es un único botón accesible con label completo.
 - **Paginación y estados:** `FlatList` virtualiza páginas de 20 con orden determinista `lastName ASC, firstName ASC, id ASC` sin reordenar y deduplicación por UUID; CTA "Cargar más veterinarios", fin "No hay más veterinarios", pull-to-refresh y estados de carga, vacío (con/sin filtros y con/sin permiso de alta), error de servidor traducido y offline con reintento diferenciados. El `FAB` "Nuevo veterinario" aparece solo con `canManageVets`.
 - **Accesibilidad:** un único H1, labels accesibles en español más `testID` en inglés (`veterinarians-list`, `veterinarians-search`, `veterinarians-status`, `veterinarians-open-filters`, `veterinarians-clear-filters`, `veterinarians-filter-sheet`/`-name`/`-license`/`-apply`/`-clear`, `veterinarians-load-more`, `veterinarians-end-of-list`, `veterinarians-create`), targets de 44 × 44, decorativos ocultos a AT y contenido desplazable con fuente ampliada.
+
 ## 49. Detalle de registro clínico (D27 / RFG-160)
 
 El detalle (`/medical-records/[id]`) toma la jerarquía de `18-medical-record-detail.jpeg` sin inventar un identificador correlativo ni datos no publicados. Es accesible solo para `admin` y `veterinarian` mediante `canReadClinicalRecords`; `shelter_manager` ve “Sin permiso” y no monta consultas.
@@ -533,6 +534,16 @@ El alta (`/veterinarians/new`) toma la jerarquía de `20-veterinarian-new.jpeg` 
 - **Atomicidad:** el submit envía una sola operación `POST /veterinarians` con `createUser`. El servidor crea o reutiliza por correo y vincula dentro de la misma transacción; la UI explica que una falla no deja una cuenta huérfana.
 - **Conflictos y resiliencia:** `LICENSE_NUMBER_ALREADY_EXISTS` se muestra junto a Matrícula; los conflictos de email/usuario vinculado se muestran junto al correo de acceso. Un error general, falta de permiso u offline conserva el borrador para reintento manual y no duplica envíos automáticamente.
 - **Acciones y accesibilidad:** “Cancelar” y “Crear perfil” envuelven en ancho reducido, conservan targets mínimos y bloquean durante el envío. El éxito se anuncia a tecnologías asistivas y vuelve al listado.
+
+## 51. Perfil de veterinario (D30 / RFG-163)
+
+El detalle (`/veterinarians/[id]`) adopta la jerarquía de `21-veterinarian-profile.jpeg` sin introducir datos ni acciones ausentes del contrato. Los tres roles pueden consultarlo; editar, desactivar y reactivar requieren `canManageVets` (`admin`/`shelter_manager`).
+
+- **Identidad:** fondo de textura, retorno rotulado “Veterinarios”, un único encabezado “Perfil veterinario” y card protagonista con avatar de iniciales, nombre contractual sin prefijo inventado, matrícula y badge de estado con icono + texto.
+- **Información:** contacto e información profesional se separan en secciones con filas accesibles. Email, teléfono y notas ausentes usan fallbacks explícitos; nunca se deja un valor vacío.
+- **Usuario vinculado:** la card de usuario muestra nombre, email, roles traducidos y estado de cuenta desde `VeterinarianResponseDto.user`. Cuando no existe vínculo se explica “Sin acceso vinculado”. Nunca se usa `userId` o un UUID como etiqueta visible y no se inventa una ruta de perfil de usuario inexistente.
+- **Acciones y conservación:** editar y cambiar estado aparecen solo con capacidad de escritura. Desactivar y reactivar exigen `ConfirmDialog`; el copy previo y el diálogo aclaran que el historial clínico permanece asociado. No hay actualización optimista.
+- **Resiliencia y accesibilidad:** UUID inválido, loading, ausencia, error, offline/reintento y pérdida reactiva de permiso se presentan por separado. El contenido desplaza con fuente ampliada, usa targets mínimos y conserva labels completos sin depender solo del color.
 
 ## Referencias técnicas
 

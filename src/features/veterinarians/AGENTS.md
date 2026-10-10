@@ -62,6 +62,7 @@
 - El toggle de creación de usuario usa `Switch` de RN con `accessibilityLabel`/`accessibilityHint`; el label del campo de contraseña indica el mínimo de 12 caracteres.
 - Área táctil mínima de 44 × 44 y labels accesibles en botones.
 - El detalle muestra `user.email` y rol legible; nunca un UUID.
+- El detalle D30 presenta además nombre y estado del usuario vinculado, separa contacto e información profesional y explica que desactivar/reactivar conserva el historial clínico. No enlaza a una ruta de usuario que el producto no publica.
 - El botón de reactivación usa `accessibilityLabel`/`accessibilityHint` y el diálogo expone la consecuencia antes de ejecutar.
 - La búsqueda del listado distingue nombre de matrícula: `toVeterinarianSearchFilter` envía `licenseNumber` cuando el término contiene dígitos y `name` en caso contrario (el backend combina ambos filtros en AND).
 
@@ -88,6 +89,7 @@
 - Rediseño del listado D28 (RFG-161): ruta delgada con `fallbackHref='/more'`, `DecorativeBackground`, `ScreenHeader`, buscador rápido, `SegmentedControl` de estado con default `Todos`, `VeterinarianFilterSheet` para `name` + `licenseNumber` en AND, `Limpiar`, FAB de alta por capacidad y tarjeta con avatar, contacto y badge no cromático. `FlatList` con pull-to-refresh, CTA "Cargar más veterinarios", fin de lista y deduplicación por UUID; estados loading/vacío (con/sin filtros y con/sin `canWrite`)/error/offline/reintento. Sin endpoints, roles ni tipos nuevos.
 - La coordinación de la sección "Gestión" se extrajo a `src/application/management` y al patrón compartido `src/components/patterns/ManagementSection` (RFG-140); esta feature solo conserva sus pantallas y reglas de veterinarios.
 - Alta D29 (RFG-162): la ruta conserva únicamente el guard `canManageVets` y compone `CreateVeterinarianScreen`; la pantalla usa textura, jerarquía editorial y cards separadas para información profesional y acceso. El acceso opcional envía un único `createUser` (correo + contraseña ≥ 12) dentro de `POST /veterinarians`, muestra el rol fijo `veterinarian`, no ofrece selector/UUID/roles y ubica los conflictos de matrícula y correo junto a campos distintos. El borrador queda en memoria ante error u offline para reintento manual; la contraseña nunca se persiste ni se registra.
+- Perfil D30 (RFG-163): la pantalla usa textura y card de identidad, separa contacto, datos profesionales y usuario interno, y deriva nombre/email/roles/estado del objeto `user` enriquecido. Las acciones aparecen según `canManageVets` y `isActive`; desactivar/reactivar se confirman, no son optimistas y conservan el historial clínico. Loading, ausencia, error y offline/reintento permanecen diferenciados.
 
 ### Pendiente o deuda conocida
 

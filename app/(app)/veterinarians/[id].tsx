@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { navigateBack } from '@/components/navigation';
+import { DecorativeBackground } from '@/components/patterns';
 import { AccountHeaderRow } from '@/features/auth/components/AccountHeaderRow';
 import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { VeterinarianDetail } from '@/features/veterinarians/components/VeterinarianDetail';
@@ -14,7 +15,7 @@ import {
 } from '@/features/veterinarians/hooks/useVeterinarianMutations';
 import { isUuid } from '@/core/validation';
 import { toVeterinarianErrorMessage } from '@/features/veterinarians/utils/veterinarianPresentation';
-import { colors, spacing } from '@/theme';
+import { colors, sizes, spacing } from '@/theme';
 
 export default function VeterinarianDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,11 +41,13 @@ export default function VeterinarianDetailRoute() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <DecorativeBackground overlay variant="texture" />
       <AccountHeaderRow
         accessibilityHint="Volver a la lista de veterinarios"
         fallbackHref={fallbackHref}
+        label="Veterinarios"
       />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} testID="veterinarian-detail-screen">
         <VeterinarianDetail
           canWrite={canManageVets}
           confirmReactivateVisible={confirmReactivateVisible}
@@ -81,10 +84,12 @@ export default function VeterinarianDetailRoute() {
 
 const styles = StyleSheet.create({
   content: {
-    backgroundColor: colors.background,
+    alignSelf: 'center',
     flexGrow: 1,
     gap: spacing.lg,
+    maxWidth: sizes.contentMaxWidth,
     padding: spacing.lg,
+    width: '100%',
   },
   safeArea: { backgroundColor: colors.background, flex: 1 },
 });

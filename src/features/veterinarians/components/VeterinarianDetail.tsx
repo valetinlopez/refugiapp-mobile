@@ -1,13 +1,30 @@
-import { StyleSheet, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { StyleSheet, View, type ViewProps } from 'react-native';
 
 import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
-import { AppBadge, AppButton, AppCard, AppText } from '@/components/primitives';
+import { SectionHeader } from '@/components/patterns';
+import {
+  AppAvatar,
+  AppBadge,
+  AppButton,
+  AppCard,
+  AppDivider,
+  AppIcon,
+  AppText,
+  type AppIconName,
+} from '@/components/primitives';
 import { isNetworkError } from '@/core/network';
-import { spacing } from '@/theme';
+import { colors, radii, sizes, spacing } from '@/theme';
 
 import type { VeterinarianResponse } from '../types';
-import { toVeterinarianErrorMessage } from '../utils/veterinarianPresentation';
+import {
+  formatVeterinarianUserRoles,
+  toVeterinarianErrorMessage,
+  veterinarianFullName,
+  veterinarianInitials,
+  veterinarianLinkedUserName,
+} from '../utils/veterinarianPresentation';
 import { DeactivateVeterinarianDialog } from './DeactivateVeterinarianDialog';
 import { ReactivateVeterinarianDialog } from './ReactivateVeterinarianDialog';
 
@@ -96,43 +113,105 @@ export function VeterinarianDetail({
   }
 
   const veterinarian = query.data;
-  const name = `${veterinarian.firstName} ${veterinarian.lastName}`;
+  const name = veterinarianFullName(veterinarian);
+  const linkedUser = veterinarian.user;
 
   return (
-    <View style={styles.detail}>
-      <View style={styles.header}>
-        <View style={styles.heading}>
-          <AppText variant="heading1">{name}</AppText>
+    <View style={styles.detail} testID="veterinarian-detail">
+      <AppText accessibilityRole="header" variant="display">
+        Perfil veterinario
+      </AppText>
+
+      <AppCard
+        accessibilityLabel={`${name}, matrícula ${veterinarian.licenseNumber}, ${veterinarian.isActive ? 'Activo' : 'Inactivo'}`}
+        accessibilityRole="summary"
+        style={styles.identityCard}
+        variant="elevated"
+      >
+        <AppAvatar
+          accessibilityLabel={`Avatar de ${name}`}
+          initials={veterinarianInitials(veterinarian)}
+          size="xl"
+        />
+        <View style={styles.identityCopy}>
+          <AppText variant="heading2">{name}</AppText>
           <AppText color="textSecondary">Matrícula {veterinarian.licenseNumber}</AppText>
           <AppBadge
+            icon={veterinarian.isActive ? 'check' : 'close'}
             label={veterinarian.isActive ? 'Activo' : 'Inactivo'}
             tone={veterinarian.isActive ? 'positive' : 'neutral'}
           />
         </View>
-      </View>
-
-      <AppCard accessibilityLabel="Datos del veterinario">
-        <Field label="Email" value={veterinarian.email ?? 'No informado'} />
-        <Field label="Teléfono" value={veterinarian.phone ?? 'No informado'} />
-        <Field
-          label="Usuario vinculado"
-          value={veterinarian.user?.email ?? 'Sin acceso vinculado'}
-        />
-        {veterinarian.user ? (
-          <Field label="Rol del usuario" value={formatUserRole(veterinarian.user.roles)} />
-        ) : null}
-        <Field label="Notas" value={veterinarian.notes ?? 'Sin notas'} />
       </AppCard>
+
+      <DetailSection title="Datos de contacto">
+        <AppCard accessibilityLabel="Datos de contacto" variant="elevated">
+          <DetailRow
+            icon="mail"
+            label="Correo electrónico"
+            value={veterinarian.email ?? 'No informado'}
+          />
+          <AppDivider />
+          <DetailRow icon="phone" label="Teléfono" value={veterinarian.phone ?? 'No informado'} />
+        </AppCard>
+      </DetailSection>
+
+      <DetailSection title="Información profesional">
+        <AppCard accessibilityLabel="Información profesional" variant="elevated">
+          <DetailRow icon="document" label="Matrícula" value={veterinarian.licenseNumber} />
+          <AppDivider />
+          <DetailRow icon="document" label="Notas" value={veterinarian.notes ?? 'Sin notas'} />
+        </AppCard>
+      </DetailSection>
+
+      <DetailSection title="Usuario interno">
+        <AppCard
+          accessibilityLabel={
+            linkedUser
+              ? `${veterinarianLinkedUserName(linkedUser)}, ${linkedUser.email}, cuenta ${linkedUser.isActive ? 'activa' : 'inactiva'}, rol ${formatVeterinarianUserRoles(linkedUser.roles)}`
+              : 'Sin acceso vinculado'
+          }
+          accessibilityRole="summary"
+          style={styles.userCard}
+          variant="elevated"
+        >
+          <View style={styles.iconFrame}>
+            <AppIcon color="info" name="account" size={sizes.iconLg} />
+          </View>
+          {linkedUser ? (
+            <View style={styles.userCopy}>
+              <AppText variant="bodyStrong">{veterinarianLinkedUserName(linkedUser)}</AppText>
+              <AppText color="textSecondary">{linkedUser.email}</AppText>
+              <AppText color="textSecondary" variant="caption">
+                {formatVeterinarianUserRoles(linkedUser.roles)}
+              </AppText>
+              <AppBadge
+                icon={linkedUser.isActive ? 'check' : 'close'}
+                label={linkedUser.isActive ? 'Cuenta activa' : 'Cuenta inactiva'}
+                tone={linkedUser.isActive ? 'positive' : 'neutral'}
+              />
+            </View>
+          ) : (
+            <View style={styles.userCopy}>
+              <AppText variant="bodyStrong">Sin acceso vinculado</AppText>
+              <AppText color="textSecondary">
+                Este perfil profesional no tiene un usuario interno asociado.
+              </AppText>
+            </View>
+          )}
+        </AppCard>
+      </DetailSection>
 
       {canWrite ? (
         <View style={styles.actions}>
-          <AppButton icon="refresh" label="Editar" onPress={onEdit} variant="secondary" />
+          <AppButton label="Editar perfil" onPress={onEdit} />
           {veterinarian.isActive ? (
             <AppButton
+              accessibilityHint="Solicita confirmación antes de desactivar el perfil."
               accessibilityLabel="Desactivar veterinario"
               label="Desactivar"
               onPress={onRequestDeactivate}
-              variant="danger"
+              variant="secondary"
             />
           ) : (
             <AppButton
@@ -140,14 +219,21 @@ export function VeterinarianDetail({
               accessibilityLabel="Reactivar veterinario"
               label="Reactivar"
               onPress={onRequestReactivate}
-              variant="secondary"
+              variant="primary"
             />
           )}
+          <AppText color="textSecondary" style={styles.historyNotice} variant="caption">
+            {veterinarian.isActive
+              ? 'Al desactivar se conserva todo el historial clínico asociado.'
+              : 'El historial clínico asociado se conserva mientras el perfil está inactivo.'}
+          </AppText>
         </View>
       ) : (
-        <AppText color="textSecondary">
-          Tu rol permite consultar veterinarios, pero no editarlos ni cambiar su estado.
-        </AppText>
+        <AppCard variant="outlined">
+          <AppText color="textSecondary">
+            Tu rol permite consultar veterinarios, pero no editarlos ni cambiar su estado.
+          </AppText>
+        </AppCard>
       )}
 
       <DeactivateVeterinarianDialog
@@ -170,35 +256,75 @@ export function VeterinarianDetail({
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+function DetailSection({ children, title }: { children: ReactNode; title: string }) {
   return (
-    <View style={styles.field}>
-      <AppText color="textSecondary" variant="label">
-        {label}
-      </AppText>
-      <AppText>{value}</AppText>
+    <View style={styles.section}>
+      <SectionHeader title={title} />
+      {children}
     </View>
   );
 }
 
-function formatUserRole(roles: readonly string[]): string {
-  if (roles.length === 0) {
-    return 'Sin rol';
-  }
-  return roles
-    .map((role) => {
-      if (role === 'veterinarian') return 'Veterinario';
-      if (role === 'admin') return 'Administrador';
-      if (role === 'shelter_manager') return 'Encargado de refugio';
-      return role;
-    })
-    .join(', ');
+interface DetailRowProps extends ViewProps {
+  icon: AppIconName;
+  label: string;
+  value: string;
+}
+
+function DetailRow({ icon, label, style, value, ...props }: DetailRowProps) {
+  return (
+    <View
+      accessibilityLabel={`${label}: ${value}`}
+      accessibilityRole="summary"
+      style={[styles.detailRow, style]}
+      {...props}
+    >
+      <View style={styles.iconFrame}>
+        <AppIcon color="info" name={icon} size={sizes.iconLg} />
+      </View>
+      <View style={styles.rowCopy}>
+        <AppText color="textSecondary" variant="label">
+          {label}
+        </AppText>
+        <AppText variant="bodyStrong">{value}</AppText>
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   actions: { gap: spacing.md },
   detail: { gap: spacing.lg },
-  field: { gap: spacing.xxs },
-  header: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
-  heading: { flex: 1, gap: spacing.xxs },
+  detailRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
+    minHeight: sizes.touchTarget,
+    paddingVertical: spacing.sm,
+  },
+  historyNotice: { textAlign: 'center' },
+  iconFrame: {
+    alignItems: 'center',
+    backgroundColor: colors.surfaceSubtle,
+    borderRadius: radii.full,
+    flexShrink: 0,
+    height: sizes.touchTarget,
+    justifyContent: 'center',
+    width: sizes.touchTarget,
+  },
+  identityCard: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.lg,
+  },
+  identityCopy: {
+    flex: 1,
+    gap: spacing.xs,
+    minWidth: sizes.avatarXl,
+  },
+  rowCopy: { flex: 1, gap: spacing.xxs, minWidth: 0 },
+  section: { gap: spacing.sm },
+  userCard: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.md },
+  userCopy: { flex: 1, gap: spacing.xxs, minWidth: 0 },
 });

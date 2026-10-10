@@ -24,6 +24,24 @@ export function veterinarianInitials(
   return getActorInitials(veterinarian.firstName, veterinarian.lastName);
 }
 
+type LinkedVeterinarianUser = NonNullable<VeterinarianResponse['user']>;
+
+const USER_ROLE_LABELS: Record<LinkedVeterinarianUser['roles'][number], string> = {
+  admin: 'Administrador',
+  shelter_manager: 'Encargado de refugio',
+  veterinarian: 'Veterinario',
+};
+
+export function veterinarianLinkedUserName(user: LinkedVeterinarianUser): string {
+  const name = `${user.firstName} ${user.lastName}`.trim();
+  return name || user.email;
+}
+
+export function formatVeterinarianUserRoles(roles: LinkedVeterinarianUser['roles']): string {
+  if (roles.length === 0) return 'Sin rol';
+  return roles.map((role) => USER_ROLE_LABELS[role]).join(', ');
+}
+
 /**
  * Preferred professional email of the veterinarian, falling back to the linked
  * access user email. Returns `undefined` (never a placeholder) when neither
