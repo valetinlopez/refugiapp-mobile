@@ -10,6 +10,7 @@ export type AuditResourceType = AuditLogResponse['resourceType'];
 export interface AuditFilters {
   action?: AuditAction;
   resourceType?: AuditResourceType;
+  resourceId?: string;
   actorUserId?: string;
   from?: string;
   to?: string;

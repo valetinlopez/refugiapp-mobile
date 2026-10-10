@@ -554,6 +554,16 @@ Lista, alta y perfil se certifican como una experiencia continua mediante la mat
 - **Conflictos:** matrícula y correo se presentan junto al campo correspondiente, sin vaciar el borrador. Los mensajes no exponen payloads, request IDs ni identificadores internos.
 - **Preservación:** desactivar/reactivar cambia disponibilidad mediante endpoints dedicados e invalida solo la raíz de veterinarios; no elimina el perfil, usuario vinculado ni historia clínica.
 
+## 53. Listado de auditoría (D32 / RFG-165)
+
+La ruta `/audit` adopta la jerarquía de `22-audit-list.jpeg` sin convertir los UUID del mockup en la identidad principal del actor. Solo `admin` (`canReadAudit`) puede montar el módulo y consultar la API; una pérdida de capacidad lo reemplaza inmediatamente por “Sin permiso”.
+
+- **Encabezado y filtros:** textura decorativa, `ScreenHeader` “Auditoría / Registro de actividad del sistema” y badge textual “Solo administradores”. La card orgánica de filtros agrupa acción y tipo de recurso en `BottomSheet`, UUID opcional de actor y recurso, y rango de fechas. Los UUID inválidos se omiten de manera segura y un rango incompleto o invertido no dispara una nueva consulta.
+- **Tarjetas:** cada evento muestra acción y recurso traducidos, identificador de recurso abreviado, actor enriquecido por nombre cuando está disponible y fecha relativa + absoluta. El fallback contractual conserva actor UUID solo durante el rollout; el email queda reservado al detalle. La lista nunca renderiza `metadata`.
+- **Riesgo:** accesos denegados y fallos de login, refresh o recuperación se marcan “Riesgo alto” mediante badge con icono, texto, borde y color `danger`; el label accesible también incluye el riesgo. Los eventos normales no reciben una alerta falsa.
+- **Paginación y resiliencia:** `FlatList` conserva el orden determinista del servidor, agrega páginas sin reordenar, ofrece “Cargar más eventos”, reintento específico si falla una página posterior, pull-to-refresh y fin explícito. Carga, vacío, vacío filtrado, error conectado y offline tienen estados diferenciados sin mostrar payloads ni metadata sensible.
+- **Accesibilidad:** encabezados semánticos, targets mínimos, sheets descartables, controles con labels completos y señales de estado no cromáticas. Los selectores E2E se mantienen y el flujo Maestro abre el sheet antes de elegir una acción.
+
 ## Referencias técnicas
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)

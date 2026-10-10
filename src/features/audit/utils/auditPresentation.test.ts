@@ -6,6 +6,8 @@ import {
   auditResourceTypeLabel,
   buildAuditFilters,
   formatAuditDateBoth,
+  formatAuditIdentifier,
+  isHighRiskAuditAction,
   sanitizeAuditMetadata,
 } from './auditPresentation';
 
@@ -60,27 +62,29 @@ describe('auditPresentation', () => {
       'access.denied',
       'authorization',
       '123e4567-e89b-12d3-a456-426614174000',
+      '223e4567-e89b-42d3-a456-426614174000',
       '2026-09-01',
       '2026-09-02'
     );
     expect(filters.action).toBe('access.denied');
     expect(filters.resourceType).toBe('authorization');
     expect(filters.actorUserId).toBe('123e4567-e89b-12d3-a456-426614174000');
+    expect(filters.resourceId).toBe('223e4567-e89b-42d3-a456-426614174000');
     expect(filters.from).toContain('2026-09-01T00:00:00');
     expect(filters.to).toContain('2026-09-02T23:59:00');
   });
 
   it('drops an invalid actor UUID without failing', () => {
-    const filters = buildAuditFilters(undefined, undefined, 'not-a-uuid', '', '');
+    const filters = buildAuditFilters(undefined, undefined, 'not-a-uuid', 'also-invalid', '', '');
     expect(filters.actorUserId).toBeUndefined();
     expect(filters).toEqual({});
   });
 
   it('builds filters with only some dimensions', () => {
-    expect(buildAuditFilters('expense.create', undefined, '', '', '')).toEqual({
+    expect(buildAuditFilters('expense.create', undefined, '', '', '', '')).toEqual({
       action: 'expense.create',
     });
-    expect(buildAuditFilters(undefined, 'notification', '', '', '')).toEqual({
+    expect(buildAuditFilters(undefined, 'notification', '', '', '', '')).toEqual({
       resourceType: 'notification',
     });
   });
@@ -98,5 +102,16 @@ describe('auditPresentation', () => {
     expect(formatAuditDateBoth(recent)).toContain('·');
     expect(formatAuditDateBoth('2026-01-01T10:00:00.000Z')).not.toContain('hace');
     expect(formatAuditDateBoth('nope')).toBe('Fecha no disponible');
+  });
+
+  it('marks security failures as high risk without relying on color alone', () => {
+    expect(isHighRiskAuditAction('access.denied')).toBe(true);
+    expect(isHighRiskAuditAction('auth.login_failure')).toBe(true);
+    expect(isHighRiskAuditAction('user.create')).toBe(false);
+  });
+
+  it('shortens resource identifiers without exposing the complete value in the list', () => {
+    expect(formatAuditIdentifier('223e4567-e89b-42d3-a456-426614174000')).toBe('223e4567…');
+    expect(formatAuditIdentifier(null)).toBe('Sin identificador');
   });
 });

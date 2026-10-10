@@ -49,6 +49,7 @@ describe('auditApi', () => {
       {
         action: 'access.denied',
         resourceType: 'authorization',
+        resourceId: '55555555-5555-4555-8555-555555555555',
         actorUserId: '44444444-4444-4444-8444-444444444444',
         from: '2026-09-01T00:00:00Z',
         to: '2026-09-02T23:59:00Z',
@@ -60,6 +61,7 @@ describe('auditApi', () => {
       limit: '20',
       action: 'access.denied',
       resourceType: 'authorization',
+      resourceId: '55555555-5555-4555-8555-555555555555',
       actorUserId: '44444444-4444-4444-8444-444444444444',
       from: '2026-09-01T00:00:00Z',
       to: '2026-09-02T23:59:00Z',

@@ -3,7 +3,7 @@
 ## Responsabilidad
 
 - Consulta paginada y detalle del registro de auditoría para administradores.
-- Filtros por acción y rango de fechas soportados por el backend.
+- Filtros por acción, tipo e identificador de recurso, actor y rango de fechas soportados por el backend.
 - Presentación segura de actor, acción, recurso, fecha y metadata sanitizada.
 
 ## Contratos
@@ -26,6 +26,8 @@
 - La UI vuelve a sanitizar `metadata` aunque el backend ya lo haga.
 - El nombre y email del actor viven solo en la cache en memoria de TanStack Query (limpiada al cerrar sesión); nunca se persisten ni se incluyen en logs, errores o query keys.
 - El email del actor se presenta únicamente en el detalle; la lista muestra nombre y fecha relativa.
+- El listado nunca muestra `metadata`; el identificador del recurso se abrevia para contexto y el detalle conserva la sanitización defensiva.
+- Los fallos de autenticación, renovación/recuperación y accesos denegados se señalan como “Riesgo alto” con texto, icono y color.
 
 ## Testing
 
@@ -39,3 +41,4 @@
 - Presentación del actor por nombre (`actor`) con fallback a UUID (`actorUserId`) durante rollout y "Sistema" cuando ambos son `null`; email solo en detalle. Fecha relativa + absoluta en listas y detalle (RFG-129).
 - Diccionarios en español de acción y recurso; sin códigos crudos visibles en UI (RFG-131).
 - E2E del flujo de auditoría cubierto con Maestro (RFG-132, `maestro/audit.yaml`): lista → detalle con actor por nombre → filtro por acción → resultados legibles sin códigos crudos. Selectores `audit-card`, `audit-detail`, `audit-filter-*` y `audit-end-of-list`; `FilterChip` acepta `testID`.
+- Listado rediseñado (RFG-165) con jerarquía editorial, filtros compactos en sheets, filtro de `resourceId`, actores enriquecidos, señal accesible de riesgo y recuperación explícita de la paginación.
