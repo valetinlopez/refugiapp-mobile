@@ -11,3 +11,6 @@ export const expenseKeys = {
 };
 
 export const dashboardQueryKey = ['dashboard'] as const;
+
+/** Value-compatible prefix of `src/application/home`, invalidated by value to avoid cross-feature imports. */
+export const homeQueryKey = ['home'] as const;

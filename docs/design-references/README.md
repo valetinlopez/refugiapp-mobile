@@ -1,6 +1,6 @@
 # Referencias visuales — RFG-134 (D01)
 
-Catálogo de las 23 referencias visuales que guían la finalización de la experiencia móvil de Refugiapp (épica `RFG-133`, Sprint 15). Este documento es la única fuente de trazabilidad entre cada referencia, su ruta Expo Router, los roles y estados que representa y las divergencias conocidas con la implementación actual.
+Catálogo de las 25 referencias visuales que guían la finalización de la experiencia móvil de Refugiapp (épica `RFG-133`, Sprints 15–22). Este documento es la única fuente de trazabilidad entre cada referencia, su ruta Expo Router, los roles y estados que representa y las divergencias conocidas con la implementación actual.
 
 La arquitectura y los contratos mandan sobre esta carpeta: las imágenes son inspiración de diseño, no contrato funcional ni fuente de datos. No se inventan endpoints, campos, estados ni permisos a partir de una captura.
 
@@ -37,6 +37,8 @@ Los cambios de nombre se hacen con `git mv` para conservar historia y mantienen 
 | 21  | `perfil veterinario.jpeg`                  | `21-veterinarian-profile.jpeg`      |
 | 22  | `auditoria.jpeg`                           | `22-audit-list.jpeg`                |
 | 23  | `detalle de auditoria.jpeg`                | `23-audit-detail.jpeg`              |
+| 24  | — (referencia final, Sprint 22)            | `24-dashboard-home.jpeg`            |
+| 25  | — (referencia final, Sprint 22)            | `25-animals-list.jpeg`              |
 
 ## 2. Matriz referencia → ruta → rol → estados → divergencias
 
@@ -76,13 +78,13 @@ Las divergencias usan cuatro etiquetas:
 | 21  | `21-veterinarian-profile.jpeg`      | `app/(app)/veterinarians/[id].tsx`                                                                                           | lectura los tres roles; gestión `admin`/`shelter_manager` (`canManageVets`)                                | detalle, activación/desactivación confirmada                                                                                                                        | `implementado` rediseño (RFG-163) · `contrato` identidad desde `user` enriquecido, nunca UUID crudo · `ux` no se enlaza a perfil de usuario porque esa ruta no existe                                                                                                                                             |
 | 22  | `22-audit-list.jpeg`                | `app/(app)/audit/index.tsx`                                                                                                  | solo `admin` (`canReadAudit`)                                                                              | listado paginado, filtros por acción/tipo/recurso/actor/fechas, offline/error                                                                                       | `implementado` rediseño (RFG-165) con actor legible, riesgo textual + icono y paginación recuperable · `contrato` actor enriquecido en `GET /audit-logs`                                                                                                                                                          |
 | 23  | `23-audit-detail.jpeg`              | `app/(app)/audit/[id].tsx`                                                                                                   | solo `admin` (`canReadAudit`)                                                                              | detalle con metadata re-sanitizada, actor con email, UUID copiables                                                                                                 | `implementado` detalle rediseñado (RFG-166) · `contrato` `GET /audit-logs/:id`; el email solo en detalle · `ux` metadata híbrida (filas legibles + JSON sanitizado colapsable) porque el backend no fija las claves                                                                                               |
+| 24  | `24-dashboard-home.jpeg`            | `app/(app)/(tabs)/index.tsx`                                                                                                 | los tres roles (lectura); clínica: `canReadClinicalRecords`                                                | saludo, hero, resumen, accesos, prioridades; loading/vacío/error/offline                                                                                            | `implementado` rediseño D36 (RFG-169) · `ux` sin total monetario mensual (Gastos muestra el total de registros) · `ux` prioridades best-effort sobre la página cargada · `contrato` sin unread count                                                                                                              |
+| 25  | `25-animals-list.jpeg`              | `app/(app)/(tabs)/explore.tsx`                                                                                               | los tres roles (lectura); escritura `admin`/`shelter_manager` (`canEditAnimal`)                            | grilla adaptable, filtros `status`/`species`/`sex`/`name`, paginación; loading/vacío/error/offline                                                                  | `pendiente` rediseño D37 (RFG-170) · `contrato` sin `sort` (el backend ordena `createdAt ASC, id ASC`) · `contrato` sin catálogo de especies (el filtro es texto)                                                                                                                                                 |
 
 ## 3. Pantallas actuales sin referencia (fuera de alcance de RFG-133)
 
 Estas rutas existen hoy pero no tienen referencia visual en esta carpeta y quedan fuera del rediseño:
 
-- `app/(app)/(tabs)/index.tsx` — Inicio / dashboard (`GET /dashboard/overview`).
-- `app/(app)/(tabs)/explore.tsx` — listado de animales (tab Animales).
 - `app/(auth)/forgot-password.tsx` y `app/(auth)/reset-password.tsx` — recuperación de contraseña.
 - `app/(app)/account/change-password.tsx` — cambio de contraseña autenticado.
 - `app/(app)/animals/[id]/adoptions/*` — adopción y postulaciones.
@@ -104,9 +106,9 @@ Estas reglas alimentan la creación de assets originales (RFG-135) y el sistema 
 
 ## 5. Trazabilidad
 
-- ID del plan: D01 (tarea `RFG-134 — Catalogar las 23 referencias visuales`).
+- ID del plan: D01 (tarea `RFG-134 — Catalogar las 23 referencias visuales`); incorpora `24-dashboard-home.jpeg` (D36 / RFG-169) y `25-animals-list.jpeg` (D37 / RFG-170) en Sprint 22.
 - Épica: `RFG-133 — Finalización visual y UX móvil según referencias 2026`.
-- Sprint: Sprint 15 — Fundación visual.
+- Sprint: Sprint 15 — Fundación visual (01–23); Sprint 22 — referencias finales (24–25).
 - Bloquea: `RFG-135` (D02 assets), `RFG-136` (D03 sistema visual) y `RFG-139` (D06 validación visual).
 - D06 (`RFG-139`) consume esta matriz: reproduce cada fila en `src/design-system/referenceCases.ts` y en la checklist `docs/design-validation/checklist.md`. La matriz sigue siendo la fuente de verdad; cualquier cambio de ruta, rol, estado o divergencia se hace aquí y se refleja en el arnés y la checklist en el mismo cambio.
 
@@ -116,4 +118,4 @@ Estas reglas alimentan la creación de assets originales (RFG-135) y el sistema 
 2. Registrar la fila en la equivalencia (sección 1) y en la matriz (sección 2) en el mismo cambio.
 3. Si la pantalla no tiene ruta prevista, marcarla `pendiente` con su historia RFG; no inventar paths.
 4. Actualizar este documento, `docs/README.md` y, si cambia UI compartida, `docs/design.md`.
-5. Mantener el invariante: total de archivos = filas de equivalencia = filas de matriz (23).
+5. Mantener el invariante: total de archivos = filas de equivalencia = filas de matriz (25).

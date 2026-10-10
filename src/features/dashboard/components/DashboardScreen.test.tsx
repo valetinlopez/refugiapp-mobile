@@ -1,11 +1,15 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, within } from '@testing-library/react-native';
 
+import type { HomePriority } from '@/application/home';
 import { ApiError } from '@/core/api';
 import { useSession } from '@/features/auth/session';
 import { DashboardScreen } from '@/features/dashboard/components/DashboardScreen';
-import { useDashboardAnimalPhoto } from '@/features/dashboard/hooks/useDashboardAnimalPhoto';
 import { useDashboardOverview } from '@/features/dashboard/hooks/useDashboardOverview';
 import type { DashboardAnimal, DashboardOverview } from '@/features/dashboard/types';
+import { getSessionGreeting } from '@/features/dashboard/utils/greeting';
+
+import { useAnimalOptions, useAnimalOptionPhoto } from '@/application/animals';
+import { useHomeSummary } from '@/application/home';
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
@@ -20,18 +24,31 @@ jest.mock('@/features/dashboard/hooks/useDashboardOverview', () => ({
 }));
 
 jest.mock('@/features/dashboard/hooks/useDashboardAnimalPhoto', () => ({
-  useDashboardAnimalPhoto: jest.fn(),
+  useDashboardAnimalPhoto: jest.fn(() => ({ data: undefined, isError: false, isPending: false })),
+}));
+
+jest.mock('@/application/home', () => ({
+  ...jest.requireActual('@/application/home'),
+  useHomeSummary: jest.fn(),
+}));
+
+jest.mock('@/application/animals', () => ({
+  ...jest.requireActual('@/application/animals'),
+  useAnimalOptions: jest.fn(),
+  useAnimalOptionPhoto: jest.fn(),
 }));
 
 const mockUseSession = useSession as jest.Mock;
 const mockUseDashboardOverview = useDashboardOverview as jest.Mock;
-const mockUseDashboardAnimalPhoto = useDashboardAnimalPhoto as jest.Mock;
+const mockUseHomeSummary = useHomeSummary as jest.Mock;
+const mockUseAnimalOptions = useAnimalOptions as jest.Mock;
+const mockUseAnimalOptionPhoto = useAnimalOptionPhoto as jest.Mock;
 const { router } = jest.requireMock('expo-router') as {
   router: { push: jest.Mock };
 };
 
 const ANIMAL_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
-const MEDIA_ID = '6ba7b814-9dad-11d1-80b4-00c04fd430c8';
+const TASK_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
 function createAnimal(overrides: Partial<DashboardAnimal> = {}): DashboardAnimal {
   return {
@@ -60,9 +77,10 @@ function createOverview(): DashboardOverview {
   };
 }
 
-function createQuery(overrides: Record<string, unknown> = {}) {
+function createOverviewQuery(overrides: Record<string, unknown> = {}) {
   return {
     data: createOverview(),
+    error: undefined,
     isError: false,
     isPending: false,
     isRefetching: false,
@@ -71,20 +89,45 @@ function createQuery(overrides: Record<string, unknown> = {}) {
   };
 }
 
-describe('DashboardScreen', () => {
+function createPriority(overrides: Partial<HomePriority> = {}): HomePriority {
+  return {
+    animalId: ANIMAL_ID,
+    dueAt: '2026-10-10T11:00:00-03:00',
+    id: TASK_ID,
+    state: 'upcoming',
+    title: 'Control veterinario',
+    ...overrides,
+  };
+}
+
+function createHomeSummary(overrides: Record<string, unknown> = {}) {
+  return {
+    expenseCount: 12,
+    expenseCountIsError: false,
+    isPending: false,
+    pendingCareTaskCount: 6,
+    pendingCareTaskCountIsError: false,
+    priorities: [createPriority()],
+    prioritiesIsError: false,
+    prioritiesIsPending: false,
+    refetch: jest.fn(),
+    ...overrides,
+  };
+}
+
+describe('DashboardScreen (D36 / RFG-169)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseSession.mockReturnValue({ user: { roles: ['admin'] } });
-    mockUseDashboardAnimalPhoto.mockReturnValue({
-      data: undefined,
-      isError: false,
-      isPending: false,
-    });
+    mockUseSession.mockReturnValue({ user: { firstName: 'Andrés', roles: ['admin'] } });
+    mockUseDashboardOverview.mockReturnValue(createOverviewQuery());
+    mockUseHomeSummary.mockReturnValue(createHomeSummary());
+    mockUseAnimalOptions.mockReturnValue({ data: [{ id: ANIMAL_ID, name: 'Luna' }] });
+    mockUseAnimalOptionPhoto.mockReturnValue({ data: undefined, isError: false, isPending: false });
   });
 
-  it('shows the skeleton while loading', async () => {
+  it('shows the skeleton while the overview loads', async () => {
     mockUseDashboardOverview.mockReturnValue(
-      createQuery({ data: undefined, isPending: true, isError: false })
+      createOverviewQuery({ data: undefined, isPending: true, isError: false })
     );
     const screen = await render(<DashboardScreen />);
 
@@ -94,12 +137,11 @@ describe('DashboardScreen', () => {
   it('shows an error state with retry', async () => {
     const refetch = jest.fn();
     mockUseDashboardOverview.mockReturnValue(
-      createQuery({ data: undefined, isError: true, refetch })
+      createOverviewQuery({ data: undefined, isError: true, refetch })
     );
     const screen = await render(<DashboardScreen />);
 
     expect(screen.getByText('No se pudo cargar el panel')).toBeTruthy();
-
     await fireEvent.press(screen.getByRole('button', { name: 'Reintentar' }));
     expect(refetch).toHaveBeenCalled();
   });
@@ -107,7 +149,7 @@ describe('DashboardScreen', () => {
   it('shows an offline state with retry when the network is unavailable', async () => {
     const refetch = jest.fn();
     mockUseDashboardOverview.mockReturnValue(
-      createQuery({
+      createOverviewQuery({
         data: undefined,
         error: new ApiError({
           code: 'NETWORK_ERROR',
@@ -122,29 +164,73 @@ describe('DashboardScreen', () => {
     const screen = await render(<DashboardScreen />);
 
     expect(screen.getByTestId('offline-state')).toBeTruthy();
-    expect(screen.getByText('Sin conexión')).toBeTruthy();
-
     await fireEvent.press(screen.getByRole('button', { name: 'Reintentar' }));
     expect(refetch).toHaveBeenCalled();
+  });
+
+  it('renders the greeting from the session first name', async () => {
+    const screen = await render(<DashboardScreen />);
+
+    expect(screen.getByText(getSessionGreeting('Andrés'))).toBeTruthy();
+  });
+
+  it('shows the three real indicators in the summary', async () => {
+    const screen = await render(<DashboardScreen />);
+
+    const summary = within(screen.getByTestId('home-summary'));
+    expect(summary.getByText('Animales')).toBeTruthy();
+    expect(summary.getByText('En tratamiento')).toBeTruthy();
+    expect(summary.getByText('Cuidados pendientes')).toBeTruthy();
+    expect(summary.getByText('6')).toBeTruthy();
+  });
+
+  it('offers the four navigation accesses to an admin', async () => {
+    const screen = await render(<DashboardScreen />);
+
+    expect(screen.getByTestId('home-access-animals')).toBeTruthy();
+    expect(screen.getByTestId('home-access-care-tasks')).toBeTruthy();
+    expect(screen.getByTestId('home-access-medical-records')).toBeTruthy();
+    expect(screen.getByTestId('home-access-expenses')).toBeTruthy();
+  });
+
+  it('hides the clinical access for a shelter manager', async () => {
+    mockUseSession.mockReturnValue({ user: { firstName: 'Sofía', roles: ['shelter_manager'] } });
+    const screen = await render(<DashboardScreen />);
+
+    expect(screen.getByTestId('home-access-animals')).toBeTruthy();
+    expect(screen.queryByTestId('home-access-medical-records')).toBeNull();
   });
 
   it('shows an empty state when there are no active animals', async () => {
     const overview = createOverview();
     overview.totals.animals = 0;
     overview.recentAnimals = [];
-    mockUseDashboardOverview.mockReturnValue(createQuery({ data: overview }));
+    mockUseDashboardOverview.mockReturnValue(createOverviewQuery({ data: overview }));
     const screen = await render(<DashboardScreen />);
 
     expect(screen.getByText('Sin datos')).toBeTruthy();
-    expect(screen.queryByText('Luna')).toBeNull();
+    expect(screen.queryByTestId('home-priorities')).toBeNull();
   });
 
-  it('renders totals, recent animals and navigates to the detail', async () => {
-    mockUseDashboardOverview.mockReturnValue(createQuery());
+  it('navigates to a priority task from the priorities section', async () => {
     const screen = await render(<DashboardScreen />);
 
-    expect(screen.getByText('Animales activos')).toBeTruthy();
-    expect(screen.getByText('Luna')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('home-priority-row'));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/care-tasks/[id]',
+      params: { id: TASK_ID },
+    });
+  });
+
+  it('opens the full agenda', async () => {
+    const screen = await render(<DashboardScreen />);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Ver todos los cuidados' }));
+    expect(router.push).toHaveBeenCalledWith('/care-tasks');
+  });
+
+  it('navigates to a recent animal detail', async () => {
+    const screen = await render(<DashboardScreen />);
 
     await fireEvent.press(screen.getByRole('button', { name: /Luna, dog/ }));
     expect(router.push).toHaveBeenCalledWith({
@@ -153,79 +239,11 @@ describe('DashboardScreen', () => {
     });
   });
 
-  it('renders one badge per animal status in the totals card', async () => {
-    mockUseDashboardOverview.mockReturnValue(createQuery());
-    const screen = await render(<DashboardScreen />);
-
-    expect(screen.getByText('Ingresado: 1')).toBeTruthy();
-    expect(screen.getByText('En tratamiento: 1')).toBeTruthy();
-    expect(screen.getByText('Disponible para adopción: 1')).toBeTruthy();
-    expect(screen.getByText('Adoptado: 0')).toBeTruthy();
-    expect(screen.getByText('Fallecido: 0')).toBeTruthy();
-  });
-
-  it('truncates long recent animal name and species but keeps the full label accessible', async () => {
-    const overview = createOverview();
-    overview.recentAnimals = [createAnimal({ name: 'Flavia Azzara', species: 'Perra' })];
-    mockUseDashboardOverview.mockReturnValue(createQuery({ data: overview }));
-    const screen = await render(<DashboardScreen />);
-
-    expect(screen.getByText('Flavia Azzara').props.numberOfLines).toBe(1);
-    expect(screen.getByText('Perra').props.numberOfLines).toBe(1);
-
-    await fireEvent.press(screen.getByRole('button', { name: /Flavia Azzara, Perra/ }));
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: '/animals/[id]',
-      params: { id: ANIMAL_ID },
-    });
-  });
-
-  it('requests the profile photo when the animal has a media id', async () => {
-    const overview = createOverview();
-    overview.recentAnimals = [createAnimal({ profilePhotoMediaId: MEDIA_ID })];
-    mockUseDashboardOverview.mockReturnValue(createQuery({ data: overview }));
-    await render(<DashboardScreen />);
-
-    expect(mockUseDashboardAnimalPhoto).toHaveBeenCalledWith(MEDIA_ID);
-  });
-
-  it('skips the photo request when the animal has no media id', async () => {
-    mockUseDashboardOverview.mockReturnValue(createQuery());
-    await render(<DashboardScreen />);
-
-    expect(mockUseDashboardAnimalPhoto).toHaveBeenCalledWith(null);
-  });
-
-  it('offers writer quick actions to admin', async () => {
-    mockUseDashboardOverview.mockReturnValue(createQuery());
-    const screen = await render(<DashboardScreen />);
-
-    expect(screen.getByRole('button', { name: 'Alta animal' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Nueva tarea' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Registrar gasto' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Gestionar usuarios' })).toBeTruthy();
-  });
-
-  it('does not show the audit shortcut on home, even for an admin', async () => {
-    mockUseDashboardOverview.mockReturnValue(createQuery());
-    const screen = await render(<DashboardScreen />);
-
-    expect(screen.queryByRole('button', { name: 'Ver auditoría' })).toBeNull();
-  });
-
-  it('hides writer quick actions for a veterinarian', async () => {
-    mockUseSession.mockReturnValue({ user: { roles: ['veterinarian'] } });
-    mockUseDashboardOverview.mockReturnValue(createQuery());
-    const screen = await render(<DashboardScreen />);
-
-    expect(screen.queryByRole('button', { name: 'Alta animal' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Registrar gasto' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Gestionar usuarios' })).toBeNull();
-  });
-
-  it('triggers a refetch on pull to refresh', async () => {
-    const refetch = jest.fn();
-    mockUseDashboardOverview.mockReturnValue(createQuery({ refetch }));
+  it('refetches the overview and the home summary on pull to refresh', async () => {
+    const overviewRefetch = jest.fn();
+    const homeRefetch = jest.fn();
+    mockUseDashboardOverview.mockReturnValue(createOverviewQuery({ refetch: overviewRefetch }));
+    mockUseHomeSummary.mockReturnValue(createHomeSummary({ refetch: homeRefetch }));
     const screen = await render(<DashboardScreen />);
 
     const refreshControl = screen.root
@@ -239,6 +257,7 @@ describe('DashboardScreen', () => {
 
     await fireEvent(refreshControl, 'refresh');
 
-    expect(refetch).toHaveBeenCalled();
+    expect(overviewRefetch).toHaveBeenCalled();
+    expect(homeRefetch).toHaveBeenCalled();
   });
 });

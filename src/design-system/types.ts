@@ -9,7 +9,14 @@
  */
 
 export type ReferenceGroupId =
-  'auth-account' | 'animals' | 'care' | 'expenses' | 'clinical' | 'veterinarians' | 'audit';
+  | 'auth-account'
+  | 'animals'
+  | 'care'
+  | 'expenses'
+  | 'clinical'
+  | 'veterinarians'
+  | 'audit'
+  | 'final';
 
 export const REFERENCE_STATES = [
   'default',
@@ -35,7 +42,7 @@ export interface ReferenceDivergence {
 export interface ReferenceCase {
   /** Stable identifier used by tests and `RFG-167` regression selectors. */
   id: `D06-${string}`;
-  /** Position of the reference in the walkthrough order (1..23). */
+  /** Position of the reference in the walkthrough order (1..25). */
   index: number;
   /** Versioned reference file name in `docs/design-references/`. */
   referenceFile: string;
