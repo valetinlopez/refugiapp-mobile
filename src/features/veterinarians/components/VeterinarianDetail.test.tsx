@@ -1,4 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import { ApiError } from '@/core/api';
 
@@ -66,6 +67,33 @@ describe('VeterinarianDetail', () => {
     expect(screen.getByText('sofia@refugiapp.local')).toBeTruthy();
     expect(screen.getByText('+54 11 5555 0101')).toBeTruthy();
     expect(screen.getByText('Especialista en felinos.')).toBeTruthy();
+  });
+
+  it('allows identity and linked-user cards to wrap with amplified text', async () => {
+    const linked = {
+      ...VET,
+      user: {
+        id: '22222222-2222-4222-8222-222222222222',
+        email: 'veterinaria-con-un-correo-extenso@refugiapp.local',
+        firstName: 'Sofía Alejandra',
+        lastName: 'Romero de los Andes',
+        roles: ['veterinarian'],
+        isActive: true,
+        createdAt: '2026-09-01T00:00:00.000Z',
+        updatedAt: '2026-09-01T00:00:00.000Z',
+      },
+    } satisfies VeterinarianResponse;
+    const screen = await renderDetail({ query: detailQuery({ data: linked }) });
+    const identityStyle = StyleSheet.flatten(
+      screen.getByTestId('veterinarian-identity-card').props.style
+    );
+    const userStyle = StyleSheet.flatten(screen.getByTestId('veterinarian-user-card').props.style);
+
+    expect(identityStyle.flexWrap).toBe('wrap');
+    expect(userStyle.flexWrap).toBe('wrap');
+    expect(identityStyle.height).toBeUndefined();
+    expect(userStyle.height).toBeUndefined();
+    expect(screen.getByText('veterinaria-con-un-correo-extenso@refugiapp.local')).toBeTruthy();
   });
 
   it('shows fallback text for missing optional fields', async () => {

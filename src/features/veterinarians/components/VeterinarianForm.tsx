@@ -142,7 +142,7 @@ export function VeterinarianForm({
             control={control}
             name="shouldCreateUser"
             render={({ field: { onChange, value } }) => (
-              <View style={styles.switchRow}>
+              <View style={styles.switchRow} testID="veterinarian-create-user-row">
                 <View style={styles.switchCopy}>
                   <AppText variant="label">Crear usuario de acceso</AppText>
                   <AppText color="textSecondary" variant="caption">
@@ -195,7 +195,7 @@ export function VeterinarianForm({
           {errorMessage}
         </AppText>
       ) : null}
-      <View style={styles.actions}>
+      <View style={styles.actions} testID="veterinarian-form-actions">
         {mode === 'create' && onCancel ? (
           <AppButton
             disabled={isSubmitting}
@@ -339,11 +339,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   multiline: { minHeight: 96, textAlignVertical: 'top' },
-  switchCopy: { flex: 1, gap: spacing.xxs },
+  switchCopy: { flex: 1, gap: spacing.xxs, minWidth: 0 },
   switchRow: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexDirection: 'row',
     gap: spacing.md,
-    minHeight: 44,
+    minHeight: sizes.touchTarget,
   },
 });

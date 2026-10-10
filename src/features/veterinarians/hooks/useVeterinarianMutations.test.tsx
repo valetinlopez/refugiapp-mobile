@@ -72,4 +72,17 @@ describe('veterinarian mutations', () => {
       expect(invalidate).toHaveBeenCalledWith({ queryKey: veterinarianKeys.all });
     }
   );
+
+  it('preserves cached clinical history when a veterinarian is deactivated', async () => {
+    const clinicalHistoryKey = ['medical-records', 'by-veterinarian', VET_ID] as const;
+    const clinicalHistory = [{ id: 'record-1', veterinarianId: VET_ID, title: 'Control anual' }];
+    queryClient.setQueryData(clinicalHistoryKey, clinicalHistory);
+    jest.spyOn(veterinariansApi, 'deactivate').mockResolvedValue(undefined);
+    const { result } = await renderHook(() => useDeactivateVeterinarian(), { wrapper });
+
+    result.current.mutate(VET_ID);
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(queryClient.getQueryData(clinicalHistoryKey)).toEqual(clinicalHistory);
+  });
 });

@@ -286,10 +286,13 @@ const styles = StyleSheet.create({
   filterActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   header: { gap: spacing.sm, marginBottom: spacing.md },
   list: {
+    alignSelf: 'center',
     flexGrow: 1,
     gap: spacing.sm,
+    maxWidth: sizes.contentMaxWidth,
     padding: spacing.lg,
     paddingBottom: sizes.fab + spacing['2xl'] + spacing.lg,
+    width: '100%',
   },
   paginationState: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md },
   search: {
