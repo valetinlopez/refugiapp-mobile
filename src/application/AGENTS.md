@@ -4,7 +4,8 @@
 
 - `src/application` es la frontera de coordinación entre features y dominios cuando existe reutilización real o una frontera técnica clara.
 - No reemplaza a `src/core` (infraestructura transversal) ni a `src/features` (comportamiento de un dominio).
-- Cada subárbol (p. ej. `animals/` o `management/`) representa un contrato de aplicación compartido por varias features o una coordinación transversal explícita.
+- Cada subárbol (p. ej. `animals/`, `management/` o `home/`) representa un contrato de aplicación compartido por varias features o una coordinación transversal explícita.
+- `home/` coordina el resumen de solo lectura de Inicio (D36 / RFG-169): conteo de cuidados pendientes, página de prioridades y conteo de gastos, sin duplicar la UI del dashboard.
 
 ## Dependencias
 

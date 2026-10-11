@@ -5,11 +5,14 @@
  *  - photoreal hero (hero-rescued-dog) -> raster PNG source (Pngtree, licensed,
  *    trimmed and centered on a square transparent canvas, see
  *    docs/brand-assets.md)
+ *  - photographic Inicio banner (hero-home) -> raster PNG source (1600 px wide
+ *    master derived from the provided stock photo, see docs/brand-assets.md)
  *
  * Run: node scripts/generate-brand-assets.mjs  (or npm run assets:brand)
  *
  * Produces:
  * - assets/images/brand/hero-rescued-dog@Nx.webp + hero-rescued-dog.png
+ * - assets/images/brand/hero-home@Nx.webp + hero-home.png
  * - assets/images/brand/brand-leaf-mark@Nx.webp + brand-leaf-mark.png
  * - assets/images/brand/leaf-texture-tile@Nx.webp + leaf-texture-tile.png
  *
@@ -32,16 +35,23 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const SOURCES = join(ROOT, 'docs', 'brand-assets', 'sources');
 const OUT = join(ROOT, 'assets', 'images', 'brand');
 
-/** Vector masters in docs/brand-assets/sources. */
+/** Vector masters in docs/brand-assets/sources (square; resized by width). */
 const VECTOR_ASSETS = {
   'brand-leaf-mark': { base: 48, densities: [1, 2, 3] },
   'leaf-texture-tile': { base: 80, densities: [1, 2, 3] },
 };
 
-/** Raster masters (PNG, transparent, already square). */
+/** Raster masters (PNG). `base`/`fallbackSize` are widths; height follows aspect. */
 const RASTER_ASSETS = {
   'hero-rescued-dog': {
     source: 'hero-rescued-dog-source.png',
+    base: 360,
+    densities: [3],
+    webpQuality: 82,
+    fallbackSize: 360,
+  },
+  'hero-home': {
+    source: 'hero-home-source.png',
     base: 360,
     densities: [3],
     webpQuality: 82,
@@ -81,7 +91,8 @@ async function generate() {
 
   for (const [name, config] of Object.entries(VECTOR_ASSETS)) {
     for (const { density, size } of sizesFor(config.base, config.densities)) {
-      const image = svgSource(SOURCES, name).resize({ width: size, height: size });
+      // Resize by width only so each square master keeps its shape.
+      const image = svgSource(SOURCES, name).resize({ width: size });
 
       const webpLossless = await image.clone().webp({ lossless: true, effort: 6 }).toBuffer();
       const webpLossy = await image
@@ -98,7 +109,7 @@ async function generate() {
     // Single PNG-8 fallback at the highest density for flat vectors.
     const maxSize = Math.max(...config.densities) * config.base;
     const png = await svgSource(SOURCES, name)
-      .resize({ width: maxSize, height: maxSize })
+      .resize({ width: maxSize })
       .png({ palette: true, compressionLevel: 9, adaptiveFiltering: true })
       .toBuffer();
     const pngPath = join(OUT, `${name}.png`);
@@ -115,7 +126,9 @@ async function generate() {
 
   for (const [name, config] of Object.entries(RASTER_ASSETS)) {
     for (const { density, size } of sizesFor(config.base, config.densities)) {
-      const image = rasterSource(SOURCES, config).resize({ width: size, height: size });
+      // Resize by width only so each master keeps its intrinsic aspect ratio
+      // (square for the login hero, 16:9 for the Inicio banner).
+      const image = rasterSource(SOURCES, config).resize({ width: size });
 
       const webp = await image
         .clone()
@@ -140,7 +153,7 @@ async function generate() {
 
     // Low-fidelity PNG-8 fallback (quantized) as a decode safety net.
     const png = await rasterSource(SOURCES, config)
-      .resize({ width: config.fallbackSize, height: config.fallbackSize })
+      .resize({ width: config.fallbackSize })
       .png({
         palette: true,
         dither: 1.0,

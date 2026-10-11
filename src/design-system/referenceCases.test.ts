@@ -30,11 +30,13 @@ const EXPECTED_REFERENCE_FILES = [
   '21-veterinarian-profile.jpeg',
   '22-audit-list.jpeg',
   '23-audit-detail.jpeg',
+  '24-dashboard-home.jpeg',
+  '25-animals-list.jpeg',
 ] as const;
 
 describe('reference cases (D06 / RFG-139)', () => {
-  it('covers exactly the 23 references of D01, in order', () => {
-    expect(REFERENCE_CASES).toHaveLength(23);
+  it('covers exactly the 25 references of D01, in order', () => {
+    expect(REFERENCE_CASES).toHaveLength(25);
     expect(REFERENCE_CASES.map((referenceCase) => referenceCase.referenceFile)).toEqual(
       EXPECTED_REFERENCE_FILES
     );
@@ -46,7 +48,7 @@ describe('reference cases (D06 / RFG-139)', () => {
       expect(referenceCase.id).toBe(expectedId);
       expect(referenceCase.index).toBe(position + 1);
     });
-    expect(new Set(REFERENCE_CASES.map((referenceCase) => referenceCase.id)).size).toBe(23);
+    expect(new Set(REFERENCE_CASES.map((referenceCase) => referenceCase.id)).size).toBe(25);
   });
 
   it('keeps every reference file with the D01 kebab-case naming', () => {
@@ -79,8 +81,8 @@ describe('reference cases (D06 / RFG-139)', () => {
     );
 
     const grouped = REFERENCE_GROUPS.flatMap((group) => referenceCasesByGroup(group.id));
-    expect(grouped).toHaveLength(23);
-    expect(new Set(grouped.map((referenceCase) => referenceCase.id)).size).toBe(23);
+    expect(grouped).toHaveLength(25);
+    expect(new Set(grouped.map((referenceCase) => referenceCase.id)).size).toBe(25);
   });
 
   it('resolves cases by id and returns undefined for unknown ids', () => {

@@ -1,5 +1,7 @@
 import brandLeafMarkPng from '../../../assets/images/brand/brand-leaf-mark.png';
 import brandLeafMarkWebp from '../../../assets/images/brand/brand-leaf-mark.webp';
+import heroHomePng from '../../../assets/images/brand/hero-home.png';
+import heroHomeWebp from '../../../assets/images/brand/hero-home.webp';
 import heroRescuedDogPng from '../../../assets/images/brand/hero-rescued-dog.png';
 import heroRescuedDogWebp from '../../../assets/images/brand/hero-rescued-dog.webp';
 import leafTextureTilePng from '../../../assets/images/brand/leaf-texture-tile.png';
@@ -16,11 +18,12 @@ import leafTextureTileWebp from '../../../assets/images/brand/leaf-texture-tile.
  *
  * All assets are strictly decorative: no text, no state, no functional
  * information is encoded in the bitmaps. The leaf mark and texture are
- * original vector illustrations; the photographic hero is a licensed Pngtree
- * raster (free plan with attribution). Masters and provenance live in
+ * original vector illustrations; the photographic heroes are licensed rasters
+ * with attribution (`heroRescuedDog`: Pngtree; `heroHome`: stock photo, see
+ * `docs/brand-assets.md`). Masters and provenance live in
  * `docs/brand-assets/sources` and `docs/brand-assets.md`.
  */
-export type BrandAssetName = 'heroRescuedDog' | 'brandLeafMark' | 'leafTextureTile';
+export type BrandAssetName = 'heroRescuedDog' | 'heroHome' | 'brandLeafMark' | 'leafTextureTile';
 
 export interface BrandSource {
   /** WebP source (full density set resolved by the RN asset pipeline). */
@@ -31,6 +34,7 @@ export interface BrandSource {
 
 export const brandAssets = {
   heroRescuedDog: { webp: heroRescuedDogWebp, png: heroRescuedDogPng },
+  heroHome: { webp: heroHomeWebp, png: heroHomePng },
   brandLeafMark: { webp: brandLeafMarkWebp, png: brandLeafMarkPng },
   leafTextureTile: { webp: leafTextureTileWebp, png: leafTextureTilePng },
 } as const satisfies Record<BrandAssetName, BrandSource>;

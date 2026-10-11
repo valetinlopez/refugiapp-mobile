@@ -2,50 +2,51 @@
 
 ## Responsabilidad
 
-- Muestra el panel de portada del refugio: totales por estado y animales recientes.
-- Filtra la autorización visual por capacidades y decide qué acciones rápidas se muestran por rol.
-- No gestiona animales, tareas ni gastos; solo los enlaza con sus rutas de alta.
+- Muestra el panel de portada del refugio: saludo con la sesión, hero decorativo, resumen del día, accesos rápidos a los cuatro destinos reales y prioridades de cuidado best-effort.
+- Filtra la autorización visual por capacidades y decide qué accesos se muestran por rol.
+- No gestiona animales, tareas ni gastos; no implementa reglas de negocio ni llamadas HTTP de otros dominios.
 
 ## Contratos
 
-- `GET /dashboard/overview`: lectura para los tres roles autenticados (JWT). Respuesta `{ totals: { animals, byStatus }, recentAnimals: DashboardAnimal[] }` con `profilePhotoMediaId` nullable y límite de recientes 5 (`DASHBOARD_RECENT_ANIMALS_LIMIT` en el backend).
-- `GET /media/:id`: lectura de un asset para mostrar la foto de perfil de un animal reciente. Si `profilePhotoMediaId` es `null`, no se realiza la consulta.
-- Los tipos de red derivan de `openapi/mobile.openapi.json` (`DashboardOverviewResponseDto`, `DashboardAnimalDto`, `DashboardTotalsDto`). El snapshot normaliza `profilePhotoMediaId` a `string | null` y `byStatus` a objeto con `additionalProperties` numéricos; el mapper de feature los convierte a `Record<DashboardAnimalStatus, number>`.
-- `DashboardAnimalStatus` es la unión `admitted | under_treatment | available_for_adoption | adopted | deceased`.
+- `GET /dashboard/overview`: lectura para los tres roles autenticados (JWT). Respuesta `{ totals: { animals, byStatus }, recentAnimals }` con `profilePhotoMediaId` nullable y límite de recientes 5.
+- `GET /media/:id`: lectura de un asset para la foto de perfil de un animal reciente (solo si `profilePhotoMediaId` existe).
+- El saludo usa `firstName` de la sesión y la fecha local `es-AR`; ambos son nativos, nunca texto incrustado en un bitmap.
+- El resumen del día combina `GET /dashboard/overview` (animales y en tratamiento) con el conteo de cuidados pendientes de la frontera `src/application/home`.
+- Los accesos rápidos navegan a Animales (`/explore`), Cuidados (`/care-tasks`), Historia clínica (`/medical-records`) y Gastos (`/expenses`).
+- La sección "Prioridades de hoy" consume la frontera `src/application/home` (página best-effort de pendientes) y deriva `Vencida`/`Próxima`/`Pendiente`; nunca promete el próximo vencimiento global.
+- Los tipos de red derivan de `openapi/mobile.openapi.json`. El modelo de vista `DashboardAnimal` normaliza nulos; `byStatus` se normaliza a `Record<DashboardAnimalStatus, number>`.
 
 ## Permisos
 
-- Los tres roles consultan `GET /dashboard/overview`.
-- La matriz de capacidades espeja `ROLE_CAPABILITIES` del backend (`src/common/authorization/role-capabilities.ts` y `docs/role-capabilities.md`):
-  - `canEditAnimal`: `admin`, `shelter_manager`. Habilita "Alta animal" y "Nueva tarea".
-  - `canManageExpenses`: `admin`, `shelter_manager`. Habilita "Registrar gasto".
-  - `canReadClinicalRecords`: `admin`, `veterinarian`.
-  - `canManageUsers`: `admin`.
-  - `canManageVets`: `admin`, `shelter_manager`.
-  - `canReadAudit`: `admin` (único rol con auditoría).
-- `capabilitiesForRoles` combina los roles del usuario con OR desde `src/application/authorization`. La UI nunca decide por rol directo: siempre pasa por el registro central de capacidades.
-- La autorización visual no reemplaza al backend; un `403` se traduce a mensaje seguro.
+- Los tres roles consultan `GET /dashboard/overview` y ven Animales, Cuidados y Gastos.
+- "Historia clínica" solo aparece con `canReadClinicalRecords` (`admin`, `veterinarian`); `shelter_manager` no ve el destino clínico.
+- La matriz de capacidades espeja `ROLE_CAPABILITIES` del backend (`src/application/authorization`).
+- La autorización visual no reemplaza al backend; un `403` se traduce a un mensaje seguro.
 
 ## Estructura
 
 - `api/`: `GET /dashboard/overview` y lectura de `GET /media/:id` para fotos de recientes.
-- `components/`: `DashboardScreen` (orquestación y estados), `DashboardTotalsCard`, `DashboardRecentAnimals`, `DashboardAnimalRow`, `DashboardQuickActions` y `DashboardSkeleton`.
+- `components/`:
+  - `DashboardScreen` (orquestación, estados y pull-to-refresh).
+  - `HomeGreeting` (saludo + fecha + atajo de cuenta), `HomeHero` (banner decorativo `heroHome`), `TodaySummaryCard` (tres indicadores), `HomeQuickAccess` (grilla 2×2 de accesos), `TodayPriorities` + `HomePriorityRow` (prioridades memoizadas).
+  - `DashboardRecentAnimals` + `DashboardAnimalRow` (animales recientes, conservados).
+  - `DashboardSkeleton` (placeholder estático de la nueva jerarquía).
 - `hooks/`: `dashboardKeys`, `useDashboardOverview` y `useDashboardAnimalPhoto`.
-- `utils/`: `quickActions` (registro declarativo de acciones con `requiredCapability`), `dashboardErrorMessages` (errores seguros) y `presentation` (estados visuales).
+- `utils/`: `greeting` (saludo/fecha puros), `homeAccess` (registro de accesos con `requiredCapability` y subtítulos por conteo), `presentation` (estados de animal y de prioridad), `dashboardErrorMessages` (errores seguros).
 - `types.ts`: modelo de vista y mapper desde los DTO generados.
-- El atajo de cuenta del encabezado de Inicio usa `AccountMenuButton` de `src/features/auth/components` (superficie pública de la feature auth, mismo patrón que `useSession`); es el único import cruzado de dashboard y está documentado en `src/features/auth/AGENTS.md`.
+- El atajo de cuenta del encabezado usa `AccountMenuButton` de `src/features/auth/components` y el saludo lee `useSession`; son la superficie pública de auth consumida por dashboard (documentada en `src/features/auth/AGENTS.md`).
 
 ## Seguridad y privacidad
 
 - No registrar URLs de media, IDs de assets ni datos del panel.
 - La cache se limpia con el resto de TanStack Query al cerrar sesión.
+- Nunca se muestran UUID crudos: los animales sin nombre resoluble caen a "Animal no disponible".
 
 ## Testing
 
-- Unit tests de `filterQuickActions`; la matriz y el filtrado genérico se prueban en `src/application/authorization`.
-- Component tests RNTL de `DashboardScreen`: skeleton, vacío, error con reintento, datos, navegación al detalle, consulta de foto por `profilePhotoMediaId` y filtrado de acciones por rol.
-- Component tests RNTL del polish responsive: un badge por estado en `DashboardTotalsCard` (wrap con `rowGap`/`columnGap` y alineación por tokens), acciones de Inicio en columna full-width con orden canónico, targets 44 × 44 y ausencia de "Ver auditoría" (migrado a Más) y truncado controlado en `DashboardAnimalRow` (`numberOfLines={1}` en nombre/especie) con label accesible completo y navegación al detalle intacta.
-- Component tests RNTL de `DashboardAnimalRow`: badge de estado estable (`flexShrink: 0`, una línea con `labelNumberOfLines={1}`), truncado de nombre/especie a una línea con `ellipsizeMode="tail"`, label accesible con nombre + especie + estado completos, navegación al detalle y foto con/sin `profilePhotoMediaId` (fallback a iniciales sin fetch cuando es `null`).
+- Unit tests de `greeting` (saludo determinista por hora y fecha local), `homeAccess` (`filterHomeAccesses` y `buildHomeAccessSubtitles`) y `presentation` (estados de prioridad).
+- Component tests RNTL de `DashboardScreen`: skeleton, vacío, error con reintento, offline con reintento, saludo desde sesión, tres indicadores, accesos filtrados por rol (incluida la ausencia de Historia clínica para `shelter_manager`), navegación a prioridad/agenda/reciente y pull-to-refresh que refetchea overview + resumen.
+- Component tests RNTL de `TodaySummaryCard` (indicador sin dato → `—` con label seguro) y `TodayPriorities` (loading, error con reintento, vacío, fallback de nombre y navegación).
 - El pull-to-refresh se valida sobre el `RefreshControl` del `ScrollView`.
 
 ## Estado
@@ -53,15 +54,15 @@
 ### Implementado
 
 - `GET /dashboard/overview` consumido en el tab "Inicio" para los tres roles.
-- Acciones rápidas filtradas mediante el registro central de capacidades de aplicación.
-- Estados de UI: skeleton inicial (placeholder estático, respeta reduce motion), vacío, error con reintento y pull-to-refresh.
-- Totales por estado y animales recientes con foto de perfil (`useDashboardAnimalPhoto` consulta solo cuando `profilePhotoMediaId` está presente; `AppAvatar` cae a iniciales ante fallo).
-- Acciones rápidas en Inicio: "Alta animal", "Nueva tarea" y "Registrar gasto" según `canEditAnimal`/`canManageExpenses` y "Gestionar usuarios" según `canManageUsers`; se ordenan en columna full-width con gap por tokens y áreas táctiles de 44 × 44.
-- Navegación de un animal reciente a `/animals/[id]`.
-- `DashboardAnimalRow` con layout responsive (RFG-117): columna de texto `flex: 1` + `minWidth: 0` (nombre/especie a una línea con elipsis), badge de estado estable (`flexShrink: 0`, `maxWidth` proporcional ~45 %, una línea) que no empuja el nombre, avatar y chevron fijos, y label accesible con nombre + especie + estado completos.
-- `dashboardKeys.all = ['dashboard']` como key canónica del panel; las features de `expenses` y `care-tasks` conservan una constante local idéntica solo para invalidar tras sus mutaciones (prefijo compartido por valor, sin imports cruzados entre features).
+- Rediseño D36 (RFG-169): saludo con `firstName` y fecha `es-AR`, hero decorativo de perro y gato (`heroHome`, oculto a AT), "Resumen de hoy" con animales/en tratamiento/cuidados pendientes, "Accesos rápidos" a los cuatro destinos filtrados por capacidades y "Prioridades de hoy" best-effort con estados derivados y acceso a la agenda completa.
+- Frontera `src/application/home` para conteo exacto de pendientes (`GET /care-tasks?status=pending&page=1&limit=1`), página de prioridades y conteo de gastos, con invalidación por prefijo `['home']` desde `care-tasks` y `expenses` (por valor, sin imports cruzados).
+- Estados de UI: skeleton estático de la nueva jerarquía, vacío, error con reintento, offline con reintento y pull-to-refresh que refetchea overview y resumen.
+- Accesos ordenados en grilla responsive de dos columnas que colapsa a una con fuente ampliada o viewport angosto, con targets ≥ 44 × 44, icono + texto (nunca solo color) y chevron.
+- `DashboardAnimalRow` conserva el layout responsive y el fallback a iniciales; las prioridades resuelven el nombre y la foto por la cache compartida de `animal-options` sin request por fila.
+- `dashboardKeys.all = ['dashboard']` como key canónica del panel; `['home']` como prefijo del resumen.
 
 ### Pendiente o deuda conocida
 
-- El acceso de auditoría migró de Inicio a la pantalla "Más" (`/audit` para `admin` vía `canReadAudit`); el destino y su polish visual los coordina RFG-118.
+- Las prioridades se limitan a la primera página de pendientes; un refugio con más volumen puede no ver su próxima tarea en Inicio (best-effort documentado en `src/application/home/AGENTS.md`).
+- No se muestra unread count ni total mensual de gastos porque esos agregados no existen en el contrato.
 - El esqueleto es local a la feature; si otro contexto lo reutiliza, promover a `src/components/feedback` con su token y documentar en `docs/design.md`.
