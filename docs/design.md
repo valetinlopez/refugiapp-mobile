@@ -366,8 +366,9 @@ La ruta interna `/design-system` incorpora el arnés de validación de D06 (RFG-
 - **Fixtures:** `src/design-system/fixtures.ts` usa UUID, fechas e importes fijos y ancla los estados derivados en `DESIGN_SYSTEM_NOW`; no incluye datos personales reales (solo identidades `*@refugiapp.test`) ni depende de red o servicios externos.
 - **Viewports:** `src/design-system/viewports.ts` fija la matriz `320 × 568`, `390 × 844`, tablet, horizontal aplicable, fuente 200 % y reduce motion; la checklist humana vive en `docs/design-validation/checklist.md`.
 - **Catálogo:** `ReferenceValidationSection` agrupa los casos por dominio (Acceso y cuenta, Animales, Cuidados, Gastos, Clínica, Veterinarios, Auditoría, Inicio y cierre); `ReferenceCaseCard` muestra los metadatos, las divergencias, la checklist de seis viewports y el caso reproducible con `testID` `ds-case-D06-NN` para `RFG-167`.
-- **Accesibilidad:** cada caso es un `summary` accesible con id, referencia, ruta, roles y estados; las divergencias y los viewports se comunican con texto e icono, nunca solo color. Los previews reutilizan los patrones y primitivas existentes.
-- **Fuera de alcance:** el rediseño por referencia (`RFG-140…RFG-170`), la regresión (`RFG-167`) y la certificación del release (`RFG-168`).
+- **Regresión de estados (RFG-167):** `ReferencePreview` materializa los seis estados de presentación (`default`, `loading`, `empty`, `error`, `offline`, `restricted`) por caso mediante los componentes compartidos de feedback, con `testID` `ds-case-D06-NN-<estado>` (150 bloques sobre los mismos `D06-24` Inicio y `D06-25` Animales). `src/design-system/testUtils.ts` centraliza los builders de selectores.
+- **Accesibilidad:** cada caso es un `summary` accesible con id, referencia, ruta, roles y estados; las divergencias y los viewports se comunican con texto e icono, nunca solo color. Los previews reutilizan los patrones y primitivas existentes. `a11y.test.tsx`, `referencePreviews.test.tsx` y `routes.test.ts` congelan la cobertura de estados, la semántica accesible y la estabilidad de rutas.
+- **Fuera de alcance:** el rediseño por referencia (completado en `RFG-140…RFG-170`) y la certificación del release (`RFG-168`); la regresión de estados y trazabilidad pertenece a `RFG-167` (evidencia en `docs/design-validation/regression-25.md`).
 
 ## 38. Alta de usuario (D06-04 / RFG-143)
 

@@ -1,5 +1,4 @@
 import type { AttachmentItem } from '@/components/patterns';
-import type { AnimalHistoryEvent } from '@/features/animals/types';
 import type { AnimalStatus, CareTaskStatus, UserRole } from '@/types/design-system';
 
 /**
@@ -129,7 +128,18 @@ export const CARE_TASK_FIXTURES: readonly CareTaskFixture[] = [
   },
 ];
 
-export type AnimalEventFixture = AnimalHistoryEvent;
+/** Mirrors the published `AnimalHistoryEventType` enum without importing a feature. */
+export type AnimalEventType =
+  'intake' | 'transfer' | 'status_change' | 'behavior_note' | 'adoption' | 'general_note';
+
+export interface AnimalEventFixture {
+  id: string;
+  animalId: string;
+  eventType: AnimalEventType;
+  description: string;
+  occurredAt: string;
+  createdByUserId: string | null;
+}
 
 export const ANIMAL_EVENT_FIXTURES: readonly AnimalEventFixture[] = [
   {

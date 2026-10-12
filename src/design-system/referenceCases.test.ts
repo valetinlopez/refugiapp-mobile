@@ -4,7 +4,7 @@ import {
   getReferenceCase,
   referenceCasesByGroup,
 } from './referenceCases';
-import { DIVERGENCE_KINDS, REFERENCE_STATES } from './types';
+import { DIVERGENCE_KINDS, REFERENCE_STATES, REFERENCE_STATE_LABELS } from './types';
 
 const EXPECTED_REFERENCE_FILES = [
   '01-login.jpeg',
@@ -89,5 +89,12 @@ describe('reference cases (D06 / RFG-139)', () => {
     expect(getReferenceCase('D06-01')?.referenceFile).toBe('01-login.jpeg');
     expect(getReferenceCase('D06-23')?.referenceFile).toBe('23-audit-detail.jpeg');
     expect(getReferenceCase('D06-99')).toBeUndefined();
+  });
+
+  it('covers the six presentation states with a label each (RFG-167 regression)', () => {
+    expect(REFERENCE_STATES).toHaveLength(6);
+    REFERENCE_STATES.forEach((state) => {
+      expect(REFERENCE_STATE_LABELS[state]).toBeTruthy();
+    });
   });
 });

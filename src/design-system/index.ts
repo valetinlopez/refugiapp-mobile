@@ -14,6 +14,7 @@ export type { ReferenceViewport, ReferenceViewportId } from './viewports';
 export { DESIGN_SYSTEM_NOW, FIXTURE_UUIDS } from './fixtures';
 export type {
   AnimalEventFixture,
+  AnimalEventType,
   AnimalFixture,
   AuditLogFixture,
   CareTaskFixture,
@@ -22,7 +23,7 @@ export type {
   UserFixture,
   VeterinarianFixture,
 } from './fixtures';
-export { DIVERGENCE_KINDS, REFERENCE_STATES } from './types';
+export { DIVERGENCE_KINDS, REFERENCE_STATE_LABELS, REFERENCE_STATES } from './types';
 export type {
   DivergenceKind,
   ReferenceCase,
@@ -30,3 +31,4 @@ export type {
   ReferenceGroupId,
   ReferenceStateId,
 } from './types';
+export { referencePreviewTestId, referenceStatesTestId } from './testUtils';
