@@ -52,7 +52,7 @@ describe('DashboardAnimalRow', () => {
     expect(species.props.ellipsizeMode).toBe('tail');
   });
 
-  it('keeps the status badge bounded: zero flex shrink, two lines and a capped width', async () => {
+  it('renders the status as a compact icon that announces the full state', async () => {
     const screen = await render(
       <DashboardAnimalRow
         animal={createAnimal({ status: 'available_for_adoption' })}
@@ -60,14 +60,12 @@ describe('DashboardAnimalRow', () => {
       />
     );
 
-    const badge = screen.getByLabelText('Disponible para adopción');
-    const badgeText = screen.getByText('Disponible para adopción');
+    expect(screen.getByLabelText('Estado: Disponible para adopción')).toBeTruthy();
+    expect(screen.queryByText('Disponible para adopción')).toBeNull();
 
-    expect(badgeText.props.numberOfLines).toBe(2);
-    expect(StyleSheet.flatten(badgeText.props.style)).toMatchObject({ flexShrink: 1 });
-    expect(StyleSheet.flatten(badge.props.style)).toMatchObject({ maxWidth: '100%' });
-
-    const badgeWrapStyle = StyleSheet.flatten(badge.parent?.props.style);
+    const badgeWrapStyle = StyleSheet.flatten(
+      screen.getByLabelText('Estado: Disponible para adopción').parent?.props.style
+    );
     expect(badgeWrapStyle).toMatchObject({ flexShrink: 0, maxWidth: '45%' });
   });
 

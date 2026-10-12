@@ -1,4 +1,5 @@
 import { colors } from './colors';
+import { motion } from './motion';
 import { opacity } from './opacity';
 import { radii } from './radii';
 import { shadows } from './shadows';
@@ -9,6 +10,7 @@ import { fontFamilies, typography } from './typography';
 export const tokens = {
   colors,
   fontFamilies,
+  motion,
   opacity,
   radii,
   shadows,

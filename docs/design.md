@@ -144,6 +144,15 @@ Patrón compartido para filtrar listados (animales por estado, tareas por estado
 
 Grupo de selección única formado por chips (§15) que cambia de vista o filtra listados densos. El contenedor es un `radiogroup` y cada opción un `radio` con `checked`, por lo que la selección nunca depende solo del color. Las opciones se desplazan en horizontal (`ScrollView`) para no recortarse en pantallas estrechas ni con fuente ampliada; cada opción conserva área táctil mínima de 44 pt y admite `disabled` e `icon`. La feature provee las opciones y el valor; el componente no conoce el dominio.
 
+### Insignia de estado de animal (`AnimalStatusBadge`, D40)
+
+Fuente única de presentación de `animal_status` (iconos, etiquetas en español y tonos según §27). Dos variantes:
+
+- `full`: icono + texto sobre `AppBadge`, para contextos con espacio (detalle, grilla).
+- `compact`: solo icono en círculo de `sizes.avatarSm` (36 pt), para filas densas como "Animales recientes" de Inicio, donde "Disponible para adopción" truncaba a 320 pt y con fuente al 200 %. El lector de pantalla anuncia el estado completo (`Estado: <etiqueta>`, rol `image`).
+
+Cada estado tiene un icono distinto (`info`/`medical`/`heart`/`check`/`paw`), por lo que nunca depende solo del color; los fondos reutilizan los tonos de `AppBadge` con los pares de contraste ya verificados en §24. La aparición y el cambio de estado usan un fundido sutil (`motion.durationSubtle`, solo opacidad) que no se reproduce con reduce motion (`useReducedMotion`). El badge compacto no es interactivo por sí mismo; dentro de una fila presionable, la fila conserva el target de 44 pt.
+
 ## 16. Avatares
 
 Tamaños: 36, 48, 72 y 128 pt (`avatarSm` a `avatarXl`). Los retratos usan recorte circular por defecto; la variante `rounded` se reserva para fotos protagonistas de cabeceras de entidad. Si falta la foto, mostrar hasta dos iniciales; nunca un espacio vacío ni una imagen genérica que pueda confundirse con el animal real. Si la imagen falla al cargar, el avatar vuelve a las iniciales de forma silenciosa (sin botón de reintento) y el fallo se resetea cuando cambia la URL.

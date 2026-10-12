@@ -2,6 +2,16 @@ export { AppAvatar } from './AppAvatar';
 export type { AppAvatarProps, AppAvatarSize } from './AppAvatar';
 export { AppBadge } from './AppBadge';
 export type { AppBadgeProps } from './AppBadge';
+export {
+  AnimalStatusBadge,
+  getAnimalStatusLabel,
+  getAnimalStatusPresentation,
+} from './AnimalStatusBadge';
+export type {
+  AnimalStatusBadgeProps,
+  AnimalStatusBadgeVariant,
+  AnimalStatusPresentation,
+} from './AnimalStatusBadge';
 export { AppButton } from './AppButton';
 export type { AppButtonProps, AppButtonVariant } from './AppButton';
 export { AppCard } from './AppCard';
