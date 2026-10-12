@@ -52,7 +52,7 @@ describe('DashboardAnimalRow', () => {
     expect(species.props.ellipsizeMode).toBe('tail');
   });
 
-  it('keeps the status badge stable: zero flex shrink and a single line', async () => {
+  it('keeps the status badge bounded: zero flex shrink, two lines and a capped width', async () => {
     const screen = await render(
       <DashboardAnimalRow
         animal={createAnimal({ status: 'available_for_adoption' })}
@@ -63,10 +63,29 @@ describe('DashboardAnimalRow', () => {
     const badge = screen.getByLabelText('Disponible para adopción');
     const badgeText = screen.getByText('Disponible para adopción');
 
-    expect(badgeText.props.numberOfLines).toBe(1);
+    expect(badgeText.props.numberOfLines).toBe(2);
+    expect(StyleSheet.flatten(badgeText.props.style)).toMatchObject({ flexShrink: 1 });
+    expect(StyleSheet.flatten(badge.props.style)).toMatchObject({ maxWidth: '100%' });
 
     const badgeWrapStyle = StyleSheet.flatten(badge.parent?.props.style);
-    expect(badgeWrapStyle).toMatchObject({ flexShrink: 0 });
+    expect(badgeWrapStyle).toMatchObject({ flexShrink: 0, maxWidth: '45%' });
+  });
+
+  it('capitalizes the lower-cased species sent by the backend', async () => {
+    const screen = await render(
+      <DashboardAnimalRow animal={createAnimal({ species: 'saco' })} onPress={jest.fn()} />
+    );
+
+    expect(screen.getByText('Saco')).toBeTruthy();
+  });
+
+  it('falls back to a readable species label when the field is empty', async () => {
+    const screen = await render(
+      <DashboardAnimalRow animal={createAnimal({ species: '' })} onPress={jest.fn()} />
+    );
+
+    expect(screen.getByText('Especie no registrada')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Especie no registrada/ })).toBeTruthy();
   });
 
   it('exposes the full name, species and status through the accessibility label', async () => {

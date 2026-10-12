@@ -46,9 +46,22 @@ describe('TodayPriorities (D36 / RFG-169)', () => {
     const screen = await render(<TodayPriorities {...buildProps()} />);
 
     expect(screen.getByText('Próxima')).toBeTruthy();
-    expect(screen.getByText('Control veterinario')).toBeTruthy();
-    expect(screen.getByText(/Luna/)).toBeTruthy();
+    expect(screen.getByText('Luna')).toBeTruthy();
+    expect(screen.getByText(/· Control veterinario/)).toBeTruthy();
     expect(screen.queryByText(ANIMAL_ID)).toBeNull();
+  });
+
+  it('keeps the animal identity on its own line and hora · título below (D38.2)', async () => {
+    const screen = await render(<TodayPriorities {...buildProps()} />);
+
+    const name = screen.getByText('Luna');
+    const detail = screen.getByText(/· Control veterinario/);
+
+    expect(name.props.numberOfLines).toBe(1);
+    expect(name.props.ellipsizeMode).toBe('tail');
+    expect(detail.props.numberOfLines).toBe(1);
+    expect(detail.props.ellipsizeMode).toBe('tail');
+    expect(name).not.toBe(detail);
   });
 
   it('falls back to a readable label when the animal is not in the loaded options', async () => {

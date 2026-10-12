@@ -24,7 +24,7 @@
 
 - Área táctil mínima de 44 × 44 (`sizes.touchTarget`) con `hitSlop` estándar de 8 (`sizes.hitSlop`) en icon-only y opciones `radio`.
 - `accessibilityLabel`, role y state en controles.
-- `AppBadge` usa `role="text"`; filas informativas usan `role="summary"`.
+- `AppBadge` usa `role="text"`; filas informativas usan `role="summary"`. Acota su ancho (`maxWidth: '100%'`) y su etiqueta se encoge internamente (`flexShrink: 1`) con hasta dos líneas, por lo que en filas densas se adapta al espacio disponible en vez de desbordar.
 - `DateTimeField` expone `accessibilityHint` con formato y apertura del picker.
 - Formularios con `returnKeyType next/done` y `onSubmitEditing` para orden de foco.
 - Texto escalable y contenedores sin alturas rígidas cuando contienen información.
