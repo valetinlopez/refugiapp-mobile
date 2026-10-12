@@ -78,10 +78,9 @@ describe('buildHomePriorities (D36 / RFG-169)', () => {
 
 describe('formatHomePriorityTime (D36 / RFG-169)', () => {
   it('formats the due time in es-AR without exposing the ISO string', () => {
-    expect(formatHomePriorityTime('2026-10-10T11:00:00-03:00')).not.toBe(
-      '2026-10-10T11:00:00-03:00'
-    );
-    expect(formatHomePriorityTime('2026-10-10T11:00:00-03:00')).toContain('11');
+    const dueAt = new Date(2026, 9, 10, 11, 0, 0).toISOString();
+    expect(formatHomePriorityTime(dueAt)).not.toBe(dueAt);
+    expect(formatHomePriorityTime(dueAt)).toContain('11');
   });
 
   it('falls back to a readable label when there is no time', () => {
