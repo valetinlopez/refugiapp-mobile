@@ -473,7 +473,7 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     audience: 'Los tres roles (lectura); escritura admin/shelter_manager (canEditAnimal)',
     states: ['default', 'loading', 'empty', 'error', 'offline'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño del listado (D37 / RFG-170).' },
+      { kind: 'implemented', note: 'Rediseño del listado (D37 / RFG-170).' },
       {
         kind: 'contract',
         note: 'Sin sort: el backend ordena createdAt ASC, id ASC (no implementar "Ingreso reciente").',
