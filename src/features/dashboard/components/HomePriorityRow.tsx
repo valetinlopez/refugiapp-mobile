@@ -16,12 +16,16 @@ export interface HomePriorityRowProps {
 }
 
 /**
- * One "Prioridades de hoy" row (D36 / RFG-169).
+ * One "Prioridades de hoy" row (D36 / RFG-169, D38.2 / RFG-173).
  *
  * Memoized and given stable callbacks by the list, it shows the resolved animal
  * (never a raw UUID), the due time in `es-AR` and a textual + iconic priority
- * badge. The animal photo is resolved through the shared `animal-options` cache,
- * so there is no request per row for animals without a photo.
+ * badge. The identity and the time are split in two lines — the animal on its
+ * own line and `hora · título` below — so neither collides with the badge at
+ * 320 pt or 200 % font scale: the text column truncates internally with the
+ * ellipsis while the badge keeps a bounded width and never pushes it. The animal
+ * photo is resolved through the shared `animal-options` cache, so there is no
+ * request per row for animals without a photo.
  */
 export const HomePriorityRow = memo(function HomePriorityRow({
   animalName,
@@ -35,7 +39,7 @@ export const HomePriorityRow = memo(function HomePriorityRow({
 
   return (
     <Pressable
-      accessibilityLabel={`${timeLabel}, ${priority.title}, ${animalName}, ${presentation.label}`}
+      accessibilityLabel={`${animalName}, ${timeLabel}, ${priority.title}, ${presentation.label}`}
       accessibilityRole="button"
       onPress={() => onPress(priority)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
@@ -49,11 +53,11 @@ export const HomePriorityRow = memo(function HomePriorityRow({
         style={styles.fixed}
       />
       <View style={styles.copy}>
-        <AppText numberOfLines={1} variant="bodyStrong">
-          {`${timeLabel} · ${animalName}`}
+        <AppText ellipsizeMode="tail" numberOfLines={1} variant="bodyStrong">
+          {animalName}
         </AppText>
         <AppText color="textSecondary" ellipsizeMode="tail" numberOfLines={1} variant="caption">
-          {priority.title}
+          {`${timeLabel} · ${priority.title}`}
         </AppText>
       </View>
       <View style={styles.badgeWrap}>
@@ -61,6 +65,7 @@ export const HomePriorityRow = memo(function HomePriorityRow({
           icon={presentation.icon}
           label={presentation.label}
           labelNumberOfLines={1}
+          style={styles.badge}
           tone={presentation.tone}
         />
       </View>
@@ -70,6 +75,9 @@ export const HomePriorityRow = memo(function HomePriorityRow({
 });
 
 const styles = StyleSheet.create({
+  badge: {
+    maxWidth: '100%',
+  },
   badgeWrap: {
     flexShrink: 0,
     maxWidth: '45%',

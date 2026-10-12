@@ -40,7 +40,12 @@ export function AppBadge({
       {...props}
     >
       {icon ? <AppIcon color={contentColor} name={icon} size={sizes.iconSm} /> : null}
-      <AppText color={contentColor} numberOfLines={labelNumberOfLines} variant="label">
+      <AppText
+        color={contentColor}
+        numberOfLines={labelNumberOfLines}
+        style={styles.label}
+        variant="label"
+      >
         {label}
       </AppText>
     </View>
@@ -54,8 +59,12 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     flexDirection: 'row',
     gap: spacing.xs,
+    maxWidth: '100%',
     minHeight: sizes.touchTarget,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+  },
+  label: {
+    flexShrink: 1,
   },
 });

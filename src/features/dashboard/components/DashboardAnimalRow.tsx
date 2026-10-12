@@ -2,10 +2,11 @@ import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppAvatar, AppBadge, AppIcon, AppText } from '@/components/primitives';
-import { spacing } from '@/theme';
+import { opacity, spacing } from '@/theme';
 
 import { useDashboardAnimalPhoto } from '../hooks/useDashboardAnimalPhoto';
 import type { DashboardAnimal } from '../types';
+import { formatSpeciesLabel } from '../utils/animalText';
 import { getStatusPresentation } from '../utils/presentation';
 
 export interface DashboardAnimalRowProps {
@@ -19,10 +20,11 @@ export const DashboardAnimalRow = memo(function DashboardAnimalRow({
 }: DashboardAnimalRowProps) {
   const photoQuery = useDashboardAnimalPhoto(animal.profilePhotoMediaId);
   const presentation = getStatusPresentation(animal.status);
+  const speciesLabel = formatSpeciesLabel(animal.species);
 
   return (
     <Pressable
-      accessibilityLabel={`${animal.name}, ${animal.species}, ${presentation.label}`}
+      accessibilityLabel={`${animal.name}, ${speciesLabel}, ${presentation.label}`}
       accessibilityRole="button"
       onPress={() => onPress(animal)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
@@ -40,14 +42,15 @@ export const DashboardAnimalRow = memo(function DashboardAnimalRow({
           {animal.name}
         </AppText>
         <AppText color="textSecondary" ellipsizeMode="tail" numberOfLines={1} variant="caption">
-          {animal.species}
+          {speciesLabel}
         </AppText>
       </View>
       <View style={styles.badgeWrap}>
         <AppBadge
           icon={presentation.icon}
           label={presentation.label}
-          labelNumberOfLines={1}
+          labelNumberOfLines={2}
+          style={styles.badge}
           tone={presentation.tone}
         />
       </View>
@@ -57,6 +60,9 @@ export const DashboardAnimalRow = memo(function DashboardAnimalRow({
 });
 
 const styles = StyleSheet.create({
+  badge: {
+    maxWidth: '100%',
+  },
   badgeWrap: {
     flexShrink: 0,
     maxWidth: '45%',
@@ -70,7 +76,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   pressed: {
-    opacity: 0.84,
+    opacity: opacity.pressed,
   },
   row: {
     alignItems: 'center',

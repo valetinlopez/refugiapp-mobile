@@ -165,11 +165,15 @@ Orden recomendado: avatar, hora y animal, tarea, responsable opcional y badge. L
 
 Prioridad visual: `completed` o `cancelled` son estados finales; para `pending`, primero se evalúa `overdue`, después `upcoming`, después `clinical`, y finalmente `pending`. Una tarea clínica vencida es **Vencida** en coral; el contexto clínico permanece en el título, iconografía secundaria o detalle.
 
+### Prioridades de hoy en Inicio (D38.2)
+
+La fila de prioridad del Inicio separa la información crítica en dos líneas para que ni el nombre del animal ni la hora compitan con el badge a 320 × 568 o con fuente al 200 %: la primera línea muestra la **identidad del animal** (`bodyStrong`, `numberOfLines={1}` + `ellipsizeMode="tail"`) y la segunda `hora · título` (`caption`, una línea con elipsis), con la hora liderando para no perderse. La zona del badge se acota (`flexShrink: 0` + `maxWidth` proporcional) y el badge trunca su etiqueta internamente, así nunca empuja ni corta la columna de texto. La hora se formatea siempre en `es-AR` (`formatHomePriorityTime`) y el animal sin nombre resoluble cae a "Animal no disponible", nunca a un UUID crudo. La etiqueta accesible concatena animal, hora, título y estado.
+
 ### Filas de animales (recientes)
 
-Mismo patrón de fila operativa para animales: avatar, nombre, especie, badge de estado y chevron. La columna de texto usa `flex: 1` y `minWidth: 0`; el nombre y la especie se truncan a una línea con elipsis (`numberOfLines={1}` + `ellipsizeMode="tail"`) y el `accessibilityLabel` del control conserva el texto completo (nombre, especie y estado). El avatar y el chevron no se encogen (`flexShrink: 0`).
+Mismo patrón de fila operativa para animales: avatar, nombre, especie, badge de estado y chevron. La columna de texto usa `flex: 1` y `minWidth: 0`; el nombre y la especie se truncan a una línea con elipsis (`numberOfLines={1}` + `ellipsizeMode="tail"`) y el `accessibilityLabel` del control conserva el texto completo (nombre, especie y estado). El avatar y el chevron no se encogen (`flexShrink: 0`). La especie, que el backend envía en minúsculas ("saco", "puma"), se capitaliza solo para presentación (`formatSpeciesLabel`) y una especie vacía degrada a "Especie no registrada", nunca a un enum crudo.
 
-El badge de estado es estable: no se encoge (`flexShrink: 0`) y se limita a un tope proporcional de ancho (`maxWidth` ≈ 45 % de la fila, medida relativa de layout, no un token de medida) con una sola línea y elipsis. Así un estado largo (p. ej. `Disponible para adopción`) no empuja ni corta el nombre, no colisiona con el chevron y conserva altura de fila estable en pantallas estrechas y con fuente ampliada. El `labelNumberOfLines` de `AppBadge` permite forzar una línea en filas densas sin cambiar el default de dos líneas del componente. Los divisores pertenecen al listado, no a la fila, y llevan margen vertical por tokens.
+El badge de estado es estable: no se encoge (`flexShrink: 0`) y se limita a un tope proporcional de ancho (`maxWidth` ≈ 45 % de la fila, medida relativa de layout, no un token de medida). `AppBadge` acota su propio ancho (`maxWidth: '100%'`) y deja que su etiqueta se encoja internamente (`flexShrink: 1`) con hasta dos líneas y elipsis; así un estado largo (p. ej. `Disponible para adopción`) se envuelve y permanece legible sin empujar ni cortar el nombre, sin colisionar con el chevron y conservando altura de fila estable. Los divisores pertenecen al listado, no a la fila, y llevan margen vertical por tokens.
 
 ## 18. Tarjetas de animales
 

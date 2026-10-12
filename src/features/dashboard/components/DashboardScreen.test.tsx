@@ -232,7 +232,7 @@ describe('DashboardScreen (D36 / RFG-169)', () => {
   it('navigates to a recent animal detail', async () => {
     const screen = await render(<DashboardScreen />);
 
-    await fireEvent.press(screen.getByRole('button', { name: /Luna, dog/ }));
+    await fireEvent.press(screen.getByRole('button', { name: /Luna, Dog/ }));
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/animals/[id]',
       params: { id: ANIMAL_ID },
