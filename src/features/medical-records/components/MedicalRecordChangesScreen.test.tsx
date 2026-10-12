@@ -1,5 +1,8 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
+import { ApiError } from '@/core/api';
+import { useVeterinarianDirectory } from '@/application/veterinarians';
+
 import { MedicalRecordChangesScreen } from './MedicalRecordChangesScreen';
 
 import { useMedicalRecordChanges } from '../hooks/useMedicalRecordChanges';
@@ -7,6 +10,11 @@ import { useMedicalRecordChanges } from '../hooks/useMedicalRecordChanges';
 jest.mock('../hooks/useMedicalRecordChanges', () => ({
   useMedicalRecordChanges: jest.fn(),
 }));
+
+jest.mock('@/application/veterinarians', () => {
+  const actual = jest.requireActual('@/application/veterinarians');
+  return { ...actual, useVeterinarianDirectory: jest.fn() };
+});
 
 jest.mock('@/components/patterns', () => {
   const actual = jest.requireActual('@/components/patterns');
@@ -38,10 +46,13 @@ jest.mock('@/components/patterns', () => {
 });
 
 const mockUseMedicalRecordChanges = useMedicalRecordChanges as jest.Mock;
+const mockUseVeterinarianDirectory = useVeterinarianDirectory as jest.Mock;
 
 const RECORD_ID = '11111111-1111-4111-8111-111111111111';
 
 const ACTOR_UUID = '33333333-3333-4333-8333-333333333333';
+const VET_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa1';
+const UNKNOWN_VET_ID = '7fa85f64-5717-4562-b3fc-2c963f66afa9';
 
 function makeChange(overrides: Record<string, unknown> = {}) {
   return {
@@ -78,6 +89,13 @@ function createQueryResult(overrides: Record<string, unknown> = {}) {
 describe('MedicalRecordChangesScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseVeterinarianDirectory.mockReturnValue({
+      data: [{ id: VET_ID, name: 'Sofía Gómez', licenseNumber: 'MP 100' }],
+      namesById: new Map([[VET_ID, 'Sofía Gómez']]),
+      isError: false,
+      isPending: false,
+      refetch: jest.fn(),
+    });
   });
 
   it('shows a loading state while fetching', async () => {
@@ -234,5 +252,130 @@ describe('MedicalRecordChangesScreen', () => {
     expect(screen.getByTestId('history-filter-apply')).toBeTruthy();
     expect(screen.getByTestId('history-filter-clear')).toBeTruthy();
     expect(screen.getByTestId('history-end-of-list')).toBeTruthy();
+  });
+
+  it('resolves a veterinarian name from the shared directory without a raw UUID (RFG-177)', async () => {
+    mockUseMedicalRecordChanges.mockReturnValue(
+      createQueryResult({
+        data: {
+          pages: [
+            {
+              items: [
+                makeChange({
+                  changedFields: ['veterinarianId'],
+                  previousValues: { veterinarianId: VET_ID },
+                }),
+              ],
+              page: 1,
+              limit: 20,
+              total: 1,
+            },
+          ],
+        },
+      })
+    );
+    const screen = await render(<MedicalRecordChangesScreen recordId={RECORD_ID} />);
+
+    expect(screen.getAllByText('Veterinario').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Sofía Gómez')).toBeTruthy();
+    expect(screen.queryByText(VET_ID)).toBeNull();
+  });
+
+  it('falls back explicitly when the previous veterinarian is unassigned or unavailable', async () => {
+    mockUseMedicalRecordChanges.mockReturnValue(
+      createQueryResult({
+        data: {
+          pages: [
+            {
+              items: [
+                makeChange({
+                  id: 'change-vet-null',
+                  changedFields: ['veterinarianId'],
+                  previousValues: { veterinarianId: null },
+                }),
+                makeChange({
+                  id: 'change-vet-unknown',
+                  changedFields: ['veterinarianId'],
+                  previousValues: { veterinarianId: UNKNOWN_VET_ID },
+                }),
+              ],
+              page: 1,
+              limit: 20,
+              total: 2,
+            },
+          ],
+        },
+      })
+    );
+    const screen = await render(<MedicalRecordChangesScreen recordId={RECORD_ID} />);
+
+    expect(screen.getByText('Sin veterinario asignado')).toBeTruthy();
+    expect(screen.getByText('Veterinario no disponible')).toBeTruthy();
+    expect(screen.queryByText(UNKNOWN_VET_ID)).toBeNull();
+  });
+
+  it('keeps veterinarian fallbacks when the directory is offline', async () => {
+    mockUseVeterinarianDirectory.mockReturnValue({
+      data: undefined,
+      namesById: new Map(),
+      isError: true,
+      isPending: false,
+      refetch: jest.fn(),
+    });
+    mockUseMedicalRecordChanges.mockReturnValue(
+      createQueryResult({
+        data: {
+          pages: [
+            {
+              items: [
+                makeChange({
+                  changedFields: ['veterinarianId'],
+                  previousValues: { veterinarianId: VET_ID },
+                }),
+              ],
+              page: 1,
+              limit: 20,
+              total: 1,
+            },
+          ],
+        },
+      })
+    );
+    const screen = await render(<MedicalRecordChangesScreen recordId={RECORD_ID} />);
+
+    expect(screen.getByText('Veterinario no disponible')).toBeTruthy();
+    expect(screen.queryByText(VET_ID)).toBeNull();
+  });
+
+  it('shows an offline state with retry for a transport failure', async () => {
+    const changesRefetch = jest.fn();
+    const directoryRefetch = jest.fn();
+    mockUseVeterinarianDirectory.mockReturnValue({
+      data: undefined,
+      namesById: new Map(),
+      isError: false,
+      isPending: false,
+      refetch: directoryRefetch,
+    });
+    mockUseMedicalRecordChanges.mockReturnValue(
+      createQueryResult({
+        data: undefined,
+        isError: true,
+        error: new ApiError({
+          code: 'NETWORK_ERROR',
+          message: 'No pudimos conectar con el servidor.',
+          requestId: 'req-offline',
+          status: 0,
+        }),
+        refetch: changesRefetch,
+      })
+    );
+    const screen = await render(<MedicalRecordChangesScreen recordId={RECORD_ID} />);
+
+    expect(screen.getByTestId('offline-state')).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(changesRefetch).toHaveBeenCalled();
+    expect(directoryRefetch).toHaveBeenCalled();
   });
 });

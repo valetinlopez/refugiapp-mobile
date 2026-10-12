@@ -1,3 +1,8 @@
+import {
+  NO_VETERINARIAN_LABEL,
+  UNAVAILABLE_VETERINARIAN_LABEL,
+  resolveVeterinarianLabel,
+} from '@/application/veterinarians';
 import { formatDateTime, parseDateOnly, toLocalDateTimeIso } from '@/components/patterns';
 import { ApiError, toApiErrorMessage } from '@/core/api';
 import { isUuid } from '@/core/validation';
@@ -75,6 +80,28 @@ export function formatChangeValue(value: unknown): string {
     }
   }
   return truncateInline(String(value));
+}
+
+/**
+ * Formats a `previousValues` entry for the change history without ever leaking
+ * a raw UUID. Only `veterinarianId` is resolved through the shared directory;
+ * every other field keeps the defensive `formatChangeValue` behavior.
+ */
+export function formatPreviousChangeValue(
+  field: string,
+  value: unknown,
+  veterinarianNames: ReadonlyMap<string, string>
+): string {
+  if (field !== 'veterinarianId') return formatChangeValue(value);
+  if (value === null) return NO_VETERINARIAN_LABEL;
+  if (value === undefined) return 'Sin valor';
+  if (typeof value === 'string') {
+    const candidate = value.trim();
+    if (candidate === '') return NO_VETERINARIAN_LABEL;
+    if (!isUuid(candidate)) return UNAVAILABLE_VETERINARIAN_LABEL;
+    return resolveVeterinarianLabel(veterinarianNames, candidate);
+  }
+  return UNAVAILABLE_VETERINARIAN_LABEL;
 }
 
 export function changeFieldsSummary(change: MedicalRecordChange): string {
