@@ -1,5 +1,7 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
+import { ApiError } from '@/core/api';
 import type { Animal } from '@/features/animals/types';
 
 import { useAnimals } from '@/features/animals/hooks/useAnimals';
@@ -7,6 +9,7 @@ import { useAnimals } from '@/features/animals/hooks/useAnimals';
 import { useAnimalPhoto } from '@/features/animals/hooks/useAnimalPhoto';
 
 import { useSession } from '@/features/auth/session';
+import { sizes } from '@/theme';
 
 import ExploreScreen from '../explore';
 
@@ -33,23 +36,25 @@ const { router } = jest.requireMock('expo-router') as {
   router: { push: jest.Mock; replace: jest.Mock };
 };
 
-function createAnimal(): Animal {
+function createAnimal(overrides: Partial<Animal> = {}): Animal {
   return {
     id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
     name: 'Luna',
-    species: 'dog',
-    breed: null,
+    species: 'cat',
+    breed: 'Mestiza',
     sex: 'female',
-    status: 'admitted',
+    status: 'under_treatment',
     intakeDate: '2026-01-10',
     birthDate: null,
     profilePhotoMediaId: null,
+    ...overrides,
   };
 }
 
 function createQueryResult(overrides: Record<string, unknown> = {}) {
   return {
     data: { pages: [{ items: [createAnimal()], page: 1, limit: 20, total: 1 }] },
+    error: null,
     fetchNextPage: jest.fn(),
     hasNextPage: false,
     isError: false,
@@ -63,11 +68,28 @@ function createQueryResult(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function networkError() {
+  return new ApiError({
+    code: 'NETWORK_ERROR',
+    message: 'Network error',
+    requestId: 'request-id',
+    status: 0,
+  });
+}
+
 describe('ExploreScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseSession.mockReturnValue({ user: { roles: ['admin'] } });
     mockUseAnimalPhoto.mockReturnValue({ data: undefined, isError: false, isPending: false });
+  });
+
+  it('shows the title with the server total', async () => {
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+
+    expect(screen.getByText('Animales')).toBeTruthy();
+    expect(screen.getByText('1 animal registrado')).toBeTruthy();
   });
 
   it('shows a loading state while fetching', async () => {
@@ -92,6 +114,15 @@ describe('ExploreScreen', () => {
     expect(refetch).toHaveBeenCalled();
   });
 
+  it('shows the offline state without connection', async () => {
+    mockUseAnimals.mockReturnValue(
+      createQueryResult({ data: undefined, error: networkError(), isError: true, isSuccess: false })
+    );
+    const screen = await render(<ExploreScreen />);
+
+    expect(screen.getByText('Sin conexión')).toBeTruthy();
+  });
+
   it('shows an empty state when there are no animals', async () => {
     mockUseAnimals.mockReturnValue(
       createQueryResult({ data: { pages: [{ items: [], page: 1, limit: 20, total: 0 }] } })
@@ -101,18 +132,42 @@ describe('ExploreScreen', () => {
     expect(screen.getByText('Sin animales')).toBeTruthy();
   });
 
-  it('lists animals and navigates to the detail on press', async () => {
+  it('lists animals in grid cards and navigates to the detail on press', async () => {
     mockUseAnimals.mockReturnValue(createQueryResult());
     const screen = await render(<ExploreScreen />);
 
     expect(screen.getByText('Luna')).toBeTruthy();
+    expect(screen.getAllByText('En tratamiento').length).toBeGreaterThan(0);
 
-    await fireEvent.press(screen.getByRole('button', { name: /Luna, dog/ }));
+    await fireEvent.press(screen.getByRole('button', { name: /Luna, cat/ }));
 
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/animals/[id]',
       params: { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6' },
     });
+  });
+
+  it('de-duplicates animals repeated across pages', async () => {
+    const luna = createAnimal();
+    mockUseAnimals.mockReturnValue(
+      createQueryResult({
+        data: {
+          pages: [
+            { items: [luna], page: 1, limit: 20, total: 2 },
+            {
+              items: [luna, { ...luna, id: '9fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'Toby' }],
+              page: 2,
+              limit: 20,
+              total: 2,
+            },
+          ],
+        },
+      })
+    );
+    const screen = await render(<ExploreScreen />);
+
+    expect(screen.getAllByText('Luna')).toHaveLength(1);
+    expect(screen.getByText('Toby')).toBeTruthy();
   });
 
   it('loads the next page once when the end is reached', async () => {
@@ -156,7 +211,7 @@ describe('ExploreScreen', () => {
     mockUseAnimals.mockReturnValue(createQueryResult({ refetch }));
     const screen = await render(<ExploreScreen />);
 
-    fireEvent(screen.getByTestId('animals-list'), 'refresh');
+    screen.getByTestId('animals-list').props.refreshControl.props.onRefresh();
 
     expect(refetch).toHaveBeenCalledTimes(1);
   });
@@ -205,11 +260,12 @@ describe('ExploreScreen', () => {
     expect(mockUseAnimalPhoto).toHaveBeenCalledWith(mediaId);
   });
 
-  it('offers the alta action to writer roles', async () => {
+  it('offers the alta action as a FAB to writer roles', async () => {
     mockUseAnimals.mockReturnValue(createQueryResult());
     const screen = await render(<ExploreScreen />);
 
-    expect(screen.getByRole('button', { name: 'Alta' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Dar de alta un animal' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Alta' })).toBeNull();
   });
 
   it('hides the alta action for a veterinarian', async () => {
@@ -217,7 +273,7 @@ describe('ExploreScreen', () => {
     mockUseAnimals.mockReturnValue(createQueryResult());
     const screen = await render(<ExploreScreen />);
 
-    expect(screen.queryByRole('button', { name: 'Alta' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Dar de alta un animal' })).toBeNull();
   });
 
   it('debounces name search by 400ms', async () => {
@@ -233,20 +289,101 @@ describe('ExploreScreen', () => {
     });
   });
 
-  it('combines status, species and sex filters', async () => {
+  it('clears the quick search without losing the status filter', async () => {
     mockUseAnimals.mockReturnValue(createQueryResult());
     const screen = await render(<ExploreScreen />);
 
-    fireEvent.press(screen.getByRole('button', { name: 'Disponible para adopción' }));
-    fireEvent.press(screen.getByRole('button', { name: 'Hembra' }));
-    fireEvent.changeText(screen.getByLabelText('Filtrar por especie'), '  dog  ');
+    await fireEvent.press(screen.getByRole('radio', { name: 'En tratamiento' }));
+    await waitFor(() => {
+      expect(mockUseAnimals).toHaveBeenLastCalledWith({ status: 'under_treatment' });
+    });
 
+    fireEvent.changeText(screen.getByLabelText('Buscar animal'), 'Luna');
     await waitFor(() => {
       expect(mockUseAnimals).toHaveBeenLastCalledWith({
-        status: 'available_for_adoption',
-        sex: 'female',
-        species: 'dog',
+        name: 'Luna',
+        status: 'under_treatment',
       });
     });
+
+    await fireEvent.press(screen.getByTestId('animals-search-clear'));
+    await waitFor(() => {
+      expect(mockUseAnimals).toHaveBeenLastCalledWith({ status: 'under_treatment' });
+    });
+  });
+
+  it('maps the status segmented control to the contract filter', async () => {
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Disponible para adopción' }));
+    await waitFor(() => {
+      expect(mockUseAnimals).toHaveBeenLastCalledWith({ status: 'available_for_adoption' });
+    });
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Todos' }));
+    await waitFor(() => {
+      expect(mockUseAnimals).toHaveBeenLastCalledWith({});
+    });
+  });
+
+  it('applies species and sex from the advanced sheet', async () => {
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+
+    await fireEvent.press(screen.getByTestId('animals-open-filters'));
+    await fireEvent.changeText(screen.getByLabelText('Buscar por especie'), '  dog  ');
+    await fireEvent.press(screen.getByRole('radio', { name: 'Macho' }));
+    await fireEvent.press(screen.getByTestId('animals-filter-apply'));
+
+    expect(mockUseAnimals).toHaveBeenLastCalledWith({ species: 'dog', sex: 'male' });
+  });
+
+  it('summarizes active filters and removes them one by one', async () => {
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+
+    await fireEvent.press(screen.getByTestId('animals-open-filters'));
+    await fireEvent.changeText(screen.getByLabelText('Buscar por especie'), 'dog');
+    await fireEvent.press(screen.getByTestId('animals-filter-apply'));
+
+    expect(screen.getByTestId('animals-remove-filter-species')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('animals-remove-filter-species'));
+    await waitFor(() => {
+      expect(mockUseAnimals).toHaveBeenLastCalledWith({});
+    });
+  });
+
+  it('clears every filter from the toolbar', async () => {
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'En tratamiento' }));
+    await waitFor(() => {
+      expect(mockUseAnimals).toHaveBeenLastCalledWith({ status: 'under_treatment' });
+    });
+
+    await fireEvent.press(screen.getByTestId('animals-clear-filters'));
+
+    expect(mockUseAnimals).toHaveBeenLastCalledWith({});
+  });
+
+  it('limits the reading width on tablet without fixing the list height', async () => {
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+    const style = StyleSheet.flatten(
+      screen.getByTestId('animals-list').props.contentContainerStyle
+    );
+
+    expect(style).toEqual(
+      expect.objectContaining({
+        alignSelf: 'center',
+        flexGrow: 1,
+        maxWidth: sizes.contentMaxWidth,
+        width: '100%',
+      })
+    );
+    expect(style.height).toBeUndefined();
   });
 });
