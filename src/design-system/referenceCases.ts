@@ -455,6 +455,14 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
         note: 'Inicio rediseñado (RFG-169) con saludo, hero, resumen, accesos y prioridades.',
       },
       {
+        kind: 'implemented',
+        note: 'Hero a-bleed heroHome con scrim inferior local y solape del resumen (D38.3 / RFG-174).',
+      },
+      {
+        kind: 'ux',
+        note: 'El copy del hero es texto nativo sobre el scrim (nunca incrustado en el bitmap).',
+      },
+      {
         kind: 'ux',
         note: 'No hay total monetario mensual; Gastos muestra el total de registros.',
       },

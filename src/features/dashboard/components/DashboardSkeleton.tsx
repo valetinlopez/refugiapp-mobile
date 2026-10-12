@@ -5,10 +5,10 @@ import { colors, radii, spacing } from '@/theme';
 /**
  * Static loading placeholder for Inicio (D36 / RFG-169).
  *
- * The bars mirror the real layout (greeting, hero, summary, accesses,
- * priorities) so the first paint preserves the rhythm. It is a plain static
- * placeholder with an accessible progressbar role, so it needs no animation and
- * is compatible with reduce motion by construction.
+ * The bars mirror the real layout (greeting, full-bleed hero, overlapping
+ * summary, accesses, priorities) so the first paint preserves the rhythm. It is
+ * a plain static placeholder with an accessible progressbar role, so it needs no
+ * animation and is compatible with reduce motion by construction.
  */
 export function DashboardSkeleton() {
   return (
@@ -91,8 +91,8 @@ const styles = StyleSheet.create({
   },
   hero: {
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    height: 140,
+    height: 200,
+    width: '100%',
   },
   lines: {
     flex: 1,
