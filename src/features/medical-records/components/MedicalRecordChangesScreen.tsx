@@ -15,6 +15,7 @@ import { DateTimeField, FilterChip } from '@/components/patterns';
 import { AppButton, AppText } from '@/components/primitives';
 import { isNetworkError } from '@/core/network';
 import { colors, fontFamilies, radii, sizes, spacing } from '@/theme';
+import { useVeterinarianDirectory } from '@/application/veterinarians';
 
 import { useMedicalRecordChanges } from '../hooks/useMedicalRecordChanges';
 import type { MedicalRecordChangeFilters, MedicalRecordChangeType } from '../types';
@@ -40,6 +41,8 @@ export function MedicalRecordChangesScreen({ recordId }: MedicalRecordChangesScr
   const [filterError, setFilterError] = useState<string | null>(null);
 
   const query = useMedicalRecordChanges(recordId, filters);
+  const veterinarianDirectory = useVeterinarianDirectory();
+  const veterinarianNames = veterinarianDirectory.namesById;
   const { fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = query;
   const entries = useMemo(
     () => query.data?.pages.flatMap((page) => page.items) ?? [],
@@ -62,15 +65,17 @@ export function MedicalRecordChangesScreen({ recordId }: MedicalRecordChangesScr
   }
 
   const renderEntry = useCallback(
-    ({ item }: { item: (typeof entries)[number] }) => <MedicalRecordChangeCard change={item} />,
-    []
+    ({ item }: { item: (typeof entries)[number] }) => (
+      <MedicalRecordChangeCard change={item} veterinarianNames={veterinarianNames} />
+    ),
+    [veterinarianNames]
   );
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
   const handleRefresh = useCallback(() => {
-    void refetch();
-  }, [refetch]);
+    void Promise.all([refetch(), veterinarianDirectory.refetch()]);
+  }, [refetch, veterinarianDirectory]);
 
   if (query.isPending) return <LoadingState label="Cargando historial de cambios" />;
   if (query.isError) {
@@ -79,7 +84,7 @@ export function MedicalRecordChangesScreen({ recordId }: MedicalRecordChangesScr
         <OfflineState
           actionLabel={offlineCopy.actionLabel}
           message={offlineCopy.message}
-          onAction={() => void query.refetch()}
+          onAction={handleRefresh}
           testID={OFFLINE_STATE_TEST_ID}
           title={offlineCopy.title}
         />
@@ -89,7 +94,7 @@ export function MedicalRecordChangesScreen({ recordId }: MedicalRecordChangesScr
       <ErrorState
         actionLabel="Reintentar"
         message={toChangeErrorMessage(query.error)}
-        onAction={() => void query.refetch()}
+        onAction={handleRefresh}
         title="No se pudo cargar el historial"
       />
     );

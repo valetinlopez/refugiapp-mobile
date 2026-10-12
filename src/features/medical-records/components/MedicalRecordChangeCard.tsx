@@ -9,7 +9,7 @@ import type { MedicalRecordChange } from '../types';
 import {
   changeFieldsSummary,
   formatChangeDate,
-  formatChangeValue,
+  formatPreviousChangeValue,
   getChangeFieldLabel,
   getChangeTypeLabel,
   getChangeTypeTone,
@@ -19,8 +19,10 @@ const SYSTEM_ACTOR_LABEL = 'Usuario del sistema';
 
 export const MedicalRecordChangeCard = memo(function MedicalRecordChangeCard({
   change,
+  veterinarianNames,
 }: {
   change: MedicalRecordChange;
+  veterinarianNames: ReadonlyMap<string, string>;
 }) {
   const actorLabel = resolveActorLabel(
     change.changedBy?.displayName,
@@ -63,7 +65,11 @@ export const MedicalRecordChangeCard = memo(function MedicalRecordChangeCard({
                   {getChangeFieldLabel(field)}
                 </AppText>
                 <AppText style={styles.fieldValue}>
-                  {formatChangeValue(change.previousValues[field])}
+                  {formatPreviousChangeValue(
+                    field,
+                    change.previousValues[field],
+                    veterinarianNames
+                  )}
                 </AppText>
               </View>
             ))}
