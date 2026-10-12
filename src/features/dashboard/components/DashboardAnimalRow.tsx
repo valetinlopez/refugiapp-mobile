@@ -1,30 +1,42 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppAvatar, AppBadge, AppIcon, AppText } from '@/components/primitives';
+import {
+  AppAvatar,
+  AppIcon,
+  AppText,
+  AnimalStatusBadge,
+  getAnimalStatusLabel,
+} from '@/components/primitives';
 import { opacity, spacing } from '@/theme';
 
 import { useDashboardAnimalPhoto } from '../hooks/useDashboardAnimalPhoto';
 import type { DashboardAnimal } from '../types';
 import { formatSpeciesLabel } from '../utils/animalText';
-import { getStatusPresentation } from '../utils/presentation';
 
 export interface DashboardAnimalRowProps {
   animal: DashboardAnimal;
   onPress(animal: DashboardAnimal): void;
 }
 
+/**
+ * One "Animales recientes" row (D40 / RFG-176).
+ *
+ * The animal state renders as a compact icon-only badge: long labels such as
+ * "Disponible para adopción" can no longer truncate or wrap at 320 pt or
+ * 200 % font scale, while the row keeps announcing the full state.
+ */
 export const DashboardAnimalRow = memo(function DashboardAnimalRow({
   animal,
   onPress,
 }: DashboardAnimalRowProps) {
   const photoQuery = useDashboardAnimalPhoto(animal.profilePhotoMediaId);
-  const presentation = getStatusPresentation(animal.status);
+  const statusLabel = getAnimalStatusLabel(animal.status);
   const speciesLabel = formatSpeciesLabel(animal.species);
 
   return (
     <Pressable
-      accessibilityLabel={`${animal.name}, ${speciesLabel}, ${presentation.label}`}
+      accessibilityLabel={`${animal.name}, ${speciesLabel}, ${statusLabel}`}
       accessibilityRole="button"
       onPress={() => onPress(animal)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
@@ -46,13 +58,7 @@ export const DashboardAnimalRow = memo(function DashboardAnimalRow({
         </AppText>
       </View>
       <View style={styles.badgeWrap}>
-        <AppBadge
-          icon={presentation.icon}
-          label={presentation.label}
-          labelNumberOfLines={2}
-          style={styles.badge}
-          tone={presentation.tone}
-        />
+        <AnimalStatusBadge status={animal.status} variant="compact" />
       </View>
       <AppIcon color="textSecondary" name="chevronRight" style={styles.fixed} />
     </Pressable>
@@ -60,9 +66,6 @@ export const DashboardAnimalRow = memo(function DashboardAnimalRow({
 });
 
 const styles = StyleSheet.create({
-  badge: {
-    maxWidth: '100%',
-  },
   badgeWrap: {
     flexShrink: 0,
     maxWidth: '45%',
