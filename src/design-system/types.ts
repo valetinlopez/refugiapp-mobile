@@ -29,6 +29,19 @@ export const REFERENCE_STATES = [
 
 export type ReferenceStateId = (typeof REFERENCE_STATES)[number];
 
+/**
+ * Human-readable labels for the presentation states, shared by the catalog card
+ * and the per-state regression previews so both surfaces stay in sync.
+ */
+export const REFERENCE_STATE_LABELS: Record<ReferenceStateId, string> = {
+  default: 'Por defecto',
+  loading: 'Carga',
+  empty: 'Vacío',
+  error: 'Error',
+  offline: 'Sin conexión',
+  restricted: 'Sin permisos',
+};
+
 export const DIVERGENCE_KINDS = ['implemented', 'contract', 'ux', 'pending'] as const;
 
 export type DivergenceKind = (typeof DIVERGENCE_KINDS)[number];

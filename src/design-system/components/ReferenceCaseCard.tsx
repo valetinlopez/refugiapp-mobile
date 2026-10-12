@@ -7,16 +7,12 @@ import { colors, radii, spacing } from '@/theme';
 import type { BadgeTone } from '@/types/design-system';
 
 import { REFERENCE_VIEWPORTS } from '../viewports';
-import type { DivergenceKind, ReferenceCase, ReferenceStateId } from '../types';
-
-const STATE_LABELS: Record<ReferenceStateId, string> = {
-  default: 'Por defecto',
-  loading: 'Carga',
-  empty: 'Vacío',
-  error: 'Error',
-  offline: 'Sin conexión',
-  restricted: 'Sin permisos',
-};
+import {
+  REFERENCE_STATE_LABELS,
+  REFERENCE_STATES,
+  type DivergenceKind,
+  type ReferenceCase,
+} from '../types';
 
 const DIVERGENCE_PRESENTATION: Record<DivergenceKind, { label: string; tone: BadgeTone }> = {
   implemented: { label: 'Implementado', tone: 'positive' },
@@ -46,7 +42,7 @@ export function ReferenceCaseCard({ referenceCase, children }: ReferenceCaseCard
     `referencia ${referenceCase.referenceFile}`,
     `ruta ${referenceCase.route}`,
     `roles: ${referenceCase.audience}`,
-    `estados: ${referenceCase.states.map((state) => STATE_LABELS[state]).join(', ') || 'por defecto'}`,
+    `estados: ${referenceCase.states.map((state) => REFERENCE_STATE_LABELS[state]).join(', ') || 'por defecto'}`,
   ].join('. ');
 
   return (
@@ -71,7 +67,18 @@ export function ReferenceCaseCard({ referenceCase, children }: ReferenceCaseCard
         </AppText>
         <View style={styles.wrap}>
           {referenceCase.states.map((state) => (
-            <AppBadge key={state} label={STATE_LABELS[state]} />
+            <AppBadge key={state} label={REFERENCE_STATE_LABELS[state]} />
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.block}>
+        <AppText color="textSecondary" variant="label">
+          Cobertura de regresión (RFG-167)
+        </AppText>
+        <View style={styles.wrap}>
+          {REFERENCE_STATES.map((state) => (
+            <AppBadge icon="check" key={state} label={REFERENCE_STATE_LABELS[state]} />
           ))}
         </View>
       </View>

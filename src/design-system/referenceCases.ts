@@ -217,7 +217,7 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     audience: 'Lectura los tres roles; escritura admin/shelter_manager',
     states: ['default', 'loading', 'empty', 'error', 'offline'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-151).' },
+      { kind: 'implemented', note: 'Rediseño (RFG-151).' },
       { kind: 'contract', note: 'Sin campo type: no inferir categorías desde el título.' },
     ],
     group: 'care',
@@ -230,7 +230,7 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     audience: 'admin/shelter_manager',
     states: ['default', 'loading', 'error'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-152).' },
+      { kind: 'implemented', note: 'Rediseño (RFG-152).' },
       {
         kind: 'contract',
         note: 'Sin type ni responsable asignable; el backend registra a createdByUserId.',
@@ -246,7 +246,7 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     audience: 'Lectura los tres roles; acciones admin/shelter_manager',
     states: ['default', 'loading', 'error', 'restricted'],
     divergences: [
-      { kind: 'pending', note: 'Rediseño (RFG-153).' },
+      { kind: 'implemented', note: 'Rediseño (RFG-153).' },
       { kind: 'ux', note: 'Completar/cancelar con ConfirmDialog.' },
     ],
     group: 'care',
@@ -355,11 +355,12 @@ export const REFERENCE_CASES: readonly ReferenceCase[] = [
     id: 'D06-18',
     index: 18,
     referenceFile: '18-medical-record-detail.jpeg',
-    route: 'app/(app)/animals/[id]/medical-records/[recordId]/changes.tsx y detalle (pendiente)',
+    route:
+      'app/(app)/medical-records/[id].tsx (detalle) y app/(app)/animals/[id]/medical-records/[recordId]/changes.tsx (historial)',
     audience: 'admin/veterinarian (canReadClinicalRecords)',
     states: ['default', 'loading', 'error', 'restricted'],
     divergences: [
-      { kind: 'pending', note: 'Detalle dedicado (RFG-160).' },
+      { kind: 'implemented', note: 'Detalle dedicado (RFG-160).' },
       { kind: 'contract', note: '/medical-records/:id/changes paginado.' },
     ],
     group: 'clinical',

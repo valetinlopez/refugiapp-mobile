@@ -1,7 +1,14 @@
 import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { MediaUploadStatus } from '@/components/feedback';
+import {
+  EmptyState,
+  ErrorState,
+  FeedbackState,
+  LoadingState,
+  MediaUploadStatus,
+  OfflineState,
+} from '@/components/feedback';
 import {
   ActorRow,
   AttachmentList,
@@ -10,11 +17,19 @@ import {
   SegmentedControl,
   TaskRow,
   formatDateMedium,
+  formatDateTime,
   type SegmentedControlOption,
 } from '@/components/patterns';
-import { AppBadge, AppButton, AppCard, AppDivider, AppText } from '@/components/primitives';
-import { AnimalHistoryTimelineItem } from '@/features/animals/components/AnimalHistoryTimelineItem';
-import { colors, radii, spacing } from '@/theme';
+import {
+  AppBadge,
+  AppButton,
+  AppCard,
+  AppDivider,
+  AppIcon,
+  AppText,
+  type AppIconName,
+} from '@/components/primitives';
+import { colors, radii, sizes, spacing, type ColorToken } from '@/theme';
 import type { AnimalStatus, BadgeTone } from '@/types/design-system';
 
 import {
@@ -28,9 +43,17 @@ import {
   MEDICAL_RECORD_FIXTURES,
   USER_FIXTURES,
   VETERINARIAN_FIXTURES,
+  type AnimalEventType,
 } from './fixtures';
 import { formatAmountCents } from './format';
-import type { ReferenceCase } from './types';
+import {
+  REFERENCE_STATES,
+  REFERENCE_STATE_LABELS,
+  type ReferenceCase,
+  type ReferenceGroupId,
+  type ReferenceStateId,
+} from './types';
+import { referencePreviewTestId, referenceStatesTestId } from './testUtils';
 
 const ANIMAL_STATUS_PRESENTATION: Record<AnimalStatus, { label: string; tone: BadgeTone }> = {
   admitted: { label: 'Ingresado', tone: 'default' },
@@ -57,6 +80,71 @@ const SEX_PREVIEW_OPTIONS: readonly SegmentedControlOption<PreviewAnimalSex>[] =
 ];
 
 type PreviewAnimalSex = 'female' | 'male' | 'unknown';
+
+const ANIMAL_EVENT_LABELS: Record<AnimalEventType, string> = {
+  intake: 'Ingreso',
+  transfer: 'Transferencia',
+  status_change: 'Cambio de estado',
+  behavior_note: 'Nota de comportamiento',
+  adoption: 'Adopción',
+  general_note: 'Nota general',
+};
+
+const ANIMAL_EVENT_VISUALS: Record<AnimalEventType, { icon: AppIconName; tone: ColorToken }> = {
+  intake: { icon: 'calendar', tone: 'warning' },
+  transfer: { icon: 'transport', tone: 'warning' },
+  status_change: { icon: 'medical', tone: 'info' },
+  behavior_note: { icon: 'document', tone: 'positive' },
+  adoption: { icon: 'heart', tone: 'positive' },
+  general_note: { icon: 'document', tone: 'neutral' },
+};
+
+/**
+ * Local timeline item for the history case. The visual-validation harness may
+ * not import `src/features`, so this composes the shared primitives and tokens
+ * directly instead of the feature's `AnimalHistoryTimelineItem`.
+ */
+function AnimalEventTimelineItem({
+  event,
+  isFirst,
+  isLast,
+}: {
+  event: (typeof ANIMAL_EVENT_FIXTURES)[number];
+  isFirst: boolean;
+  isLast: boolean;
+}) {
+  const label = ANIMAL_EVENT_LABELS[event.eventType];
+  const visual = ANIMAL_EVENT_VISUALS[event.eventType];
+  const date = formatDateTime(event.occurredAt);
+
+  return (
+    <View
+      accessibilityLabel={`${label}. ${event.description}. ${date}`}
+      accessibilityRole="summary"
+      style={styles.timelineRow}
+      testID="animal-history-event"
+    >
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={styles.timelineMarkerColumn}
+      >
+        {!isFirst ? <View style={styles.timelineLineTop} /> : null}
+        {!isLast ? <View style={styles.timelineLineBottom} /> : null}
+        <View style={[styles.timelineMarker, { backgroundColor: colors[visual.tone] }]}>
+          <AppIcon color="textInverse" name={visual.icon} />
+        </View>
+      </View>
+      <AppCard style={styles.timelineCard} variant="elevated">
+        <AppText variant="heading3">{label}</AppText>
+        <AppText>{event.description}</AppText>
+        <AppText color="textSecondary" variant="caption">
+          {date}
+        </AppText>
+      </AppCard>
+    </View>
+  );
+}
 
 function LoginPreview() {
   return (
@@ -139,7 +227,7 @@ function AnimalHistoryPreview() {
   return (
     <View style={styles.stack}>
       {ANIMAL_EVENT_FIXTURES.map((event, index) => (
-        <AnimalHistoryTimelineItem
+        <AnimalEventTimelineItem
           event={event}
           isFirst={index === 0}
           isLast={index === ANIMAL_EVENT_FIXTURES.length - 1}
@@ -598,6 +686,103 @@ const PREVIEWS: Partial<Record<ReferenceCase['id'], () => ReactNode>> = {
   'D06-25': AnimalsListPreview,
 };
 
+const GROUP_SUBJECT: Record<ReferenceGroupId, string> = {
+  'auth-account': 'los datos de tu cuenta',
+  animals: 'los animales',
+  care: 'los cuidados',
+  expenses: 'los gastos',
+  clinical: 'los registros clínicos',
+  veterinarians: 'los veterinarios',
+  audit: 'la auditoría',
+  final: 'la información',
+};
+
+const FINAL_SUBJECT_OVERRIDES: Record<string, string> = {
+  'D06-24': 'el resumen de Inicio',
+  'D06-25': 'los animales',
+};
+
+/**
+ * Subject noun used to phrase the shared presentation states per domain. The
+ * `final` group needs per-case copy so Inicio and Animales read naturally.
+ */
+function regressionSubject(referenceCase: ReferenceCase): string {
+  const override = FINAL_SUBJECT_OVERRIDES[referenceCase.id];
+  if (referenceCase.group === 'final' && override !== undefined) {
+    return override;
+  }
+  return GROUP_SUBJECT[referenceCase.group];
+}
+
+/**
+ * Renders one shared presentation state (loading, empty, error, offline or
+ * restricted) for a case. The `default` state is the case preview itself and is
+ * rendered by `ReferencePreview`. Each block keeps a stable `testID`
+ * `ds-case-D06-NN-<state>` so `RFG-167` can select and regress the six states.
+ */
+function StatePreview({
+  referenceCase,
+  state,
+}: {
+  referenceCase: ReferenceCase;
+  state: ReferenceStateId;
+}) {
+  let content: ReactNode;
+  const subject = regressionSubject(referenceCase);
+
+  switch (state) {
+    case 'loading':
+      content = <LoadingState label={`Cargando ${subject}`} />;
+      break;
+    case 'empty':
+      content = (
+        <EmptyState message={`Todavía no hay ${subject} para mostrar.`} title="Sin resultados" />
+      );
+      break;
+    case 'error':
+      content = (
+        <ErrorState
+          actionLabel="Reintentar"
+          message={`No pudimos cargar ${subject}.`}
+          onAction={() => undefined}
+          title="Algo salió mal"
+        />
+      );
+      break;
+    case 'offline':
+      content = (
+        <OfflineState
+          actionLabel="Volver a intentar"
+          message="Revisá tu conexión y volvé a intentarlo."
+          onAction={() => undefined}
+          title="Sin conexión"
+        />
+      );
+      break;
+    case 'restricted':
+      content = (
+        <FeedbackState
+          icon="account"
+          message="Tu rol no habilita esta pantalla; el backend vuelve a validar."
+          title="Sin permiso"
+          tone="neutral"
+        />
+      );
+      break;
+    default:
+      content = null;
+  }
+
+  return (
+    <View style={styles.stateBlock} testID={referenceStatesTestId(referenceCase.id, state)}>
+      <AppText color="textSecondary" variant="label">
+        {REFERENCE_STATE_LABELS[state]}
+      </AppText>
+      {content}
+    </View>
+  );
+}
+
 /**
  * Renders the reproducible case of a reference (D06 / RFG-139).
  *
@@ -610,11 +795,21 @@ export function ReferencePreview({ referenceCase }: { referenceCase: ReferenceCa
   const Preview = PREVIEWS[referenceCase.id];
   if (!Preview) return null;
   return (
-    <View style={styles.preview} testID={`ds-case-preview-${referenceCase.id}`}>
-      <Preview />
+    <View style={styles.preview} testID={referencePreviewTestId(referenceCase.id)}>
+      <View style={styles.stateBlock} testID={referenceStatesTestId(referenceCase.id, 'default')}>
+        <AppText color="textSecondary" variant="label">
+          {REFERENCE_STATE_LABELS.default}
+        </AppText>
+        <Preview />
+      </View>
+      {REFERENCE_STATES.filter((state) => state !== 'default').map((state) => (
+        <StatePreview key={state} referenceCase={referenceCase} state={state} />
+      ))}
     </View>
   );
 }
+
+const timelineLineLeft = (sizes.touchTarget - sizes.divider) / 2;
 
 const styles = StyleSheet.create({
   actionRow: {
@@ -646,6 +841,48 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   stack: {
+    gap: spacing.sm,
+  },
+  stateBlock: {
+    gap: spacing.xs,
+  },
+  timelineCard: {
+    flex: 1,
+    gap: spacing.xxs,
+    minWidth: 0,
+  },
+  timelineLineBottom: {
+    backgroundColor: colors.divider,
+    bottom: -spacing.sm,
+    left: timelineLineLeft,
+    position: 'absolute',
+    top: '50%',
+    width: sizes.divider,
+  },
+  timelineLineTop: {
+    backgroundColor: colors.divider,
+    bottom: '50%',
+    left: timelineLineLeft,
+    position: 'absolute',
+    top: 0,
+    width: sizes.divider,
+  },
+  timelineMarker: {
+    alignItems: 'center',
+    borderRadius: radii.full,
+    height: sizes.touchTarget,
+    justifyContent: 'center',
+    width: sizes.touchTarget,
+  },
+  timelineMarkerColumn: {
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+    width: sizes.touchTarget,
+  },
+  timelineRow: {
+    alignItems: 'stretch',
+    flexDirection: 'row',
     gap: spacing.sm,
   },
 });

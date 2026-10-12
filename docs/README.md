@@ -17,6 +17,7 @@ Este directorio es el índice de documentación viva del frontend móvil.
 | [`releases/`](releases/)                                                   | Notas y evidencia por candidata               | Cada candidata o publicación                                                   |
 | [`design-references/`](design-references/README.md)                        | Referencias visuales y matriz de trazabilidad | Al versionar, renombrar o catalogar referencias visuales                       |
 | [`design-validation/`](design-validation/checklist.md)                     | Checklist de validación visual D06            | Al preparar o ejecutar la validación por referencia y viewport                 |
+| [`design-validation/regression-25.md`](design-validation/regression-25.md) | Evidencia de la regresión visual RFG-167      | Al cerrar o ampliar la regresión de las 25 referencias                         |
 | [`design-validation/veterinarians.md`](design-validation/veterinarians.md) | Certificación D31 de Veterinarios             | Al modificar lista, alta, perfil, permisos o cambios de estado de veterinarios |
 
 ## Reglas locales
