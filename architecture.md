@@ -32,6 +32,7 @@ Los detalles visuales viven en `docs/design.md`. Los contratos del servidor y pe
 | Selector de fecha   | `@react-native-community/datetimepicker` | Patrón compartido para animales, tareas y registros médicos (ver ADR-0004)                                                    |
 | Selección de media  | Expo ImagePicker + DocumentPicker        | Cámara, galería e importación de PDF (ver ADR-0005)                                                                           |
 | Imágenes remotas    | Expo Image                               | Caché memoria/disco y media Cloudinary optimizada (ver ADR-0012)                                                              |
+| Degradados          | `expo-linear-gradient` (SDK 57)          | Solo el fundido foto→fondo del hero de Inicio (`transparent` → `background`, sin estado ni texto)                             |
 | Assets de marca     | SVG + sharp (dev) + WebP/PNG             | Hojas vectoriales propias; hero de stock licenciado (Pngtree); densidades `@Nx` resueltas por Metro (ver ADR-0015 y ADR-0016) |
 | Push notifications  | Expo Notifications                       | Permisos, token Expo, preferencias y navegación por tap (ver ADR-0014)                                                        |
 | Portapapeles        | Expo Clipboard                           | Copiado accesible de identificadores en Auditoría (D33/RFG-166)                                                               |

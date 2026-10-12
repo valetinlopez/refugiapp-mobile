@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 
 import { HOME_HERO_TAGLINE, HomeGreeting } from './HomeGreeting';
 import { formatHomeDate, getSessionGreeting } from '../utils/greeting';
@@ -7,7 +7,15 @@ jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
 }));
 
-describe('HomeGreeting (D36 / RFG-169, D38.3 / RFG-174)', () => {
+const { router } = jest.requireMock('expo-router') as {
+  router: { push: jest.Mock };
+};
+
+describe('HomeGreeting (D36 / RFG-169, D38.3 / RFG-174, D39.1 / RFG-175)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('renders the greeting and the local es-AR date from the session', async () => {
     const now = new Date('2026-10-10T10:00:00-03:00');
     const screen = await render(<HomeGreeting firstName="Andrés" now={now} />);
@@ -35,9 +43,24 @@ describe('HomeGreeting (D36 / RFG-169, D38.3 / RFG-174)', () => {
     expect(screen.queryByText(HOME_HERO_TAGLINE)).toBeNull();
   });
 
-  it('keeps the account shortcut accessible', async () => {
+  it('keeps the profile shortcut accessible with initials and navigates to the profile', async () => {
+    const screen = await render(<HomeGreeting firstName="Andrés" lastName="Borrego" />);
+
+    const profile = screen.getByRole('button', { name: 'Abrir perfil' });
+    expect(profile).toBeTruthy();
+    expect(screen.getByText('AB')).toBeTruthy();
+
+    await fireEvent.press(profile);
+    expect(router.push).toHaveBeenCalledWith('/profile');
+  });
+
+  it('keeps the notifications shortcut accessible and navigates to More', async () => {
     const screen = await render(<HomeGreeting firstName="Andrés" />);
 
-    expect(screen.getByRole('button', { name: 'Abrir menú de cuenta' })).toBeTruthy();
+    const notifications = screen.getByRole('button', { name: 'Abrir notificaciones' });
+    expect(notifications).toBeTruthy();
+
+    await fireEvent.press(notifications);
+    expect(router.push).toHaveBeenCalledWith('/more');
   });
 });

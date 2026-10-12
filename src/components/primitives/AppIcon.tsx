@@ -28,6 +28,7 @@ export type AppIconName =
   | 'medical'
   | 'menu'
   | 'money'
+  | 'notification'
   | 'offline'
   | 'paw'
   | 'phone'
@@ -68,6 +69,7 @@ const iconNames: Record<AppIconName, SymbolViewProps['name']> = {
   medical: { ios: 'stethoscope', android: 'stethoscope', web: 'stethoscope' },
   menu: { ios: 'ellipsis', android: 'more_horiz', web: 'more_horiz' },
   money: { ios: 'banknote.fill', android: 'payments', web: 'payments' },
+  notification: { ios: 'bell.fill', android: 'notifications', web: 'notifications' },
   offline: { ios: 'wifi.slash', android: 'wifi_off', web: 'wifi_off' },
   paw: { ios: 'pawprint.fill', android: 'pets', web: 'pets' },
   phone: { ios: 'phone.fill', android: 'call', web: 'call' },

@@ -1,34 +1,32 @@
-import type { ReactNode } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { DecorativeImage, resolveBrandSource } from '@/components/patterns';
-import { colors, opacity, sizes, spacing } from '@/theme';
-
-export interface HomeHeroProps {
-  /** Native copy rendered over the scrim band (greeting + account shortcut). */
-  children: ReactNode;
-}
+import { colors, spacing } from '@/theme';
 
 /**
- * The `hero-home` master is a 16:9 photograph (4461×2500). The reserved image
- * height keeps the header stable and scales with the viewport, avoiding layout
- * shift while leaving the band below content-sized.
+ * The `hero-home` master is a 16:9 photograph (4461×2500). The reserved aspect
+ * ratio plus a viewport-proportional minimum height keep the header stable and
+ * avoid layout shift on narrow screens or amplified fonts.
  */
 const HERO_IMAGE_MIN_HEIGHT_FACTOR = 0.26;
 
 /**
- * Full-bleed decorative hero for Inicio (D38.3 / RFG-174).
+ * Full-bleed decorative hero for Inicio (D38.3 / RFG-174, header-first reorder).
  *
- * Reuses the editorial pattern of the login hero (D04 / RFG-137): the `heroHome`
- * photograph bleeds edge to edge behind the greeting and the "Resumen de hoy"
- * card overlaps the bottom. The image is strictly decorative (hidden from
- * assistive technologies, `priority="high"` for the LCP, WebP + PNG fallback via
- * `resolveBrandSource`), while every piece of functional copy arrives as native
- * `children` over a local scrim band that keeps `textPrimary` readable regardless
- * of the subject behind it. The scrim is local, not a full overlay, so the top of
- * the photograph stays visible and editorial.
+ * Reference `24-dashboard-home.jpeg` orders the screen as header → hero →
+ * summary: the greeting (`HomeGreeting`) renders first on the solid page
+ * background and this block only carries the `heroHome` photograph bleeding
+ * edge to edge. The image is strictly decorative (hidden from assistive
+ * technologies, `priority="high"` for the LCP, WebP + PNG fallback via
+ * `resolveBrandSource`) and never holds functional copy.
+ *
+ * A subtle `LinearGradient` (`transparent` → `colors.background`, Expo SDK 57)
+ * melts the bottom of the photo into the page so the "Resumen de hoy" card
+ * overlaps a smooth blend instead of a hard cut or a visible band edge. Only
+ * theme colors, no hexadecimals, no arbitrary measures.
  */
-export function HomeHero({ children }: HomeHeroProps) {
+export function HomeHero() {
   const { height } = useWindowDimensions();
   const source = resolveBrandSource('heroHome');
   const imageMinHeight = Math.round(height * HERO_IMAGE_MIN_HEIGHT_FACTOR);
@@ -36,6 +34,7 @@ export function HomeHero({ children }: HomeHeroProps) {
   return (
     <View style={styles.header} testID="home-hero">
       <DecorativeImage
+        aspectRatio={16 / 9}
         contentFit="cover"
         fallbackSource={source.png}
         priority="high"
@@ -43,37 +42,28 @@ export function HomeHero({ children }: HomeHeroProps) {
         style={[styles.image, { minHeight: imageMinHeight }]}
         testID="home-hero-image"
       />
-      <View style={styles.band}>
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, styles.bandAccent]}
-          testID="home-hero-scrim"
-        />
-        <View style={styles.bandContent}>{children}</View>
-      </View>
+      <LinearGradient
+        colors={[colors.transparent, colors.background]}
+        pointerEvents="none"
+        style={styles.fade}
+        testID="home-hero-fade"
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  band: {
-    backgroundColor: colors.scrim,
-    position: 'relative',
-    width: '100%',
-  },
-  bandAccent: {
-    backgroundColor: colors.background,
-    opacity: opacity.overlay,
-  },
-  bandContent: {
-    alignSelf: 'center',
-    maxWidth: sizes.contentMaxWidth,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    width: '100%',
+  fade: {
+    bottom: 0,
+    height: spacing['3xl'],
+    left: 0,
+    position: 'absolute',
+    right: 0,
   },
   header: {
+    backgroundColor: colors.background,
     overflow: 'hidden',
+    position: 'relative',
     width: '100%',
   },
   image: {
