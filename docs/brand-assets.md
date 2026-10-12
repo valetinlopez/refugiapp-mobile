@@ -7,7 +7,7 @@ Documento de procedencia, autoría, licencia, variantes y uso de los assets de m
 Crear los bloques decorativos de la experiencia móvil sin reutilizar capturas de `docs/design-references/` como fondos:
 
 - **Hero de perro rescatado:** protagonista editorial de la cabecera de login (consumida en RFG-137). Es **fotografía de stock licenciada** (Pngtree, plan gratuito con atribución) — ver §2 y ADR-0016.
-- **Hero de Inicio:** banner fotográfico de perro y gato de la portada (consumido en D36 / RFG-169). Es **fotografía de stock** (4461×2500) — ver §2.
+- **Hero de Inicio:** hero a-bleed de la cabecera de la portada (consumido en D36 / RFG-169; recomposición a-bleed estilo login en D38.3 / RFG-174). Es **fotografía de stock** (4461×2500) — ver §2.
 - **Marca vegetal:** símbolo botánico mínimo de marca (ilustración vectorial original propia).
 - **Textura de hojas:** patrón sutil de fondo para cabeceras editoriales (ilustración vectorial original propia).
 
@@ -36,12 +36,12 @@ Ningún asset incrusta texto, badges, botones ni información de estado: son orn
 
 `assets/images/brand/`:
 
-| Asset               | WebP                                 | PNG fallback                        | Uso             |
-| ------------------- | ------------------------------------ | ----------------------------------- | --------------- |
-| `hero-rescued-dog`  | `@3x` (1080) — única densidad        | `hero-rescued-dog.png` (360, PNG-8) | Hero login      |
-| `hero-home`         | `@3x` (1080) — única densidad        | `hero-home.png` (360, PNG-8)        | Hero de Inicio  |
-| `brand-leaf-mark`   | `@1x` (48), `@2x` (96), `@3x` (144)  | `brand-leaf-mark.png` (144)         | Marca vegetal   |
-| `leaf-texture-tile` | `@1x` (80), `@2x` (160), `@3x` (240) | `leaf-texture-tile.png` (240)       | Fondo editorial |
+| Asset               | WebP                                 | PNG fallback                        | Uso                            |
+| ------------------- | ------------------------------------ | ----------------------------------- | ------------------------------ |
+| `hero-rescued-dog`  | `@3x` (1080) — única densidad        | `hero-rescued-dog.png` (360, PNG-8) | Hero login                     |
+| `hero-home`         | `@3x` (1080) — única densidad        | `hero-home.png` (360, PNG-8)        | Hero de Inicio (a-bleed D38.3) |
+| `brand-leaf-mark`   | `@1x` (48), `@2x` (96), `@3x` (144)  | `brand-leaf-mark.png` (144)         | Marca vegetal                  |
+| `leaf-texture-tile` | `@1x` (80), `@2x` (160), `@3x` (240) | `leaf-texture-tile.png` (240)       | Fondo editorial                |
 
 `hero-home` es un banner 16:9 (el ancho se versiona, el alto deriva del aspect ratio); `hero-rescued-dog` es cuadrado.
 
@@ -64,7 +64,7 @@ Ningún asset incrusta texto, badges, botones ni información de estado: son orn
 
 - Todo decorativo se oculta a tecnologías asistivas. `DecorativeImage` (`src/components/patterns`) aplica `accessible={false}`, `accessibilityElementsHidden`, `importantForAccessibility="no-hide-descendants"` y `alt=""` por defecto.
 - Ningún asset comunica estado; las hojas y el hero son ornamentales, no señales semánticas.
-- `expo-image`: `allowDownscaling` (clave para el hero de densidad única), `cachePolicy="memory-disk"` y prioridad baja por ser no crítico.
+- `expo-image`: `allowDownscaling` (clave para el hero de densidad única), `cachePolicy="memory-disk"` y prioridad baja por ser no crítico; el hero del login (D04 / RFG-137) y el hero de Inicio (D38.3 / RFG-174) suben `priority` a `high` por ser la imagen principal del primer pliegue.
 
 ## 5. Consumo desde la UI
 
@@ -123,4 +123,4 @@ npm run assets:brand   # node scripts/generate-brand-assets.mjs
 - Épica: `RFG-133`; Sprint 15.
 - Decisiones: ADR-0015 (pipeline), ADR-0016 (hero stock Pngtree con atribución).
 - Desbloquea: D04 login editorial `RFG-137`.
-- `hero-home` (foto perro+gato) se incorpora en D36 / `RFG-169`; es fotografía de stock con atribución pendiente (ver §2) y se consume vía `brandAssets`/`resolveBrandSource` en `HomeHero` de la feature `dashboard`.
+- `hero-home` (foto perro+gato) se incorpora en D36 / `RFG-169`; es fotografía de stock con atribución pendiente (ver §2) y se consume vía `brandAssets`/`resolveBrandSource` en `HomeHero` de la feature `dashboard`. D38.3 / `RFG-174` la recompone como hero a-bleed estilo login con scrim inferior local y solape del "Resumen de hoy", manteniendo siempre el texto funcional en capas nativas (nunca incrustado en el bitmap).

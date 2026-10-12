@@ -10,6 +10,7 @@ import { getSessionGreeting } from '@/features/dashboard/utils/greeting';
 
 import { useAnimalOptions, useAnimalOptionPhoto } from '@/application/animals';
 import { useHomeSummary } from '@/application/home';
+import { HOME_HERO_TAGLINE } from '@/features/dashboard/components/HomeGreeting';
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
@@ -172,6 +173,20 @@ describe('DashboardScreen (D36 / RFG-169)', () => {
     const screen = await render(<DashboardScreen />);
 
     expect(screen.getByText(getSessionGreeting('Andrés'))).toBeTruthy();
+  });
+
+  it('renders the greeting and the native tagline over the full-bleed hero', async () => {
+    const screen = await render(<DashboardScreen />);
+
+    expect(screen.getByTestId('home-hero')).toBeTruthy();
+    expect(screen.getByText(getSessionGreeting('Andrés'))).toBeTruthy();
+    expect(screen.getByText(HOME_HERO_TAGLINE)).toBeTruthy();
+  });
+
+  it('renders the local scrim band that keeps the hero copy readable', async () => {
+    const screen = await render(<DashboardScreen />);
+
+    expect(screen.getByTestId('home-hero-scrim')).toBeTruthy();
   });
 
   it('shows the three real indicators in the summary', async () => {

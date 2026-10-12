@@ -12,8 +12,10 @@ import {
 import {
   ActorRow,
   AttachmentList,
+  DecorativeImage,
   EntityCard,
   MetadataRow,
+  resolveBrandSource,
   SegmentedControl,
   TaskRow,
   formatDateMedium,
@@ -29,7 +31,7 @@ import {
   AppText,
   type AppIconName,
 } from '@/components/primitives';
-import { colors, radii, sizes, spacing, type ColorToken } from '@/theme';
+import { colors, opacity, radii, sizes, spacing, type ColorToken } from '@/theme';
 import type { AnimalStatus, BadgeTone } from '@/types/design-system';
 
 import {
@@ -603,15 +605,30 @@ function AuditDetailPreview() {
   );
 }
 
+const heroHome = resolveBrandSource('heroHome');
+
 function DashboardHomePreview() {
   const pending = CARE_TASK_FIXTURES.filter((task) => task.status === 'pending');
   return (
     <View style={styles.stack}>
-      <AppText variant="heading3">Buenas tardes, Andrés</AppText>
-      <AppText color="textSecondary" variant="caption">
-        Hoy, 20 de septiembre
-      </AppText>
-      <AppCard style={styles.stack} variant="organic">
+      <View style={styles.heroBand}>
+        <DecorativeImage
+          contentFit="cover"
+          fallbackSource={heroHome.png}
+          priority="high"
+          source={heroHome.webp}
+          style={styles.heroImage}
+        />
+        <View style={styles.heroScrim} />
+        <View style={styles.heroCopy}>
+          <AppText variant="heading3">Buenas tardes, Andrés</AppText>
+          <AppText color="textSecondary" variant="caption">
+            Hoy, 20 de septiembre
+          </AppText>
+          <AppText variant="bodyStrong">Mismo compromiso. Más vidas posibles.</AppText>
+        </View>
+      </View>
+      <AppCard style={styles.summaryOverlap} variant="organic">
         <View style={styles.badgeWrap}>
           <AppBadge icon="paw" label="Animales: 48" />
           <AppBadge icon="medical" label="En tratamiento: 9" tone="info" />
@@ -829,6 +846,29 @@ const styles = StyleSheet.create({
     height: spacing.xs,
     width: spacing.xs,
   },
+  heroBand: {
+    overflow: 'hidden',
+    position: 'relative',
+    width: '100%',
+  },
+  heroCopy: {
+    gap: spacing.xxs,
+    padding: spacing.md,
+    position: 'relative',
+  },
+  heroImage: {
+    height: 160,
+    width: '100%',
+  },
+  heroScrim: {
+    backgroundColor: colors.scrim,
+    bottom: 0,
+    left: 0,
+    opacity: opacity.overlay,
+    position: 'absolute',
+    right: 0,
+    top: '30%',
+  },
   preview: {
     borderColor: colors.divider,
     borderRadius: radii.md,
@@ -845,6 +885,9 @@ const styles = StyleSheet.create({
   },
   stateBlock: {
     gap: spacing.xs,
+  },
+  summaryOverlap: {
+    marginTop: -spacing.xs,
   },
   timelineCard: {
     flex: 1,

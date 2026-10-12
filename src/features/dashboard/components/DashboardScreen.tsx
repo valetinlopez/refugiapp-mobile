@@ -18,7 +18,7 @@ import { toDashboardErrorMessage } from '../utils/dashboardErrorMessages';
 import { buildHomeAccessSubtitles, HOME_ACCESSES } from '../utils/homeAccess';
 import { DashboardRecentAnimals } from './DashboardRecentAnimals';
 import { DashboardSkeleton } from './DashboardSkeleton';
-import { HomeGreeting } from './HomeGreeting';
+import { HomeGreeting, HOME_HERO_TAGLINE } from './HomeGreeting';
 import { HomeHero } from './HomeHero';
 import { HomeQuickAccess } from './HomeQuickAccess';
 import { TodayPriorities } from './TodayPriorities';
@@ -104,7 +104,7 @@ export function DashboardScreen() {
   });
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right']} style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.content}
         testID="dashboard-screen"
@@ -117,8 +117,9 @@ export function DashboardScreen() {
           />
         }
       >
-        <HomeGreeting firstName={user?.firstName} />
-        <HomeHero />
+        <HomeHero>
+          <HomeGreeting caption={HOME_HERO_TAGLINE} firstName={user?.firstName} />
+        </HomeHero>
         <View style={styles.body}>
           <TodaySummaryCard
             animalCount={overview.totals.animals}
@@ -160,17 +161,16 @@ export function DashboardScreen() {
 
 const styles = StyleSheet.create({
   body: {
+    alignSelf: 'center',
     gap: spacing.lg,
+    marginTop: -spacing.md,
+    maxWidth: sizes.contentMaxWidth,
+    paddingHorizontal: spacing.lg,
+    width: '100%',
   },
   content: {
-    alignSelf: 'center',
-    backgroundColor: colors.background,
     flexGrow: 1,
-    gap: spacing.lg,
-    maxWidth: sizes.contentMaxWidth,
-    padding: spacing.lg,
     paddingBottom: sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + spacing.lg,
-    width: '100%',
   },
   safeArea: {
     backgroundColor: colors.background,
