@@ -175,18 +175,19 @@ describe('DashboardScreen (D36 / RFG-169)', () => {
     expect(screen.getByText(getSessionGreeting('Andrés'))).toBeTruthy();
   });
 
-  it('renders the greeting and the native tagline over the full-bleed hero', async () => {
+  it('renders the header above the full-bleed hero with the native tagline', async () => {
     const screen = await render(<DashboardScreen />);
 
+    expect(screen.getByTestId('home-greeting')).toBeTruthy();
     expect(screen.getByTestId('home-hero')).toBeTruthy();
     expect(screen.getByText(getSessionGreeting('Andrés'))).toBeTruthy();
     expect(screen.getByText(HOME_HERO_TAGLINE)).toBeTruthy();
   });
 
-  it('renders the local scrim band that keeps the hero copy readable', async () => {
+  it('renders the fade band that softens the hero into the summary overlap', async () => {
     const screen = await render(<DashboardScreen />);
 
-    expect(screen.getByTestId('home-hero-scrim')).toBeTruthy();
+    expect(screen.getByTestId('home-hero-fade')).toBeTruthy();
   });
 
   it('shows the three real indicators in the summary', async () => {

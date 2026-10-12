@@ -104,7 +104,7 @@ export function DashboardScreen() {
   });
 
   return (
-    <SafeAreaView edges={['left', 'right']} style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.content}
         testID="dashboard-screen"
@@ -117,9 +117,14 @@ export function DashboardScreen() {
           />
         }
       >
-        <HomeHero>
-          <HomeGreeting caption={HOME_HERO_TAGLINE} firstName={user?.firstName} />
-        </HomeHero>
+        <View style={styles.header}>
+          <HomeGreeting
+            caption={HOME_HERO_TAGLINE}
+            firstName={user?.firstName}
+            lastName={user?.lastName}
+          />
+        </View>
+        <HomeHero />
         <View style={styles.body}>
           <TodaySummaryCard
             animalCount={overview.totals.animals}
@@ -163,7 +168,7 @@ const styles = StyleSheet.create({
   body: {
     alignSelf: 'center',
     gap: spacing.lg,
-    marginTop: -spacing.md,
+    marginTop: -spacing.lg,
     maxWidth: sizes.contentMaxWidth,
     paddingHorizontal: spacing.lg,
     width: '100%',
@@ -171,6 +176,14 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     paddingBottom: sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + spacing.lg,
+  },
+  header: {
+    alignSelf: 'center',
+    maxWidth: sizes.contentMaxWidth,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    width: '100%',
   },
   safeArea: {
     backgroundColor: colors.background,
