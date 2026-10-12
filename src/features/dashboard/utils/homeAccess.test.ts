@@ -18,6 +18,15 @@ describe('HOME_ACCESSES (D36 / RFG-169)', () => {
     expect(gated[0]?.requiredCapability).toBe('canReadClinicalRecords');
   });
 
+  it('assigns a semantic accent to every destination (D38.1 / RFG-172)', () => {
+    expect(HOME_ACCESSES.map((access) => access.tone)).toEqual([
+      'positive',
+      'warning',
+      'info',
+      'neutral',
+    ]);
+  });
+
   it('keeps every destination navigable for all roles except the clinical gate', () => {
     expect(
       filterHomeAccesses(HOME_ACCESSES, capabilitiesForRoles(['admin'])).map((a) => a.id)

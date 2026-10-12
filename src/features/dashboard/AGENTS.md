@@ -28,11 +28,11 @@
 - `api/`: `GET /dashboard/overview` y lectura de `GET /media/:id` para fotos de recientes.
 - `components/`:
   - `DashboardScreen` (orquestación, estados y pull-to-refresh).
-  - `HomeGreeting` (saludo + fecha + atajo de cuenta), `HomeHero` (banner decorativo `heroHome`), `TodaySummaryCard` (tres indicadores), `HomeQuickAccess` (grilla 2×2 de accesos), `TodayPriorities` + `HomePriorityRow` (prioridades memoizadas).
+  - `HomeGreeting` (saludo + fecha + atajo de cuenta), `HomeHero` (banner decorativo `heroHome`), `TodaySummaryCard` (3-up simétrico con divisores e iconos circulares de color), `HomeQuickAccess` (grilla 2×2 simétrica de accesos), `TodayPriorities` + `HomePriorityRow` (prioridades memoizadas).
   - `DashboardRecentAnimals` + `DashboardAnimalRow` (animales recientes, conservados).
   - `DashboardSkeleton` (placeholder estático de la nueva jerarquía).
 - `hooks/`: `dashboardKeys`, `useDashboardOverview` y `useDashboardAnimalPhoto`.
-- `utils/`: `greeting` (saludo/fecha puros), `homeAccess` (registro de accesos con `requiredCapability` y subtítulos por conteo), `presentation` (estados de animal y de prioridad), `dashboardErrorMessages` (errores seguros).
+- `utils/`: `greeting` (saludo/fecha puros), `homeAccess` (registro de accesos con `requiredCapability`, `tone` semántico y subtítulos por conteo), `presentation` (estados de animal y de prioridad), `dashboardErrorMessages` (errores seguros).
 - `types.ts`: modelo de vista y mapper desde los DTO generados.
 - El atajo de cuenta del encabezado usa `AccountMenuButton` de `src/features/auth/components` y el saludo lee `useSession`; son la superficie pública de auth consumida por dashboard (documentada en `src/features/auth/AGENTS.md`).
 
@@ -46,7 +46,8 @@
 
 - Unit tests de `greeting` (saludo determinista por hora y fecha local), `homeAccess` (`filterHomeAccesses` y `buildHomeAccessSubtitles`) y `presentation` (estados de prioridad).
 - Component tests RNTL de `DashboardScreen`: skeleton, vacío, error con reintento, offline con reintento, saludo desde sesión, tres indicadores, accesos filtrados por rol (incluida la ausencia de Historia clínica para `shelter_manager`), navegación a prioridad/agenda/reciente y pull-to-refresh que refetchea overview + resumen.
-- Component tests RNTL de `TodaySummaryCard` (indicador sin dato → `—` con label seguro) y `TodayPriorities` (loading, error con reintento, vacío, fallback de nombre y navegación).
+- Component tests RNTL de `TodaySummaryCard` (3-up con dos divisores, indicador sin dato → `—` con label seguro) y de `HomeQuickAccess` (subtítulos reales, ausencia sin accesos, label accesible completo y navegación al destino).
+- Component tests RNTL de `TodayPriorities` (loading, error con reintento, vacío, fallback de nombre y navegación).
 - El pull-to-refresh se valida sobre el `RefreshControl` del `ScrollView`.
 
 ## Estado
@@ -57,7 +58,8 @@
 - Rediseño D36 (RFG-169): saludo con `firstName` y fecha `es-AR`, hero decorativo de perro y gato (`heroHome`, oculto a AT), "Resumen de hoy" con animales/en tratamiento/cuidados pendientes, "Accesos rápidos" a los cuatro destinos filtrados por capacidades y "Prioridades de hoy" best-effort con estados derivados y acceso a la agenda completa.
 - Frontera `src/application/home` para conteo exacto de pendientes (`GET /care-tasks?status=pending&page=1&limit=1`), página de prioridades y conteo de gastos, con invalidación por prefijo `['home']` desde `care-tasks` y `expenses` (por valor, sin imports cruzados).
 - Estados de UI: skeleton estático de la nueva jerarquía, vacío, error con reintento, offline con reintento y pull-to-refresh que refetchea overview y resumen.
-- Accesos ordenados en grilla responsive de dos columnas que colapsa a una con fuente ampliada o viewport angosto, con targets ≥ 44 × 44, icono + texto (nunca solo color) y chevron.
+- Accesos ordenados en grilla 2×2 simétrica de igual altura que no colapsa a una columna: celdas con base porcentual y `minWidth: 0` (dos columnas siempre a 320 × 568), targets ≥ 44 × 44, iconos circulares con acento semántico (`positive`/`warning`/`info`/`neutral`), título + subtítulo truncados internamente, texto (nunca solo color) y chevron.
+- Polido D38.1 (RFG-172): "Resumen de hoy" como 3-up simétrico con divisores verticales e iconos circulares de color (animales `positive`, tratamiento `info`, pendientes `warning`); número en `heading2` y etiqueta a 2 líneas máximo, con degradación a `—` cuando un conteo falla. El color nunca es la única señal: cada métrica conserva icono + número + etiqueta accesible.
 - `DashboardAnimalRow` conserva el layout responsive y el fallback a iniciales; las prioridades resuelven el nombre y la foto por la cache compartida de `animal-options` sin request por fila.
 - `dashboardKeys.all = ['dashboard']` como key canónica del panel; `['home']` como prefijo del resumen.
 

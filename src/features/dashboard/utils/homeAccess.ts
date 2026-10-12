@@ -6,6 +6,7 @@ import {
   type RoleCapabilities,
 } from '@/application/authorization';
 import type { AppIconName } from '@/components/primitives';
+import type { ColorToken } from '@/theme';
 
 export type HomeAccessId = 'animals' | 'care-tasks' | 'medical-records' | 'expenses';
 
@@ -15,6 +16,8 @@ export interface HomeAccess {
   id: HomeAccessId;
   label: string;
   requiredCapability?: Capability;
+  /** Semantic accent for the circular icon; always paired with icon + text. */
+  tone: ColorToken;
 }
 
 /**
@@ -23,19 +26,40 @@ export interface HomeAccess {
  * They replace the previous creation quick actions: the dashboard now routes to
  * the four real destinations of the reference instead of the high flows.
  * `Historia clínica` is gated by `canReadClinicalRecords` (so `shelter_manager`
- * never sees a destination that would answer 403).
+ * never sees a destination that would answer 403). Each destination carries a
+ * semantic accent (`positive` identity, `warning` pending work, `info` clinical,
+ * `neutral` secondary) rendered as a circular icon, never as the only signal.
  */
 export const HOME_ACCESSES: readonly HomeAccess[] = [
-  { href: { pathname: '/explore' }, icon: 'paw', id: 'animals', label: 'Animales' },
-  { href: { pathname: '/care-tasks' }, icon: 'calendar', id: 'care-tasks', label: 'Cuidados' },
+  {
+    href: { pathname: '/explore' },
+    icon: 'paw',
+    id: 'animals',
+    label: 'Animales',
+    tone: 'positive',
+  },
+  {
+    href: { pathname: '/care-tasks' },
+    icon: 'calendar',
+    id: 'care-tasks',
+    label: 'Cuidados',
+    tone: 'warning',
+  },
   {
     href: { pathname: '/medical-records' },
     icon: 'medical',
     id: 'medical-records',
     label: 'Historia clínica',
     requiredCapability: 'canReadClinicalRecords',
+    tone: 'info',
   },
-  { href: { pathname: '/expenses' }, icon: 'money', id: 'expenses', label: 'Gastos' },
+  {
+    href: { pathname: '/expenses' },
+    icon: 'money',
+    id: 'expenses',
+    label: 'Gastos',
+    tone: 'neutral',
+  },
 ];
 
 export function filterHomeAccesses(
