@@ -179,6 +179,12 @@ Contienen fotografía, nombre como encabezado y estado explícito. La foto ocupa
 
 Muestran icono semántico, valor con Newsreader y etiqueta DM Sans. El número no comunica por sí solo: siempre necesita una etiqueta. Una métrica puede ser enlace si ofrece pista de navegación y área táctil completa. Limitar la cantidad visible y permitir desplazamiento o envoltura. El contenido interno mantiene un ritmo vertical por tokens (etiqueta, métrica, divisor y bloque de badges); el divisor separa la métrica del bloque de badges con respiro vertical por tokens.
 
+### Resumen de hoy y accesos rápidos en Inicio (D38.1)
+
+El "Resumen de hoy" se compone como una fila 3-up simétrica de pesos iguales, con divisores verticales de 1 pt (`sizes.divider`, `colors.divider`) entre columnas y cada métrica centrada (icono circular → número → etiqueta). El icono vive en un círculo píldora de `sizes.avatarSm` con fondo semántico y símbolo en `textInverse` —siempre acompañado de número y etiqueta, porque el color nunca es la única señal. El número usa `heading2` (Newsreader 28) en vez de `display` para no desbordar la columna con la fuente ampliada; la etiqueta `caption` admite hasta dos líneas centradas. Un conteo que no cargó degrada a "—" con label accesible, sin romper la fila.
+
+Los "Accesos rápidos" forman una grilla 2×2 simétrica de cards `elevated` de igual altura (celdas con base porcentual y `minWidth: 0`, por lo que dos columnas caben incluso a 320 pt). Cada card combina círculo de icono con acento semántico (`positive` identidad, `warning` trabajo pendiente, `info` clínico, `neutral` secundario), título `bodyStrong` y subtítulo `caption` truncados a una línea internamente (sin empujar el círculo ni el chevron), y el estado presionado usa `opacity.pressed` (compatible con reduce motion).
+
 ## 20. Navegación inferior
 
 Máximo cuatro o cinco destinos estables. Cada elemento combina icono y texto; el activo usa lima, peso visual e `accessibilityState.selected`. Altura base de 72 pt más el inset inferior del dispositivo. La barra queda fija mientras el contenido principal desplaza.
