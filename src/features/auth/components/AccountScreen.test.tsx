@@ -10,6 +10,14 @@ import { SessionProvider } from '../session/SessionProvider';
 import type { User, UserRole } from '../types';
 import { AccountScreen } from './AccountScreen';
 
+jest.mock('expo-image-picker', () => ({
+  MediaTypeOptions: { Images: 'Images' },
+  launchCameraAsync: jest.fn(),
+  launchImageLibraryAsync: jest.fn(),
+  requestCameraPermissionsAsync: jest.fn(),
+  requestMediaLibraryPermissionsAsync: jest.fn(),
+}));
+
 const EMAIL = 'member@refugiapp.local';
 
 function createUser(roles: UserRole[]): User {
@@ -20,6 +28,7 @@ function createUser(roles: UserRole[]): User {
     lastName: 'Refugiapp',
     roles,
     isActive: true,
+    profilePhotoMediaId: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   };

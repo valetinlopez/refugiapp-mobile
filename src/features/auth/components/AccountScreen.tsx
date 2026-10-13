@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoadingState } from '@/components/feedback';
 import { useTabBarContentPadding } from '@/components/navigation';
 import { DecorativeBackground } from '@/components/patterns';
-import { AppAvatar, AppBadge, AppButton, AppCard, AppIcon, AppText } from '@/components/primitives';
+import { AppBadge, AppButton, AppCard, AppIcon, AppText } from '@/components/primitives';
 import { useConnectivityStatus } from '@/core/network';
 import { useSession } from '@/features/auth/session';
 import { colors, opacity, radii, spacing } from '@/theme';
@@ -16,6 +16,8 @@ import { accountDisplayName, accountInitials } from '../utils/accountPresentatio
 import { roleLabels } from '../utils/roleLabels';
 import { AccountApplicationSection } from './AccountApplicationSection';
 import { AccountSignOutSheet } from './AccountSignOutSheet';
+import { useUserAvatar } from '../hooks/useUserAvatar';
+import { UserAvatar } from './UserAvatar';
 
 export interface AccountScreenProps {
   /** Destinos autorizados de gestión coordinados por la ruta. */
@@ -39,6 +41,7 @@ export function AccountScreen({
   const isOnline = useConnectivityStatus();
   const { errorMessage, isSigningOut, reset, signOut } = useSignOut();
   const [sheetVisible, setSheetVisible] = useState(false);
+  const avatarQuery = useUserAvatar(user?.profilePhotoMediaId ?? null);
   const tabPaddingBottom = useTabBarContentPadding();
 
   const handleOpenSheet = useCallback(() => {
@@ -93,10 +96,10 @@ export function AccountScreen({
         >
           <AppCard style={styles.profileCard} testID="account-identity" variant="organic">
             <View style={styles.profile}>
-              <AppAvatar
-                accessibilityLabel={`Iniciales de ${accountDisplayName(user)}`}
+              <UserAvatar
+                displayName={accountDisplayName(user)}
                 initials={accountInitials(user)}
-                size="lg"
+                photoUri={avatarQuery.data ?? null}
               />
               <View style={styles.profileCopy}>
                 <AppText variant="heading3">{accountDisplayName(user)}</AppText>

@@ -11,6 +11,13 @@ import { ProfileScreen } from './ProfileScreen';
 
 jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
 jest.mock('./AccountHeaderRow', () => ({ AccountHeaderRow: () => null }));
+jest.mock('expo-image-picker', () => ({
+  MediaTypeOptions: { Images: 'Images' },
+  launchCameraAsync: jest.fn(),
+  launchImageLibraryAsync: jest.fn(),
+  requestCameraPermissionsAsync: jest.fn(),
+  requestMediaLibraryPermissionsAsync: jest.fn(),
+}));
 
 const USER: User = {
   id: '52f45f39-c7b5-4a1a-aa37-ed0fdf203c91',
@@ -19,6 +26,7 @@ const USER: User = {
   lastName: 'Borrego',
   roles: ['shelter_manager'],
   isActive: true,
+  profilePhotoMediaId: null,
   createdAt: '2026-09-07T15:00:00.000Z',
   updatedAt: '2026-09-21T15:00:00.000Z',
 };
@@ -108,6 +116,15 @@ describe('ProfileScreen', () => {
       );
     }
   );
+
+  it('shows the photo section with initials fallback when there is no avatar', async () => {
+    const screen = await renderProfile();
+
+    await waitFor(() => expect(screen.getByText('Andrés Borrego')).toBeTruthy());
+    expect(screen.getByTestId('profile-photo-section')).toBeTruthy();
+    expect(screen.getByLabelText('Iniciales de Andrés Borrego')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Cambiar foto' })).toBeTruthy();
+  });
 
   it('opens the existing authenticated password change flow', async () => {
     const screen = await renderProfile();

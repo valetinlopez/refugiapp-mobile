@@ -22,6 +22,7 @@ type SessionCleanupHandler = () => Promise<void>;
 type SessionContextValue = SessionState & {
   endSession(notice?: string | null): Promise<void>;
   registerSignOutHandler(handler: SessionCleanupHandler): () => void;
+  refreshUser(): Promise<User | null>;
   signIn(credentials: LoginRequest): Promise<User>;
   signOut(): Promise<void>;
 };
@@ -133,12 +134,26 @@ export function SessionProvider({ children }: PropsWithChildren) {
     }
   }, [endSession]);
 
+  const refreshUser = useCallback(async (): Promise<User | null> => {
+    try {
+      const user = await authApi.getCurrentUser();
+      dispatch({ type: 'authenticated', user });
+      return user;
+    } catch (error) {
+      if (isNetworkError(error)) {
+        return null;
+      }
+      throw error;
+    }
+  }, []);
+
   return (
     <SessionContext
       value={{
         ...state,
         endSession,
         registerSignOutHandler,
+        refreshUser,
         signIn,
         signOut,
       }}

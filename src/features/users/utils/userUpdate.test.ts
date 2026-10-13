@@ -9,6 +9,7 @@ const initial: UserResponse = {
   lastName: 'Ramirez',
   roles: ['shelter_manager'],
   isActive: true,
+  profilePhotoMediaId: null,
   createdAt: '2026-09-01T00:00:00.000Z',
   updatedAt: '2026-09-01T00:00:00.000Z',
 };
