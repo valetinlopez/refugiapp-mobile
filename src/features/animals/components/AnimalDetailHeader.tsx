@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppAvatar, AppBadge, AppCard, AppText } from '@/components/primitives';
 import type { Animal } from '@/features/animals/types';
@@ -7,12 +7,22 @@ import { sizes, spacing } from '@/theme';
 
 export interface AnimalDetailHeaderProps {
   animal: Pick<Animal, 'breed' | 'name' | 'species' | 'status'>;
+  onPreviewPhoto?(): void;
   photoUri: string | null;
 }
 
-export function AnimalDetailHeader({ animal, photoUri }: AnimalDetailHeaderProps) {
+export function AnimalDetailHeader({ animal, onPreviewPhoto, photoUri }: AnimalDetailHeaderProps) {
   const badge = getStatusBadge(animal.status);
   const description = animal.breed ? `${animal.species} · ${animal.breed}` : animal.species;
+  const avatar = (
+    <AppAvatar
+      accessibilityLabel={photoUri ? `Foto de ${animal.name}` : `Sin foto de ${animal.name}`}
+      initials={animal.name.slice(0, 2)}
+      shape="rounded"
+      size="xl"
+      source={photoUri ? { uri: photoUri } : undefined}
+    />
+  );
 
   return (
     <AppCard
@@ -22,13 +32,20 @@ export function AnimalDetailHeader({ animal, photoUri }: AnimalDetailHeaderProps
       variant="organic"
     >
       <View style={styles.layout} testID="animal-detail-layout">
-        <AppAvatar
-          accessibilityLabel={photoUri ? `Foto de ${animal.name}` : `Sin foto de ${animal.name}`}
-          initials={animal.name.slice(0, 2)}
-          shape="rounded"
-          size="xl"
-          source={photoUri ? { uri: photoUri } : undefined}
-        />
+        {photoUri !== null && onPreviewPhoto !== undefined ? (
+          <Pressable
+            accessibilityHint="Abre la foto en tamaño completo"
+            accessibilityLabel={`Ver foto de ${animal.name} en tamaño completo`}
+            accessibilityRole="button"
+            hitSlop={sizes.hitSlop}
+            onPress={onPreviewPhoto}
+            testID="animal-photo-preview-trigger"
+          >
+            {avatar}
+          </Pressable>
+        ) : (
+          avatar
+        )}
         <View style={styles.identity} testID="animal-detail-identity">
           <AppText accessibilityRole="header" variant="display">
             {animal.name}

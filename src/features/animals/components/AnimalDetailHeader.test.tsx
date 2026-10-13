@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 
 import type { Animal } from '@/features/animals/types';
 
@@ -45,5 +45,29 @@ describe('AnimalDetailHeader', () => {
 
     expect(screen.getByLabelText(`Foto de ${animal.name}`)).toBeTruthy();
     expect(screen.getByTestId('app-avatar-image')).toBeTruthy();
+  });
+
+  it('offers a fullscreen preview trigger when a handler is provided', async () => {
+    const onPreviewPhoto = jest.fn();
+    const screen = await render(
+      <AnimalDetailHeader
+        animal={animal}
+        onPreviewPhoto={onPreviewPhoto}
+        photoUri="https://cdn.test/luna.jpg"
+      />
+    );
+
+    await fireEvent.press(screen.getByTestId('animal-photo-preview-trigger'));
+    expect(onPreviewPhoto).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides the preview trigger without a photo or handler', async () => {
+    const withoutPhoto = await render(<AnimalDetailHeader animal={animal} photoUri={null} />);
+    expect(withoutPhoto.queryByTestId('animal-photo-preview-trigger')).toBeNull();
+
+    const withoutHandler = await render(
+      <AnimalDetailHeader animal={animal} photoUri="https://cdn.test/luna.jpg" />
+    );
+    expect(withoutHandler.queryByTestId('animal-photo-preview-trigger')).toBeNull();
   });
 });

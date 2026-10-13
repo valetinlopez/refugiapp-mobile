@@ -3,6 +3,7 @@ import { memo, useCallback, useState, type ReactNode } from 'react';
 import {
   FlatList,
   PixelRatio,
+  Pressable,
   RefreshControl,
   StyleSheet,
   useWindowDimensions,
@@ -24,6 +25,8 @@ import { colors, radii, sizes, spacing } from '@/theme';
 
 import type { AnimalFile } from '../types';
 
+import { AnimalFilePreview } from './AnimalFilePreview';
+
 const COLUMNS = 2;
 
 export interface AnimalFilesGridProps {
@@ -39,13 +42,16 @@ export interface AnimalFilesGridProps {
   isRefreshing: boolean;
   onDelete(id: string): void;
   onLoadMore(): void;
+  onPreview?(file: AnimalFile): void;
   onRefresh(): void;
   onRetry(): void;
+  openExternal?: (file: AnimalFile) => void;
 }
 
 interface AnimalFileTileProps {
   canDelete: boolean;
   file: AnimalFile;
+  onPreview(id: string): void;
   onRequestRemove(id: string): void;
   removeDisabled: boolean;
   size: number;
@@ -54,6 +60,7 @@ interface AnimalFileTileProps {
 const AnimalFileTile = memo(function AnimalFileTile({
   canDelete,
   file,
+  onPreview,
   onRequestRemove,
   removeDisabled,
   size,
@@ -64,7 +71,16 @@ const AnimalFileTile = memo(function AnimalFileTile({
 
   return (
     <View style={[styles.tile, { width: size }]} testID={`animal-file-${file.id}`}>
-      <View style={[styles.preview, { height: size }]}>
+      <Pressable
+        accessibilityHint={
+          file.isImage ? 'Abre la vista previa de la imagen' : 'Abre la vista previa del adjunto'
+        }
+        accessibilityLabel={`Ver ${file.name}`}
+        accessibilityRole="button"
+        onPress={() => onPreview(file.id)}
+        style={[styles.preview, { height: size }]}
+        testID={`animal-file-preview-trigger-${file.id}`}
+      >
         {thumbnailUri ? (
           <Image
             accessibilityElementsHidden
@@ -89,7 +105,7 @@ const AnimalFileTile = memo(function AnimalFileTile({
             </AppText>
           </View>
         )}
-      </View>
+      </Pressable>
       <View style={styles.tileFooter}>
         <AppText numberOfLines={2} style={styles.tileName} variant="caption">
           {file.name}
@@ -111,14 +127,15 @@ const AnimalFileTile = memo(function AnimalFileTile({
 });
 
 /**
- * Paginated archive grid for an animal (D17 / RFG-150).
+ * Paginated archive grid for an animal (D17 / RFG-150, preview RFG-184).
  *
  * Renders images as optimized Cloudinary thumbnails and any other resource
- * (PDF) with a document glyph. It owns the destructive confirmation: a tile's
- * remove action only opens a `ConfirmDialog`, and `onDelete` runs after the
- * explicit confirmation, honouring the design-system rule. Loading, empty,
- * offline and error states are handled before the grid, and the current
- * profile photo is already filtered out by the caller.
+ * (PDF) with a document glyph. Tapping a tile opens `AnimalFilePreview`
+ * (fullscreen image, safe external open for documents); the tile's remove
+ * action and the preview's delete action only open a `ConfirmDialog`, and
+ * `onDelete` runs after the explicit confirmation. Loading, empty, offline
+ * and error states are handled before the grid, and the current profile
+ * photo is already filtered out by the caller.
  */
 export function AnimalFilesGrid({
   canDelete,
@@ -133,30 +150,48 @@ export function AnimalFilesGrid({
   isRefreshing,
   onDelete,
   onLoadMore,
+  onPreview,
   onRefresh,
   onRetry,
+  openExternal,
 }: AnimalFilesGridProps) {
   const { width } = useWindowDimensions();
   const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
+  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
   const tileSize = Math.max(
     sizes.touchTarget,
     (width - spacing.lg * 2 - spacing.sm * (COLUMNS - 1)) / COLUMNS
   );
 
   const handleRequestRemove = useCallback((id: string) => setPendingRemovalId(id), []);
+  const handlePreview = useCallback(
+    (id: string) => {
+      const file = files.find((item) => item.id === id) ?? null;
+      if (file !== null) onPreview?.(file);
+      setPreviewFileId(id);
+    },
+    [files, onPreview]
+  );
+  const handleClosePreview = useCallback(() => setPreviewFileId(null), []);
+  const handlePreviewDelete = useCallback((id: string) => {
+    setPreviewFileId(null);
+    setPendingRemovalId(id);
+  }, []);
   const pendingRemoval = files.find((file) => file.id === pendingRemovalId) ?? null;
+  const previewFile = files.find((file) => file.id === previewFileId) ?? null;
 
   const renderItem = useCallback(
     ({ item }: { item: AnimalFile }) => (
       <AnimalFileTile
         canDelete={canDelete}
         file={item}
+        onPreview={handlePreview}
         onRequestRemove={handleRequestRemove}
         removeDisabled={deletingId !== null}
         size={tileSize}
       />
     ),
-    [canDelete, deletingId, handleRequestRemove, tileSize]
+    [canDelete, deletingId, handlePreview, handleRequestRemove, tileSize]
   );
 
   const emptyState = isPending ? (
@@ -182,7 +217,7 @@ export function AnimalFilesGrid({
     <EmptyState
       message="Todavía no hay archivos cargados para este animal."
       testID="animal-files-empty"
-      title="Sin archivos"
+      title="Sin archivos adjuntos"
     />
   );
 
@@ -246,6 +281,15 @@ export function AnimalFilesGrid({
         title="¿Querés eliminar este archivo?"
         variant="danger"
         visible={pendingRemovalId !== null}
+      />
+      <AnimalFilePreview
+        canDelete={canDelete}
+        deleting={deletingId !== null}
+        file={previewFile}
+        onClose={handleClosePreview}
+        onRequestDelete={handlePreviewDelete}
+        visible={previewFile !== null}
+        {...(openExternal === undefined ? {} : { openExternal })}
       />
     </>
   );
