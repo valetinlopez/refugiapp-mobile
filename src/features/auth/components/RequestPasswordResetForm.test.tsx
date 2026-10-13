@@ -50,4 +50,19 @@ describe('RequestPasswordResetForm', () => {
       resolveSubmit?.();
     });
   });
+
+  it('blocks the CTA while the email is empty or invalid', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined);
+    const screen = await render(<RequestPasswordResetForm onSubmit={onSubmit} />);
+
+    expect(screen.getByRole('button', { name: 'Enviar enlace de recuperación' })).toBeDisabled();
+
+    await fireEvent.changeText(screen.getByLabelText('Correo electrónico'), 'invalid');
+    expect(screen.getByRole('button', { name: 'Enviar enlace de recuperación' })).toBeDisabled();
+    expect(screen.getByRole('alert')).toHaveTextContent('Ingresá un correo válido.');
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    await fireEvent.changeText(screen.getByLabelText('Correo electrónico'), 'user@example.com');
+    expect(screen.getByRole('button', { name: 'Enviar enlace de recuperación' })).toBeEnabled();
+  });
 });
