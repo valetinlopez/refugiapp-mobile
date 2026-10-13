@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DecorativeBackground, DecorativeImage, resolveBrandSource } from '@/components/patterns';
 import { AppCard, AppIcon, AppText } from '@/components/primitives';
@@ -16,18 +16,21 @@ const brandMark = resolveBrandSource('brandLeafMark');
  *
  * Thin route: it only composes the decorative hero (D02 assets through
  * `DecorativeBackground`, hidden from assistive technologies), the native
- * editorial copy and the organic access card that hosts `LoginForm`. All
- * functional text stays native and no screenshot is used as a background.
+ * editorial copy and the organic access card that hosts `LoginForm`. The hero
+ * layer starts below the top safe-area inset, so the notch / Dynamic Island
+ * never crops the artwork, and keeps its bottom edge at the documented 62 %.
+ * All functional text stays native and no screenshot is used as a background.
  * The content scrolls inside a `KeyboardAvoidingView`, so fields and actions
  * remain reachable with the keyboard open on 320 × 568 and 390 × 844.
  */
 export default function LoginScreen() {
   const { notice, signIn } = useSession();
+  const insets = useSafeAreaInsets();
   const [errorMessage, setErrorMessage] = useState<string | null>(notice);
 
   return (
     <View style={styles.root}>
-      <View pointerEvents="none" style={styles.heroLayer}>
+      <View pointerEvents="none" style={[styles.heroLayer, { top: insets.top }]}>
         <DecorativeBackground priority="high" testID="login-hero" variant="hero" />
       </View>
       <SafeAreaView style={styles.safeArea}>
@@ -115,11 +118,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   heroLayer: {
-    height: '62%',
+    bottom: '38%',
     left: 0,
     position: 'absolute',
     right: 0,
-    top: 0,
   },
   root: {
     backgroundColor: colors.background,

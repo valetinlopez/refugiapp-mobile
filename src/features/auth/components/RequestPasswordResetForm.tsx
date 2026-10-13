@@ -19,6 +19,11 @@ export function RequestPasswordResetForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
+  const normalizedPreview = normalizeEmail(email);
+  const isPreviewValid = isValidEmail(normalizedPreview);
+  const liveValidationMessage =
+    normalizedPreview.length > 0 && !isPreviewValid ? 'Ingresá un correo válido.' : null;
+
   async function handleSubmit(): Promise<void> {
     const normalizedEmail = normalizeEmail(email);
     if (!isValidEmail(normalizedEmail)) {
@@ -35,7 +40,8 @@ export function RequestPasswordResetForm({
     }
   }
 
-  const visibleError = validationMessage ?? errorMessage;
+  const visibleError = liveValidationMessage ?? validationMessage ?? errorMessage;
+  const isCtaDisabled = isSubmitting || !isPreviewValid;
 
   return (
     <View style={styles.form} testID="request-password-reset-form">
@@ -55,6 +61,7 @@ export function RequestPasswordResetForm({
           returnKeyType="done"
           style={styles.input}
           testID="request-password-reset-email"
+          textContentType="emailAddress"
           value={email}
         />
       </View>
@@ -69,6 +76,7 @@ export function RequestPasswordResetForm({
         </AppText>
       ) : null}
       <AppButton
+        disabled={isCtaDisabled}
         label="Enviar enlace de recuperación"
         loading={isSubmitting}
         onPress={() => void handleSubmit()}

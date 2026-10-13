@@ -370,7 +370,7 @@ D14 (RFG-147) agrega el patrón `BottomSheet` en `src/components/feedback`: shee
 
 La pantalla de acceso replica la composición editorial de la referencia `01-login.jpeg` sin incrustar la captura como fondo:
 
-- **Hero decorativo:** `DecorativeBackground variant="hero"` a-bleed en el 62 % superior, con `priority="high"` y overlay (`opacity.overlay`) para sostener el contraste del copy. Oculto a tecnologías asistivas; no comunica estado ni contiene texto.
+- **Hero decorativo:** `DecorativeBackground variant="hero"` a-bleed con el borde inferior en el 62 % superior y el borde superior anclado bajo el inset de safe area (`useSafeAreaInsets().top`), de modo que la isla de la cámara / notch de iOS no recorte el arte; en pantallas sin notch el comportamiento es el mismo que antes. `priority="high"` y overlay (`opacity.overlay`) para sostener el contraste del copy. Oculto a tecnologías asistivas; no comunica estado ni contiene texto.
 - **Copy nativo:** marca `Refugiapp` (`display`, `accessibilityRole="header"`, único encabezado principal), claim y descripción en `heading3`/`body`. El texto funcional nunca va dentro de un bitmap.
 - **Tarjeta de acceso:** `AppCard variant="organic"` (superficie elevada, radios orgánicos, sombra `raised`) con el encabezado "Acceso para personal autorizado" (`heading3`, header, icono `account` decorativo) y `LoginForm`.
 - **Teclado y viewport:** `KeyboardAvoidingView` (`padding` en iOS) + `ScrollView` (`keyboardShouldPersistTaps="handled"`, `flexGrow`, `justifyContent: 'space-between'`). En pantallas pequeñas o con fuente al 200 % el contenido desplaza; ninguna altura rígida rodea texto.
@@ -604,6 +604,15 @@ La ruta `app/(app)/(tabs)/index.tsx` conserva la consulta existente (`GET /dashb
 - **Prioridades de hoy (`TodayPriorities` + `HomePriorityRow`):** vista compacta best-effort de la página cargada de pendientes, ordenada por urgencia, con estado derivado `Vencida`/`Próxima`/`Pendiente` (icono + texto) y acceso a la agenda completa. El nombre del animal se resuelve por la cache compartida `animal-options`; sin coincidencia cae a "Animal no disponible", nunca a un UUID. Las filas están memoizadas y navegan al detalle de la tarea.
 - **Estados:** skeleton estático de la nueva jerarquía (respeta reduce motion), vacío cuando no hay animales, error con reintento, offline con reintento y pull-to-refresh que refetchea el overview y el resumen. El `content` limita el ancho a `sizes.contentMaxWidth` (760 pt) centrado en tablet y reserva el inset de la bottom navigation.
 - **Divergencias aceptadas:** no hay total monetario mensual (el contrato no publica agregación) y los accesos de Gastos muestran el total de registros; no hay unread count; las prioridades son best-effort sobre el conjunto cargado.
+
+## 56. Recuperar contraseña (D45 / RFG-181)
+
+La ruta pública `app/(auth)/forgot-password.tsx` adopta el sistema visual del login (D04) solo para el formulario de solicitud; el estado de confirmación se mantiene funcional a propósito y no recibe hero ni card. No hay referencia propia en `docs/design-references` (§3); el estilo se toma de `01-login.jpeg`.
+
+- **Formulario editorial:** `DecorativeBackground variant="hero"` a-bleed con el borde inferior en el 62 % superior y el borde superior anclado bajo el inset de safe area (mismo criterio que el login: la isla de la cámara / notch no recorta el arte), con `priority="high"` y overlay (`opacity.overlay`), oculto a tecnologías asistivas. Copy nativo con `Recuperar contraseña` (`display`, único encabezado) y descripción en `body` secundario. Tarjeta `AppCard variant="organic"` con encabezado `Enlace de recuperación` (`heading3`, icono `mail` decorativo) y ayuda `caption`.
+- **Formulario:** `RequestPasswordResetForm` conserva el label `Enviar enlace de recuperación` y el contrato `POST /auth/password-recovery/request` con confirmación genérica anti-enumeración. Expone `autoComplete="email"` + `textContentType="emailAddress"`, `returnKeyType done` y CTA bloqueado (`disabled`) mientras el email está vacío o es inválido, con mensaje `Ingresá un correo válido.` en `role="alert"` + `liveRegion`. Acción explícita para volver (`AppHeaderBack` + botón `ghost` `Volver al inicio de sesión` con `replace('/login')`).
+- **Confirmación:** copy genérico idéntico tras el `202`, guía de spam, TTL (`PASSWORD_RESET_LINK_TTL_MINUTES`) y reenvío con cooldown de 60 s que deshabilita el botón con cuenta regresiva. Errores traducidos y anunciados; sin tokens ni payloads en UI o logs.
+- **Teclado y viewport:** `KeyboardAvoidingView` (`padding` en iOS) + `ScrollView` (`keyboardShouldPersistTaps="handled"`, `flexGrow`, `space-between`). Desplaza en `320 × 568`, `390 × 844`, tablet y fuente 200 %; sin alturas rígidas alrededor de texto. `app/(auth)/_layout.tsx` ya declara `title` por pantalla para el documento web.
 
 ## Referencias técnicas
 
