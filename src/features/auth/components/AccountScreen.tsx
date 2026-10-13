@@ -4,11 +4,12 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LoadingState } from '@/components/feedback';
+import { useTabBarContentPadding } from '@/components/navigation';
 import { DecorativeBackground } from '@/components/patterns';
 import { AppBadge, AppButton, AppCard, AppIcon, AppText } from '@/components/primitives';
 import { useConnectivityStatus } from '@/core/network';
 import { useSession } from '@/features/auth/session';
-import { colors, opacity, radii, sizes, spacing } from '@/theme';
+import { colors, opacity, radii, spacing } from '@/theme';
 
 import { useSignOut } from '../session/useSignOut';
 import { accountDisplayName, accountInitials } from '../utils/accountPresentation';
@@ -41,6 +42,7 @@ export function AccountScreen({
   const { errorMessage, isSigningOut, reset, signOut } = useSignOut();
   const [sheetVisible, setSheetVisible] = useState(false);
   const avatarQuery = useUserAvatar(user?.profilePhotoMediaId ?? null);
+  const tabPaddingBottom = useTabBarContentPadding();
 
   const handleOpenSheet = useCallback(() => {
     reset();
@@ -70,7 +72,12 @@ export function AccountScreen({
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <DecorativeBackground overlay testID="more-background" variant="texture" />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: tabPaddingBottom }]}
+        contentInsetAdjustmentBehavior="never"
+        scrollIndicatorInsets={{ bottom: tabPaddingBottom }}
+        testID="account-scroll"
+      >
         <View style={styles.heading}>
           <AppText variant="heading1">{heading}</AppText>
           <AppText color="textSecondary">{subtitle}</AppText>
@@ -145,7 +152,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: spacing.lg,
     padding: spacing.lg,
-    paddingBottom: sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + spacing.lg,
   },
   heading: {
     gap: spacing.xxs,

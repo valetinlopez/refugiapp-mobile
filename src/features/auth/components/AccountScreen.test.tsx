@@ -1,8 +1,9 @@
 import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 import { tokenStorage } from '@/core/storage';
+import { sizes, spacing } from '@/theme';
 
 import { authApi } from '../api/authApi';
 import { SessionProvider } from '../session/SessionProvider';
@@ -139,5 +140,20 @@ describe('AccountScreen', () => {
 
     await waitFor(() => expect(authApi.logout).toHaveBeenCalledWith('stored-refresh'));
     expect(tokenStorage.clearTokens).toHaveBeenCalled();
+  });
+
+  it('reserves tab bar height plus safe-area inset so Cerrar sesión stays tappable', async () => {
+    const screen = await renderAccount();
+    await waitFor(() => expect(screen.getByText(EMAIL)).toBeTruthy());
+
+    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeTruthy();
+    const style = StyleSheet.flatten(
+      screen.getByTestId('account-scroll').props.contentContainerStyle
+    ) as {
+      paddingBottom?: number;
+    };
+    expect(style.paddingBottom).toBeGreaterThanOrEqual(
+      sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + spacing.lg
+    );
   });
 });

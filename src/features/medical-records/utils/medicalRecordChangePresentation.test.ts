@@ -7,6 +7,7 @@ import {
   changeFieldsSummary,
   changeRangeError,
   formatChangeValue,
+  formatPreviousChangeValue,
   getChangeFieldLabel,
   getChangeTypeLabel,
   getChangeTypeTone,
@@ -74,6 +75,46 @@ describe('formatChangeValue', () => {
     const circular: Record<string, unknown> = {};
     circular.self = circular;
     expect(formatChangeValue(circular)).toBe('Valor no disponible');
+  });
+});
+
+describe('formatPreviousChangeValue', () => {
+  const vetId = '3fa85f64-5717-4562-b3fc-2c963f66afa1';
+  const unknownVetId = '7fa85f64-5717-4562-b3fc-2c963f66afa9';
+  const namesById = new Map([[vetId, 'Sofía Gómez']]);
+
+  it('resolves a known veterinarian id from the shared directory', () => {
+    expect(formatPreviousChangeValue('veterinarianId', vetId, namesById)).toBe('Sofía Gómez');
+  });
+
+  it('falls back explicitly for null without leaking a UUID', () => {
+    expect(formatPreviousChangeValue('veterinarianId', null, namesById)).toBe(
+      'Sin veterinario asignado'
+    );
+  });
+
+  it('falls back explicitly for an inactive or out-of-page veterinarian', () => {
+    const rendered = formatPreviousChangeValue('veterinarianId', unknownVetId, namesById);
+    expect(rendered).toBe('Veterinario no disponible');
+    expect(rendered).not.toContain(unknownVetId);
+  });
+
+  it('never renders a raw UUID for malformed veterinarian values', () => {
+    expect(formatPreviousChangeValue('veterinarianId', 'not-a-uuid', namesById)).toBe(
+      'Veterinario no disponible'
+    );
+    expect(formatPreviousChangeValue('veterinarianId', 42, namesById)).toBe(
+      'Veterinario no disponible'
+    );
+  });
+
+  it('keeps the defensive empty value for a missing previous veterinarian', () => {
+    expect(formatPreviousChangeValue('veterinarianId', undefined, namesById)).toBe('Sin valor');
+  });
+
+  it('delegates every other field to the generic formatter', () => {
+    expect(formatPreviousChangeValue('diagnosis', 'Prev', namesById)).toBe('Prev');
+    expect(formatPreviousChangeValue('title', null, namesById)).toBe('Sin valor');
   });
 });
 

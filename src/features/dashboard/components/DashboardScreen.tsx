@@ -7,6 +7,7 @@ import { useAnimalOptions } from '@/application/animals';
 import { useHomeSummary, type HomePriority } from '@/application/home';
 import { EmptyState, ErrorState, OfflineState } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
+import { useTabBarContentPadding } from '@/components/navigation';
 import { isNetworkError } from '@/core/network';
 import { useSession } from '@/features/auth/session';
 import { useAuthorizedNavigation, useCapabilities } from '@/features/auth/hooks/useCapabilities';
@@ -31,6 +32,7 @@ export function DashboardScreen() {
   const home = useHomeSummary();
   const animalOptions = useAnimalOptions();
   const accesses = useAuthorizedNavigation(HOME_ACCESSES);
+  const tabPaddingBottom = useTabBarContentPadding();
 
   const animalsById = useMemo(
     () => new Map((animalOptions.data ?? []).map((option) => [option.id, option])),
@@ -106,7 +108,9 @@ export function DashboardScreen() {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: tabPaddingBottom }]}
+        contentInsetAdjustmentBehavior="never"
+        scrollIndicatorInsets={{ bottom: tabPaddingBottom }}
         testID="dashboard-screen"
         refreshControl={
           <RefreshControl
@@ -175,7 +179,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    paddingBottom: sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + spacing.lg,
   },
   header: {
     alignSelf: 'center',

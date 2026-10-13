@@ -5,3 +5,7 @@ export type { BottomNavigationItem, BottomNavigationProps } from './BottomNaviga
 export { CurvedTabBar } from './CurvedTabBar';
 export type { CurvedTabBarProps, TabPresentationEntry } from './CurvedTabBar';
 export { tabBarCurveArchPath, tabBarCurvePath } from './tabBarCurve';
+export {
+  resolveTabBarContentPaddingBottom,
+  useTabBarContentPadding,
+} from './useTabBarContentPadding';

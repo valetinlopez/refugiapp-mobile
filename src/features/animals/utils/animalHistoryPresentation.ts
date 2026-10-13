@@ -1,8 +1,9 @@
-import { formatDateTime } from '@/components/patterns';
+import { formatDateTime, formatRelativeDateTime } from '@/components/patterns';
 import type { AppIconName } from '@/components/primitives';
 import type { ColorToken } from '@/theme';
 
-import type { AnimalHistoryEventType } from '../types';
+import type { AnimalHistoryEvent, AnimalHistoryEventType } from '../types';
+import { HISTORY_MISSING_VALUE_LABEL, humanizeHistoryDescription } from './humanizeStatusChange';
 
 const EVENT_TYPE_LABELS: Record<AnimalHistoryEventType, string> = {
   intake: 'Ingreso',
@@ -37,4 +38,17 @@ export function getAnimalEventVisual(type: AnimalHistoryEventType) {
 
 export function formatAnimalEventDate(value: string): string {
   return formatDateTime(value);
+}
+
+export function formatAnimalEventDateLabel(value: string): string {
+  const absolute = formatDateTime(value);
+  if (absolute === '') return HISTORY_MISSING_VALUE_LABEL;
+  const relative = formatRelativeDateTime(value);
+  return relative === '' ? absolute : `${relative} · ${absolute}`;
+}
+
+export function getAnimalEventDescription(
+  event: Pick<AnimalHistoryEvent, 'description' | 'eventType'>
+): string {
+  return humanizeHistoryDescription(event);
 }

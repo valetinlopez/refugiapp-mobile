@@ -103,15 +103,21 @@ describe('animalGridAccessibilityLabel', () => {
 });
 
 describe('resolveAnimalGridColumns', () => {
-  it('uses two columns on wide viewports with standard fonts', () => {
+  it('uses two columns on standard phones with standard fonts (D41)', () => {
+    expect(resolveAnimalGridColumns(390, 1)).toBe(2);
+    expect(resolveAnimalGridColumns(390, 1.5)).toBe(2);
     expect(resolveAnimalGridColumns(600, 1)).toBe(2);
     expect(resolveAnimalGridColumns(800, 1.25)).toBe(2);
   });
 
-  it('falls back to one column on narrow viewports or amplified fonts', () => {
-    expect(resolveAnimalGridColumns(390, 1)).toBe(1);
+  it('falls back to one column on narrow viewports', () => {
     expect(resolveAnimalGridColumns(320, 1)).toBe(1);
-    expect(resolveAnimalGridColumns(800, 1.5)).toBe(1);
+    expect(resolveAnimalGridColumns(359, 1)).toBe(1);
+    expect(resolveAnimalGridColumns(360, 1)).toBe(2);
+  });
+
+  it('falls back to one column with amplified fonts (200 %)', () => {
+    expect(resolveAnimalGridColumns(390, 2)).toBe(1);
     expect(resolveAnimalGridColumns(800, 2)).toBe(1);
   });
 

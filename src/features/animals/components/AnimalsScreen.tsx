@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   RefreshControl,
@@ -9,11 +9,13 @@ import {
   View,
   useWindowDimensions,
   type ListRenderItem,
+  type ViewToken,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
+import { resolveTabBarContentPaddingBottom } from '@/components/navigation';
 import { virtualizedListPerformanceProps } from '@/components/performance';
 import {
   DecorativeBackground,
@@ -48,6 +50,9 @@ export function AnimalsScreen({ canWrite }: { canWrite: boolean }) {
   const insets = useSafeAreaInsets();
   const { fontScale, width } = useWindowDimensions();
   const numColumns = resolveAnimalGridColumns(width, fontScale);
+  const listRef = useRef<FlatList<Animal>>(null);
+  const firstVisibleIndexRef = useRef(0);
+  const previousColumnsRef = useRef(numColumns);
 
   const [statusFilter, setStatusFilter] = useState<AnimalStatusFilter>('all');
   const [quickSearch, setQuickSearch] = useState('');
@@ -89,6 +94,40 @@ export function AnimalsScreen({ canWrite }: { canWrite: boolean }) {
   const handleAnimalPress = useCallback((animal: Animal) => {
     router.push({ pathname: '/animals/[id]', params: { id: animal.id } });
   }, []);
+
+  const keyExtractor = useCallback((animal: Animal) => animal.id, []);
+
+  const handleViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const firstIndex = viewableItems[0]?.index;
+      if (typeof firstIndex === 'number') {
+        firstVisibleIndexRef.current = firstIndex;
+      }
+    },
+    []
+  );
+
+  const viewabilityConfig = useMemo(() => ({ itemVisiblePercentThreshold: 50 }), []);
+
+  // D41 / RFG-180: keep the logical position when the grid switches between
+  // 1 and 2 columns. Filter state already lives outside the FlatList, so only
+  // the scroll offset needs restoring — no remount via `key`.
+  useEffect(() => {
+    const previous = previousColumnsRef.current;
+    if (previous === numColumns) return;
+    previousColumnsRef.current = numColumns;
+    const target = firstVisibleIndexRef.current;
+    if (target <= 0 || animals.length === 0) return;
+    const safeTarget = Math.min(target, animals.length - 1);
+    const timeout = setTimeout(() => {
+      try {
+        listRef.current?.scrollToIndex({ index: safeTarget, viewPosition: 0 });
+      } catch {
+        // Item not laid out yet (short list, footer only): keep top.
+      }
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, [numColumns, animals.length]);
 
   const renderAnimal = useCallback<ListRenderItem<Animal>>(
     ({ item }) => (
@@ -201,6 +240,7 @@ export function AnimalsScreen({ canWrite }: { canWrite: boolean }) {
       />
       <View style={styles.searchRow}>
         <TextInput
+          accessibilityHint="Filtra el listado por nombre mientras escribís"
           accessibilityLabel="Buscar animal"
           autoCapitalize="none"
           autoCorrect={false}
@@ -271,16 +311,21 @@ export function AnimalsScreen({ canWrite }: { canWrite: boolean }) {
     </View>
   );
 
+  const tabListPaddingBottom = resolveTabBarContentPaddingBottom(
+    insets.bottom,
+    sizes.fab + spacing.lg
+  );
+
   return (
     <View style={styles.container}>
       <DecorativeBackground variant="texture" />
       <FlatList
         {...virtualizedListPerformanceProps}
         columnWrapperStyle={numColumns > 1 ? styles.columns : undefined}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: tabListPaddingBottom }]}
+        scrollIndicatorInsets={{ bottom: tabListPaddingBottom }}
         data={animals}
-        key={numColumns}
-        keyExtractor={(animal) => animal.id}
+        keyExtractor={keyExtractor}
         ListEmptyComponent={listState}
         ListFooterComponent={
           animals.length === 0 ? null : animalsQuery.isFetchingNextPage ? (
@@ -306,6 +351,9 @@ export function AnimalsScreen({ canWrite }: { canWrite: boolean }) {
         ListHeaderComponent={header}
         numColumns={numColumns}
         onEndReached={loadMore}
+        onViewableItemsChanged={handleViewableItemsChanged}
+        ref={listRef}
+        viewabilityConfig={viewabilityConfig}
         onEndReachedThreshold={0.4}
         refreshControl={
           <RefreshControl
@@ -376,8 +424,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     maxWidth: sizes.contentMaxWidth,
     padding: spacing.lg,
-    paddingBottom:
-      sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + sizes.fab + spacing.lg,
     width: '100%',
   },
   paginationState: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md },

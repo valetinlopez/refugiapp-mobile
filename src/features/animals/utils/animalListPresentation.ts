@@ -116,14 +116,20 @@ export function animalGridAccessibilityLabel(animal: Animal, statusLabel: string
 }
 
 /**
- * Adaptive columns for the animals grid (D37 / RFG-170).
+ * Adaptive columns for the animals grid (D41 / RFG-180).
  *
- * Two columns only when the viewport is wide enough *and* the font scale keeps
- * cards legible; narrow viewports or amplified fonts fall back to one column
- * so no critical data is clipped.
+ * Two columns by default on standard phones (390 wide) so the listing matches
+ * reference 25. A single column is reserved for narrow viewports (320 class)
+ * or amplified fonts (200 %, `fontScale >= 2`) so no critical data is
+ * clipped and touch targets stay legible.
  */
+export const ANIMAL_GRID_MIN_WIDTH_FOR_TWO_COLUMNS = 360;
+export const ANIMAL_GRID_MAX_FONT_SCALE_FOR_TWO_COLUMNS = 2;
+
 export function resolveAnimalGridColumns(width: number, fontScale: number): 1 | 2 {
   if (!Number.isFinite(width) || width <= 0) return 1;
   if (!Number.isFinite(fontScale) || fontScale <= 0) return 1;
-  return width >= 600 && fontScale < 1.5 ? 2 : 1;
+  if (width < ANIMAL_GRID_MIN_WIDTH_FOR_TWO_COLUMNS) return 1;
+  if (fontScale >= ANIMAL_GRID_MAX_FONT_SCALE_FOR_TWO_COLUMNS) return 1;
+  return 2;
 }

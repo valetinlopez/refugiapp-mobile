@@ -6,7 +6,8 @@ import { colors, radii, sizes, spacing } from '@/theme';
 
 import type { AnimalHistoryEvent } from '../types';
 import {
-  formatAnimalEventDate,
+  formatAnimalEventDateLabel,
+  getAnimalEventDescription,
   getAnimalEventTypeLabel,
   getAnimalEventVisual,
 } from '../utils/animalHistoryPresentation';
@@ -24,11 +25,12 @@ export const AnimalHistoryTimelineItem = memo(function AnimalHistoryTimelineItem
 }: AnimalHistoryTimelineItemProps) {
   const label = getAnimalEventTypeLabel(event.eventType);
   const visual = getAnimalEventVisual(event.eventType);
-  const date = formatAnimalEventDate(event.occurredAt);
+  const description = getAnimalEventDescription(event);
+  const date = formatAnimalEventDateLabel(event.occurredAt);
 
   return (
     <View
-      accessibilityLabel={`${label}. ${event.description}. ${date}`}
+      accessibilityLabel={`${label}. ${description}. ${date}`}
       accessibilityRole="summary"
       style={styles.row}
       testID="animal-history-event"
@@ -45,8 +47,10 @@ export const AnimalHistoryTimelineItem = memo(function AnimalHistoryTimelineItem
         </View>
       </View>
       <AppCard style={styles.card} variant="elevated">
-        <AppText variant="heading3">{label}</AppText>
-        <AppText>{event.description}</AppText>
+        <AppText accessibilityRole="header" variant="heading3">
+          {label}
+        </AppText>
+        <AppText style={styles.description}>{description}</AppText>
         <AppText color="textSecondary" variant="caption">
           {date}
         </AppText>
@@ -60,8 +64,15 @@ const lineLeft = (sizes.touchTarget - sizes.divider) / 2;
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    gap: spacing.xxs,
+    flexShrink: 1,
+    gap: spacing.xs,
+    maxWidth: '100%',
     minWidth: 0,
+  },
+  description: {
+    flexShrink: 1,
+    flexWrap: 'wrap',
+    maxWidth: '100%',
   },
   lineBottom: {
     backgroundColor: colors.divider,
@@ -89,11 +100,12 @@ const styles = StyleSheet.create({
   markerColumn: {
     alignItems: 'center',
     alignSelf: 'stretch',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: spacing.xxs,
     width: sizes.touchTarget,
   },
   row: {
-    alignItems: 'stretch',
+    alignItems: 'flex-start',
     flexDirection: 'row',
     gap: spacing.sm,
   },
