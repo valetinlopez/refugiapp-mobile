@@ -1,6 +1,8 @@
 import {
   ANIMAL_HISTORY_EVENT_TYPES,
   formatAnimalEventDate,
+  formatAnimalEventDateLabel,
+  getAnimalEventDescription,
   getAnimalEventTypeLabel,
   getAnimalEventVisual,
 } from './animalHistoryPresentation';
@@ -34,6 +36,29 @@ describe('formatAnimalEventDate', () => {
       new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(
         new Date('2026-09-21T14:30:00.000Z')
       )
+    );
+  });
+
+  it('combines relative and absolute dates like the rest of the app', () => {
+    expect(formatAnimalEventDateLabel('not-a-date')).toBe('Sin valor');
+    const label = formatAnimalEventDateLabel('2026-09-21T14:30:00.000Z');
+    expect(label).toContain(formatAnimalEventDate('2026-09-21T14:30:00.000Z'));
+  });
+});
+
+describe('getAnimalEventDescription', () => {
+  it('humanizes status_change without raw enums', () => {
+    const result = getAnimalEventDescription({
+      eventType: 'status_change',
+      description: 'Status changed from available_for_adoption to adopted.',
+    });
+    expect(result).toBe('Cambió de Disponible para adopción a Adoptado');
+    expect(result).not.toMatch(/_/);
+  });
+
+  it('falls back to Sin valor when the description is missing', () => {
+    expect(getAnimalEventDescription({ eventType: 'status_change', description: '' })).toBe(
+      'Sin valor'
     );
   });
 });
