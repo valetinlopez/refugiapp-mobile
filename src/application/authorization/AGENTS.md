@@ -18,6 +18,7 @@
 - Esta matriz controla presentación y navegación; el backend sigue siendo la autoridad final.
 - Cualquier cambio debe contrastarse con `../refugiapp/src/common/authorization/role-capabilities.ts`.
 - `canManageAdoptions` habilita datos de adoptantes, postulaciones y aprobación para `admin` y `shelter_manager`; el historial público al rol autenticado se controla por separado desde la feature.
+- `canDeleteProtected` es `true` solo para `admin` y protege las bajas `DELETE /users/{id}`, `/veterinarians/{id}` y `/animals/{id}` (RFG-185, ADR-0020). Es un gate visual de UI —el backend no la publica como capacidad y revalida con `403`— y nunca debe sustituirse por `canManageVets` o `canEditAnimal` (`shelter_manager` escribe pero no borra).
 
 ## Testing
 

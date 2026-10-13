@@ -110,4 +110,21 @@ describe('usersApi', () => {
       `/api/v1/users/${USER_ID}/deactivate`,
     ]);
   });
+
+  it('deletes a user with DELETE returning 204 without body', async () => {
+    let capturedPath = '';
+    let capturedMethod = '';
+    const client = createClient({
+      [`DELETE /api/v1/users/${USER_ID}`]: ({ url, method }) => {
+        capturedPath = url.pathname;
+        capturedMethod = method;
+        return { status: 204 };
+      },
+    });
+
+    await usersApi.remove(USER_ID, client);
+
+    expect(capturedMethod).toBe('DELETE');
+    expect(capturedPath).toBe(`/api/v1/users/${USER_ID}`);
+  });
 });

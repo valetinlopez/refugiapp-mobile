@@ -59,4 +59,8 @@ export const animalsApi = {
     const response = await client.patch<AnimalResponse>(`/animals/${id}/status`, data);
     return toAnimalView(response.data);
   },
+
+  async remove(id: string, client: HttpClient = apiClient): Promise<void> {
+    await client.delete<void>(`/animals/${id}`);
+  },
 };

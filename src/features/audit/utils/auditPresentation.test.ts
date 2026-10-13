@@ -30,12 +30,15 @@ describe('auditPresentation', () => {
   });
 
   it('maps every supported action to a Spanish label', () => {
-    expect(AUDIT_ACTIONS.length).toBe(31);
+    expect(AUDIT_ACTIONS.length).toBe(34);
     for (const action of AUDIT_ACTIONS) {
       expect(auditActionLabel(action).trim()).not.toBe('');
       expect(auditActionLabel(action)).not.toContain('.');
     }
     expect(auditActionLabel('user.create')).toBe('Usuario creado');
+    expect(auditActionLabel('user.delete')).toBe('Usuario eliminado');
+    expect(auditActionLabel('veterinarian.delete')).toBe('Veterinario eliminado');
+    expect(auditActionLabel('animal.delete')).toBe('Animal eliminado');
     expect(auditActionLabel('auth.password_change')).toBe('Contraseña cambiada');
     expect(auditActionLabel('push.token_invalid')).toBe('Token de notificación inválido');
     expect(auditActionLabel('adoption.complete')).toBe('Adopción completada');
@@ -44,6 +47,8 @@ describe('auditPresentation', () => {
   it('maps every supported resource type to a Spanish label', () => {
     expect(AUDIT_RESOURCE_TYPES).toEqual([
       'user',
+      'veterinarian',
+      'animal',
       'medical_record',
       'expense',
       'care_task',
@@ -58,6 +63,8 @@ describe('auditPresentation', () => {
       expect(auditResourceTypeLabel(resourceType).trim()).not.toBe('');
     }
     expect(auditResourceTypeLabel('user')).toBe('Usuario');
+    expect(auditResourceTypeLabel('veterinarian')).toBe('Veterinario');
+    expect(auditResourceTypeLabel('animal')).toBe('Animal');
     expect(auditResourceTypeLabel('medical_record')).toBe('Registro clínico');
   });
 

@@ -141,6 +141,24 @@ export function toVeterinarianErrorMessage(error: unknown): string {
   return toApiErrorMessage(error);
 }
 
+export function toDeleteVeterinarianErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.code === 'VETERINARIAN_HAS_HISTORY') {
+      return 'Este veterinario tiene historial clínico asignado y no se puede eliminar. El historial se conserva.';
+    }
+    if (error.status === 403) {
+      return 'Tu rol no tiene permiso para eliminar veterinarios. Solo un administrador puede hacerlo.';
+    }
+    if (error.status === 404) {
+      return 'El veterinario ya no está disponible o fue eliminado.';
+    }
+    if (error.status === 409) {
+      return 'Este veterinario no se puede eliminar en este momento porque conserva historial.';
+    }
+  }
+  return toApiErrorMessage(error);
+}
+
 /**
  * Places create conflicts next to the credential that must be corrected.
  *

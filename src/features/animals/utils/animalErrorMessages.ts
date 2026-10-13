@@ -179,3 +179,29 @@ export function toAnimalFileDeleteErrorMessage(error: unknown): string {
 
   return toApiErrorMessage(error);
 }
+
+export function toDeleteAnimalErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.code === 'ANIMAL_UNDER_TREATMENT') {
+      return 'Este animal está en tratamiento y no se puede eliminar. Finalizá el tratamiento antes de intentarlo.';
+    }
+    if (error.code === 'ANIMAL_HAS_PENDING_TASKS') {
+      return 'Este animal tiene tareas de cuidado pendientes. Completalas o cancelalas antes de eliminarlo.';
+    }
+    if (error.code === 'ANIMAL_HAS_HISTORY') {
+      return 'Este animal tiene historia clínica, gastos o adopciones asociadas que deben conservarse y no se puede eliminar.';
+    }
+    switch (error.status) {
+      case 403:
+        return 'Tu rol no tiene permiso para eliminar animales. Solo un administrador puede hacerlo.';
+      case 404:
+        return 'El animal ya no está disponible o fue eliminado.';
+      case 409:
+        return 'Este animal no se puede eliminar en este momento por reglas de integridad.';
+      default:
+        return toApiErrorMessage(error);
+    }
+  }
+
+  return toApiErrorMessage(error);
+}

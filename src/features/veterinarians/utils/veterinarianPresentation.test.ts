@@ -3,6 +3,7 @@ import { ApiError } from '@/core/api';
 import {
   formatVeterinarianUserRoles,
   hasActiveVeterinarianFilters,
+  toDeleteVeterinarianErrorMessage,
   toVeterinarianAdvancedFilters,
   toVeterinarianCreateErrorPresentation,
   toVeterinarianErrorMessage,
@@ -251,5 +252,27 @@ describe('veterinarianAccessibilityLabel', () => {
 
     expect(label).toBe('Sofía Romero, matrícula VET-001, Inactivo');
     expect(label).not.toContain(VETERINARIAN.id);
+  });
+});
+
+describe('toDeleteVeterinarianErrorMessage', () => {
+  it.each([
+    [
+      apiError(409, 'VETERINARIAN_HAS_HISTORY'),
+      'Este veterinario tiene historial clínico asignado y no se puede eliminar. El historial se conserva.',
+    ],
+    [
+      apiError(403),
+      'Tu rol no tiene permiso para eliminar veterinarios. Solo un administrador puede hacerlo.',
+    ],
+    [apiError(404), 'El veterinario ya no está disponible o fue eliminado.'],
+    [
+      apiError(409),
+      'Este veterinario no se puede eliminar en este momento porque conserva historial.',
+    ],
+  ])('translates delete failures without leaking internals', (error, expected) => {
+    const message = toDeleteVeterinarianErrorMessage(error);
+    expect(message).toBe(expected);
+    expect(message).not.toContain('VETERINARIAN_HAS_HISTORY');
   });
 });

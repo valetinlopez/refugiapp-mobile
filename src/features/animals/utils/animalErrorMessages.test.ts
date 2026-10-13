@@ -7,13 +7,14 @@ import {
   toAnimalFileUploadErrorMessage,
   toChangeStatusErrorMessage,
   toCreateAnimalErrorMessage,
+  toDeleteAnimalErrorMessage,
   toUpdateAnimalErrorMessage,
   UpdateAnimalError,
 } from './animalErrorMessages';
 
-function apiError(status: number): ApiError {
+function apiError(status: number, code = 'ERROR'): ApiError {
   return new ApiError({
-    code: `HTTP_${String(status)}`,
+    code,
     message: 'Mensaje técnico del core.',
     requestId: 'request-id',
     status,
@@ -186,5 +187,31 @@ describe('toAnimalFileDeleteErrorMessage', () => {
     expect(toAnimalFileDeleteErrorMessage(null)).toBe(
       'Ocurrió un error inesperado. Intentá de nuevo.'
     );
+  });
+});
+
+describe('toDeleteAnimalErrorMessage', () => {
+  it.each([
+    [
+      apiError(409, 'ANIMAL_UNDER_TREATMENT'),
+      'Este animal está en tratamiento y no se puede eliminar. Finalizá el tratamiento antes de intentarlo.',
+    ],
+    [
+      apiError(409, 'ANIMAL_HAS_PENDING_TASKS'),
+      'Este animal tiene tareas de cuidado pendientes. Completalas o cancelalas antes de eliminarlo.',
+    ],
+    [
+      apiError(409, 'ANIMAL_HAS_HISTORY'),
+      'Este animal tiene historia clínica, gastos o adopciones asociadas que deben conservarse y no se puede eliminar.',
+    ],
+    [
+      apiError(403),
+      'Tu rol no tiene permiso para eliminar animales. Solo un administrador puede hacerlo.',
+    ],
+    [apiError(404), 'El animal ya no está disponible o fue eliminado.'],
+  ])('translates integrity blocks without leaking codes', (error, expected) => {
+    const message = toDeleteAnimalErrorMessage(error);
+    expect(message).toBe(expected);
+    expect(message).not.toMatch(/ANIMAL_/);
   });
 });

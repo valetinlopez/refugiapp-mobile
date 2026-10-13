@@ -1,13 +1,17 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppButton, AppCard, AppText } from '@/components/primitives';
 import { DecorativeBackground, formatDateMedium, ScreenHeader } from '@/components/patterns';
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { navigateBack } from '@/components/navigation';
+import {
+  AnimalDeleteDialog,
+  type AnimalDeleteStep,
+} from '@/features/animals/components/AnimalDeleteDialog';
 import { AnimalHistory } from '@/features/animals/components/AnimalHistory';
 import { AnimalDetailHeader } from '@/features/animals/components/AnimalDetailHeader';
 import { AnimalFilePreview } from '@/features/animals/components/AnimalFilePreview';
@@ -23,7 +27,11 @@ import { useAnimal } from '@/features/animals/hooks/useAnimal';
 import { animalKeys } from '@/features/animals/hooks/animalKeys';
 import { useAnimalPhoto } from '@/features/animals/hooks/useAnimalPhoto';
 import { useChangeAnimalStatus } from '@/features/animals/hooks/useChangeAnimalStatus';
-import { toChangeStatusErrorMessage } from '@/features/animals/utils/animalErrorMessages';
+import { useDeleteAnimal } from '@/features/animals/hooks/useDeleteAnimal';
+import {
+  toChangeStatusErrorMessage,
+  toDeleteAnimalErrorMessage,
+} from '@/features/animals/utils/animalErrorMessages';
 import { isUuid } from '@/features/animals/utils/uuid';
 import { AnimalCareTasks } from '@/features/care-tasks/components/AnimalCareTasks';
 import { AnimalExpenses } from '@/features/expenses/components/AnimalExpenses';
@@ -41,6 +49,28 @@ export default function AnimalDetailScreen() {
   const animalQuery = useAnimal(animalId);
   const photoQuery = useAnimalPhoto(animalQuery.data?.profilePhotoMediaId ?? null);
   const changeStatus = useChangeAnimalStatus(animalId);
+  const deleteAnimal = useDeleteAnimal();
+  const [deleteStep, setDeleteStep] = useState<AnimalDeleteStep | null>(null);
+
+  const closeDeleteDialog = useCallback(() => {
+    if (deleteAnimal.isPending) return;
+    deleteAnimal.reset();
+    setDeleteStep(null);
+  }, [deleteAnimal]);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!capabilities.canDeleteProtected) {
+      setDeleteStep(null);
+      return;
+    }
+    deleteAnimal.mutate(animalId, {
+      onSuccess: () => {
+        setDeleteStep(null);
+        AccessibilityInfo.announceForAccessibility('Animal eliminado.');
+        navigateBack(fallbackHref);
+      },
+    });
+  }, [animalId, capabilities.canDeleteProtected, deleteAnimal, fallbackHref]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -50,17 +80,28 @@ export default function AnimalDetailScreen() {
         fallbackHref={fallbackHref}
       />
       <AnimalDetailContent
+        canDelete={capabilities.canDeleteProtected}
         canWrite={capabilities.canEditAnimal}
         canReadClinicalRecords={capabilities.canReadClinicalRecords}
         canManageAdoptions={capabilities.canManageAdoptions}
         changeStatusError={
           changeStatus.error ? toChangeStatusErrorMessage(changeStatus.error) : null
         }
+        deleteError={deleteAnimal.error ? toDeleteAnimalErrorMessage(deleteAnimal.error) : null}
+        deleteStep={capabilities.canDeleteProtected ? deleteStep : null}
+        isDeleting={deleteAnimal.isPending}
         isSubmittingStatus={changeStatus.isPending}
+        onAdvanceDelete={() => setDeleteStep('acknowledge')}
         onBack={() => navigateBack(fallbackHref)}
+        onCancelDelete={closeDeleteDialog}
         onChangeStatus={(status, occurredAt) =>
           changeStatus.mutate(occurredAt === undefined ? { status } : { status, occurredAt })
         }
+        onConfirmDelete={handleConfirmDelete}
+        onRequestDelete={() => {
+          deleteAnimal.reset();
+          setDeleteStep('confirm');
+        }}
         onRetry={() => void animalQuery.refetch()}
         onAdoptionApproved={() => {
           void queryClient.invalidateQueries({ queryKey: animalKeys.all });
@@ -74,14 +115,22 @@ export default function AnimalDetailScreen() {
 }
 
 interface AnimalDetailContentProps {
+  canDelete: boolean;
   canWrite: boolean;
   canReadClinicalRecords: boolean;
   canManageAdoptions: boolean;
   changeStatusError: string | null;
+  deleteError: string | null;
+  deleteStep: AnimalDeleteStep | null;
+  isDeleting: boolean;
   isSubmittingStatus: boolean;
+  onAdvanceDelete(): void;
   onBack(): void;
   onAdoptionApproved(): void;
+  onCancelDelete(): void;
   onChangeStatus(status: AnimalStatus, occurredAt?: string): void;
+  onConfirmDelete(): void;
+  onRequestDelete(): void;
   onRetry(): void;
   photoUri: string | null;
   query: ReturnType<typeof useAnimal>;
@@ -89,14 +138,22 @@ interface AnimalDetailContentProps {
 }
 
 function AnimalDetailContent({
+  canDelete,
   canWrite,
   canReadClinicalRecords,
   canManageAdoptions,
   changeStatusError,
+  deleteError,
+  deleteStep,
+  isDeleting,
   isSubmittingStatus,
+  onAdvanceDelete,
   onBack,
   onAdoptionApproved,
+  onCancelDelete,
   onChangeStatus,
+  onConfirmDelete,
+  onRequestDelete,
   onRetry,
   photoUri,
   query,
@@ -277,6 +334,23 @@ function AnimalDetailContent({
                 />
               </View>
             ) : null}
+            {canDelete ? (
+              <View style={styles.writeSection}>
+                <AppButton
+                  accessibilityHint="Solicita doble confirmación antes de eliminar la ficha."
+                  accessibilityLabel={`Eliminar a ${animal.name}`}
+                  disabled={isDeleting}
+                  icon="trash"
+                  label="Eliminar animal"
+                  onPress={onRequestDelete}
+                  testID="animal-delete"
+                  variant="danger"
+                />
+                <AppText color="textSecondary" variant="caption">
+                  Solo administradores. La baja es permanente y queda auditada.
+                </AppText>
+              </View>
+            ) : null}
           </>
         ) : null}
 
@@ -350,6 +424,18 @@ function AnimalDetailContent({
           />
         ) : null}
       </View>
+      {canDelete ? (
+        <AnimalDeleteDialog
+          errorMessage={deleteError}
+          key={deleteStep ?? 'closed'}
+          name={animal.name}
+          onAdvance={onAdvanceDelete}
+          onCancel={onCancelDelete}
+          onConfirm={onConfirmDelete}
+          step={deleteStep}
+          submitting={isDeleting}
+        />
+      ) : null}
     </ScrollView>
   );
 }

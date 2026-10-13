@@ -20,8 +20,7 @@
 - `GET /media?ownerType=animal&ownerId=:animalId`: listado paginado de archivos del animal y PDFs, lectura para los tres roles.
 - `POST /media/upload` con `ownerType=animal` + `ownerId`: archivo vinculado directo al animal (imágenes JPEG/PNG/WebP y PDF); no hay paso huérfano para Archivos (D17/RFG-150).
 - `DELETE /media/:id`: borrado de un archivo del animal. `admin` y `shelter_manager` borran cualquier asset; `veterinarian` solo huérfanos propios o adjuntos clínicos, por lo que un `403` ante un archivo del animal es un estado esperado (D17/RFG-150).
-
-No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar endpoints sin confirmarlos en OpenAPI.
+- `DELETE /animals/:id`: baja solo para `admin` (`canDeleteProtected`, no `canEditAnimal`); `204` sin body. Bloquea con `409` sin borrar nada cuando el animal está `under_treatment` (`ANIMAL_UNDER_TREATMENT`), tiene `care-tasks` `pending` (`ANIMAL_HAS_PENDING_TASKS`) o conserva historia —registros clínicos, gastos y postulaciones/adopciones, incluidas las soft-deleted— (`ANIMAL_HAS_HISTORY`). Sin bloqueos aplica baja lógica (`deletedAt`), libera la foto a huérfana y registra `animal.delete` en auditoría. Los listados excluyen `deletedAt` y un segundo `DELETE` responde `404`.
 
 - `POST /media/upload` sin `ownerType`/`ownerId`: alta de foto huérfana para `admin`, `shelter_manager` y `veterinarian`; se vincula con `profilePhotoMediaId` al crear o editar el animal. Los huérfanos no vinculados se purgan por antigüedad.
 
@@ -54,16 +53,16 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 ## Permisos de UI
 
-- `admin`: lectura y escritura general.
-- `shelter_manager`: lectura y escritura general.
-- `veterinarian`: lectura; no mostrar alta, edición general ni cambio de estado como acciones disponibles.
+- `admin`: lectura y escritura general; único rol que ve y ejecuta la baja (`canDeleteProtected`).
+- `shelter_manager`: lectura y escritura general (sin baja).
+- `veterinarian`: lectura; no mostrar alta, edición general, cambio de estado ni baja como acciones disponibles.
 - Archivos del animal: lectura para los tres roles desde `app/(app)/animals/[id]/files.tsx`; subida y borrado solo para `canEditAnimal` (`admin`/`shelter_manager`). `veterinarian` ve la galería y el preview de solo lectura sin acciones de subida ni borrado.
 - Un 403 del servidor sigue siendo posible y debe manejarse de forma segura.
 
 ## Estructura objetivo
 
 - `api/`: endpoints de animals (listado, alta, detalle, edición, cambio de estado y eventos generales), media (alta huérfana y lectura) y `animalFilesApi` (listado por owner `animal`, subida vinculada directa y borrado).
-- `hooks/`: `animalKeys`, `useAnimals`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useCreateAnimalEvent`, `useAnimalHistory`, `useAnimalPhoto`, `useAnimalFiles` (paginación infinita), `useUploadAnimalFile` (progreso + cancelación) y `useDeleteAnimalFile`.
+- `hooks/`: `animalKeys`, `useAnimals`, `useAnimal`, `useCreateAnimal`, `useUpdateAnimal`, `useChangeAnimalStatus`, `useDeleteAnimal` (elimina la query de detalle e invalida listados por prefijo, sin optimistic updates ni reintentos), `useCreateAnimalEvent`, `useAnimalHistory`, `useAnimalPhoto`, `useAnimalFiles` (paginación infinita), `useUploadAnimalFile` (progreso + cancelación) y `useDeleteAnimalFile`.
 - `components/`: formulario compartido de perfil (alta/edición), formulario de evento general, selector de foto de perfil, selector de estado con sheet y confirmación (`AnimalStatusChanger`, `AnimalStatusSheet`, `StatusConfirmDialog`), pantalla del listado (`AnimalsScreen`), celda de grilla (`AnimalGridCard` con foto protagonista), sheet de filtros avanzados (`AnimalFiltersSheet`), tarjeta de fila (`AnimalCard` con avatar `AnimalCardAvatar`, conservada para compatibilidad), sección de historial (`AnimalHistory`), selector de archivos (`AnimalFileUploader`), grid paginado de archivos (`AnimalFilesGrid`), visor de archivos (`AnimalFilePreview`: imagen a pantalla completa con `expo-image` `contain` y apertura externa segura para PDF, RFG-184) y pantalla compositora (`AnimalFilesScreen`).
 - `types/`: modelos de vista y aliases derivados de OpenAPI, incluidos `AnimalFile`/`PaginatedAnimalFiles` con `toAnimalFile`, `toPaginatedAnimalFiles` y `flattenAnimalFilesPages`.
 - `utils/`: esquemas Zod, mappers al DTO, matriz de transiciones, presentación de eventos e historial, presentación de archivos (`animalFilePresentation`: tipo/tamaño legible y validación `https` para apertura externa), presentación del listado (`animalListPresentation`: filtros de búsqueda/avanzados, resumen de filtros activos, aplanado con dedupe por UUID, label accesible de la tarjeta y columnas adaptativas) y traducción de errores de backend.
@@ -87,7 +86,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 
 - Unit tests para mappers, filtros, matriz de transiciones y presentación de estados.
 - Hook tests para paginación, invalidación y errores 404/409/403.
-- Component tests para capacidades por rol, confirmación de estado y estados de feedback.
+- Component tests para capacidades por rol, confirmación de estado, baja con doble confirmación y estados de feedback.
 - E2E del flujo principal cuando el producto defina su alcance.
 
 ## Estado
@@ -120,7 +119,7 @@ No existe un `DELETE /animals/:id` documentado actualmente. No agregar o invocar
 - Normalización de fechas en la frontera: `toDateOnly` convierte el ISO datetime del backend a `YYYY-MM-DD` en `toAnimalView` (detalle, listado y respuestas de escritura) y en `toUpdateAnimalFormValues`/`toUpdateAnimalRequest`; las filas del detalle envuelven en pantallas estrechas (`flexWrap`) según `docs/design.md`.
 - Errores de subida de foto y de guardado distinguidos en UI, con reintento y opción "Guardar sin foto"; errores Zod con scroll y foco al primer campo inválido.
 - Selector de cambio de estado (`AnimalStatusChanger` + `AnimalStatusSheet`) sobre el patrón compartido `BottomSheet` con solo las transiciones válidas, estado actual con icono + texto, fecha opcional (`DateTimeField`) y doble confirmación para terminales con `StatusConfirmDialog` (envuelve `ConfirmDialog` sin `Alert` nativo; tono danger por `isTerminalStatus`).
-- Traducción de errores de backend a mensajes claros (`toCreateAnimalErrorMessage`, `toUpdateAnimalErrorMessage`, `toChangeStatusErrorMessage`) en voseo rioplatense, con fallback genérico delegado en `toApiErrorMessage` de `core/api`.
+- Traducción de errores de backend a mensajes claros (`toCreateAnimalErrorMessage`, `toUpdateAnimalErrorMessage`, `toChangeStatusErrorMessage`, `toDeleteAnimalErrorMessage` con `ANIMAL_UNDER_TREATMENT` / `ANIMAL_HAS_PENDING_TASKS` / `ANIMAL_HAS_HISTORY` y 403/404 admin-only) en voseo rioplatense, con fallback genérico delegado en `toApiErrorMessage` de `core/api`.
 - Unit tests (matriz de transiciones, esquemas, mappers, mensajes), integración multipart con transporte falso y component tests con RNTL.
 
 ### Deuda conocida

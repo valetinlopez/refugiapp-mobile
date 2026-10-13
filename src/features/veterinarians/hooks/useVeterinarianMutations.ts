@@ -42,3 +42,15 @@ export function useReactivateVeterinarian() {
     onSuccess: () => invalidateVeterinarians(queryClient),
   });
 }
+
+export function useDeleteVeterinarian() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => veterinariansApi.remove(id),
+    onSuccess: async (_data, id) => {
+      queryClient.removeQueries({ queryKey: veterinarianKeys.detail(id) });
+      await invalidateVeterinarians(queryClient);
+    },
+    retry: 0,
+  });
+}

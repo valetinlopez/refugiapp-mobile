@@ -134,4 +134,21 @@ describe('veterinariansApi', () => {
     expect(result.id).toBe(VET_ID);
     expect(result.isActive).toBe(true);
   });
+
+  it('deletes a veterinarian with DELETE returning 204 without body', async () => {
+    let capturedPath = '';
+    let capturedMethod = '';
+    const client = createClient({
+      [`DELETE /api/v1/veterinarians/${VET_ID}`]: ({ url, method }) => {
+        capturedPath = url.pathname;
+        capturedMethod = method;
+        return { status: 204 };
+      },
+    });
+
+    await veterinariansApi.remove(VET_ID, client);
+
+    expect(capturedMethod).toBe('DELETE');
+    expect(capturedPath).toBe(`/api/v1/veterinarians/${VET_ID}`);
+  });
 });

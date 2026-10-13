@@ -62,4 +62,8 @@ export const veterinariansApi = {
     const response = await client.post<VeterinarianResponse>(`/veterinarians/${id}/reactivate`);
     return response.data;
   },
+
+  async remove(id: string, client: HttpClient = apiClient): Promise<void> {
+    await client.delete<void>(`/veterinarians/${id}`);
+  },
 };

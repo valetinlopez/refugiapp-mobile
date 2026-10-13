@@ -27,6 +27,7 @@ import {
 } from '../utils/veterinarianPresentation';
 import { DeactivateVeterinarianDialog } from './DeactivateVeterinarianDialog';
 import { ReactivateVeterinarianDialog } from './ReactivateVeterinarianDialog';
+import { VeterinarianDeleteDialog, type VeterinarianDeleteStep } from './VeterinarianDeleteDialog';
 
 export interface VeterinarianDetailQuery {
   data: VeterinarianResponse | undefined;
@@ -37,42 +38,58 @@ export interface VeterinarianDetailQuery {
 }
 
 interface VeterinarianDetailProps {
+  canDelete?: boolean;
   canWrite: boolean;
   confirmReactivateVisible: boolean;
   confirmVisible: boolean;
   deactivateError: string | null;
+  deleteError?: string | null;
+  deleteStep?: VeterinarianDeleteStep | null;
+  onAdvanceDelete?(): void;
   onBack(): void;
   onCancelDeactivate(): void;
+  onCancelDelete?(): void;
   onCancelReactivate(): void;
   onConfirmDeactivate(): void;
+  onConfirmDelete?(): void;
   onConfirmReactivate(): void;
   onEdit(): void;
   onRequestDeactivate(): void;
+  onRequestDelete?(): void;
   onRequestReactivate(): void;
   onRetry(): void;
   query: VeterinarianDetailQuery;
   reactivateError: string | null;
   submittingDeactivate: boolean;
+  submittingDelete?: boolean;
   submittingReactivate: boolean;
 }
 
 export function VeterinarianDetail({
+  canDelete = false,
   canWrite,
   confirmReactivateVisible,
   confirmVisible,
   deactivateError,
+  deleteError = null,
+  deleteStep = null,
+  onAdvanceDelete,
   onBack,
   onCancelDeactivate,
+  onCancelDelete,
   onCancelReactivate,
   onConfirmDeactivate,
+  onConfirmDelete,
   onConfirmReactivate,
   onEdit,
   onRequestDeactivate,
+  onRequestDelete,
   onRequestReactivate,
   onRetry,
   query,
   reactivateError,
   submittingDeactivate,
+  submittingDelete = false,
   submittingReactivate,
 }: VeterinarianDetailProps) {
   if (query.isPending) {
@@ -224,11 +241,27 @@ export function VeterinarianDetail({
               variant="primary"
             />
           )}
+          {canDelete && onRequestDelete ? (
+            <AppButton
+              accessibilityHint="Solicita doble confirmación antes de eliminar el perfil."
+              accessibilityLabel={`Eliminar a ${name}`}
+              icon="trash"
+              label="Eliminar veterinario"
+              onPress={onRequestDelete}
+              testID="veterinarian-delete"
+              variant="danger"
+            />
+          ) : null}
           <AppText color="textSecondary" style={styles.historyNotice} variant="caption">
             {veterinarian.isActive
               ? 'Al desactivar se conserva todo el historial clínico asociado.'
               : 'El historial clínico asociado se conserva mientras el perfil está inactivo.'}
           </AppText>
+          {canDelete ? (
+            <AppText color="textSecondary" style={styles.historyNotice} variant="caption">
+              La eliminación es permanente y queda auditada.
+            </AppText>
+          ) : null}
         </View>
       ) : (
         <AppCard variant="outlined">
@@ -254,6 +287,18 @@ export function VeterinarianDetail({
         submitting={submittingReactivate}
         visible={confirmReactivateVisible}
       />
+      {canDelete && onAdvanceDelete && onCancelDelete && onConfirmDelete && onRequestDelete ? (
+        <VeterinarianDeleteDialog
+          errorMessage={deleteError}
+          key={deleteStep ?? 'closed'}
+          name={name}
+          onAdvance={onAdvanceDelete}
+          onCancel={onCancelDelete}
+          onConfirm={onConfirmDelete}
+          step={deleteStep}
+          submitting={submittingDelete}
+        />
+      ) : null}
     </View>
   );
 }

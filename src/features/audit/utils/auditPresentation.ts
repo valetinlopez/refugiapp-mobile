@@ -15,6 +15,9 @@ export const AUDIT_ACTIONS: readonly AuditAction[] = [
   'user.deactivate',
   'user.activate',
   'user.role_assign',
+  'user.delete',
+  'veterinarian.delete',
+  'animal.delete',
   'medical_record.create',
   'medical_record.update',
   'medical_record.soft_delete',
@@ -49,6 +52,9 @@ const ACTION_LABELS: Record<AuditAction, string> = {
   'user.deactivate': 'Usuario desactivado',
   'user.activate': 'Usuario activado',
   'user.role_assign': 'Rol asignado',
+  'user.delete': 'Usuario eliminado',
+  'veterinarian.delete': 'Veterinario eliminado',
+  'animal.delete': 'Animal eliminado',
   'medical_record.create': 'Registro clínico creado',
   'medical_record.update': 'Registro clínico actualizado',
   'medical_record.soft_delete': 'Registro clínico eliminado',
@@ -80,6 +86,8 @@ const ACTION_LABELS: Record<AuditAction, string> = {
 
 export const AUDIT_RESOURCE_TYPES: readonly AuditResourceType[] = [
   'user',
+  'veterinarian',
+  'animal',
   'medical_record',
   'expense',
   'care_task',
@@ -93,6 +101,8 @@ export const AUDIT_RESOURCE_TYPES: readonly AuditResourceType[] = [
 
 const RESOURCE_TYPE_LABELS: Record<AuditResourceType, string> = {
   user: 'Usuario',
+  veterinarian: 'Veterinario',
+  animal: 'Animal',
   medical_record: 'Registro clínico',
   expense: 'Gasto',
   care_task: 'Tarea',
@@ -106,6 +116,8 @@ const RESOURCE_TYPE_LABELS: Record<AuditResourceType, string> = {
 
 const RESOURCE_TYPE_ICONS: Record<AuditResourceType, AppIconName> = {
   user: 'account',
+  veterinarian: 'medical',
+  animal: 'paw',
   medical_record: 'medical',
   expense: 'money',
   care_task: 'document',
