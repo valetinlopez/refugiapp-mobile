@@ -623,6 +623,7 @@
     },
     "/users/{id}": {
       "patch": {
+        "description": "Admins can update firstName, lastName, email and roles of any user. Any authenticated user can update only their own profilePhotoMediaId; editing another user or any profile field without admin rights returns 403.",
         "operationId": "UsersController_updateUser",
         "parameters": [
           {
@@ -699,7 +700,7 @@
             }
           },
           "409": {
-            "description": "Email already registered or last admin protection.",
+            "description": "Email already registered, last admin protection, incompatible media owner type or media already owned.",
             "content": {
               "application/json": {
                 "schema": {
@@ -724,7 +725,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update a user profile and roles (admin only)",
+        "summary": "Update a user profile, roles or profile photo",
         "tags": ["users"]
       }
     },
@@ -2449,7 +2450,7 @@
     },
     "/media/upload": {
       "post": {
-        "description": "Uploads a file and persists its metadata. Omitting ownerType and ownerId creates an orphan asset that can be linked later to an animal, expense or medical record. Orphan assets are removed by the cleanup job after MEDIA_ORPHAN_RETENTION_HOURS (default 48h) unless they are linked; the uploader can delete their own orphan asset with DELETE /media/:id before it is linked.",
+        "description": "Uploads a file and persists its metadata. Omitting ownerType and ownerId creates an orphan asset that can be linked later to an animal, expense, medical record or user. Orphan assets are removed by the cleanup job after MEDIA_ORPHAN_RETENTION_HOURS (default 48h) unless they are linked; the uploader can delete their own orphan asset with DELETE /media/:id before it is linked.",
         "operationId": "MediaController_upload",
         "parameters": [],
         "requestBody": {
@@ -2899,7 +2900,7 @@
         "tags": ["media"]
       },
       "delete": {
-        "description": "Deletes a media asset (soft-delete on media_assets) and removes its Cloudinary file. admin and shelter_manager can delete any asset. veterinarian can delete clinical attachments (ownerType=medical_record) and orphan assets uploaded by the same user; deleting a foreign orphan or a linked asset owned by another entity returns 403.",
+        "description": "Deletes a media asset (soft-delete on media_assets) and removes its Cloudinary file. admin and shelter_manager can delete any asset except another user avatar; user avatars can only be deleted by their owner or an admin. veterinarian can delete clinical attachments (ownerType=medical_record) and orphan assets uploaded by the same user; deleting a foreign orphan or a linked asset owned by another entity returns 403.",
         "operationId": "MediaController_delete",
         "parameters": [
           {
@@ -5189,6 +5190,13 @@
             "example": true,
             "description": "Whether the user account is active."
           },
+          "profilePhotoMediaId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "description": "UUID del asset de media que actua como foto de perfil; null explicito cuando el usuario no tiene foto."
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -5209,6 +5217,7 @@
           "lastName",
           "roles",
           "isActive",
+          "profilePhotoMediaId",
           "createdAt",
           "updatedAt"
         ]
@@ -5268,6 +5277,13 @@
               "type": "string",
               "enum": ["admin", "shelter_manager", "veterinarian"]
             }
+          },
+          "profilePhotoMediaId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "description": "UUID del asset de media que actua como foto de perfil. Enviar null para quitar la foto. Solo el propio usuario o un admin puede modificarla."
           }
         }
       },
@@ -5403,482 +5419,6 @@
           },
           "total": {
             "type": "number"
-          }
-        },
-        "required": ["items", "page", "limit", "total"]
-      },
-      "CreateAdopterDto": {
-        "type": "object",
-        "properties": {
-          "firstName": {
-            "type": "string",
-            "maxLength": 100
-          },
-          "lastName": {
-            "type": "string",
-            "maxLength": 100
-          },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "maxLength": 320
-          },
-          "phone": {
-            "type": "string",
-            "example": "+5491123456789",
-            "maxLength": 32
-          },
-          "address": {
-            "type": "string",
-            "maxLength": 255,
-            "nullable": true
-          }
-        },
-        "required": ["firstName", "lastName", "email", "phone"]
-      },
-      "AdopterResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "firstName": {
-            "type": "string"
-          },
-          "lastName": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string",
-            "format": "email"
-          },
-          "phone": {
-            "type": "string"
-          },
-          "address": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": ["id", "firstName", "lastName", "email", "phone", "createdAt", "updatedAt"]
-      },
-      "CreateAdoptionApplicationDto": {
-        "type": "object",
-        "properties": {
-          "adopterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "submittedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Defaults to the server time."
-          }
-        },
-        "required": ["adopterId"]
-      },
-      "AdoptionApplicationResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "animalId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "adopterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "status": {
-            "type": "string",
-            "enum": ["pending", "approved", "rejected"]
-          },
-          "submittedAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "createdByUserId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "decidedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "decidedByUserId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "animalId",
-          "adopterId",
-          "status",
-          "submittedAt",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "PaginatedAdoptionApplicationsResponseDto": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AdoptionApplicationResponseDto"
-            }
-          },
-          "page": {
-            "type": "number"
-          },
-          "limit": {
-            "type": "number"
-          },
-          "total": {
-            "type": "number"
-          }
-        },
-        "required": ["items", "page", "limit", "total"]
-      },
-      "ApproveAdoptionDto": {
-        "type": "object",
-        "properties": {
-          "adoptedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Defaults to the server time."
-          }
-        }
-      },
-      "AdoptionResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "animalId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "adopterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "applicationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "adoptedAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "responsibleUserId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "createdAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "animalId",
-          "adopterId",
-          "applicationId",
-          "adoptedAt",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "PaginatedAdoptionsResponseDto": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AdoptionResponseDto"
-            }
-          },
-          "page": {
-            "type": "number"
-          },
-          "limit": {
-            "type": "number"
-          },
-          "total": {
-            "type": "number"
-          }
-        },
-        "required": ["items", "page", "limit", "total"]
-      },
-      "CreateAnimalDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "species": {
-            "type": "string",
-            "example": "dog"
-          },
-          "breed": {
-            "type": "string",
-            "example": "mixed",
-            "nullable": true
-          },
-          "sex": {
-            "type": "string",
-            "enum": ["female", "male", "unknown"],
-            "default": "unknown"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "admitted",
-              "under_treatment",
-              "available_for_adoption",
-              "adopted",
-              "deceased"
-            ],
-            "default": "admitted"
-          },
-          "intakeDate": {
-            "type": "string"
-          },
-          "birthDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "profilePhotoMediaId": {
-            "type": "string"
-          }
-        },
-        "required": ["name", "species", "intakeDate"]
-      },
-      "AnimalResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "species": {
-            "type": "string"
-          },
-          "breed": {
-            "type": "string",
-            "nullable": true
-          },
-          "sex": {
-            "type": "string",
-            "enum": ["female", "male", "unknown"]
-          },
-          "status": {
-            "type": "string",
-            "enum": ["admitted", "under_treatment", "available_for_adoption", "adopted", "deceased"]
-          },
-          "intakeDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "birthDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "notes": {
-            "type": "string",
-            "nullable": true
-          },
-          "profilePhotoMediaId": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": ["id", "name", "species", "sex", "status", "intakeDate"]
-      },
-      "PaginatedAnimalsResponseDto": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AnimalResponseDto"
-            }
-          },
-          "page": {
-            "type": "number",
-            "example": 1
-          },
-          "limit": {
-            "type": "number",
-            "example": 20
-          },
-          "total": {
-            "type": "number",
-            "example": 42
-          }
-        },
-        "required": ["items", "page", "limit", "total"]
-      },
-      "UpdateAnimalDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "species": {
-            "type": "string",
-            "example": "dog"
-          },
-          "breed": {
-            "type": "string",
-            "example": "mixed",
-            "nullable": true
-          },
-          "sex": {
-            "type": "string",
-            "enum": ["female", "male", "unknown"]
-          },
-          "intakeDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "birthDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "profilePhotoMediaId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          }
-        }
-      },
-      "ChangeAnimalStatusDto": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": ["admitted", "under_treatment", "available_for_adoption", "adopted", "deceased"]
-          },
-          "occurredAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": ["status"]
-      },
-      "CreateAnimalHistoryEventDto": {
-        "type": "object",
-        "properties": {
-          "eventType": {
-            "type": "string",
-            "enum": ["general_note", "behavior_note", "transfer"]
-          },
-          "description": {
-            "type": "string",
-            "example": "Moved to foster home."
-          },
-          "occurredAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": ["eventType", "description"]
-      },
-      "AnimalHistoryEventResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "animalId": {
-            "type": "string"
-          },
-          "eventType": {
-            "type": "string",
-            "enum": [
-              "intake",
-              "transfer",
-              "status_change",
-              "behavior_note",
-              "adoption",
-              "general_note"
-            ]
-          },
-          "description": {
-            "type": "string"
-          },
-          "occurredAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "createdByUserId": {
-            "type": "string",
-            "nullable": true
-          },
-          "metadata": {
-            "type": "object"
-          }
-        },
-        "required": ["id", "animalId", "eventType", "description", "occurredAt"]
-      },
-      "PaginatedAnimalHistoryEventsResponseDto": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AnimalHistoryEventResponseDto"
-            }
-          },
-          "page": {
-            "type": "number",
-            "example": 1
-          },
-          "limit": {
-            "type": "number",
-            "example": 20
-          },
-          "total": {
-            "type": "number",
-            "example": 5
           }
         },
         "required": ["items", "page", "limit", "total"]
@@ -6139,6 +5679,247 @@
             "nullable": true
           }
         }
+      },
+      "CreateAnimalDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "species": {
+            "type": "string",
+            "example": "dog"
+          },
+          "breed": {
+            "type": "string",
+            "example": "mixed",
+            "nullable": true
+          },
+          "sex": {
+            "type": "string",
+            "enum": ["female", "male", "unknown"],
+            "default": "unknown"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "admitted",
+              "under_treatment",
+              "available_for_adoption",
+              "adopted",
+              "deceased"
+            ],
+            "default": "admitted"
+          },
+          "intakeDate": {
+            "type": "string"
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "profilePhotoMediaId": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "species", "intakeDate"]
+      },
+      "AnimalResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "species": {
+            "type": "string"
+          },
+          "breed": {
+            "type": "string",
+            "nullable": true
+          },
+          "sex": {
+            "type": "string",
+            "enum": ["female", "male", "unknown"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["admitted", "under_treatment", "available_for_adoption", "adopted", "deceased"]
+          },
+          "intakeDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "profilePhotoMediaId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "name", "species", "sex", "status", "intakeDate"]
+      },
+      "PaginatedAnimalsResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnimalResponseDto"
+            }
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "limit": {
+            "type": "number",
+            "example": 20
+          },
+          "total": {
+            "type": "number",
+            "example": 42
+          }
+        },
+        "required": ["items", "page", "limit", "total"]
+      },
+      "UpdateAnimalDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "species": {
+            "type": "string",
+            "example": "dog"
+          },
+          "breed": {
+            "type": "string",
+            "example": "mixed",
+            "nullable": true
+          },
+          "sex": {
+            "type": "string",
+            "enum": ["female", "male", "unknown"]
+          },
+          "intakeDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "profilePhotoMediaId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "ChangeAnimalStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["admitted", "under_treatment", "available_for_adoption", "adopted", "deceased"]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["status"]
+      },
+      "CreateAnimalHistoryEventDto": {
+        "type": "object",
+        "properties": {
+          "eventType": {
+            "type": "string",
+            "enum": ["general_note", "behavior_note", "transfer"]
+          },
+          "description": {
+            "type": "string",
+            "example": "Moved to foster home."
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["eventType", "description"]
+      },
+      "AnimalHistoryEventResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "animalId": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "intake",
+              "transfer",
+              "status_change",
+              "behavior_note",
+              "adoption",
+              "general_note"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdByUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object"
+          }
+        },
+        "required": ["id", "animalId", "eventType", "description", "occurredAt"]
+      },
+      "PaginatedAnimalHistoryEventsResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnimalHistoryEventResponseDto"
+            }
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "limit": {
+            "type": "number",
+            "example": 20
+          },
+          "total": {
+            "type": "number",
+            "example": 5
+          }
+        },
+        "required": ["items", "page", "limit", "total"]
       },
       "CreateExpenseDto": {
         "type": "object",
@@ -6524,6 +6305,241 @@
             "description": "Notes. Omit to keep the current value; pass null to clear it. Empty or whitespace-only strings are stored as null."
           }
         }
+      },
+      "CreateAdopterDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 320
+          },
+          "phone": {
+            "type": "string",
+            "example": "+5491123456789",
+            "maxLength": 32
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          }
+        },
+        "required": ["firstName", "lastName", "email", "phone"]
+      },
+      "AdopterResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": ["id", "firstName", "lastName", "email", "phone", "createdAt", "updatedAt"]
+      },
+      "CreateAdoptionApplicationDto": {
+        "type": "object",
+        "properties": {
+          "adopterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Defaults to the server time."
+          }
+        },
+        "required": ["adopterId"]
+      },
+      "AdoptionApplicationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "animalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "adopterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "approved", "rejected"]
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "createdByUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "decidedByUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "animalId",
+          "adopterId",
+          "status",
+          "submittedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PaginatedAdoptionApplicationsResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdoptionApplicationResponseDto"
+            }
+          },
+          "page": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": ["items", "page", "limit", "total"]
+      },
+      "ApproveAdoptionDto": {
+        "type": "object",
+        "properties": {
+          "adoptedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Defaults to the server time."
+          }
+        }
+      },
+      "AdoptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "animalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "adopterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "adoptedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "responsibleUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "animalId",
+          "adopterId",
+          "applicationId",
+          "adoptedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PaginatedAdoptionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdoptionResponseDto"
+            }
+          },
+          "page": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": ["items", "page", "limit", "total"]
       },
       "CreateCareTaskDto": {
         "type": "object",

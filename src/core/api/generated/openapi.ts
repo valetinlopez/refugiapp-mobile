@@ -56,6 +56,7 @@ export interface components {
       lastName: string;
       roles: ('admin' | 'shelter_manager' | 'veterinarian')[];
       isActive: boolean;
+      profilePhotoMediaId: string | null;
       createdAt: string;
       updatedAt: string;
     };
@@ -70,6 +71,7 @@ export interface components {
       lastName?: string;
       email?: string;
       roles?: ('admin' | 'shelter_manager' | 'veterinarian')[];
+      profilePhotoMediaId?: string | null;
     };
     Object: Record<string, unknown>;
     AuditActorDto: {
@@ -132,126 +134,6 @@ export interface components {
     };
     PaginatedAuditLogsResponseDto: {
       items: components['schemas']['AuditLogResponseDto'][];
-      page: number;
-      limit: number;
-      total: number;
-    };
-    CreateAdopterDto: {
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      address?: string | null;
-    };
-    AdopterResponseDto: {
-      id: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      address?: string | null;
-      createdAt: string;
-      updatedAt: string;
-    };
-    CreateAdoptionApplicationDto: {
-      adopterId: string;
-      submittedAt?: string;
-    };
-    AdoptionApplicationResponseDto: {
-      id: string;
-      animalId: string;
-      adopterId: string;
-      status: 'pending' | 'approved' | 'rejected';
-      submittedAt: string;
-      createdByUserId?: string | null;
-      decidedAt?: string | null;
-      decidedByUserId?: string | null;
-      createdAt: string;
-      updatedAt: string;
-    };
-    PaginatedAdoptionApplicationsResponseDto: {
-      items: components['schemas']['AdoptionApplicationResponseDto'][];
-      page: number;
-      limit: number;
-      total: number;
-    };
-    ApproveAdoptionDto: {
-      adoptedAt?: string;
-    };
-    AdoptionResponseDto: {
-      id: string;
-      animalId: string;
-      adopterId: string;
-      applicationId: string;
-      adoptedAt: string;
-      responsibleUserId?: string | null;
-      createdAt: string;
-      updatedAt: string;
-    };
-    PaginatedAdoptionsResponseDto: {
-      items: components['schemas']['AdoptionResponseDto'][];
-      page: number;
-      limit: number;
-      total: number;
-    };
-    CreateAnimalDto: {
-      name: string;
-      species: string;
-      breed?: string | null;
-      sex?: 'female' | 'male' | 'unknown';
-      status?: 'admitted' | 'under_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
-      intakeDate: string;
-      birthDate?: string | null;
-      profilePhotoMediaId?: string;
-    };
-    AnimalResponseDto: {
-      id: string;
-      name: string;
-      species: string;
-      breed?: string | null;
-      sex: 'female' | 'male' | 'unknown';
-      status: 'admitted' | 'under_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
-      intakeDate: string;
-      birthDate?: string | null;
-      notes?: string | null;
-      profilePhotoMediaId?: string | null;
-    };
-    PaginatedAnimalsResponseDto: {
-      items: components['schemas']['AnimalResponseDto'][];
-      page: number;
-      limit: number;
-      total: number;
-    };
-    UpdateAnimalDto: {
-      name?: string;
-      species?: string;
-      breed?: string | null;
-      sex?: 'female' | 'male' | 'unknown';
-      intakeDate?: string;
-      birthDate?: string | null;
-      profilePhotoMediaId?: string | null;
-    };
-    ChangeAnimalStatusDto: {
-      status: 'admitted' | 'under_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
-      occurredAt?: string;
-    };
-    CreateAnimalHistoryEventDto: {
-      eventType: 'general_note' | 'behavior_note' | 'transfer';
-      description: string;
-      occurredAt?: string;
-    };
-    AnimalHistoryEventResponseDto: {
-      id: string;
-      animalId: string;
-      eventType:
-        'intake' | 'transfer' | 'status_change' | 'behavior_note' | 'adoption' | 'general_note';
-      description: string;
-      occurredAt: string;
-      createdByUserId?: string | null;
-      metadata?: Record<string, unknown>;
-    };
-    PaginatedAnimalHistoryEventsResponseDto: {
-      items: components['schemas']['AnimalHistoryEventResponseDto'][];
       page: number;
       limit: number;
       total: number;
@@ -322,6 +204,68 @@ export interface components {
       email?: string | null;
       phone?: string | null;
       notes?: string | null;
+    };
+    CreateAnimalDto: {
+      name: string;
+      species: string;
+      breed?: string | null;
+      sex?: 'female' | 'male' | 'unknown';
+      status?: 'admitted' | 'under_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
+      intakeDate: string;
+      birthDate?: string | null;
+      profilePhotoMediaId?: string;
+    };
+    AnimalResponseDto: {
+      id: string;
+      name: string;
+      species: string;
+      breed?: string | null;
+      sex: 'female' | 'male' | 'unknown';
+      status: 'admitted' | 'under_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
+      intakeDate: string;
+      birthDate?: string | null;
+      notes?: string | null;
+      profilePhotoMediaId?: string | null;
+    };
+    PaginatedAnimalsResponseDto: {
+      items: components['schemas']['AnimalResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
+    UpdateAnimalDto: {
+      name?: string;
+      species?: string;
+      breed?: string | null;
+      sex?: 'female' | 'male' | 'unknown';
+      intakeDate?: string;
+      birthDate?: string | null;
+      profilePhotoMediaId?: string | null;
+    };
+    ChangeAnimalStatusDto: {
+      status: 'admitted' | 'under_treatment' | 'available_for_adoption' | 'adopted' | 'deceased';
+      occurredAt?: string;
+    };
+    CreateAnimalHistoryEventDto: {
+      eventType: 'general_note' | 'behavior_note' | 'transfer';
+      description: string;
+      occurredAt?: string;
+    };
+    AnimalHistoryEventResponseDto: {
+      id: string;
+      animalId: string;
+      eventType:
+        'intake' | 'transfer' | 'status_change' | 'behavior_note' | 'adoption' | 'general_note';
+      description: string;
+      occurredAt: string;
+      createdByUserId?: string | null;
+      metadata?: Record<string, unknown>;
+    };
+    PaginatedAnimalHistoryEventsResponseDto: {
+      items: components['schemas']['AnimalHistoryEventResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
     };
     CreateExpenseDto: {
       animalId: string;
@@ -431,6 +375,64 @@ export interface components {
       diagnosis?: string | null;
       treatment?: string | null;
       notes?: string | null;
+    };
+    CreateAdopterDto: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      address?: string | null;
+    };
+    AdopterResponseDto: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      address?: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+    CreateAdoptionApplicationDto: {
+      adopterId: string;
+      submittedAt?: string;
+    };
+    AdoptionApplicationResponseDto: {
+      id: string;
+      animalId: string;
+      adopterId: string;
+      status: 'pending' | 'approved' | 'rejected';
+      submittedAt: string;
+      createdByUserId?: string | null;
+      decidedAt?: string | null;
+      decidedByUserId?: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+    PaginatedAdoptionApplicationsResponseDto: {
+      items: components['schemas']['AdoptionApplicationResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
+    };
+    ApproveAdoptionDto: {
+      adoptedAt?: string;
+    };
+    AdoptionResponseDto: {
+      id: string;
+      animalId: string;
+      adopterId: string;
+      applicationId: string;
+      adoptedAt: string;
+      responsibleUserId?: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+    PaginatedAdoptionsResponseDto: {
+      items: components['schemas']['AdoptionResponseDto'][];
+      page: number;
+      limit: number;
+      total: number;
     };
     CreateCareTaskDto: {
       animalId: string;

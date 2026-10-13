@@ -156,6 +156,7 @@ describe('linked veterinarian user presentation', () => {
     lastName: 'Romero',
     roles: ['veterinarian', 'admin'],
     isActive: true,
+    profilePhotoMediaId: null,
     createdAt: '2026-09-01T00:00:00.000Z',
     updatedAt: '2026-09-01T00:00:00.000Z',
   };

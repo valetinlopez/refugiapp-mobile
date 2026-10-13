@@ -11,7 +11,6 @@ import {
   SectionHeader,
 } from '@/components/patterns';
 import {
-  AppAvatar,
   AppBadge,
   AppButton,
   AppCard,
@@ -24,11 +23,12 @@ import { colors, sizes, spacing } from '@/theme';
 import { useCapabilities } from '../hooks/useCapabilities';
 import { useSession } from '../session';
 import { useSignOut } from '../session/useSignOut';
-import { accountDisplayName, accountInitials } from '../utils/accountPresentation';
+import { accountDisplayName } from '../utils/accountPresentation';
 import { grantedCapabilityPresentation } from '../utils/profilePresentation';
 import { roleLabels } from '../utils/roleLabels';
 import { AccountHeaderRow } from './AccountHeaderRow';
 import { AccountSignOutSheet } from './AccountSignOutSheet';
+import { ProfilePhotoSection } from './ProfilePhotoSection';
 
 export function ProfileScreen() {
   const { status, user } = useSession();
@@ -75,12 +75,8 @@ export function ProfileScreen() {
         </AppText>
 
         <AppCard style={styles.identityCard} testID="profile-identity" variant="organic">
+          <ProfilePhotoSection user={user} />
           <View accessibilityRole="summary" style={styles.identity}>
-            <AppAvatar
-              accessibilityLabel={`Iniciales de ${accountDisplayName(user)}`}
-              initials={accountInitials(user)}
-              size="lg"
-            />
             <View style={styles.identityCopy}>
               <AppText variant="heading3">{accountDisplayName(user)}</AppText>
               <AppText color="textSecondary">{user.email}</AppText>
