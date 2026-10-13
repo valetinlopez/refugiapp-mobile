@@ -1,0 +1,21 @@
+# RFG-168: gastos admin → Inicio → acceso Gastos → listado global legible.
+# Solo lectura: no crea, edita ni borra datos, no requiere seeds.
+appId: ${APP_ID}
+tags: [e2e, sprint-22, RFG-168]
+---
+- runFlow:
+    file: helpers/login.yaml
+    env:
+      EMAIL: ${E2E_ADMIN_EMAIL}
+      PASSWORD: ${E2E_ADMIN_PASSWORD}
+- assertVisible:
+    id: dashboard-screen
+    timeout: 20000
+- tapOn:
+    id: home-access-expenses
+- assertVisible:
+    id: expenses-list
+    timeout: 15000
+- assertVisible: Gastos
+- assertVisible: Subtotal cargado
+- runFlow: helpers/logout.yaml
