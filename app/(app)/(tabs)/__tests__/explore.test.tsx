@@ -1,8 +1,10 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import * as RN from 'react-native';
 import { StyleSheet } from 'react-native';
 
 import { ApiError } from '@/core/api';
 import type { Animal } from '@/features/animals/types';
+import { resolveAnimalGridColumns } from '@/features/animals/utils/animalListPresentation';
 
 import { useAnimals } from '@/features/animals/hooks/useAnimals';
 
@@ -30,6 +32,16 @@ jest.mock('@/features/animals/hooks/useAnimalPhoto', () => ({
 }));
 
 const mockUseAnimals = useAnimals as jest.Mock;
+const dimensionsSpy = jest.spyOn(RN, 'useWindowDimensions');
+
+function setViewport(width: number, fontScale = 1) {
+  dimensionsSpy.mockReturnValue({
+    width,
+    height: width < 360 ? 568 : 844,
+    scale: 2,
+    fontScale,
+  });
+}
 const mockUseSession = useSession as jest.Mock;
 const mockUseAnimalPhoto = useAnimalPhoto as jest.Mock;
 const { router } = jest.requireMock('expo-router') as {
@@ -80,6 +92,7 @@ function networkError() {
 describe('ExploreScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    setViewport(390, 1);
     mockUseSession.mockReturnValue({ user: { roles: ['admin'] } });
     mockUseAnimalPhoto.mockReturnValue({ data: undefined, isError: false, isPending: false });
   });
@@ -385,5 +398,94 @@ describe('ExploreScreen', () => {
       })
     );
     expect(style.height).toBeUndefined();
+  });
+
+  it('renders two columns on a standard 390 phone (D41.1)', async () => {
+    setViewport(390, 1);
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+
+    // RNTL mocks FlatList and strips numColumns, so assert the wiring:
+    // the mocked viewport resolves to 2 columns and the grid still renders.
+    expect(resolveAnimalGridColumns(390, 1)).toBe(2);
+    expect(screen.getByTestId('animals-list')).toBeTruthy();
+    expect(screen.getByText('Luna')).toBeTruthy();
+  });
+
+  it('renders one column on a narrow 320 viewport (D41.1)', async () => {
+    setViewport(320, 1);
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+
+    expect(resolveAnimalGridColumns(320, 1)).toBe(1);
+    expect(screen.getByTestId('animals-list')).toBeTruthy();
+    expect(screen.getByText('Luna')).toBeTruthy();
+  });
+
+  it('renders one column with 200 % font scale (D41.1)', async () => {
+    setViewport(390, 2);
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+
+    expect(resolveAnimalGridColumns(390, 2)).toBe(1);
+    expect(screen.getByTestId('animals-list')).toBeTruthy();
+  });
+
+  it('keeps filter state when the grid switches columns (D41.1)', async () => {
+    setViewport(390, 1);
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'En tratamiento' }));
+    await waitFor(() => {
+      expect(mockUseAnimals).toHaveBeenLastCalledWith({ status: 'under_treatment' });
+    });
+
+    // Viewport change (390 -> 320) must not reset filter state (D41.1).
+    setViewport(320, 1);
+    await screen.rerender(<ExploreScreen />);
+
+    expect(resolveAnimalGridColumns(320, 1)).toBe(1);
+    expect(mockUseAnimals).toHaveBeenLastCalledWith({ status: 'under_treatment' });
+    expect(screen.getByTestId('animals-remove-filter-status')).toBeTruthy();
+  });
+
+  it('reserves bottom padding so the FAB never covers the last row (D41.3)', async () => {
+    mockUseAnimals.mockReturnValue(createQueryResult());
+    const screen = await render(<ExploreScreen />);
+    const style = StyleSheet.flatten(
+      screen.getByTestId('animals-list').props.contentContainerStyle
+    );
+
+    expect(style.paddingBottom).toBeGreaterThanOrEqual(
+      sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + sizes.fab
+    );
+  });
+
+  it('keeps long names and the status badge visible (D41.2)', async () => {
+    const longName = 'Un nombre de animal extremadamente largo para envolver la tarjeta';
+    mockUseAnimals.mockReturnValue(
+      createQueryResult({
+        data: {
+          pages: [
+            {
+              items: [
+                createAnimal({
+                  breed: 'Una raza con un nombre extremadamente largo para envolver',
+                  name: longName,
+                }),
+              ],
+              page: 1,
+              limit: 20,
+              total: 1,
+            },
+          ],
+        },
+      })
+    );
+    const screen = await render(<ExploreScreen />);
+
+    expect(screen.getByText(longName)).toBeTruthy();
+    expect(screen.getAllByText('En tratamiento').length).toBeGreaterThan(0);
   });
 });
