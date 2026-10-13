@@ -77,7 +77,7 @@ describe('AnimalFilesGrid', () => {
   it('shows an empty state when the animal has no files', async () => {
     const screen = await renderGrid({ files: [] });
 
-    expect(screen.getByText('Sin archivos')).toBeTruthy();
+    expect(screen.getByText('Sin archivos adjuntos')).toBeTruthy();
   });
 
   it('distinguishes offline from server errors', async () => {
@@ -95,5 +95,35 @@ describe('AnimalFilesGrid', () => {
     await fireEvent.press(screen.getByTestId('animal-files-load-more'));
 
     expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens a fullscreen preview when tapping a file', async () => {
+    const screen = await renderGrid();
+
+    await fireEvent.press(screen.getByTestId('animal-file-preview-trigger-file-1'));
+
+    expect(screen.getByTestId('animal-file-preview')).toBeTruthy();
+    expect(screen.getByTestId('animal-file-preview-image')).toBeTruthy();
+  });
+
+  it('deletes from the preview only after confirmation', async () => {
+    const onDelete = jest.fn();
+    const screen = await renderGrid({ onDelete });
+
+    await fireEvent.press(screen.getByTestId('animal-file-preview-trigger-file-1'));
+    await fireEvent.press(screen.getByTestId('animal-file-preview-delete'));
+    expect(onDelete).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByTestId('confirm-accept'));
+    expect(onDelete).toHaveBeenCalledWith('file-1');
+  });
+
+  it('keeps the preview available read-only without delete permission', async () => {
+    const screen = await renderGrid({ canDelete: false });
+
+    await fireEvent.press(screen.getByTestId('animal-file-preview-trigger-file-1'));
+
+    expect(screen.getByTestId('animal-file-preview-image')).toBeTruthy();
+    expect(screen.queryByTestId('animal-file-preview-delete')).toBeNull();
   });
 });

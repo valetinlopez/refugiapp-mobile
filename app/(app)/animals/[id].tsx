@@ -10,6 +10,7 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/feedback';
 import { navigateBack } from '@/components/navigation';
 import { AnimalHistory } from '@/features/animals/components/AnimalHistory';
 import { AnimalDetailHeader } from '@/features/animals/components/AnimalDetailHeader';
+import { AnimalFilePreview } from '@/features/animals/components/AnimalFilePreview';
 import {
   AnimalDetailTabs,
   type AnimalDetailTab,
@@ -104,6 +105,7 @@ function AnimalDetailContent({
   const [activeTab, setActiveTab] = useState<AnimalDetailTab>(
     isAnimalDetailTab(requestedTab) ? requestedTab : 'summary'
   );
+  const [photoPreviewVisible, setPhotoPreviewVisible] = useState(false);
   if (query.isPending) {
     return (
       <ScrollView contentContainerStyle={styles.content}>
@@ -139,14 +141,38 @@ function AnimalDetailContent({
   }
 
   const animal = query.data;
+  const profilePhotoFile =
+    animal.profilePhotoMediaId !== null && photoUri !== null
+      ? {
+          id: animal.profilePhotoMediaId,
+          name: `Foto de ${animal.name}`,
+          secureUrl: photoUri,
+          isImage: true as const,
+          bytes: null,
+          format: null,
+        }
+      : null;
   const detailHeader = (
     <View style={styles.detailHeader}>
       <ScreenHeader title="Detalle del animal" />
-      <AnimalDetailHeader animal={animal} photoUri={photoUri} />
+      <AnimalDetailHeader
+        animal={animal}
+        photoUri={photoUri}
+        {...(profilePhotoFile !== null
+          ? { onPreviewPhoto: () => setPhotoPreviewVisible(true) }
+          : {})}
+      />
       <AnimalDetailTabs
         activeTab={activeTab}
         canReadClinicalRecords={canReadClinicalRecords}
         onChange={setActiveTab}
+      />
+      <AnimalFilePreview
+        canDelete={false}
+        file={profilePhotoFile}
+        onClose={() => setPhotoPreviewVisible(false)}
+        onRequestDelete={() => undefined}
+        visible={photoPreviewVisible && profilePhotoFile !== null}
       />
     </View>
   );
