@@ -33,6 +33,7 @@ maestro test maestro/admin.yaml --env APP_ID=app.refugiapp.mobile.staging
 | `online-restore.yaml`  | admin           | al volver la red: reintento carga y sesión válida sin login    |
 | `medical-history.yaml` | admin           | registro → historial → paginación → actor + diff campo a campo |
 | `audit.yaml`           | admin           | lista → detalle → filtro por acción → resultados legibles      |
+| `expenses.yaml`        | admin           | Inicio → acceso Gastos → listado global legible (solo lectura) |
 
 ### Seeds para RFG-132 (historial médico y auditoría)
 
