@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState, ErrorState, LoadingState, OfflineState } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
+import { resolveTabBarContentPaddingBottom } from '@/components/navigation';
 import { virtualizedListPerformanceProps } from '@/components/performance';
 import {
   DecorativeBackground,
@@ -310,13 +311,19 @@ export function AnimalsScreen({ canWrite }: { canWrite: boolean }) {
     </View>
   );
 
+  const tabListPaddingBottom = resolveTabBarContentPaddingBottom(
+    insets.bottom,
+    sizes.fab + spacing.lg
+  );
+
   return (
     <View style={styles.container}>
       <DecorativeBackground variant="texture" />
       <FlatList
         {...virtualizedListPerformanceProps}
         columnWrapperStyle={numColumns > 1 ? styles.columns : undefined}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: tabListPaddingBottom }]}
+        scrollIndicatorInsets={{ bottom: tabListPaddingBottom }}
         data={animals}
         keyExtractor={keyExtractor}
         ListEmptyComponent={listState}
@@ -417,8 +424,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     maxWidth: sizes.contentMaxWidth,
     padding: spacing.lg,
-    paddingBottom:
-      sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + sizes.fab + spacing.lg,
     width: '100%',
   },
   paginationState: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md },

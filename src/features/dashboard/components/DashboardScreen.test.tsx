@@ -1,4 +1,5 @@
 import { fireEvent, render, within } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import type { HomePriority } from '@/application/home';
 import { ApiError } from '@/core/api';
@@ -11,6 +12,7 @@ import { getSessionGreeting } from '@/features/dashboard/utils/greeting';
 import { useAnimalOptions, useAnimalOptionPhoto } from '@/application/animals';
 import { useHomeSummary } from '@/application/home';
 import { HOME_HERO_TAGLINE } from '@/features/dashboard/components/HomeGreeting';
+import { sizes, spacing } from '@/theme';
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
@@ -275,5 +277,17 @@ describe('DashboardScreen (D36 / RFG-169)', () => {
 
     expect(overviewRefetch).toHaveBeenCalled();
     expect(homeRefetch).toHaveBeenCalled();
+  });
+
+  it('reserves tab bar height plus safe-area inset so the last priority scrolls above the bar', async () => {
+    const screen = await render(<DashboardScreen />);
+
+    expect(screen.getByTestId('home-priority-row')).toBeTruthy();
+    const style = StyleSheet.flatten(
+      screen.getByTestId('dashboard-screen').props.contentContainerStyle
+    ) as { paddingBottom?: number };
+    expect(style.paddingBottom).toBeGreaterThanOrEqual(
+      sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + spacing.lg
+    );
   });
 });

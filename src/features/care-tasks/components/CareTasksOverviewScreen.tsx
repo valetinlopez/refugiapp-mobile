@@ -11,6 +11,7 @@ import {
   OfflineState,
 } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
+import { resolveTabBarContentPaddingBottom } from '@/components/navigation';
 import { virtualizedListPerformanceProps } from '@/components/performance';
 import { DecorativeBackground, SegmentedControl } from '@/components/patterns';
 import { AppButton, AppIcon, AppText, FAB } from '@/components/primitives';
@@ -128,12 +129,18 @@ export function CareTasksOverviewScreen({
     />
   );
 
+  const tabListPaddingBottom = resolveTabBarContentPaddingBottom(
+    insets.bottom,
+    sizes.fab + spacing.xl
+  );
+
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <DecorativeBackground variant="texture" />
       <FlatList
         {...virtualizedListPerformanceProps}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: tabListPaddingBottom }]}
+        scrollIndicatorInsets={{ bottom: tabListPaddingBottom }}
         data={tasks}
         keyExtractor={(task) => task.id}
         ListEmptyComponent={listState}
@@ -330,8 +337,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: spacing.sm,
     padding: spacing.lg,
-    paddingBottom:
-      sizes.bottomNavigationHeight + sizes.bottomNavigationCurve + sizes.fab + spacing.xl,
   },
   option: {
     alignItems: 'center',
