@@ -30,4 +30,8 @@ export const usersApi = {
   async deactivate(id: string, client: HttpClient = apiClient): Promise<void> {
     await client.post<void>(`/users/${id}/deactivate`);
   },
+
+  async remove(id: string, client: HttpClient = apiClient): Promise<void> {
+    await client.delete<void>(`/users/${id}`);
+  },
 };

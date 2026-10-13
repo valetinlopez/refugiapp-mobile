@@ -279,3 +279,22 @@ describe('animalsApi.changeStatus', () => {
     ).rejects.toMatchObject({ status: 409 });
   });
 });
+
+describe('animalsApi.remove', () => {
+  it('deletes an animal with DELETE returning 204 without body', async () => {
+    let capturedPath = '';
+    let capturedMethod = '';
+    const client = createClient({
+      'DELETE /api/v1/animals/3fa85f64-5717-4562-b3fc-2c963f66afa6': ({ url, method }) => {
+        capturedPath = url.pathname;
+        capturedMethod = method;
+        return { status: 204 };
+      },
+    });
+
+    await animalsApi.remove('3fa85f64-5717-4562-b3fc-2c963f66afa6', client);
+
+    expect(capturedMethod).toBe('DELETE');
+    expect(capturedPath).toBe('/api/v1/animals/3fa85f64-5717-4562-b3fc-2c963f66afa6');
+  });
+});

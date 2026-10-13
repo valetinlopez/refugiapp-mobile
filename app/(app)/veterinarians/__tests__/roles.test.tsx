@@ -7,6 +7,7 @@ import { VeterinariansScreen } from '@/features/veterinarians/components/Veterin
 import { useVeterinarian } from '@/features/veterinarians/hooks/useVeterinarian';
 import {
   useDeactivateVeterinarian,
+  useDeleteVeterinarian,
   useReactivateVeterinarian,
 } from '@/features/veterinarians/hooks/useVeterinarianMutations';
 
@@ -27,6 +28,7 @@ jest.mock('@/features/veterinarians/hooks/useVeterinarian', () => ({
 }));
 jest.mock('@/features/veterinarians/hooks/useVeterinarianMutations', () => ({
   useDeactivateVeterinarian: jest.fn(),
+  useDeleteVeterinarian: jest.fn(),
   useReactivateVeterinarian: jest.fn(),
 }));
 jest.mock('@/features/veterinarians/components/VeterinariansScreen', () => ({
@@ -68,17 +70,19 @@ const mockList = VeterinariansScreen as jest.Mock;
 const mockDetail = VeterinarianDetail as jest.Mock;
 const mockUseVeterinarian = useVeterinarian as jest.Mock;
 const mockDeactivate = useDeactivateVeterinarian as jest.Mock;
+const mockDelete = useDeleteVeterinarian as jest.Mock;
 const mockReactivate = useReactivateVeterinarian as jest.Mock;
 
 const ROLE_ACCESS = [
-  { canWrite: true, role: 'admin' },
-  { canWrite: true, role: 'shelter_manager' },
-  { canWrite: false, role: 'veterinarian' },
-] as const satisfies readonly { canWrite: boolean; role: UserRole }[];
+  { canDelete: true, canWrite: true, role: 'admin' },
+  { canDelete: false, canWrite: true, role: 'shelter_manager' },
+  { canDelete: false, canWrite: false, role: 'veterinarian' },
+] as const satisfies readonly { canDelete: boolean; canWrite: boolean; role: UserRole }[];
 
 describe('veterinarian role certification', () => {
-  const deactivateMutation = { error: null, isPending: false, mutate: jest.fn() };
-  const reactivateMutation = { error: null, isPending: false, mutate: jest.fn() };
+  const deactivateMutation = { error: null, isPending: false, mutate: jest.fn(), reset: jest.fn() };
+  const deleteMutation = { error: null, isPending: false, mutate: jest.fn(), reset: jest.fn() };
+  const reactivateMutation = { error: null, isPending: false, mutate: jest.fn(), reset: jest.fn() };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -90,6 +94,7 @@ describe('veterinarian role certification', () => {
       refetch: jest.fn(),
     });
     mockDeactivate.mockReturnValue(deactivateMutation);
+    mockDelete.mockReturnValue(deleteMutation);
     mockReactivate.mockReturnValue(reactivateMutation);
   });
 
@@ -110,6 +115,19 @@ describe('veterinarian role certification', () => {
     expect(screen.getByText(canWrite ? 'Perfil editable' : 'Perfil de solo lectura')).toBeTruthy();
     expect(mockDetail).toHaveBeenLastCalledWith(expect.objectContaining({ canWrite }), undefined);
   });
+
+  it.each(ROLE_ACCESS)(
+    'configures profile delete actions for $role',
+    async ({ canDelete, role }) => {
+      mockCapabilities.mockReturnValue(capabilitiesForRoles([role]));
+      await render(<VeterinarianDetailRoute />);
+
+      expect(mockDetail).toHaveBeenLastCalledWith(
+        expect.objectContaining({ canDelete }),
+        undefined
+      );
+    }
+  );
 
   it('closes confirmation and blocks mutation when permission is lost in-session', async () => {
     mockCapabilities.mockReturnValue(capabilitiesForRoles(['admin']));

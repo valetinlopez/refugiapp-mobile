@@ -88,6 +88,9 @@ export interface components {
         | 'user.deactivate'
         | 'user.activate'
         | 'user.role_assign'
+        | 'user.delete'
+        | 'veterinarian.delete'
+        | 'animal.delete'
         | 'medical_record.create'
         | 'medical_record.update'
         | 'medical_record.soft_delete'
@@ -117,6 +120,8 @@ export interface components {
         | 'adoption.complete';
       resourceType:
         | 'user'
+        | 'veterinarian'
+        | 'animal'
         | 'medical_record'
         | 'expense'
         | 'care_task'

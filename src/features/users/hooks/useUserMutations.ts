@@ -44,3 +44,12 @@ export function useDeactivateUser() {
     onSuccess: () => invalidateUsers(queryClient),
   });
 }
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, string>({
+    mutationFn: (id) => usersApi.remove(id),
+    onSuccess: () => invalidateUsers(queryClient),
+    retry: 0,
+  });
+}

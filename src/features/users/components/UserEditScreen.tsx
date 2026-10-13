@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 
 import {
   ConfirmDialog,
@@ -10,24 +10,29 @@ import {
   OfflineState,
 } from '@/components/feedback';
 import { OFFLINE_STATE_TEST_ID, offlineCopy } from '@/components/feedback/offlineCopy';
-import { AppText } from '@/components/primitives';
+import { AppButton, AppText } from '@/components/primitives';
 import { isNetworkError } from '@/core/network';
 import { isUuid } from '@/core/validation';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 import { colors, spacing } from '@/theme';
 
-import { useUpdateUser, type UpdateUserInput } from '../hooks/useUserMutations';
+import { useDeleteUser, useUpdateUser, type UpdateUserInput } from '../hooks/useUserMutations';
 import { useUser } from '../hooks/useUser';
 import type { UpdateUserRequest } from '../types';
-import { roleLabel, toUserErrorMessage } from '../utils/userPresentation';
+import { roleLabel, toDeleteUserErrorMessage, toUserErrorMessage } from '../utils/userPresentation';
 import { hasRoleChanged, toUpdateUserPayload } from '../utils/userUpdate';
 import type { UpdateUserFormValues } from '../utils/userSchema';
+import { UserDeleteDialog, type UserDeleteStep } from './UserDeleteDialog';
 import { UserForm } from './UserForm';
 
 export function UserEditScreen({ userId }: { userId: string }) {
+  const { canDeleteProtected } = useCapabilities();
   const userQuery = useUser(userId);
   const updateUser = useUpdateUser();
+  const deleteUser = useDeleteUser();
   const [pendingPayload, setPendingPayload] = useState<UpdateUserRequest | null>(null);
   const [noChangesNotice, setNoChangesNotice] = useState<string | null>(null);
+  const [deleteStep, setDeleteStep] = useState<UserDeleteStep | null>(null);
   const user = userQuery.user;
 
   const closeRoleDialog = useCallback(() => {
@@ -71,6 +76,26 @@ export function UserEditScreen({ userId }: { userId: string }) {
   const confirmRoleChange = useCallback(() => {
     if (pendingPayload) mutate(pendingPayload);
   }, [mutate, pendingPayload]);
+
+  const closeDeleteDialog = useCallback(() => {
+    if (deleteUser.isPending) return;
+    deleteUser.reset();
+    setDeleteStep(null);
+  }, [deleteUser]);
+
+  const confirmDelete = useCallback(() => {
+    if (!user || !canDeleteProtected) {
+      setDeleteStep(null);
+      return;
+    }
+    deleteUser.mutate(user.id, {
+      onSuccess: () => {
+        setDeleteStep(null);
+        AccessibilityInfo.announceForAccessibility('Usuario eliminado.');
+        router.replace('/users');
+      },
+    });
+  }, [canDeleteProtected, deleteUser, user]);
 
   if (!isUuid(userId)) {
     return (
@@ -125,6 +150,7 @@ export function UserEditScreen({ userId }: { userId: string }) {
 
   const fullName = `${user.firstName} ${user.lastName}`;
   const mutationError = updateUser.error ? toUserErrorMessage(updateUser.error) : null;
+  const deleteError = deleteUser.error ? toDeleteUserErrorMessage(deleteUser.error) : null;
 
   return (
     <View style={styles.container}>
@@ -137,6 +163,25 @@ export function UserEditScreen({ userId }: { userId: string }) {
         mode="edit"
         onSubmit={handleSubmit}
       />
+      {canDeleteProtected ? (
+        <View style={styles.deleteSection}>
+          <AppButton
+            accessibilityHint="Solicita doble confirmación antes de eliminar la cuenta."
+            accessibilityLabel={`Eliminar a ${fullName}`}
+            icon="trash"
+            label="Eliminar usuario"
+            onPress={() => {
+              deleteUser.reset();
+              setDeleteStep('confirm');
+            }}
+            testID="user-delete"
+            variant="danger"
+          />
+          <AppText color="textSecondary" variant="caption">
+            La baja es permanente, pierde el acceso y queda auditada.
+          </AppText>
+        </View>
+      ) : null}
       <ConfirmDialog
         cancelAccessibilityLabel="Cancelar cambio de rol"
         confirmAccessibilityLabel="Confirmar cambio de rol"
@@ -150,6 +195,16 @@ export function UserEditScreen({ userId }: { userId: string }) {
         variant="primary"
         visible={pendingPayload !== null}
       />
+      <UserDeleteDialog
+        errorMessage={deleteError}
+        key={deleteStep ?? 'closed'}
+        name={fullName}
+        onAdvance={() => setDeleteStep('acknowledge')}
+        onCancel={closeDeleteDialog}
+        onConfirm={confirmDelete}
+        step={canDeleteProtected ? deleteStep : null}
+        submitting={deleteUser.isPending}
+      />
     </View>
   );
 }
@@ -162,4 +217,5 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.lg,
   },
+  deleteSection: { gap: spacing.xs },
 });

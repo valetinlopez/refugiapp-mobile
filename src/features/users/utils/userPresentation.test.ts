@@ -1,6 +1,10 @@
 import { ApiError } from '@/core/api';
 
-import { toCreateUserErrorMessage, toUserErrorMessage } from './userPresentation';
+import {
+  toCreateUserErrorMessage,
+  toDeleteUserErrorMessage,
+  toUserErrorMessage,
+} from './userPresentation';
 
 describe('toCreateUserErrorMessage', () => {
   it.each([
@@ -94,5 +98,50 @@ describe('toUserErrorMessage', () => {
     expect(toUserErrorMessage(error)).toBe(
       'No pudimos completar la operación. Intentá nuevamente.'
     );
+  });
+});
+
+describe('toDeleteUserErrorMessage', () => {
+  it.each([
+    [
+      new ApiError({
+        code: 'LAST_ADMIN_FORBIDDEN',
+        message: 'Last admin.',
+        requestId: 'request-id',
+        status: 409,
+      }),
+      'No se puede eliminar al último administrador activo. Asigná otro administrador antes de eliminarlo.',
+    ],
+    [
+      new ApiError({
+        code: 'HTTP_403',
+        message: 'Forbidden.',
+        requestId: 'request-id',
+        status: 403,
+      }),
+      'Tu rol no tiene permiso para eliminar usuarios. Solo un administrador puede hacerlo.',
+    ],
+    [
+      new ApiError({
+        code: 'HTTP_404',
+        message: 'Not found.',
+        requestId: 'request-id',
+        status: 404,
+      }),
+      'El usuario ya no está disponible o fue eliminado.',
+    ],
+    [
+      new ApiError({
+        code: 'HTTP_409',
+        message: 'Conflict.',
+        requestId: 'request-id',
+        status: 409,
+      }),
+      'Este usuario no se puede eliminar en este momento.',
+    ],
+  ])('translates delete failures without leaking internals', (error, expected) => {
+    const message = toDeleteUserErrorMessage(error);
+    expect(message).toBe(expected);
+    expect(message).not.toContain('LAST_ADMIN_FORBIDDEN');
   });
 });

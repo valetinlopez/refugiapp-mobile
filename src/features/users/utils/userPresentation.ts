@@ -65,3 +65,21 @@ export function toUserErrorMessage(error: unknown): string {
   }
   return 'No pudimos completar la operación. Intentá nuevamente.';
 }
+
+export function toDeleteUserErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.code === 'LAST_ADMIN_FORBIDDEN') {
+      return 'No se puede eliminar al último administrador activo. Asigná otro administrador antes de eliminarlo.';
+    }
+    if (error.status === 403) {
+      return 'Tu rol no tiene permiso para eliminar usuarios. Solo un administrador puede hacerlo.';
+    }
+    if (error.status === 404) {
+      return 'El usuario ya no está disponible o fue eliminado.';
+    }
+    if (error.status === 409) {
+      return 'Este usuario no se puede eliminar en este momento.';
+    }
+  }
+  return 'No pudimos eliminar el usuario. Intentá nuevamente.';
+}

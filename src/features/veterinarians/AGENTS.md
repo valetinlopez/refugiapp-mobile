@@ -2,7 +2,7 @@
 
 ## Responsabilidad
 
-- Gestiona el listado, detalle, alta, edición y desactivación de veterinarios según permisos.
+- Gestiona el listado, detalle, alta, edición, desactivación y baja de veterinarios según permisos.
 - En el alta puede crear y vincular el usuario de acceso del veterinario (rol `veterinarian`) mediante `createUser`, sin tipear IDs manuales.
 - No gestiona usuarios internos (pertenecen a `users`) ni la selección de veterinario del formulario clínico (pertenece a `medical-records`).
 
@@ -16,6 +16,7 @@
 - `PATCH /veterinarians/:id`: edición parcial para `admin` y `shelter_manager`; omitir un campo lo conserva, `null` limpia `email`, `phone` y `notes`. La edición no modifica el vínculo de usuario.
 - `POST /veterinarians/:id/deactivate`: desactivación lógica (conserva el historial clínico vinculado) para `admin` y `shelter_manager`.
 - `POST /veterinarians/:id/reactivate`: reactivación para `admin` y `shelter_manager`; conserva historial e identidad (no crea un registro nuevo). Un veterinario ya activo responde `409 VETERINARIAN_ALREADY_ACTIVE`; inexistente, `404 RESOURCE_NOT_FOUND`.
+- `DELETE /veterinarians/:id`: baja solo para `admin` (`canDeleteProtected`, no `canManageVets`); `204` sin body, `404` inexistente, `403` sin rol admin, `409 VETERINARIAN_HAS_HISTORY` cuando tiene filas en `medical_records` (incluidas soft-deleted) sin borrar nada. Borrado físico (los veterinarios no usan soft delete) y registro `veterinarian.delete` en auditoría.
 - `VeterinarianResponseDto` incluye `user` (`UserResponseDto` sin `passwordHash`) o `null`; el detalle y el listado presentan `user.email` y rol, nunca el UUID crudo.
 - Códigos de conflicto del backend: `LICENSE_NUMBER_ALREADY_EXISTS` (409), `EMAIL_ALREADY_EXISTS` (409), `USER_ALREADY_LINKED_TO_VETERINARIAN` (409), `VET_USER_PAYLOAD_CONFLICT` (400) y `VET_CREATE_USER_EMAIL_REQUIRED` (400); traducir a mensajes accionables sin exponer detalles internos.
 - Los tipos de red derivan de `openapi/mobile.openapi.json`.
@@ -23,6 +24,7 @@
 ## Permisos
 
 - Escritura (crear, editar, desactivar): `admin` y `shelter_manager` (`canManageVets`).
+- Baja (`DELETE`): solo `admin` (`canDeleteProtected`); la UI la oculta al resto y el backend revalida con `403`.
 - Lectura (listado y detalle): los tres roles.
 - El usuario auto-creado siempre recibe el rol `veterinarian` (regla del backend); la UI nunca ofrece roles de escritura.
 - La interfaz oculta acciones no disponibles para el rol, pero el backend vuelve a validar; un `403` se maneja de forma segura.
@@ -38,19 +40,20 @@
 
 ## Estructura
 
-- `api/`: `veterinariansApi` (listado, detalle, alta, edición y desactivación).
-- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianDetail`, `CreateVeterinarianScreen`, `VeterinarianForm`, `DeactivateVeterinarianDialog` y `ReactivateVeterinarianDialog`.
+- `api/`: `veterinariansApi` (listado, detalle, alta, edición, desactivación y baja `remove`).
+- `components/`: `VeterinariansScreen`, `VeterinarianCard`, `VeterinarianDetail`, `CreateVeterinarianScreen`, `VeterinarianForm`, `DeactivateVeterinarianDialog`, `VeterinarianDeleteDialog` y `ReactivateVeterinarianDialog`.
 - `VeterinarianForm` recibe `mode` (`create` | `edit`): solo en `create` expone el toggle "Crear usuario de acceso" con email y contraseña del usuario; en `edit` no ofrece vínculo.
-- `hooks/`: keys, listado infinito, detalle y mutations.
+- `hooks/`: keys, listado infinito, detalle y mutations (incluye `useDeleteVeterinarian`: elimina la query de detalle e invalida `veterinarianKeys.all` por prefijo, sin optimistic updates ni reintentos).
 - `types.ts`: aliases derivados del contrato generado.
 - `utils/`: esquema Zod, mappers create/edit (PATCH diferencial + `createUser`) y presentación/errores.
 
 ## Estrategia de escritura
 
-- Sin optimistic updates: `useCreateVeterinarian`, `useUpdateVeterinarian`, `useDeactivateVeterinarian` y `useReactivateVeterinarian` invalidan `veterinarianKeys.all` (prefijo) tras éxito, lo que también refresca las opciones de veterinario activas del formulario clínico (`['veterinarians', 'options']`, prefijo compartido por valor, sin imports cruzados).
+- Sin optimistic updates: `useCreateVeterinarian`, `useUpdateVeterinarian`, `useDeactivateVeterinarian`, `useReactivateVeterinarian` y `useDeleteVeterinarian` invalidan `veterinarianKeys.all` (prefijo) tras éxito, lo que también refresca las opciones de veterinario activas del formulario clínico (`['veterinarians', 'options']`, prefijo compartido por valor, sin imports cruzados).
 - El alta envía `createUser` solo cuando el toggle está activo; omite `userId` siempre.
 - La edición usa PATCH diferencial: omite campos intactos y envía `null` para limpiar `email`, `phone` y `notes`; no toca `userId` ni `createUser`.
 - La desactivación se confirma con `ConfirmDialog` del sistema de diseño (via `DeactivateVeterinarianDialog`) y la reactivación con `ReactivateVeterinarianDialog`; ninguna acción con consecuencia se ejecuta sin confirmación.
+- La baja se ofrece solo en el detalle con `canDeleteProtected` (`VeterinarianDeleteDialog`): primer `ConfirmDialog` con el nombre y segundo diálogo con `Switch` `Entiendo que es permanente`; el éxito anuncia `Veterinario eliminado.` y vuelve al listado. El bloqueo `409 VETERINARIAN_HAS_HISTORY` se traduce conservando el historial.
 
 ## UI y accesibilidad
 

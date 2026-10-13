@@ -1,17 +1,26 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import { ApiError } from '@/core/api';
+import { useCapabilities } from '@/features/auth/hooks/useCapabilities';
 
-import { useUpdateUser } from '../hooks/useUserMutations';
+import { useDeleteUser, useUpdateUser } from '../hooks/useUserMutations';
 import { useUser } from '../hooks/useUser';
 import { UserEditScreen } from './UserEditScreen';
 
 jest.mock('expo-router', () => ({ router: { replace: jest.fn() } }));
 jest.mock('../hooks/useUser', () => ({ useUser: jest.fn() }));
-jest.mock('../hooks/useUserMutations', () => ({ useUpdateUser: jest.fn() }));
+jest.mock('../hooks/useUserMutations', () => ({
+  useDeleteUser: jest.fn(),
+  useUpdateUser: jest.fn(),
+}));
+jest.mock('@/features/auth/hooks/useCapabilities', () => ({
+  useCapabilities: jest.fn(),
+}));
 
 const mockUseUser = useUser as jest.Mock;
 const mockUseUpdateUser = useUpdateUser as jest.Mock;
+const mockUseDeleteUser = useDeleteUser as jest.Mock;
+const mockUseCapabilities = useCapabilities as jest.Mock;
 
 const user = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -34,9 +43,20 @@ function updateMutation(overrides = {}) {
   };
 }
 
+function deleteMutation(overrides = {}) {
+  return {
+    error: null,
+    isPending: false,
+    mutate: jest.fn(),
+    reset: jest.fn(),
+    ...overrides,
+  };
+}
+
 describe('UserEditScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseCapabilities.mockReturnValue({ canDeleteProtected: false });
     mockUseUser.mockReturnValue({
       error: null,
       isError: false,
@@ -45,6 +65,7 @@ describe('UserEditScreen', () => {
       user,
     });
     mockUseUpdateUser.mockReturnValue(updateMutation());
+    mockUseDeleteUser.mockReturnValue(deleteMutation());
   });
 
   it('saves profile changes without confirmation when the role is unchanged', async () => {
@@ -123,5 +144,32 @@ describe('UserEditScreen', () => {
     const screen = await render(<UserEditScreen userId={user.id} />);
 
     expect(screen.getByText('Usuario no disponible')).toBeTruthy();
+  });
+
+  it('hides the delete action without the admin delete capability', async () => {
+    mockUseCapabilities.mockReturnValue({ canDeleteProtected: false });
+    const screen = await render(<UserEditScreen userId={user.id} />);
+
+    expect(screen.queryByTestId('user-delete')).toBeNull();
+  });
+
+  it('runs the delete flow only after double confirmation with explicit acknowledgement', async () => {
+    mockUseCapabilities.mockReturnValue({ canDeleteProtected: true });
+    const mutate = jest.fn();
+    mockUseDeleteUser.mockReturnValue(deleteMutation({ mutate }));
+    const screen = await render(<UserEditScreen userId={user.id} />);
+
+    await fireEvent.press(screen.getByTestId('user-delete'));
+    expect(screen.getByText('¿Eliminar a Sofia Ramirez permanentemente?')).toBeTruthy();
+    expect(mutate).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByText('Continuar'));
+    const confirm = screen.getByTestId('delete-user-confirm');
+    await fireEvent.press(confirm);
+    expect(mutate).not.toHaveBeenCalled();
+
+    await fireEvent(screen.getByTestId('delete-user-acknowledge'), 'valueChange', true);
+    await fireEvent.press(confirm);
+    await waitFor(() => expect(mutate).toHaveBeenCalledWith(user.id, expect.any(Object)));
   });
 });

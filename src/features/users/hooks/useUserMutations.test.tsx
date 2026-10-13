@@ -9,6 +9,7 @@ import {
   useActivateUser,
   useCreateUser,
   useDeactivateUser,
+  useDeleteUser,
   useUpdateUser,
 } from './useUserMutations';
 
@@ -67,10 +68,11 @@ describe('user mutations', () => {
     ['create', useCreateUser, createInput],
     ['activate', useActivateUser, USER_ID],
     ['deactivate', useDeactivateUser, USER_ID],
+    ['remove', useDeleteUser, USER_ID],
   ] as const)(
     'invalidates the users list after %s succeeds',
     async (method, useMutation, input) => {
-      const response = method === 'deactivate' ? undefined : createdUser;
+      const response = method === 'deactivate' || method === 'remove' ? undefined : createdUser;
       jest.spyOn(usersApi, method).mockResolvedValue(response as never);
       const invalidate = jest.spyOn(queryClient, 'invalidateQueries');
       const { result } = await renderHook(() => useMutation(), { wrapper });

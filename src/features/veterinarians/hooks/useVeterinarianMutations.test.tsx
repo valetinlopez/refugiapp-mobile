@@ -8,6 +8,7 @@ import { veterinarianKeys } from './veterinarianKeys';
 import {
   useCreateVeterinarian,
   useDeactivateVeterinarian,
+  useDeleteVeterinarian,
   useReactivateVeterinarian,
   useUpdateVeterinarian,
 } from './useVeterinarianMutations';
@@ -72,6 +73,22 @@ describe('veterinarian mutations', () => {
       expect(invalidate).toHaveBeenCalledWith({ queryKey: veterinarianKeys.all });
     }
   );
+
+  it('removes the detail query and invalidates the prefix after delete succeeds', async () => {
+    jest.spyOn(veterinariansApi, 'remove').mockResolvedValue(undefined);
+    const removeQueries = jest.spyOn(queryClient, 'removeQueries');
+    const invalidate = jest.spyOn(queryClient, 'invalidateQueries');
+    const { result } = await renderHook(() => useDeleteVeterinarian(), { wrapper });
+
+    result.current.mutate(VET_ID);
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(veterinariansApi.remove).toHaveBeenCalledWith(VET_ID);
+    expect(removeQueries).toHaveBeenCalledWith({
+      queryKey: veterinarianKeys.detail(VET_ID),
+    });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: veterinarianKeys.all });
+  });
 
   it('preserves cached clinical history when a veterinarian is deactivated', async () => {
     const clinicalHistoryKey = ['medical-records', 'by-veterinarian', VET_ID] as const;
