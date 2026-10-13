@@ -17,7 +17,7 @@ export interface AnimalGridCardProps {
 }
 
 /**
- * Adaptive grid cell for the animals listing (D37 / RFG-170).
+ * Adaptive grid cell for the animals listing (D37 / RFG-170, stabilized D41 / RFG-180).
  *
  * Photo-first card: optimized profile photo (or initials fallback), name,
  * `species · breed` when the breed exists, and a text+icon status badge so the
@@ -69,10 +69,10 @@ export const AnimalGridCard = memo(function AnimalGridCard({
           )}
         </View>
         <View style={styles.body}>
-          <AppText numberOfLines={2} variant="heading3">
+          <AppText ellipsizeMode="tail" numberOfLines={2} variant="heading3">
             {animal.name}
           </AppText>
-          <AppText color="textSecondary" numberOfLines={1} variant="caption">
+          <AppText color="textSecondary" ellipsizeMode="tail" numberOfLines={1} variant="caption">
             {meta}
           </AppText>
           <View style={styles.footer}>
@@ -80,9 +80,15 @@ export const AnimalGridCard = memo(function AnimalGridCard({
               icon={badge.icon}
               label={badge.label}
               labelNumberOfLines={1}
+              style={styles.badge}
               tone={badge.tone}
             />
-            <AppIcon color="textSecondary" name="chevronRight" size={sizes.iconMd} />
+            <AppIcon
+              color="textSecondary"
+              name="chevronRight"
+              size={sizes.iconMd}
+              style={styles.chevron}
+            />
           </View>
         </View>
       </AppCard>
@@ -91,13 +97,23 @@ export const AnimalGridCard = memo(function AnimalGridCard({
 });
 
 const styles = StyleSheet.create({
+  badge: {
+    flexShrink: 1,
+    minWidth: 0,
+  },
   body: {
     flex: 1,
     gap: spacing.xxs,
+    minWidth: 0,
     padding: spacing.md,
   },
   card: {
+    flex: 1,
+    minWidth: 0,
     overflow: 'hidden',
+  },
+  chevron: {
+    flexShrink: 0,
   },
   fallback: {
     alignItems: 'center',
@@ -111,6 +127,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.xs,
     justifyContent: 'space-between',
+    minWidth: 0,
     paddingTop: spacing.xxs,
   },
   image: {
@@ -124,6 +141,8 @@ const styles = StyleSheet.create({
   },
   pressable: {
     borderRadius: radii.lg,
+    flex: 1,
+    minWidth: 0,
   },
   pressed: {
     opacity: opacity.pressed,
